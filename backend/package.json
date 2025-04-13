@@ -1,0 +1,21 @@
+{
+  "name": "luminus-backend",
+  "version": "1.0.0",
+  "description": "This is a folder to make a backend to Luminus project, created in PBL on Software engennering discipline",
+  "keywords": [
+    "Luminus",
+    "development",
+    "dossie",
+    "study",
+    "Software",
+    "Engennering",
+    "backend"
+  ],
+  "license": "MIT",
+  "author": "Andre, Armando, Daniel, João vitor, kauã, Luan, Maike, Pedro Henrique",
+  "type": "commonts",
+  "main": "index.ts",
+  "scripts": {
+    "test": "run"
+  }
+}
