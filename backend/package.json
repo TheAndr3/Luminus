@@ -13,7 +13,7 @@
   ],
   "license": "MIT",
   "author": "Andre, Armando, Daniel, João vitor, kauã, Luan, Maike, Pedro Henrique",
-  "type": "commonts",
+  "type": "commonjs",
   "main": "index.ts",
   "scripts": {
     "test": "run"
