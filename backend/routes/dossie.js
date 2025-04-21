@@ -1,23 +1,28 @@
 const express = require('express');
 const routerDossie = express.Router();
 
-app.post('/dossies', (req, res) => {
+//Criar dossiê
+app.post('/dossies/criar', (req, res) => {
   res.send('Rota para criar dossiê');
 });
 
-app.get('/dossies', (req, res) => {
+//Listar dossiês
+app.get('/dossies/list', (req, res) => {
   res.send('Rota para listar dossiês');
 });
 
+//ver dossiê específico
 app.get('/dossies/:id', (req, res) => {
   res.send('Rota para obter um dossiê específico');
 });
 
-app.put('/dossies/:id', (req, res) => {
+//atualizar dossiê
+app.put('/dossies/:id/editar', (req, res) => {
   res.send('Rota para atualizar dossiê');
 });
 
-app.delete('/dossies/:id', (req, res) => {
+//deletar dossiê
+app.delete('/dossies/:id/delete', (req, res) => {
   res.send('Rota para deletar dossiê');
 });
 
