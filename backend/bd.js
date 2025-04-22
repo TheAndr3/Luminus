@@ -13,10 +13,10 @@ app.use(bodyParser.json());
 
 // Conexão com PostgreSQL usando variáveis do .env
 const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASS, {
-        host: process.env.DB_HOST,
+    test_db.env.DB_NAME,
+    test_db.env.DB_USER,
+    test_db.env.DB_PASS, {
+        host: test_db.env.DB_HOST,
         dialect: 'postgres',
     }
 );
