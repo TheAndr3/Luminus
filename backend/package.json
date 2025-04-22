@@ -1,0 +1,30 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend for project to software engennering disciple, this backend is made to work with dossie maneger development by nexus corp",
+  "keywords": [
+    "dossie",
+    "PBL",
+    "software",
+    "engenerring"
+  ],
+  "license": "MIT",
+  "author": "Andre Vinicius, Armando, Daniel, João vitor, Kauã, Luan, Maike de Oliveira, Pedro Henrrique",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "html-pdf": "^3.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
