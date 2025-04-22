@@ -1,21 +1,24 @@
 {
-  "name": "luminus-backend",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "This is a folder to make a backend to Luminus project, created in PBL on Software engennering discipline",
+  "description": "Backend for project to software engennering disciple, this backend is made to work with dossie maneger development by nexus corp",
   "keywords": [
-    "Luminus",
-    "development",
     "dossie",
-    "study",
-    "Software",
-    "Engennering",
-    "backend"
+    "PBL",
+    "software",
+    "engenerring"
   ],
   "license": "MIT",
-  "author": "Andre, Armando, Daniel, João vitor, kauã, Luan, Maike, Pedro Henrique",
+  "author": "Andre Vinicius, Armando, Daniel, João vitor, Kauã, Luan, Maike de Oliveira, Pedro Henrrique",
   "type": "commonjs",
-  "main": "index.ts",
+  "main": "index.js",
   "scripts": {
-    "test": "run"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "html-pdf": "^3.0.1"
   }
 }
