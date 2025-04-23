@@ -127,5 +127,5 @@ create table InstitutionalQuestion(
 
 	CONSTRAINT fk_InstitutionalQuestion_InstitutionalSection FOREIGN KEY(section_id, dossier_id) REFERENCES InstitutionalSection(id, dossier_id),
 	CONSTRAINT fk_InstitutionalQuestion_Instituition FOREIGN KEY(instituition_id) REFERENCES Instituicao(id),
-	PRIMARY KEY(id_questao, id_sessao)
+	PRIMARY KEY(id, section_id)
 );
