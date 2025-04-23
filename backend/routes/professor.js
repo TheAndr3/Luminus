@@ -1,35 +1,23 @@
 const express = require('express');
 const routerProfessor = express.Router();
+const professorController = require('../controller/professorController.js');
 
-//fazer login
-routerProfessor.post('/professor/login', (req, res)=>{
-    res.status(200).send('Rota para fazer login')
-})
+//Login
+routerProfessor.post('/professor/login', professorController.login);
 
-//cadastrar professor 
-routerProfessor.post('/professor/cadastrar', (req, res)=>{
-    res.status(200).send("Rota para cadastrar professor!");
-})
+//Cadastro
+routerProfessor.post('/professores', professorController.cadastrar);
 
-//ver perfil
-routerProfessor.get('/professor/:id/perfil', (req, res)=>{
-    res.status(200).send('Rota para ver perfil do professor');
-})
+//Perfil
+routerProfessor.get('/professores/:id', professorController.verPerfil);
 
-//deletar professor
-routerProfessor.get('/professor/:id/delete', (req, res) => {
-    res.status(200).send('Rota para exlcuir professor');
-})
+//Home
+routerProfessor.get('/professores/:id/home', professorController.home);
 
-//recuperar senha 
-routerProfessor.post('/professor/recuperar-senha', (req, res) =>{
-    res.status(200).send('rota de recuperar senha')
-})
+//Deletar
+routerProfessor.delete('/professores/:id', professorController.deletar);
 
-//home professor
-routerProfessor.get('/professor/:id/home', (req, res) => {
-    res.status(200).send('Rota para a pagina inicial');
-})
-
+//Recuperar senha
+routerProfessor.post('/professor/recuperar-senha', professorController.recuperarSenha);
 
 module.exports = routerProfessor;

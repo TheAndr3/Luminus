@@ -1,32 +1,20 @@
 const express = require('express');
 const routerInstituicao = express.Router();
+const instituicaoController = require('../controller/instituicaoController.js');
 
-//fazer login
-routerInstituicao.post('/instituicao/login', (req, res)=>{
-    res.status(200).send('Rota para instituicao fazer login');
-})
+//Login
+routerInstituicao.post('/instituicao/login', instituicaoController.login);
 
-//deletar instituicao
-routerInstituicao.post('/instituicao/:id/delete', (req, res)=>{
-    res.status(200).send('Rota para fazer login');
-})
+//Deletar instituição
+routerInstituicao.delete('/instituicoes/:id', instituicaoController.deletar);
 
-//adicionar professor
-routerInstituicao.post('/instituicao/adicionar-professor', (req, res)=>{
-    res.status(200).send('Rota para adicionar professor');
-})
+//Adicionar professor
+routerInstituicao.post('/instituicoes/:id/professores', instituicaoController.adicionarProfessor);
 
-//ver dossiês
-routerInstituicao.get('/instituicao/dossies', (req, res)=>{
-    res.status(200).send('Rota para ver dossies da instituicao');
-})
+//Ver dossiês da instituição
+routerInstituicao.get('/instituicoes/:id/dossies', instituicaoController.verDossies);
 
-//ver perfil
-routerInstituicao.get('/instituicao/:id/perfil', (req, res)=>{
-    res.status(200).send('Rota para ver perfil do professor');
-})
+//Ver perfil da instituição
+routerInstituicao.get('/instituicoes/:id', instituicaoController.perfil);
 
 module.exports = routerInstituicao;
-
-
-

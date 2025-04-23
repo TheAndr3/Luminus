@@ -1,29 +1,20 @@
 const express = require('express');
 const routerDossie = express.Router();
+const dossieController = require('../controller/dossieController.js');
 
 //Criar dossiê
-routerDossie.post('/dossies/criar', (req, res) => {
-  res.send('Rota para criar dossiê');
-});
+routerDossie.post('/dossies', dossieController.criar);
 
-//Listar dossiês
-routerDossie.get('/dossies/list', (req, res) => {
-  res.send('Rota para listar dossiês');
-});
+//Listar todos os dossiês
+routerDossie.get('/dossies', dossieController.listar);
 
-//ver dossiê específico
-routerDossie.get('/dossies/:id', (req, res) => {
-  res.send('Rota para obter um dossiê específico');
-});
+//Obter dossiê específico
+routerDossie.get('/dossies/:id', dossieController.obter);
 
-//atualizar dossiê
-routerDossie.put('/dossies/:id/editar', (req, res) => {
-  res.send('Rota para atualizar dossiê');
-});
+//Editar dossiê
+routerDossie.put('/dossies/:id', dossieController.editar);
 
-//deletar dossiê
-routerDossie.delete('/dossies/:id/delete', (req, res) => {
-  res.send('Rota para deletar dossiê');
-});
+//Deletar dossiê
+routerDossie.delete('/dossies/:id', dossieController.deletar);
 
 module.exports = routerDossie;

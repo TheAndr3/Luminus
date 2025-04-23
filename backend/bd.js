@@ -10,7 +10,6 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-
 // Conexão com PostgreSQL usando variáveis do .env
 const sequelize = new Sequelize(
     test_db.env.DB_NAME,

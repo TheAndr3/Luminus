@@ -1,30 +1,20 @@
 const express = require('express');
 const routerTurmas = express.Router();
+const turmaController = require('../controller/turmaController.js');
 
-//ver turmas
-routerTurmas.get('/turmas', (req, res)=>{
-    res.status(200).send("Rota de visualizar turmas");
-})
+//Listar turmas
+routerTurmas.get('/turmas', turmaController.listar);
 
-//ver turma específica
-routerTurmas.get('/turmas:id', (req, res)=>{
-    res.status(200).send("Rota de visualizar turma específica");
-})
+//Obter turma específica
+routerTurmas.get('/turmas/:id', turmaController.obter);
 
-//criar turmas
-routerTurmas.post('/turmas/:id', (req, res)=>{
-    res.status(200).send("Rota de criar turma");
-})
+//Criar nova turma
+routerTurmas.post('/turmas', turmaController.criar);
 
-//editar turma
-routerTurmas.put('/turmas/:id', (req, res)=>{
-    res.status(200).send("Rota de turmas funcionando!");
-})
+//Editar turma
+routerTurmas.put('/turmas/:id', turmaController.editar);
 
-//deletar turma
-routerTurmas.delete('/turmas/:id', (req, res)=>{
-    res.status(200).send("Rota de turmas funcionando!");
-})
-
+//Deletar turma
+routerTurmas.delete('/turmas/:id', turmaController.deletar);
 
 module.exports = routerTurmas;
