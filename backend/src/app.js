@@ -6,10 +6,12 @@ const app = express();
 const routerDossie = require('../routes/dossie.js');
 const routerTurmas = require('../routes/turmas.js');
 const routerProfessor = require('../routes/professor.js');
+const routerUtils = require('../routes/utils.js');
 
 app.use(cors());
 app.use(routerProfessor);
 app.use(routerDossie);
 app.use(routerTurmas);
+app.use(routerUtils);
 
 module.exports = app;
