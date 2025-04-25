@@ -6,18 +6,20 @@ const professorController = require('../controller/professorController.js');
 routerProfessor.post('/professor/login', professorController.login);
 
 //Cadastro
-routerProfessor.post('/professores', professorController.cadastrar);
+routerProfessor.post('/professor', professorController.cadastrar);
 
 //Perfil
-routerProfessor.get('/professores/:id', professorController.verPerfil);
+routerProfessor.get('/professor/:id', professorController.verPerfil);
 
 //Home
-routerProfessor.get('/professores/:id/home', professorController.home);
+routerProfessor.get('/professor/:id/home', professorController.home);
 
 //Deletar
-routerProfessor.delete('/professores/:id', professorController.deletar);
+routerProfessor.delete('/professor/:id', professorController.deletar);
 
 //Recuperar senha
 routerProfessor.post('/professor/recuperar-senha', professorController.recuperarSenha);
+
+routerProfessor.get('/professor/public-key', professorController.Key);  
 
 module.exports = routerProfessor;

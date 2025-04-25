@@ -1,7 +1,17 @@
 //Controller do professor
-const db = require('../bd.js')
-const express = require('express')
+const db = require('../bd.js');
+const express = require('express');
+const fs = require('fs');
+const crypt = require('crypto')
+const public = require('../keys/public.pem');
+const private = require('../keys/private.pem');
 
+
+//enviar chave publica para criptografia
+exports.Key = (req, res) => {
+    const publicKey = fs.readFileSync(public, 'utf-8');
+    res.status(200).send(publicKey);
+}
 
 exports.login = (req, res) => {
     res.status(200).send('Login do professor');
@@ -9,6 +19,13 @@ exports.login = (req, res) => {
 
 exports.cadastrar = async (req, res) => {
     const {email, login, password, name} = req.body;
+    const decryptedPassword = crypto.privateDecrypt(
+        {
+            key: private,
+            padding: crypto.constants.RSA_PKCS1_PADDING 
+        },
+        Buffer.from(password, 'base64')
+    ).toString('utf8');
 
     try{
         const verification = await db.query('SELECT * FROM Professor where (login = $1, email_professor = $2)', [login, email]);
