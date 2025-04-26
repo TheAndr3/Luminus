@@ -1,70 +1,36 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { Sequelize, DataTypes } = require('sequelize');
+const {Pool} = require('pg');
 
-const app = express();
-const port = 3000;
-
-app.use(cors());
-app.use(bodyParser.json());
-
-
-// Conexão com PostgreSQL usando variáveis do .env
-const sequelize = new Sequelize(
-    test_db.env.DB_NAME,
-    test_db.env.DB_USER,
-    test_db.env.DB_PASS, {
-        host: test_db.env.DB_HOST,
-        dialect: 'postgres',
+async function connect() {
+    if (global.connection) {
+        return global.connection.connect();
     }
-);
 
-// Testar conexão
-sequelize.authenticate()
-    .then(() => console.log('Conectado ao PostgreSQL!'))
-    .catch(err => console.error('Erro de conexão:', err));
+    const pool = Pool({connectionString:process.env.CONNECTION_STRING});
 
+    const client = await pool.connect();
+    const res = await client.query('SELECT NOW()');
+    console.log(res.rows[0]);
 
-// Modelo User
-const User = sequelize.define('User', {
-    name: { type: DataTypes.STRING, allowNull: false },
-    email: { type: DataTypes.STRING, allowNull: false }
-});
+    client.release();
 
-// Sincronizar com o banco
-sequelize.sync();
+    global.connection = pool;
+    return pool.connect();
+}
 
-// Rotas CRUD
-app.get('/users', async(req, res) => {
-    const users = await User.findAll();
-    res.json(users);
-});
+async function select(params, table, attr, comparation, value) {
+    const sqlString = `SELECT ${params} FROM ${table} WHERE ${attr} ${comparation} ${value}`
 
-app.post('/users', async(req, res) => {
-    const { name, email } = req.body;
-    const newUser = await User.create({ name, email });
-    res.json(newUser);
-});
+    const client = await connect();
+    const res = await client.query(sqlString);
+    return res.rows;
 
-app.put('/users/:id', async(req, res) => {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-    const { name, email } = req.body;
-    user.name = name;
-    user.email = email;
-    await user.save();
-    res.json(user);
-});
+}
 
-app.delete('/users/:id', async(req, res) => {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-    await user.destroy();
-    res.json({ message: 'Usuário removido com sucesso' });
-});
+async function insertOnProfessor(params) {
+    const sqlString = `INSERT INTO Professor()`
+}
 
-// Start server
-app.listen(port, () => {
-    console.log(`Servidor está em http://localhost:${port}`);
-});
+async function insert(params, table, columns, ) {
+    
+}
+module.exports = {select}
