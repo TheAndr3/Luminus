@@ -132,10 +132,20 @@ create table Notification(
 	id SERIAL,
 	professor_id INT,
 	instituition_id INT,
-	status VARCHAR(8),
+	status INT,
 
 	CONSTRAINT fk_Notification_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id),
 	CONSTRAINT fk_Notification_Instituition FOREIGN KEY(instituition_id) REFERENCES Institution(id),
 
 	PRIMARY KEY(id, professor_id, instituition_id)
+);
+
+create table VerifyCode(
+	code INT UNIQUE NOT NULL,
+	professor_id INT,
+	data_sol date,
+	status INT,
+
+	CONSTRAINT fk_VerifyCode_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id),
+	PRIMARY KEY(code, professor_id, data_sol),
 );
