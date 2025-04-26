@@ -6,15 +6,15 @@ const instituicaoController = require('../controller/instituicaoController.js');
 routerInstituicao.post('/instituicao/login', instituicaoController.login);
 
 //Deletar instituição
-routerInstituicao.delete('/instituicoes/:id', instituicaoController.deletar);
+routerInstituicao.delete('/instituicao/:id', instituicaoController.deletar);
 
 //Adicionar professor
-routerInstituicao.post('/instituicoes/:id/professores', instituicaoController.adicionarProfessor);
+routerInstituicao.post('/instituicao/:id/professores', instituicaoController.adicionarProfessor);
 
 //Ver dossiês da instituição
-routerInstituicao.get('/instituicoes/:id/dossies', instituicaoController.verDossies);
+routerInstituicao.get('/instituicao/:id/dossies', instituicaoController.verDossies);
 
 //Ver perfil da instituição
-routerInstituicao.get('/instituicoes/:id', instituicaoController.perfil);
+routerInstituicao.get('/instituicao/:id', instituicaoController.perfil);
 
 module.exports = routerInstituicao;
