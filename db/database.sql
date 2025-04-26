@@ -1,7 +1,6 @@
 create table Institution(
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
-	login VARCHAR(50) UNIQUE NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	institution_email VARCHAR(255) NOT NULL UNIQUE
 );
@@ -9,12 +8,11 @@ create table Institution(
 create table Professor(
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
-	login VARCHAR(50) UNIQUE NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	instituition_id INT ,
 	professor_email VARCHAR(255) UNIQUE NOT NULL,
 
-	FOREIGN KEY (instituition_id) REFERENCES Instituicao(id)
+	FOREIGN KEY (instituition_id) REFERENCES Institution(id)
 );
 
 create table Dossier(
@@ -126,6 +124,18 @@ create table InstitutionalQuestion(
 	description TEXT NOT NULL,
 
 	CONSTRAINT fk_InstitutionalQuestion_InstitutionalSection FOREIGN KEY(section_id, dossier_id) REFERENCES InstitutionalSection(id, dossier_id),
-	CONSTRAINT fk_InstitutionalQuestion_Instituition FOREIGN KEY(instituition_id) REFERENCES Instituicao(id),
+	CONSTRAINT fk_InstitutionalQuestion_Instituition FOREIGN KEY(instituition_id) REFERENCES Institution(id),
 	PRIMARY KEY(id, section_id)
+);
+
+create table Notification(
+	id SERIAL,
+	professor_id INT,
+	instituition_id INT,
+	status VARCHAR(8),
+
+	CONSTRAINT fk_Notification_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id),
+	CONSTRAINT fk_Notification_Instituition FOREIGN KEY(instituition_id) REFERENCES Institution(id),
+
+	PRIMARY KEY(id, professor_id, instituition_id)
 );
