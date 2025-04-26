@@ -4,8 +4,8 @@
 
 | Tabela                     | Atributos                                           |
 |----------------------------|-----------------------------------------------------|
-| Institution                | (id, name, login, password, institution_email)      |
-| Professor                  | (id, name, login, password, instituition_id, professor_email) |
+| Institution                | (id, name, password, institution_email)      |
+| Professor                  | (id, name, password, instituition_id, professor_email) |
 | Dossier                    | (id, professor_id, name, evaluation_method)         |
 | Section                    | (id, dossier_id, professor_id, name, description, weigth) |
 | Question                   | (id, professor_id, dossier_id, section_id, description) |
@@ -16,6 +16,7 @@
 | InstitutionalDossier       | (id, instituition_id, name, evaluation_method)      |
 | InstitutionalSection       | (id, instituition_id, dossier_id, name, description, weigth) |
 | InstitutionalQuestion      | (id, instituition_id, dossier_id, section_id, description) |
+| Notification               | (id, professor_id, instituition_id, status)|
 
 ## 2. Tabela completa com os detalhes (domínios, chaves, etgitc.)
 
@@ -23,12 +24,10 @@
 |----------------------------|----------------------|------------------|----------------------------------|
 | Institution                | id                   | INT              | **PK**                          |
 |                            | name                 | VARCHAR(100)     | NOT NULL                        |
-|                            | login                | VARCHAR(50)      | NOT NULL, UNIQUE                |
 |                            | password             | VARCHAR(255)     | NOT NULL                        |
 |                            | institution_email    | VARCHAR(255)     | NOT NULL, UNIQUE                |
 | Professor                  | id                   | INT              | **PK**                          |
 |                            | name                 | VARCHAR(100)     | NOT NULL                        |
-|                            | login                | VARCHAR(50)      | NOT NULL, UNIQUE                |
 |                            | password             | VARCHAR(255)     | NOT NULL                        |
 |                            | instituition_id      | INT              | **FK → Institution(id)**        |
 |                            | professor_email      | VARCHAR(255)     | NOT NULL, UNIQUE                |
@@ -80,3 +79,7 @@
 |                            | dossier_id           | INT              | **FK → InstitutionalDossier(id)**|
 |                            | section_id           | INT              | **FK → InstitutionalSection(id)**|
 |                            | description          | TEXT             | NOT NULL                        |
+| Notification               | id                   | INT              | **PK (composta)**              |
+|                            | professor_id         | INT              | **FK → Professor(id)**         |
+|                            | instituition_id      | INT              | **FK → Institution(id)**        |
+|                            | status               | VARCHAR(8)       | — |
