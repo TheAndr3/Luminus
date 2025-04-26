@@ -20,6 +20,7 @@ routerProfessor.delete('/professor/:id', professorController.deletar);
 //Recuperar senha
 routerProfessor.post('/professor/recuperar-senha', professorController.recuperarSenha);
 
+//Enviar chave publica
 routerProfessor.get('/professor/public-key', professorController.Key);  
 
 module.exports = routerProfessor;

@@ -2,10 +2,9 @@
 const db = require('../bd.js');
 const express = require('express');
 const fs = require('fs');
-const crypt = require('crypto')
+const crypto = require('crypto');
 const public = require('../keys/public.pem');
 const private = require('../keys/private.pem');
-
 
 //enviar chave publica para criptografia
 exports.Key = (req, res) => {
@@ -19,6 +18,8 @@ exports.login = (req, res) => {
 
 exports.cadastrar = async (req, res) => {
     const {email, login, password, name} = req.body;
+
+    //criptografia de senha no backend
     const decryptedPassword = crypto.privateDecrypt(
         {
             key: private,
