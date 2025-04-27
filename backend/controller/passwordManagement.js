@@ -13,7 +13,6 @@ async function hashPassword(password) {
     } catch (err) {
         console.error('Erro ao criar hash');
     }
-    
 }
 
 async function decryptPassword(password) {
@@ -29,7 +28,6 @@ async function decryptPassword(password) {
     } catch (err) {
         console.error('Erro ao criar hash');
     }
-
 }
 
 module.exports = {

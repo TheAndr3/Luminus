@@ -31,7 +31,6 @@ async function pgSelect(table, data) {
 
 }
 
-
 async function pgInsert(table, data) {
 
     const keys = Object.keys(data);
