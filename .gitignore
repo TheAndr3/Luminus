@@ -1,9 +1,4 @@
-
 /backend/node_modules
 /frontend/luminus_frontend/node_modules
 /backend/.env*
-<<<<<<< HEAD
-*.pem
-
-=======
->>>>>>> 50193aaa7189042ba0ce5fe215699deb348bcdb2
+/backend/keys/*.pem
