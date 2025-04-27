@@ -17,20 +17,51 @@ async function connect() {
     return pool.connect();
 }
 
-async function select(params, table, attr, comparation, value) {
-    const sqlString = `SELECT ${params} FROM ${table} WHERE ${attr} ${comparation} ${value}`
+async function pgSelect(table, data) {
+
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolder = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+
+    const sqlString = `SELECT * FROM ${table} WHERE ${placeHolder};`
 
     const client = await connect();
-    const res = await client.query(sqlString);
+    const res = await client.query(sqlString, values);
     return res.rows;
 
 }
 
-async function insertOnProfessor(params) {
-    const sqlString = `INSERT INTO Professor()`
+
+async function pgInsert(table, data) {
+
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolder = keys.map((_,i) => `$${i+1}`).join(', ');
+    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES(${placeHolder})`;
+
+
+    const client = await connect();
+    return await client.query(query, values);
 }
 
-async function insert(params, table, columns, ) {
-    
+async function pgDelete(table, data) {
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolder = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+    const query = `DELETE FROM ${table} WHERE ${placeHolder}`;
+
+    const client = await connect();
+    return await client.query(query, values);
 }
-module.exports = {select}
+
+async function pgUpdate(table, data, keys) {
+    const keysNewObject = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolderToWhere = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+    const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1}`).join(', ');
+    const query = `DELETE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
+
+    const client = await connect();
+    return await client.query(query, values);
+}
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate}
