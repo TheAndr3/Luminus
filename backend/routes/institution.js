@@ -1,20 +1,20 @@
 const express = require('express');
-const routerInstituition = express.Router();
-const instituitionController = require('../controller/instituitionController.js');
+const routerInstitution = express.Router();
+const institutionController = require('../controller/institutionController.js');
 
 //Login
-routerInstituition.post('/instituition/login', instituitionController.Login);
+routerInstitution.post('/institution/login', institutionController.Login);
 
 //Deletar instituição
-routerInstituition.delete('/instituition/:id', instituitionController.Delete);
+routerInstitution.delete('/institution/:id', institutionController.Delete);
 
 //Adicionar professor
-routerInstituition.post('/instituition/:id/professores', instituitionController.addTeacher);
+routerInstitution.post('/institution/:id/professores', institutionController.addTeacher);
 
 //Ver dossiês da instituição
-routerInstituition.get('/instituition/:id/dossies', instituitionController.ReadDossier);
+routerInstitution.get('/institution/:id/dossies', institutionController.ReadDossier);
 
 //Ver perfil da instituição
-routerInstituition.get('/instituition/:id', instituitionController.Profile);
+routerInstitution.get('/institution/:id', institutionController.Profile);
 
-module.exports = routerInstituition;
+module.exports = routerInstitution;
