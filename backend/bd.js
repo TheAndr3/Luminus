@@ -1,70 +1,67 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { Sequelize, DataTypes } = require('sequelize');
+const {Pool} = require('pg');
 
-const app = express();
-const port = 3000;
-
-app.use(cors());
-app.use(bodyParser.json());
-
-
-// Conexão com PostgreSQL usando variáveis do .env
-const sequelize = new Sequelize(
-    test_db.env.DB_NAME,
-    test_db.env.DB_USER,
-    test_db.env.DB_PASS, {
-        host: test_db.env.DB_HOST,
-        dialect: 'postgres',
+async function connect() {
+    if (global.connection) {
+        return global.connection.connect();
     }
-);
 
-// Testar conexão
-sequelize.authenticate()
-    .then(() => console.log('Conectado ao PostgreSQL!'))
-    .catch(err => console.error('Erro de conexão:', err));
+    const pool = Pool({connectionString:process.env.CONNECTION_STRING});
+
+    const client = await pool.connect();
+    const res = await client.query('SELECT NOW()');
+    console.log(res.rows[0]);
+
+    client.release();
+
+    global.connection = pool;
+    return pool.connect();
+}
+
+async function pgSelect(table, data) {
+
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolder = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+
+    const sqlString = `SELECT * FROM ${table} WHERE ${placeHolder};`
+
+    const client = await connect();
+    const res = await client.query(sqlString, values);
+    return res.rows;
+
+}
 
 
-// Modelo User
-const User = sequelize.define('User', {
-    name: { type: DataTypes.STRING, allowNull: false },
-    email: { type: DataTypes.STRING, allowNull: false }
-});
+async function pgInsert(table, data) {
 
-// Sincronizar com o banco
-sequelize.sync();
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolder = keys.map((_,i) => `$${i+1}`).join(', ');
+    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES(${placeHolder})`;
 
-// Rotas CRUD
-app.get('/users', async(req, res) => {
-    const users = await User.findAll();
-    res.json(users);
-});
 
-app.post('/users', async(req, res) => {
-    const { name, email } = req.body;
-    const newUser = await User.create({ name, email });
-    res.json(newUser);
-});
+    const client = await connect();
+    return await client.query(query, values);
+}
 
-app.put('/users/:id', async(req, res) => {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-    const { name, email } = req.body;
-    user.name = name;
-    user.email = email;
-    await user.save();
-    res.json(user);
-});
+async function pgDelete(table, data) {
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolder = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+    const query = `DELETE FROM ${table} WHERE ${placeHolder}`;
 
-app.delete('/users/:id', async(req, res) => {
-    const user = await User.findByPk(req.params.id);
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-    await user.destroy();
-    res.json({ message: 'Usuário removido com sucesso' });
-});
+    const client = await connect();
+    return await client.query(query, values);
+}
 
-// Start server
-app.listen(port, () => {
-    console.log(`Servidor está em http://localhost:${port}`);
-});
+async function pgUpdate(table, data, keys) {
+    const keysNewObject = Object.keys(data);
+    const values = Object.values(data);
+    const placeHolderToWhere = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+    const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1}`).join(', ');
+    const query = `DELETE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
+
+    const client = await connect();
+    return await client.query(query, values);
+}
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate}

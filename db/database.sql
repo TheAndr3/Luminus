@@ -99,7 +99,7 @@ create table InstitutionalDossier(
 	name VARCHAR(255) UNIQUE NOT NULL,
 	evaluation_method VARCHAR(50),
 
-	FOREIGN KEY(instituition_id) REFERENCES Institution(is),
+	FOREIGN KEY(instituition_id) REFERENCES Institution(id),
 	PRIMARY KEY(id, instituition_id)
 );
 
@@ -147,5 +147,5 @@ create table VerifyCode(
 	status INT,
 
 	CONSTRAINT fk_VerifyCode_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id),
-	PRIMARY KEY(code, professor_id, data_sol),
+	PRIMARY KEY(code, professor_id, data_sol)
 );
