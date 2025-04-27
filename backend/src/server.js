@@ -3,7 +3,6 @@ require('dotenv').config();
 const bd = require('../bd.js');
 
 const PORT = process.env.PORT;
-const pool = bd.connect();
 
 app.listen(PORT, ()=>{
     console.log(`Server running on port ${PORT}`);
