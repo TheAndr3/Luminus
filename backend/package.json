@@ -17,6 +17,7 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

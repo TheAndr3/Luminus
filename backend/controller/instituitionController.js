@@ -1,23 +1,23 @@
 //Controller de instituicao
 
-exports.login = (req, res) => {
+exports.Login = (req, res) => {
   res.status(200).send('Rota para instituicao fazer login');
 }
 
-exports.deletar = (req, res) => {
+exports.Delete = (req, res) => {
   const id = req.params.id;
   res.status(204).send();
 }
 
-exports.adicionarProfessor = (req, res) => {
+exports.addTeacher = (req, res) => {
   res.status(201).send('Rota para adicionar professor');
 }
 
-exports.verDossies = (req, res) => {
+exports.ReadDossier = (req, res) => {
   res.status(200).send('Rota para ver dossies da instituicao');
 }
 
-exports.perfil = (req, res) => {
+exports.Profile = (req, res) => {
   const id = req.params.id;
   res.status(200).send(`Perfil da instituição ${id}`);
 }
