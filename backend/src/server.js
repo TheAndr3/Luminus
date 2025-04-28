@@ -1,6 +1,6 @@
 const app = require('./app.js');
 require('dotenv').config();
-const bd = require('../bd.js')
+const bd = require('../bd.js');
 
 const PORT = process.env.PORT;
 
