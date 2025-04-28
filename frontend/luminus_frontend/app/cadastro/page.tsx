@@ -193,6 +193,7 @@ export default function CadastroPage() {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         {/* Formulário de Cadastro */}
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           {/* Campos do formulário utilizando os componentes de input especializados */}
@@ -204,6 +205,13 @@ export default function CadastroPage() {
           <InputForm
             type="text"
 >>>>>>> 5892938 (InputForm.tsx criado e documentado)
+=======
+        {/* Formulário de Cadastro */}
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+          {/* Campos do formulário utilizando os componentes de input especializados */}
+
+          <TextInput
+>>>>>>> a505ac7 (Components de Input Feitos e testados numa page)
             label="Usuário:"
             placeholder="Nome"
             value={formData.username}
@@ -211,6 +219,7 @@ export default function CadastroPage() {
             required
             error={formErrors.username}
             disabled={isLoading}
+<<<<<<< HEAD
 <<<<<<< HEAD
             containerClassName="mb-2" // Adiciona margem inferior ao container do input
             name="username"
@@ -307,11 +316,14 @@ export default function CadastroPage() {
         <form onSubmit={handleSubmit} className={styles.form}>
 =======
             className="mb-2" // Espaçamento entre campos
+=======
+            containerClassName="mb-2" // Adiciona margem inferior ao container do input
+            name="username"
+>>>>>>> a505ac7 (Components de Input Feitos e testados numa page)
           />
 >>>>>>> 5892938 (InputForm.tsx criado e documentado)
 
-          <InputForm
-            type="email"
+          <EmailInput
             label="Email:"
             placeholder="Email"
             value={formData.email}
@@ -319,36 +331,37 @@ export default function CadastroPage() {
             required
             error={formErrors.email}
             disabled={isLoading}
-            className="mb-2" // Espaçamento entre campos
+            containerClassName="mb-2"
+            name="email"
           />
 
-          <InputForm
-            type="tel"
+          <PhoneInput
             label="Número de contato:"
-            placeholder="(XX) XXXXX-XXXX"
-            value={formData.contactNumber}
-            onChange={handleChange('contactNumber')}
+            // Placeholder padrão do PhoneInput é usado, mas pode ser sobrescrito
+            value={formData.contactNumber} // Passa o valor formatado
+            onChange={handleChange('contactNumber')} // Recebe o valor formatado
             required
             error={formErrors.contactNumber}
             disabled={isLoading}
-            className="mb-2" // Espaçamento entre campos
+            containerClassName="mb-2"
+            name="contactNumber"
           />
 
-          <InputForm
-            type="password"
+          <PasswordInput
             label="Senha:"
             placeholder="Mínimo 8 caracteres"
             value={formData.password}
             onChange={handleChange('password')}
             required
-            minLength={8}
+            minLength={8} // Validação HTML básica (complementa a do JS)
             error={formErrors.password}
             disabled={isLoading}
-            className="mb-2" // Espaçamento entre campos
+            containerClassName="mb-2"
+            name="password"
+            // Props opcionais para customizar o PasswordInput podem ser adicionadas aqui
           />
 
-          <InputForm
-            type="password"
+          <PasswordInput
             label="Confirme a senha:"
             placeholder="Digite novamente sua senha"
             value={formData.confirmPassword}
@@ -357,32 +370,33 @@ export default function CadastroPage() {
             minLength={8}
             error={formErrors.confirmPassword}
             disabled={isLoading}
-            className="mb-2" // Espaçamento entre campos
+            containerClassName="mb-2"
+            name="confirmPassword"
           />
 
-          {/* Botão de Submissão */}
+          {/* Botão de Submissão do Formulário */}
           <button
             type="submit"
-            className={`${styles.submitButton} mt-3`} // Margem acima do botão
-            disabled={isLoading}
+            className={`${styles.submitButton} mt-3`} // Estilos do botão e margem superior
+            disabled={isLoading} // Desabilita durante o envio
           >
-            {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+            {isLoading ? 'Cadastrando...' : 'Cadastrar'} {/* Texto dinâmico */}
           </button>
         </form>
 
-        {/* Link para Login */}
+        {/* Link para a página de Login */}
         <p className={styles.loginLink}>
           Já possui uma conta?{' '}
-          {/* CORREÇÃO APLICADA: Link sem legacyBehavior e sem <a> interno */}
           <Link href="/login">
             Entrar
           </Link>
         </p>
       </div>
 
-      {/* Painel Direito */}
+      {/* Painel Direito: Contém logo secundário e espaço para conteúdo visual (ex: carrossel) */}
        <div className={styles.rightPanel}>
          <div className={styles.NexusLogoContainer}>
+            {/* Logo secundário */}
            <Image
              src="/logo-Nexus.svg"
              alt="Nexus Logo"
@@ -390,6 +404,7 @@ export default function CadastroPage() {
              height={40}
            />
          </div>
+         {/* Placeholder para um futuro carrossel ou imagem */}
          <div className={styles.carouselPlaceholder}>
            <h2>Crie, gerencie e obtenha dados de suas turmas.</h2>
            <p>(Aqui entrará o carrossel de imagens)</p>
