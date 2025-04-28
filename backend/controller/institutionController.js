@@ -1,8 +1,9 @@
 //Controller de instituicao
 
-exports.Cadastro = async (req, res) =>{
+exports.Create = async (req, res) =>{
   res.status(201).send('Cadastro de instuição');
 }
+
 exports.Login = (req, res) => {
   res.status(200).send('Rota para instituicao fazer login');
 }
