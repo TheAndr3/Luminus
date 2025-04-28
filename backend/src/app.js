@@ -21,6 +21,7 @@ const routerTeacher = require('../routes/teacher.js');
 const routerNotification = require('../routes/notification.js');
 
 app.use(cors());
+app.use(express.json()); 
 app.use(routerTeacher);
 app.use(routerDossie);
 app.use(routerTurmas);

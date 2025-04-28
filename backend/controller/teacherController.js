@@ -16,13 +16,27 @@ exports.Login = (req, res) => {
 }
 
 exports.Create = async (req, res) => {
-    const {email, login, password, name} = req.body;
+    const {email, password, name} = req.body;
 
     //desencriptar senha 
     const decryptedPassword = await decryptPassword(password);
 
     //fazer hash de senha
     const hashedPassword = await hashPassword(decryptedPassword);
+
+    //cadastrar
+    try {
+        
+        
+        if(email)
+        await db.pgInsert('Professor', {email, hashedPassword, name});
+        console.log(`Cadastro realizado para ${email}`);
+        res.status(201).json({message:'Usuário criado com sucesso!'})
+    } catch (err) {
+        return res.status(400).json({ error: 'Email já cadastrado!' });
+        
+    }
+    
 }
 
 exports.GetProfile = (req, res) => {
