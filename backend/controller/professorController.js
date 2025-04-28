@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 const PUBLIC_KEY = process.env.PUBLIC_KEY.replace(/\\n/g, '\n');
 
 //enviar chave publica para criptografia no frontend
-exports.GetPublicKey = (req, res) => {
+exports.GetPublicKey = async (req, res) => {
     res.status(200).send('Solicitar chave pública');
 }
 
