@@ -23,6 +23,7 @@
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
     "html-pdf": "^3.0.1",
+    "nodemailer": "^6.10.1",
     "pg": "^8.15.6"
   },
   "devDependencies": {
