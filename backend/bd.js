@@ -5,7 +5,13 @@ async function connect() {
         return global.connection.connect();
     }
 
-    const pool = Pool({connectionString:process.env.CONNECTION_STRING});
+    const pool = new Pool({
+        host: process.env.CONNECTION_STRING,
+        user:process.env.DB_USER,
+        password:process.env.DB_PASS,
+        database: process.env.DB_DATABASE,
+        port: process.env.DB_PORT
+    });
 
     const client = await pool.connect();
     const res = await client.query('SELECT NOW()');
@@ -23,7 +29,13 @@ async function pgSelect(table, data) {
     const values = Object.values(data);
     const placeHolder = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
 
-    const sqlString = `SELECT * FROM ${table} WHERE ${placeHolder};`
+    var sqlString = ''
+
+    if (Object.keys(data).length == 0) {
+        sqlString = `SELECT * FROM ${table};`
+    } else {
+        sqlString = `SELECT * FROM ${table} WHERE ${placeHolder};`
+    }
 
     const client = await connect();
     const res = await client.query(sqlString, values);
