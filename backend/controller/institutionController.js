@@ -26,7 +26,7 @@ exports.Login = async (req, res) => {
       const institution = rows[0];
 
       // Comparar a senha desencriptada com o hash salvo
-      const passwordMatch = await bcrypt.compare(decryptedPassword, institution.senha);
+      const passwordMatch = await bcrypt.compare(decryptedPassword, institution.password);
 
       if (!passwordMatch) {
           return res.status(401).send('Senha incorreta');
