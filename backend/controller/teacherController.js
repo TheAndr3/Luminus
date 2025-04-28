@@ -1,8 +1,6 @@
 //Controller do professor
 const db = require('../bd.js');
-const crypto = require('crypto');
 const {hashPassword, decryptPassword} = require('./passwordManagement.js');
-const { decrypt } = require('dotenv');
 require('dotenv').config();
 
 //Chave Publica
@@ -19,11 +17,14 @@ exports.Login = (req, res) => {
 
 exports.Create = async (req, res) => {
     const {email, login, password, name} = req.body;
+
     //desencriptar senha 
     const decryptedPassword = await decryptPassword(password);
 
     //fazer hash de senha
     const hashedPassword = await hashPassword(decryptedPassword);
+
+    
 }
 
 exports.GetProfile = (req, res) => {
