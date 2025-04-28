@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * @file LoginPage.tsx (ou page.tsx dentro de /login)
  * @description Página de Login de usuário.
@@ -244,4 +245,15 @@ export default function LoginPage() {
 
     </div>
   );
+=======
+'use client';
+
+import React, { useState } from "react";
+import Image from 'next/image';       
+import Link from 'next/link';        
+import styles from './cadastro.module.css'; //Tenho que mudar para Login.module.css
+
+export default function LoginPage() {
+	
+>>>>>>> 5892938 (InputForm.tsx criado e documentado)
 }

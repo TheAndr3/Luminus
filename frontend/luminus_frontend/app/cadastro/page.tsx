@@ -192,11 +192,18 @@ export default function CadastroPage() {
         <h1 className={styles.title}>CADASTRO</h1>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         {/* Formulário de Cadastro */}
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           {/* Campos do formulário utilizando os componentes de input especializados */}
 
           <TextInput
+=======
+        {/* Formulário */}
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+          <InputForm
+            type="text"
+>>>>>>> 5892938 (InputForm.tsx criado e documentado)
             label="Usuário:"
             placeholder="Nome"
             value={formData.username}
@@ -204,6 +211,7 @@ export default function CadastroPage() {
             required
             error={formErrors.username}
             disabled={isLoading}
+<<<<<<< HEAD
             containerClassName="mb-2" // Adiciona margem inferior ao container do input
             name="username"
           />
@@ -297,103 +305,102 @@ export default function CadastroPage() {
        </div>
 =======
         <form onSubmit={handleSubmit} className={styles.form}>
+=======
+            className="mb-2" // Espaçamento entre campos
+          />
+>>>>>>> 5892938 (InputForm.tsx criado e documentado)
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="username">Usuário:</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Nome" 
-              required // Campo obrigatório
-              disabled={isLoading} // Desabilita durante o envio
-            />
-          </div>
+          <InputForm
+            type="email"
+            label="Email:"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange('email')}
+            required
+            error={formErrors.email}
+            disabled={isLoading}
+            className="mb-2" // Espaçamento entre campos
+          />
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              disabled={isLoading}
-            />
-          </div>
+          <InputForm
+            type="tel"
+            label="Número de contato:"
+            placeholder="(XX) XXXXX-XXXX"
+            value={formData.contactNumber}
+            onChange={handleChange('contactNumber')}
+            required
+            error={formErrors.contactNumber}
+            disabled={isLoading}
+            className="mb-2" // Espaçamento entre campos
+          />
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="contactNumber">Número de contato</label>
-            <input
-              type="tel" // Tipo apropriado para telefone
-              id="contactNumber"
-              value={contactNumber}
-              onChange={(e) => setContactNumber(e.target.value)}
-              placeholder="(XX) X XXXX - XXXX" // Formato como dica
-              required
-              disabled={isLoading}
-            />
-          </div>
+          <InputForm
+            type="password"
+            label="Senha:"
+            placeholder="Mínimo 8 caracteres"
+            value={formData.password}
+            onChange={handleChange('password')}
+            required
+            minLength={8}
+            error={formErrors.password}
+            disabled={isLoading}
+            className="mb-2" // Espaçamento entre campos
+          />
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="password">Senha</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Senha"
-              required
-              minLength={8} 
-              disabled={isLoading}
-            />
-          </div>
+          <InputForm
+            type="password"
+            label="Confirme a senha:"
+            placeholder="Digite novamente sua senha"
+            value={formData.confirmPassword}
+            onChange={handleChange('confirmPassword')}
+            required
+            minLength={8}
+            error={formErrors.confirmPassword}
+            disabled={isLoading}
+            className="mb-2" // Espaçamento entre campos
+          />
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="confirmPassword">Confirme a senha</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmar Senha"
-              required
-              minLength={8}
-              disabled={isLoading}
-            />
-          </div>
-
-          <button type="submit" className={styles.submitButton} disabled={isLoading}>
+          {/* Botão de Submissão */}
+          <button
+            type="submit"
+            className={`${styles.submitButton} mt-3`} // Margem acima do botão
+            disabled={isLoading}
+          >
             {isLoading ? 'Cadastrando...' : 'Cadastrar'}
           </button>
         </form>
 
+        {/* Link para Login */}
         <p className={styles.loginLink}>
           Já possui uma conta?{' '}
-          <Link href="/login">Entrar</Link> {/* Link para a página de login, depois a gente ajeita Pedro */}
+          {/* CORREÇÃO APLICADA: Link sem legacyBehavior e sem <a> interno */}
+          <Link href="/login">
+            Entrar
+          </Link>
         </p>
       </div>
 
-      {/*Carrossel Placeholder*/}
-      <div className={styles.rightPanel}>
+      {/* Painel Direito */}
+       <div className={styles.rightPanel}>
          <div className={styles.NexusLogoContainer}>
-             <Image
-                src="/logo-Nexus.svg" 
-                alt="Nexus Logo"
-                width={150}
-                height={40}
-             />
+           <Image
+             src="/logo-Nexus.svg"
+             alt="Nexus Logo"
+             width={150}
+             height={40}
+           />
          </div>
-
          <div className={styles.carouselPlaceholder}>
-            <h2>Crie, gerencie e obtenha dados de suas turmas.</h2>
-            <p>(Aqui entrará o carrossel de imagens)</p>
+           <h2>Crie, gerencie e obtenha dados de suas turmas.</h2>
+           <p>(Aqui entrará o carrossel de imagens)</p>
          </div>
+<<<<<<< HEAD
       </div>
 
 >>>>>>> 1f7abd1 (Cadastro UI)
+=======
+       </div>
+>>>>>>> 5892938 (InputForm.tsx criado e documentado)
     </div>
   );
 }
