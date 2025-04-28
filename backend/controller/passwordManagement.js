@@ -10,16 +10,10 @@ async function hashPassword(password) {
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log(hashedPassword);
         return hashedPassword;
+        
     } catch (err) {
         console.error('Erro ao criar hash');
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    
->>>>>>> 0d8bfd4 (Modificações de ptbr para ingles, desencriptacao e hash feitos)
-=======
->>>>>>> 8b17507 (ajustes)
 }
 
 async function decryptPassword(password) {
@@ -35,13 +29,6 @@ async function decryptPassword(password) {
     } catch (err) {
         console.error('Erro ao criar hash');
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 0d8bfd4 (Modificações de ptbr para ingles, desencriptacao e hash feitos)
-=======
->>>>>>> 8b17507 (ajustes)
 }
 
 module.exports = {
