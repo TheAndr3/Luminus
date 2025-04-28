@@ -23,8 +23,6 @@ exports.Create = async (req, res) => {
 
     //fazer hash de senha
     const hashedPassword = await hashPassword(decryptedPassword);
-
-    
 }
 
 exports.GetProfile = (req, res) => {
