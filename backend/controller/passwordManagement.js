@@ -13,6 +13,10 @@ async function hashPassword(password) {
     } catch (err) {
         console.error('Erro ao criar hash');
     }
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 0d8bfd4 (Modificações de ptbr para ingles, desencriptacao e hash feitos)
 }
 
 async function decryptPassword(password) {
@@ -28,6 +32,10 @@ async function decryptPassword(password) {
     } catch (err) {
         console.error('Erro ao criar hash');
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0d8bfd4 (Modificações de ptbr para ingles, desencriptacao e hash feitos)
 }
 
 module.exports = {
