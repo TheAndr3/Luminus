@@ -8,7 +8,7 @@ const bcrypt = require('bcrypt');
 const PUBLIC_KEY = process.env.PUBLIC_KEY.replace(/\\n/g, '\n');
 
 //enviar chave publica para criptografia no frontend
-exports.GetPublicKey = (req, res) => {
+exports.GetPublicKey = async (req, res) => {
     res.status(200).send('Solicitar chave pública');
 }
 
@@ -72,18 +72,18 @@ exports.Create = async (req, res) => {
     try {
         const verification = await db.pgSelect('Professor', {professor_email:email});
 
-        if (verification.lenght === 0){
+        if (verification.length === 0){
             await db.pgInsert('Professor', {
-                email, 
-                hashedPassword, 
-                name
+                professor_email: email, 
+                password: hashedPassword, 
+                name: name
             });
             res.status(201).json({message:'Usuário criado com sucesso!'});
         }else{
             res.status(409).json({message:'Esse e-mail já possui um cadastro'});
         }
     } catch (err) {
-        return res.status(400).json({ error: `${err}`});
+        return res.status(400).json({ error: err.message});
     }
 }
 

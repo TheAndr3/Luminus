@@ -5,6 +5,10 @@ const bcrypt = require('bcrypt');
 const {hashPassword, decryptPassword} = require('./passwordManagement.js');
 const { decrypt } = require('dotenv');
 
+exports.Create = async (req, res) =>{
+  res.status(201).send('Cadastro de instuição');
+}
+
 exports.Login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -49,20 +53,20 @@ exports.Login = async (req, res) => {
   }
 };
 
-exports.Delete = (req, res) => {
+exports.Delete = async (req, res) => {
   const id = req.params.id;
   res.status(204).send();
 }
 
-exports.addTeacher = (req, res) => {
+exports.addTeacher = async (req, res) => {
   res.status(201).send('Rota para adicionar professor');
 }
 
-exports.ReadDossier = (req, res) => {
+exports.ReadDossier = async (req, res) => {
   res.status(200).send('Rota para ver dossies da instituicao');
 }
 
-exports.Profile = (req, res) => {
+exports.Profile = async (req, res) => {
   const id = req.params.id;
   res.status(200).send(`Perfil da instituição ${id}`);
 }
