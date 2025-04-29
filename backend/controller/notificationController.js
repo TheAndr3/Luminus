@@ -1,21 +1,21 @@
 // NotificacaoController.js
 
-exports.Listar = (req, res) =>{
+exports.Listar = async (req, res) =>{
     res.status(200).send('Rota para listar notificações');
 }
 
-exports.Enviar = (req, res) =>{
+exports.Enviar = async (req, res) =>{
     res.status(201).send('Rota para enviar notificação');
 }
 
-exports.Aceitar = (req, res) =>{
+exports.Aceitar = async (req, res) =>{
     res.status(201).send('Rota para aceitar solicitação');
 }
 
-exports.Rejeitar = (req, res) =>{
+exports.Rejeitar = async (req, res) =>{
     res.status(201).send('Rota para rejeitar solicitação');
 }
 
-exports.Deletar = (req, res) =>{
+exports.Deletar = async (req, res) =>{
     res.status(204).send();
 }
