@@ -1,6 +1,3 @@
-
 /backend/node_modules
 /frontend/luminus_frontend/node_modules
 /backend/.env*
-*.pem/backend/keys/*.pem
-*.pem

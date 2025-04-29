@@ -1,24 +1,24 @@
 //Controller de dossie
 
-exports.criar = (req, res) => {
+exports.Create = async (req, res) => {
   res.status(201).send('Rota para criar dossiê');
 }
 
-exports.listar = (req, res) => {
+exports.List = async(req, res) => {
   res.status(200).send('Rota para listar dossiês');
 }
 
-exports.obter = (req, res) => {
+exports.Get = async (req, res) => {
   const id = req.params.id;
   res.status(200).send(`Rota para obter o dossiê ${id}`);
 }
 
-exports.editar = (req, res) => {
+exports.Update = async (req, res) => {
   const id = req.params.id;
   res.status(200).send(`Rota para atualizar o dossiê ${id}`);
 }
 
-exports.deletar = (req, res) => {
+exports.Delete = async (req, res) => {
   const id = req.params.id;
   res.status(204).send();
 }
