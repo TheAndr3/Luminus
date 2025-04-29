@@ -2,17 +2,14 @@ const express = require('express');
 const routerProfessor = express.Router();
 const professorController = require('../controller/professorController.js');
 
-//Solicitar chave publica
-routerProfessor.get('/professor/get/public-key', professorController.GetPublicKey);  
-
 //Enviar chave Publica
-routerProfessor.post('/professor/post/public-key', professorController.SendPublicKey);  
-
-//Login
-routerProfessor.post('/professor/login', professorController.Login);
+routerProfessor.get('/professor/public-key', professorController.GetPublicKey);  
 
 //Cadastro
 routerProfessor.post('/professor', professorController.Create);
+
+//Login
+routerProfessor.post('/professor/login', professorController.Login);
 
 //Perfil
 routerProfessor.get('/professor/:id', professorController.GetProfile);
