@@ -26,7 +26,7 @@ export default function OtpFunction(){
 
 
     //Função para não deixar entrar letras, apenas números
-    function handleChange(element, index){
+    function handleChange(element:any, index:any){
         if(isNaN(element.target.value)) return false;
         
         setOtp([...otp.map((data, indx) => (indx === index? element.target.value:data))])
@@ -40,12 +40,12 @@ export default function OtpFunction(){
 
 
     //Função para mandar o codigo para api e tratar se passa pra proxima pagina ou não
-    async function provisoryFunction() {
+    async function codeToAPI() {
         const otpConected = otp.join("");
         
         try {
             //abaixo é apenas teste retirar
-            router.push("/enterNewPassword")
+            router.push("/recorverPassword/enterNewPassword")
             alert("Código correto!"+otpConected);
             //teste termina aq
 
@@ -53,7 +53,7 @@ export default function OtpFunction(){
 
             if (response.status >= 200 && response.status < 300) {
                 if (response.data.valid) { 
-                    router.push("/enterNewPassword");
+                    router.push("/recorverPassword/enterNewPassword");
                 } else {
                     alert("Código incorreto ou expirado!");
                 }
@@ -64,9 +64,9 @@ export default function OtpFunction(){
         catch(err) {
         }
     }
-
+    //função para fazer voltar a tela de inserção de email 
     function backToEnterEmail(){
-        router.push("/enterEmail");
+        router.push("/recorverPassword/enterEmail");
     }
 
     return(
@@ -80,7 +80,7 @@ export default function OtpFunction(){
                 </div>
                 <div className={styleOtp.buttonContainer}>
                     <button className={style.buttonBack} onClick={backToEnterEmail}> Voltar</button>
-                    <button className={style.buttonGo} onClick={provisoryFunction} disabled={!otpCompleted}> Confirmar</button>
+                    <button className={style.buttonGo} onClick={codeToAPI} disabled={!otpCompleted}> Confirmar</button>
                 </div>
             
             </div>

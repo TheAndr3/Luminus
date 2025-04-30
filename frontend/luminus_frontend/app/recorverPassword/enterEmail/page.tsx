@@ -11,19 +11,18 @@ import {redirect} from 'next/navigation';
 
 export default function enterEmail(){
 
+    //função para mandar email para API 
     async function emailtoAPI(formData: FormData){
         "use server"
-
         const email = formData.get("email");
-
+        //try para enviar para api
         try{    
-            
             await api.post("/",{ email}) // maike vai dizer qual o caminho da api
         }catch(err){
 
         }
-
-        redirect("../recoveryCode");
+        //redireciona para a pagina de inserção de codigo
+        redirect("/recorverPassword/recoveryCode");
 
     }
 
