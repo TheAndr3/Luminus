@@ -14,15 +14,40 @@ export default function enterEmail(){
     //função para mandar email para API 
     async function emailtoAPI(formData: FormData){
         "use server"
-        const email = formData.get("email");
+        const email = formData.get("email")?.toString();
+
+
+
+        //teste
+        redirect(`/recorverPassword/recoveryCode?email=${encodeURIComponent(email!)}`);
+        //teste termina aqui
+
+
+
         //try para enviar para api
         try{    
-            await api.post("/",{ email}) // maike vai dizer qual o caminho da api
+            //envia o email pra api
+
+            //duvida nesse post ai, no de mikey tá get, n entendi muito bem 
+            const response = await api.post("/professor/send-email/:id",{id: email}) 
+        
+            if(response.status >= 200 && response.status < 300){
+                if(response.data.valid){
+                    //redireciona para a pagina de inserção de codigo
+                    redirect(`/recorverPassword/recoveryCode?email=${encodeURIComponent(email!)}`);
+                }
+                else{
+                    alert("Não encontramos seu email em nossos registros!");
+                }
+            }
+            else{
+                alert("Erro! API não response");
+            }
+        
         }catch(err){
 
         }
-        //redireciona para a pagina de inserção de codigo
-        redirect("/recorverPassword/recoveryCode");
+        
 
     }
 
@@ -36,9 +61,6 @@ export default function enterEmail(){
 
 
             </div>
-
-
-
 
 
             <div className={style.right_panel}>

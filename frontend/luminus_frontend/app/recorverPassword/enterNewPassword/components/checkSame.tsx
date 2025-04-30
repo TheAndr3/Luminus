@@ -4,12 +4,18 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import style from "@/app/recorverPassword/enterNewPassword/page.module.css";
 import {api} from "@/services/api"
+import { redirect } from "next/navigation";
+
+import { useSearchParams } from "next/navigation";
 
 export default function CheckSame() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isEqual, setIsEqual] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+
+    const searchParams = useSearchParams();
+
 
     // Verifica igualdade em tempo real
     useEffect(() => {
@@ -20,11 +26,35 @@ export default function CheckSame() {
 
     // Função para enviar a senha à API
     const passwordToAPI = async (password: string) => {
+        //usa o searchparams para receber o parametro email da outra pagina
+        const email = searchParams.get('email');
         try {
-            alert('Senha alterada com sucesso!');// colocar depois do endpoint q maike mandar
+
+
+
+            //teste
+            alert('Senha alterada com sucesso!'+email);// colocar depois do endpoint q maike mandar
             setIsLoading(true);
-            await api.post("/", { password }); // Ajustar conforme o que maike mandar
+            //teste termina aqui
+
+
             
+            const response = await api.post("/professor/new-password/:id", {id:email ,senha: password }); 
+            
+            if(response.status >= 200 && response.status < 300){
+                if(response.data.valid){
+                    //redirecionamento para a pagina de login
+                    alert('Senha alterada com sucesso!'+email);// colocar depois do endpoint q maike mandar
+                    setIsLoading(true);
+                    redirect("/")
+                }
+                else{
+                    alert("Erro ao armazenar senha");
+                }
+            }
+
+
+
         } catch (err) {
             console.error('Erro ao enviar a senha:', err);
             alert('Falha ao atualizar a senha. Tente novamente.');

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import styleOtp from "@/app/recorverPassword/recoveryCode/components/otp.module.css"
 import style from "@/app/recorverPassword/recoveryCode/page.module.css"
 
-import { useRouter} from "next/navigation";
+import { useRouter, useSearchParams} from "next/navigation";
 
 import {api} from "@/services/api";
 
@@ -15,6 +15,8 @@ export default function OtpFunction(){
     const [otp, setOtp] =  useState(new Array(4).fill(""));
     const [otpCompleted, setotpCompleted] = useState(otp.length === 4);
     const router = useRouter();
+
+    const searchParams = useSearchParams();
 
     //verifica se os campos estão preenchidos com todos os numeros, se não o botao de confirmar ficará bloqueado
     useEffect(()=>{
@@ -42,18 +44,26 @@ export default function OtpFunction(){
     //Função para mandar o codigo para api e tratar se passa pra proxima pagina ou não
     async function codeToAPI() {
         const otpConected = otp.join("");
+        const email = searchParams.get('email')
         
         try {
-            //abaixo é apenas teste retirar
-            router.push("/recorverPassword/enterNewPassword")
+
+
+
+            //teste
+
+            router.push(`/recorverPassword/enterNewPassword?email=${email}`)
             alert("Código correto!"+otpConected);
             //teste termina aq
 
-            const response = await api.post("/", { codigo: otpConected }); 
+
+
+
+            const response = await api.post("/professor/recorver-password/:id", {id:email, codigo: otpConected }); 
 
             if (response.status >= 200 && response.status < 300) {
                 if (response.data.valid) { 
-                    router.push("/recorverPassword/enterNewPassword");
+                    router.push(`/recorverPassword/enterNewPassword?email=${email}`);
                 } else {
                     alert("Código incorreto ou expirado!");
                 }
