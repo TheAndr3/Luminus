@@ -15,7 +15,7 @@ async function hashPassword(password) {
     }
 }
 
-async function decryptPassword(password) {
+async function decryptPassword(password) {  
     try {
         const decryptedPassword = crypto.privateDecrypt({
             key: PRIVATE_KEY,
@@ -25,11 +25,11 @@ async function decryptPassword(password) {
         ).toString('utf-8');
         return decryptedPassword;
     } catch (err) {
-        console.error('Erro ao criar hash:', err);
+        console.error('Erro ao criar desencriptar:', err);
     }
 }
 
 module.exports = {
     hashPassword,
     decryptPassword
-}
+}   

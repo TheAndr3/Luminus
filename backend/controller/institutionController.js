@@ -81,11 +81,11 @@ exports.Delete = async (req, res) => {
   res.status(204).send();
 }
 
-exports.addTeacher = async (req, res) => {
+exports.AddProfessor = async (req, res) => {
   res.status(201).send('Rota para adicionar professor');
 }
 
-exports.ReadDossier = async (req, res) => {
+exports.GetDossier = async (req, res) => {
   res.status(200).send('Rota para ver dossies da instituicao');
 }
 
