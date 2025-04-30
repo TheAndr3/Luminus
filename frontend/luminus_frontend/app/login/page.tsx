@@ -1,6 +1,6 @@
 /**
  * @file LoginPage.tsx (ou page.tsx dentro de /login)
- * @description Página de Login de usuário.
+ * @description Página de Login de usuário com Carousel no painel esquerdo.
  */
 'use client';
 
@@ -11,23 +11,25 @@ import styles from './login.module.css'; // Estilos gerais da página/layout
 
 // --- Importações de Componentes ---
 import { EmailInput } from '@/components/inputs/EmailInput';
-import { PasswordInput } from '@/components/inputs/PasswordInput'; // Ensure path is correct
+import { PasswordInput } from '@/components/inputs/PasswordInput';
 import { Checkbox } from '@/components/checkboxs/Checkbox';
 import { ErrorContainer } from '@/components/errors/ErrorContainer';
+// --- ADICIONADO: Importar o Carousel ---
+import Carousel from '@/components/carousel/Carousel';
 
 // --- Tipos ---
 type FormErrors = {
   email?: string | null;
-  password?: string | null; // For errors coming from submit (e.g., 'required')
-  general?: string | null;  // For non-field-specific errors
+  password?: string | null;
+  general?: string | null;
 };
 
 /**
  * @component LoginPage
- * @description Componente funcional que renderiza a página de login.
+ * @description Componente funcional que renderiza a página de login com carousel.
  */
 export default function LoginPage() {
-  // --- Estados ---
+  // --- Estados (sem alterações) ---
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,104 +37,127 @@ export default function LoginPage() {
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  // --- NOVO ESTADO: Rastreia se o usuário tentou submeter ---
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // --- Validação ---
+  // --- Validação (sem alterações) ---
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // --- Handlers ---
+  // --- ADICIONADO: Definição dos Slides para o Carousel ---
+  // Ajuste os `src` e `alt` conforme necessário para a página de login
+  const loginSlides = [
+    <Image
+      key="login-slide-1"
+      src="/carroselAlunos.png" // Exemplo: reutilizando slide
+      alt="Bem-vindo de volta - Gerencie seus alunos"
+      layout="fill"
+      objectFit="cover"
+      priority // Primeira imagem
+    />,
+    <Image
+      key="login-slide-2"
+      src="/carroselGerencie.png" // Exemplo: reutilizando slide
+      alt="Organize suas turmas e avaliações"
+      layout="fill"
+      objectFit="cover"
+    />,
+    <Image
+      key="login-slide-3"
+      src="/carroselAvaliação.png" // Exemplo: reutilizando slide
+      alt="Acesse dados e insights rapidamente"
+      layout="fill"
+      objectFit="cover"
+    />,
+  ];
+
+
+  // --- Handlers (sem alterações) ---
   const handleChange = (field: 'email' | 'password') =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
       setFormData(prevData => ({ ...prevData, [field]: value }));
-
-      // --- LÓGICA DE LIMPEZA DE ERRO ATUALIZADA ---
-      // Limpa o erro específico do campo sendo editado E o erro geral.
-      // NÃO limpa o erro do *outro* campo.
       setFormErrors(prevErrors => {
           const updatedErrors: FormErrors = { ...prevErrors, general: null };
-          if (field === 'email') {
-              updatedErrors.email = null;
-          } else if (field === 'password') {
-              updatedErrors.password = null;
-          }
+          if (field === 'email') updatedErrors.email = null;
+          else if (field === 'password') updatedErrors.password = null;
           return updatedErrors;
       });
-      // Não resetamos hasAttemptedSubmit aqui. Ele só é resetado em um submit bem-sucedido (ou outra ação de reset).
     };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prevData => ({ ...prevData, rememberMe: e.target.checked }));
   };
 
-  // --- Submissão com Flag de Tentativa ---
+  // --- Submissão (sem alterações) ---
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormErrors({}); // Limpa erros anteriores antes de validar
-    // --- MARCA QUE A SUBMISSÃO FOI TENTADA ---
+    setFormErrors({});
     setHasAttemptedSubmit(true);
     setIsLoading(true);
 
-    // --- Validação de Frontend Obrigatória ---
     const errors: FormErrors = {};
-    if (!formData.email.trim()) {
-      errors.email = 'Email é obrigatório.';
-    } else if (!validateEmail(formData.email)) {
-      errors.email = 'Formato de email inválido.';
-    }
+    if (!formData.email.trim()) errors.email = 'Email é obrigatório.';
+    else if (!validateEmail(formData.email)) errors.email = 'Formato de email inválido.';
+    if (!formData.password) errors.password = 'Senha é obrigatória.';
 
-    // --- Validação de Senha Obrigatória (no submit) ---
-    // Esta validação AINDA é útil aqui para definir o erro inicial
-    // que será passado para o PasswordInput como 'error' (externalError).
-    if (!formData.password) {
-      errors.password = 'Senha é obrigatória.'; // Usamos a mensagem padrão aqui
-                                                  // ou a 'requiredMessage' do PasswordInput se quisermos consistência
-                                                  // Mas como 'PasswordInput' prioriza 'externalError', esta mensagem será mostrada.
-    }
-    // A validação de força acontece dentro do PasswordInput e é mostrada lá.
-
-    // --- Verifica Erros de Validação do Submit ---
     if (Object.keys(errors).length > 0) {
-      setFormErrors(errors); // Define os erros 'required' ou 'formato'
+      setFormErrors(errors);
       setIsLoading(false);
-      return; // Impede o "login"
+      return;
     }
 
-    // --- Simulação de Sucesso ---
     console.log('Validação de frontend OK. Submetendo Login com dados:', formData);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    alert(`Login (simulado) realizado com sucesso!\nEmail: ${formData.email}\nManter conectado: ${formData.rememberMe}`);
-
-    // Resetar form e flags após sucesso
-    setFormData({ email: '', password: '', rememberMe: false });
-    setFormErrors({});
-    setHasAttemptedSubmit(false); // Reseta a flag de tentativa
-    setIsLoading(false);
-    // router.push('/dashboard');
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        alert(`Login (simulado) realizado com sucesso!\nEmail: ${formData.email}\nManter conectado: ${formData.rememberMe}`);
+        setFormData({ email: '', password: '', rememberMe: false });
+        setFormErrors({});
+        setHasAttemptedSubmit(false);
+        // router.push('/dashboard');
+    } catch (error) {
+      console.error("Erro na simulação de login:", error);
+      setFormErrors({ general: 'Falha no login. Verifique suas credenciais.' }); // Exemplo de erro geral
+    } finally {
+        setIsLoading(false);
+    }
   };
 
-  // --- IDs ---
+  // --- IDs (sem alterações) ---
   const emailInputId = 'login-email';
   const passwordInputId = 'login-password';
   const generalErrorId = 'general-error';
 
   // --- Renderização ---
   return (
-    <div className={`${styles.pageContainer} overflow-hidden`}>
-      {/* Painel Esquerdo */}
-      <div className={styles.leftPanel}>{/* ... */}</div>
+    // Container principal - removido overflow-hidden daqui se ainda estiver
+    <div className={styles.pageContainer}>
 
-      {/* Painel Direito */}
+      {/* Painel Esquerdo: Agora com Logo Nexus e Carousel */}
+      <div className={styles.leftPanel}>
+         {/* Logo Secundário (Nexus) - Posicionado sobre o carrossel via CSS */}
+         <div className={styles.NexusLogoContainer}>
+           <Image
+             src="/logo-Nexus.svg" // Logo do painel esquerdo
+             alt="Nexus Logo"
+             width={200} // Ajuste tamanho conforme necessário
+             height={40}  // Ajuste tamanho conforme necessário
+           />
+         </div>
+         {/* --- ADICIONADO: Carousel --- */}
+         <Carousel autoSlide={true} autoSlideInterval={5000}>
+           {loginSlides}
+         </Carousel>
+      </div> {/* Fim leftPanel */}
+
+      {/* Painel Direito (Formulário de Login - sem alterações estruturais) */}
       <div className={styles.rightPanel}>
-        {/* Logo */}
+        {/* Logo Principal (Luminus) */}
         <div className={styles.logoContainer}>
             <Image
-                src="/logo-Luminus.svg"
-                alt="Luminus Nexus Logo"
+                src="/logo-Luminus.svg" // Logo do painel direito
+                alt="Luminus Logo"
                 width={200} height={50} priority
             />
         </div>
@@ -149,7 +174,7 @@ export default function LoginPage() {
             required
             disabled={isLoading}
             name="email"
-            error={formErrors.email} // Passa erro do submit
+            error={formErrors.email}
             errorDisplayMode="inline"
           />
 
@@ -159,14 +184,13 @@ export default function LoginPage() {
             placeholder="Senha"
             value={formData.password}
             onChange={handleChange('password')}
-            required // Importante para a lógica interna do PasswordInput
+            required
             disabled={isLoading}
             name="password"
-            error={formErrors.password} // Passa o erro de submit ('Senha é obrigatória.')
-            attemptedSubmit={hasAttemptedSubmit} // Passa a flag de tentativa
-            requiredMessage="Senha é Obrigatório" // Mensagem usada internamente pelo PasswordInput se error=null
+            error={formErrors.password}
+            attemptedSubmit={hasAttemptedSubmit}
+            requiredMessage="Senha é Obrigatório"
             errorDisplayMode="inline"
-            // showPasswordLabel, hidePasswordLabel, iconClassName podem ser adicionados se necessário
           />
 
           <div className={styles.checkboxGroup}>
@@ -179,7 +203,7 @@ export default function LoginPage() {
               disabled={isLoading}
               labelClassName="text-sm text-gray-700"
             />
-            <Link href="/esqueceu-senha" className={styles.forgotPasswordLink}>
+            <Link href="/forgot-password" className={styles.forgotPasswordLink}>
               Esqueci minha senha
             </Link>
           </div>
@@ -199,7 +223,7 @@ export default function LoginPage() {
             Cadastre-se
           </Link>
         </p>
-      </div>
-    </div>
+      </div> {/* Fim rightPanel */}
+    </div> // Fim pageContainer
   );
 }

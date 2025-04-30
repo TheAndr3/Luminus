@@ -1,0 +1,204 @@
+/* register.module.css (Modificado para incluir scrollbar e carousel) */
+
+/* Container Principal da Página */
+.pageContainer {
+  display: flex; /* Habilita Flexbox para criar as colunas */
+  height: 100vh; /* Garante que o container ocupe a altura total da tela */
+  background-color: #f0f2f5; /* Fundo leve */
+  /* overflow: hidden; foi removido daqui para permitir scroll no leftPanel */
+}
+
+/* Coluna Esquerda (Formulário) */
+.leftPanel {
+  width: 35%; /* Largura da coluna esquerda */
+  background-color: white;
+  padding: 3rem 4rem; /* Espaçamento interno */
+  display: flex;
+  flex-direction: column; /* Organiza itens internos em coluna */
+  align-items: center;
+  /* justify-content: center;  /* Removido ou ajustado para flex-start se preferir conteúdo no topo */
+  overflow-y: auto; /* <<< ADICIONADO: Habilita scroll vertical se necessário */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra */
+  z-index: 1; /* Garante que a sombra fique sobre a coluna direita */
+  /* Adicionado para garantir que o painel possa rolar */
+  max-height: 100vh; /* Limita a altura máxima à da viewport */
+  box-sizing: border-box; /* Garante que padding não aumente a altura total */
+}
+
+/* Coluna Direita (Carrossel) */
+.rightPanel {
+  width: 65%; /* Ocupa o restante da largura */
+  background-color: #1a3a6d; /* Cor de fundo como fallback ou base */
+  color: white;
+  position: relative; /* <<< MODIFICADO: Necessário para posicionar o logo e conter o carrossel */
+  overflow: hidden;   /* <<< ADICIONADO: Para conter slides que transbordam */
+  padding: 0; /* <<< MODIFICADO: Remove padding para o carrossel preencher */
+  /* display: flex, align-items, justify-content removidos */
+}
+
+/* Container do Logo Principal (Luminus) */
+.logoContainer {
+  margin-bottom: 2rem; /* Espaço abaixo do logo */
+  flex-shrink: 0; /* Impede que o logo encolha se o conteúdo for muito */
+}
+
+/* Container do Logo Secundário (Nexus - na coluna direita) */
+.NexusLogoContainer {
+    position: absolute; /* <<< MODIFICADO: Posicionamento sobre o carrossel */
+    top: 1.5rem;         /* <<< AJUSTADO: Distância do topo (ajuste conforme gosto) */
+    left: 3rem;        /* <<< AJUSTADO: Distância da esquerda */
+    z-index: 2;        /* <<< ADICIONADO: Garante que fique acima do carrossel */
+}
+
+
+/* Título "REGISTRO" (ou CADASTRO) */
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.8rem;
+  flex-shrink: 0; /* Impede que o título encolha */
+}
+
+/* Formulário */
+.form {
+  width: 100%;
+  max-width: 400px; /* Limita a largura máxima */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Espaço entre os inputs */
+  flex-grow: 1; /* Permite que o formulário cresça para ocupar espaço, ajudando no scroll */
+  /* Adicione padding inferior se necessário para dar espaço ao rolar até o fim */
+  padding-bottom: 2rem;
+}
+
+/* Estilos de Input (mantidos como estavam no CSS original/Cadastro) */
+/* ... (TextInput, EmailInput, PhoneInput, PasswordInput usarão seus próprios estilos internos
+       ou você pode ter estilos globais aqui como .inputGroup se os componentes não encapsularem tudo) ... */
+/* Se você estava usando .inputGroup, mantenha essas regras: */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.inputGroup label { /* Exemplo, ajuste se necessário */
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #555;
+}
+.inputGroup input { /* Exemplo, ajuste se necessário */
+  padding: 0.9rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  color: #333;
+}
+.inputGroup input:focus { /* Exemplo, ajuste se necessário */
+  outline: none;
+  border-color: #1a3a6d;
+  box-shadow: 0 0 0 2px rgba(26, 58, 109, 0.2);
+}
+
+
+/* Botão de Registro */
+.submitButton {
+  padding: 0.9rem 1.5rem;
+  background-color: #34495e;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0; /* Impede que o botão encolha */
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #2c3e50;
+}
+
+.submitButton:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Link para Login */
+.loginLink {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #555;
+  flex-shrink: 0; /* Impede que o link encolha */
+  /* Adicionado para garantir que seja visível mesmo com scroll */
+  padding-bottom: 1rem; /* Espaço extra no final */
+}
+
+.loginLink a {
+  color: #e74c3c;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.loginLink a:hover {
+  text-decoration: underline;
+}
+
+/* Placeholder do Carrossel (Removido pois o Carrossel foi adicionado) */
+/* .carouselPlaceholder { ... } */
+
+/* Mensagem de Erro (Mantida) */
+.errorMessage {
+  color: #e74c3c;
+  background-color: #fadbd8;
+  border: 1px solid #e74c3c;
+  padding: 0.8rem;
+  border-radius: 4px;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Ajustes para Telas Menores (Mantido) */
+@media (max-width: 768px) {
+  .pageContainer {
+    flex-direction: column; /* Empilha as colunas */
+    height: auto; /* Permite que o conteúdo defina a altura */
+    min-height: 100vh; /* Garante pelo menos a altura da tela */
+  }
+
+  .leftPanel,
+  .rightPanel {
+    width: 100%; /* Largura total */
+    min-height: auto; /* Altura definida pelo conteúdo */
+    max-height: none; /* Remove limite de altura em telas pequenas */
+    box-shadow: none;
+    overflow-y: visible; /* Desativa scroll interno no painel esquerdo */
+  }
+
+  .leftPanel {
+      padding: 2rem; /* Menos padding */
+      /* A página inteira rolará agora, não apenas o painel */
+  }
+
+  .rightPanel {
+      /* Ajustar altura mínima ou específica se necessário para o carrossel */
+      min-height: 50vh; /* Exemplo: Dar alguma altura mínima */
+      /* O padding: 0 e overflow: hidden ainda são importantes para o carrossel */
+  }
+
+  .form {
+      max-width: 100%;
+      padding-bottom: 1rem; /* Reduz padding inferior do form */
+  }
+
+  .NexusLogoContainer {
+      /* Pode precisar ajustar posicionamento em telas menores */
+      top: 1rem;
+      left: 1.5rem;
+  }
+}
