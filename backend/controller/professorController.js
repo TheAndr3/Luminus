@@ -1,15 +1,15 @@
 //Controller do professor
 const db = require('../bd.js');
-const {hashPassword, decryptPassword} = require('./passwordManagement.js');
+const {hashPassword, decryptPassword} = require('../utils/passwordManagement.js');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 
 //Chave Publica
-const PUBLIC_KEY = process.env.PUBLIC_KEY.replace(/\\n/g, '\n');
+const PUBLIC_KEY = process.env.PUBLIC_KEY;
 
 //Enviar chave pública
 exports.GetPublicKey = async (req, res) => {
-    res.status(200).send(PUBLIC_KEY);
+    res.status(200).json({ publicKey: PUBLIC_KEY });
 }
 
 exports.Login = async (req, res) => {

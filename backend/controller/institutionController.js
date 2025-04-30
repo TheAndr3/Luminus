@@ -1,9 +1,7 @@
 //Controller de instituicao
 const db = require('../bd.js');
 const { decryptPassword, hashPassword } = require("./passwordManagement");
-const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const { decrypt } = require('dotenv');
 
 exports.Create = async (req, res) =>{
   const {email, password, name} = req.body;
