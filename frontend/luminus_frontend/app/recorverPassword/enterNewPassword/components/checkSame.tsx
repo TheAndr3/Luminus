@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import style from "@/app/(recorverPassword)/enterNewPassword/page.module.css";
+import style from "@/app/recorverPassword/enterNewPassword/page.module.css";
 import {api} from "@/services/api"
 
 export default function CheckSame() {

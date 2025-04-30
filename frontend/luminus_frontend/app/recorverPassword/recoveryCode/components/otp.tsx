@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import styleOtp from "@/app/(recorverPassword)/recoveryCode/components/otp.module.css"
-import style from "@/app/(recorverPassword)/recoveryCode/page.module.css"
+import styleOtp from "@/app/recorverPassword/recoveryCode/components/otp.module.css"
+import style from "@/app/recorverPassword/recoveryCode/page.module.css"
 
 import { useRouter} from "next/navigation";
- 
+
 import {api} from "@/services/api";
 
 

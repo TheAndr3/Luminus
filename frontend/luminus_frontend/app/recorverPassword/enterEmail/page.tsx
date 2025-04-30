@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import logoLuminus from '@/app/Image/logoLuminus.svg';
-import style from '@/app/(recorverPassword)/enterEmail/page.module.css';
+import style from '@/app/recorverPassword/enterEmail/page.module.css';
 import Link from 'next/link';
 
 import {api} from "@/services/api";
@@ -23,7 +23,7 @@ export default function enterEmail(){
 
         }
 
-        redirect("/recoveryCode");
+        redirect("../recoveryCode");
 
     }
 
