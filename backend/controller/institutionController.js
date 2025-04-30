@@ -1,12 +1,37 @@
 //Controller de instituicao
 const db = require('../bd.js');
+const { decryptPassword, hashPassword } = require("./passwordManagement");
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const {hashPassword, decryptPassword} = require('./passwordManagement.js');
 const { decrypt } = require('dotenv');
 
 exports.Create = async (req, res) =>{
-  res.status(201).send('Cadastro de instuição');
+  const {email, password, name} = req.body;
+  try {
+    //desencriptar senha
+    const decryptedPassword = await decryptPassword(password);
+
+    //hash de senha
+    const hashedPassword = await hashPassword(decryptedPassword);
+
+    //verifica se há email existente cadastrado
+    const verification = await db.pgSelect('Institution', {instution_email: email});
+
+    if (verification.lenght === 0) {
+      await db.pgInsert('Institution', {
+        name: name,
+        institution_email: email,
+        password: hashedPassword
+      });
+
+      res.status(201).json({message:'Instituição cadastrada com sucesso!'});
+
+    } else {
+      res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+    }
+  } catch (err) {
+    res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+  }
 }
 
 exports.Login = async (req, res) => {

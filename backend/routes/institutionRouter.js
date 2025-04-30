@@ -17,4 +17,7 @@ routerInstitution.get('/institution/:id/dossies', institutionController.ReadDoss
 //Ver perfil da instituição
 routerInstitution.get('/institution/:id', institutionController.Profile);
 
+// Cadastro de instituicao
+routerInstitution.post('/institution/cadastro/:id', institutionController.Create);
+
 module.exports = routerInstitution;
