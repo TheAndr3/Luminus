@@ -10,9 +10,8 @@ async function hashPassword(password) {
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log(hashedPassword);
         return hashedPassword;
-        
     } catch (err) {
-        console.error('Erro ao criar hash');
+        console.error('Erro ao criar hash:', err);
     }
 }
 
@@ -24,10 +23,9 @@ async function decryptPassword(password) {
         },
         Buffer.from(password, 'base64')
         ).toString('utf-8');
-
         return decryptedPassword;
     } catch (err) {
-        console.error('Erro ao criar hash');
+        console.error('Erro ao criar hash:', err);
     }
 }
 
