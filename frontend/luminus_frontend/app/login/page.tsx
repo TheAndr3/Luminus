@@ -1,29 +1,25 @@
 /**
  * @file LoginPage.tsx (ou page.tsx dentro de /login)
  * @description Página de Login de usuário.
- * Contém um formulário com campos para email e senha, opção de manter conectado
- * e link para esquecer senha.
  */
 'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import styles from './login.module.css';
+import styles from './login.module.css'; // Estilos gerais da página/layout
 
 // --- Importações de Componentes ---
-
 import { EmailInput } from '@/components/inputs/EmailInput';
-import { PasswordInput } from '@/components/inputs/PasswordInput';
+import { PasswordInput } from '@/components/inputs/PasswordInput'; // Ensure path is correct
+import { Checkbox } from '@/components/checkboxs/Checkbox';
+import { ErrorContainer } from '@/components/errors/ErrorContainer';
 
 // --- Tipos ---
-/**
- * @type FormErrors
- * @description Define a estrutura para armazenar mensagens de erro de validação do formulário de Login.
- */
 type FormErrors = {
   email?: string | null;
-  password?: string | null;
+  password?: string | null; // For errors coming from submit (e.g., 'required')
+  general?: string | null;  // For non-field-specific errors
 };
 
 /**
@@ -31,217 +27,179 @@ type FormErrors = {
  * @description Componente funcional que renderiza a página de login.
  */
 export default function LoginPage() {
-  // --- Estados do Componente ---
-  /** Estado para armazenar os dados do formulário (email, senha, lembrar). */
+  // --- Estados ---
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false, // Estado para o checkbox "Manter conectado"
+    rememberMe: false,
   });
-
-  /** Estado para armazenar as mensagens de erro de validação. */
   const [formErrors, setFormErrors] = useState<FormErrors>({});
-
-  /** Estado para controlar o feedback de carregamento. */
   const [isLoading, setIsLoading] = useState(false);
+  // --- NOVO ESTADO: Rastreia se o usuário tentou submeter ---
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // --- Funções Auxiliares ---
-  /** Valida formato de email (pode ser movida para um utilitário). */
+  // --- Validação ---
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // --- Manipuladores de Eventos ---
-
-  /**
-   * @function handleChange
-   * @description Manipulador para atualizações nos campos de email e senha.
-   * @param {'email' | 'password'} field - O nome do campo sendo atualizado.
-   */
+  // --- Handlers ---
   const handleChange = (field: 'email' | 'password') =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
       setFormData(prevData => ({ ...prevData, [field]: value }));
-      // Limpa o erro do campo específico ao digitar
-      if (formErrors[field]) {
-        setFormErrors(prevErrors => ({ ...prevErrors, [field]: null }));
-      }
+
+      // --- LÓGICA DE LIMPEZA DE ERRO ATUALIZADA ---
+      // Limpa o erro específico do campo sendo editado E o erro geral.
+      // NÃO limpa o erro do *outro* campo.
+      setFormErrors(prevErrors => {
+          const updatedErrors: FormErrors = { ...prevErrors, general: null };
+          if (field === 'email') {
+              updatedErrors.email = null;
+          } else if (field === 'password') {
+              updatedErrors.password = null;
+          }
+          return updatedErrors;
+      });
+      // Não resetamos hasAttemptedSubmit aqui. Ele só é resetado em um submit bem-sucedido (ou outra ação de reset).
     };
 
-  /**
-   * @function handleCheckboxChange
-   * @description Manipulador específico para o checkbox "Manter conectado".
-   */
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { checked } = e.target;
-    setFormData(prevData => ({ ...prevData, rememberMe: checked }));
+    setFormData(prevData => ({ ...prevData, rememberMe: e.target.checked }));
   };
 
-  /**
-   * @function handleSubmit
-   * @description Manipulador para a submissão do formulário de login.
-   * Realiza validações para email e senha e simula um envio.
-   */
+  // --- Submissão com Flag de Tentativa ---
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormErrors({}); // Limpa erros anteriores
+    setFormErrors({}); // Limpa erros anteriores antes de validar
+    // --- MARCA QUE A SUBMISSÃO FOI TENTADA ---
+    setHasAttemptedSubmit(true);
     setIsLoading(true);
 
+    // --- Validação de Frontend Obrigatória ---
     const errors: FormErrors = {};
-
-    // --- Validações de Login ---
-    // Email
     if (!formData.email.trim()) {
       errors.email = 'Email é obrigatório.';
     } else if (!validateEmail(formData.email)) {
       errors.email = 'Formato de email inválido.';
     }
 
-    // Senha
+    // --- Validação de Senha Obrigatória (no submit) ---
+    // Esta validação AINDA é útil aqui para definir o erro inicial
+    // que será passado para o PasswordInput como 'error' (externalError).
     if (!formData.password) {
-      errors.password = 'Senha é obrigatória.';
+      errors.password = 'Senha é obrigatória.'; // Usamos a mensagem padrão aqui
+                                                  // ou a 'requiredMessage' do PasswordInput se quisermos consistência
+                                                  // Mas como 'PasswordInput' prioriza 'externalError', esta mensagem será mostrada.
     }
-		//Não precisamos validar se a senha tem pelo menos 8 digitos acredito eu
+    // A validação de força acontece dentro do PasswordInput e é mostrada lá.
 
-    // --- Fim Validações ---
-
-    // Verifica se há erros
+    // --- Verifica Erros de Validação do Submit ---
     if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+      setFormErrors(errors); // Define os erros 'required' ou 'formato'
       setIsLoading(false);
-      return; // Impede o envio
+      return; // Impede o "login"
     }
 
-    // Se não houver erros, loga os dados e simula o envio
-    console.log('Dados do Login:', formData);
+    // --- Simulação de Sucesso ---
+    console.log('Validação de frontend OK. Submetendo Login com dados:', formData);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    alert(`Login (simulado) realizado com sucesso!\nEmail: ${formData.email}\nManter conectado: ${formData.rememberMe}`);
 
-    // Simulação de envio para API (substituir pela chamada real)
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simula delay
-      alert('Login (simulado) realizado com sucesso!');
-      // Opcional: Redirecionar após sucesso
-      // router.push('/dashboard');
-    } catch (error) {
-      console.error("Erro na simulação de login:", error);
-      // Exemplo de erro de login
-      setFormErrors({ email: 'Usuário ou senha inválidos.' }); // Mostra erro genérico
-    } finally {
-      setIsLoading(false); // Finaliza o carregamento
-    }
+    // Resetar form e flags após sucesso
+    setFormData({ email: '', password: '', rememberMe: false });
+    setFormErrors({});
+    setHasAttemptedSubmit(false); // Reseta a flag de tentativa
+    setIsLoading(false);
+    // router.push('/dashboard');
   };
 
-  // --- Renderização do Componente ---
+  // --- IDs ---
+  const emailInputId = 'login-email';
+  const passwordInputId = 'login-password';
+  const generalErrorId = 'general-error';
+
+  // --- Renderização ---
   return (
-    // Container principal
     <div className={`${styles.pageContainer} overflow-hidden`}>
+      {/* Painel Esquerdo */}
+      <div className={styles.leftPanel}>{/* ... */}</div>
 
-      {/* Painel Esquerdo (Azul/Placeholder - SEM ALTERAÇÕES) */}
-      <div className={styles.leftPanel}>
-        <div className={styles.NexusLogoContainer}>
-          <Image src="/logo-Nexus.svg" alt="Nexus Logo" width={150} height={40} />
-        </div>
-        <div className={styles.contentPlaceholder}>
-          <h2>Crie, gerencie e obtenha dados de suas turmas.</h2>
-          <div className={styles.carouselIndicators}>
-            <span className={styles.active}></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </div>
-
-      {/* Painel Direito (Branco/Formulário de LOGIN) */}
+      {/* Painel Direito */}
       <div className={styles.rightPanel}>
+        {/* Logo */}
         <div className={styles.logoContainer}>
-          {/* Logo principal */}
-          <Image
-            src="/logo-Luminus.svg" // Logo correto para este painel
-            alt="Luminus Nexus Logo"
-            width={200}
-            height={50}
-            priority
-          />
+            <Image
+                src="/logo-Luminus.svg"
+                alt="Luminus Nexus Logo"
+                width={200} height={50} priority
+            />
         </div>
-
-        {/* Título LOGIN */}
         <h1 className={styles.title}>LOGIN</h1>
+        <ErrorContainer id={generalErrorId} message={formErrors.general} />
 
-        {/* Exibe erro geral de login (ex: credenciais inválidas) */}
-        {formErrors.email && !formErrors.password && (
-            <div className={styles.errorMessage}>{formErrors.email}</div>
-        )}
-        {/* Adicione aqui outras mensagens de erro gerais se necessário */}
-
-
-        {/* Formulário de Login */}
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          {/* Campo Email (rotulado como Usuário) */}
           <EmailInput
-            label="Usuário:" // Rótulo como na imagem
-            placeholder="Email" // Placeholder indicando que é o email
+            id={emailInputId}
+            label="Email:"
+            placeholder="Email"
             value={formData.email}
             onChange={handleChange('email')}
             required
-            error={formErrors.email && formErrors.password ? formErrors.email : null}
-						// Mostra erro de email apenas se não for erro genérico
             disabled={isLoading}
-            containerClassName="mb-2" // Ajuste margens se necessário
             name="email"
+            error={formErrors.email} // Passa erro do submit
+            errorDisplayMode="inline"
           />
 
-          {/* Campo Senha */}
           <PasswordInput
+            id={passwordInputId}
             label="Senha:"
-            placeholder="Senha" // Placeholder simples
+            placeholder="Senha"
             value={formData.password}
             onChange={handleChange('password')}
-            required
-            // minLength={8} // Removido minLength se não aplicável ao login
-            error={formErrors.password}
+            required // Importante para a lógica interna do PasswordInput
             disabled={isLoading}
-            containerClassName="mb-2" // Ajuste margens se necessário
             name="password"
+            error={formErrors.password} // Passa o erro de submit ('Senha é obrigatória.')
+            attemptedSubmit={hasAttemptedSubmit} // Passa a flag de tentativa
+            requiredMessage="Senha é Obrigatório" // Mensagem usada internamente pelo PasswordInput se error=null
+            errorDisplayMode="inline"
+            // showPasswordLabel, hidePasswordLabel, iconClassName podem ser adicionados se necessário
           />
 
-          {/* Linha com Checkbox e Link "Esqueci minha senha" */}
-          {/* Use as classes do CSS fornecido na primeira resposta ou crie novas */}
-          <div className={styles.checkboxGroup}> {/* Container para alinhar */}
-            <label className={styles.rememberLabel}> {/* Estilo para o label do checkbox */}
-              <input
-                type="checkbox"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleCheckboxChange}
-                disabled={isLoading}
-              />
-              Manter conectado
-            </label>
+          <div className={styles.checkboxGroup}>
+            <Checkbox
+              id="remember-me"
+              label="Manter conectado"
+              name="rememberMe"
+              checked={formData.rememberMe}
+              onChange={handleCheckboxChange}
+              disabled={isLoading}
+              labelClassName="text-sm text-gray-700"
+            />
             <Link href="/esqueceu-senha" className={styles.forgotPasswordLink}>
               Esqueci minha senha
             </Link>
           </div>
 
-          {/* Botão de Submissão */}
           <button
             type="submit"
-            className={`${styles.submitButton} mt-4`} // Use a classe correta e ajuste margem superior
+            className={styles.submitButton}
             disabled={isLoading}
           >
-            {isLoading ? 'Entrando...' : 'Entrar'} {/* Texto do botão */}
+            {isLoading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
 
-        {/* Link para a página de Cadastro */}
-        {/* Use a classe do CSS fornecido na primeira resposta ou crie nova */}
         <p className={styles.switchLink}>
           Não tem uma conta?{' '}
-          <Link href="/cadastro"> {/* Link para a página de cadastro */}
+          <Link href="/register">
             Cadastre-se
           </Link>
         </p>
       </div>
-
     </div>
   );
 }

@@ -3,15 +3,10 @@
 	display: flex; /* Habilita Flexbox para criar as colunas */
 	min-height: 100vh; /* Garante que o container ocupe pelo menos a altura total da tela */
 	background-color: #f0f2f5; /* Um fundo leve para fora das colunas, se necessário */
+    overflow-x: hidden; /* Evita scroll horizontal se painéis forem muito largos */
 }
 
-/* 
---------------------------------------------------------------------------
-INVERSÃO DE ESTILOS: Painel Esquerdo AGORA tem o estilo do Painel Direito Original
---------------------------------------------------------------------------
-*/
 .leftPanel {
-	/* Estilos originais do rightPanel */
 	width: 65%; /* Ocupa a maior parte da largura */
 	background-color: #1a3a6d; /* Azul escuro */
 	color: white; /* Texto branco */
@@ -24,37 +19,24 @@ INVERSÃO DE ESTILOS: Painel Esquerdo AGORA tem o estilo do Painel Direito Origi
 	/* Remove a sombra e o z-index que pertenciam ao painel esquerdo original */
 }
 
-/* 
---------------------------------------------------------------------------
-INVERSÃO DE ESTILOS: Painel Direito AGORA tem o estilo do Painel Esquerdo Original
---------------------------------------------------------------------------
-*/
 .rightPanel {
-	/* Estilos originais do leftPanel */
 	width: 35%; /* Largura menor */
 	background-color: white; /* Fundo branco */
-	padding: 3rem 4rem; /* Espaçamento interno original do leftPanel */
+	padding: 3rem 4rem;
 	display: flex;
 	flex-direction: column; /* Organiza itens internos em coluna */
 	justify-content: center; /* Centraliza o conteúdo verticalmente */
 	align-items: center; /* Centraliza horizontalmente */
-	/* Ajuste da sombra: agora na borda ESQUERDA */
 	box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra suave na borda ESQUERDA */
 	z-index: 1; /* Garante que a sombra fique sobre o painel esquerdo (azul) */
-	/* Remove position: relative se não for necessário para o conteúdo do formulário */
 	color: #333; /* Cor padrão para texto no painel branco (ajuste se necessário) */
+    overflow-y: auto; /* Permite scroll vertical se o conteúdo for maior que a altura */
 }
-
-/* 
---------------------------------------------------------------------------
-ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis invertidos)
---------------------------------------------------------------------------
-*/
 
 /* Container do Logo Principal (Luminus - Assumindo que está no painel DIREITO no HTML) */
 .logoContainer {
 	margin-bottom: 2rem; /* Espaço abaixo do logo */
-	/* Adicione 'align-self: center;' se necessário, dependendo do flex container pai */
+    align-self: center; /* Garante centralização mesmo com outros itens */
 }
 
 /* Container do Logo Secundário (Nexus - Assumindo que está no painel ESQUERDO no HTML) */
@@ -68,7 +50,7 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 /* Título "LOGIN" ou "CADASTRO" (no painel direito) */
 .title {
 	text-align: center;
-	margin-bottom: 2rem;
+	margin-bottom: 1.5rem; /* Reduzido ligeiramente para acomodar espaço do erro geral */
 	color: #333;
 	font-weight: bold; /* Ou use 600, 700 */
 	font-size: 1.8rem; /* Tamanho do título */
@@ -81,10 +63,38 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 	margin: 0 auto; /* Centraliza o formulário se a rightPanel for mais larga */
 	display: flex;
 	flex-direction: column;
-	gap: 1.2rem; /* Espaço entre os inputGroups */
+    /* O gap cria espaço entre os filhos diretos:
+       (Erro Geral Container) -> (Email Input) -> (Erro Email Container) -> (Senha Input) -> (Erro Senha Container) -> (Checkbox Group) -> (Botão)
+       Ajuste o valor conforme necessário para o espaçamento visual desejado entre esses blocos */
+	gap: 0.5rem; /* Espaçamento vertical entre os elementos do formulário */
 }
 
-/* Grupo de Input (Label + Input) */
+/* --- CONTÊINER E TEXTO DE ERRO PARA NÃO DESLOCAR --- */
+
+/* Contêiner que SEMPRE ocupa espaço, mesmo vazio */
+.errorContainer {
+  width: 100%; /* Para ocupar a largura do form */
+  min-height: 1.4em; /* Altura mínima para ~1 linha de texto de erro. Ajuste conforme sua fonte/line-height */
+  /* Não precisa de margin-bottom aqui se o 'gap' do .form já cria espaço suficiente */
+  display: flex; /* Para alinhar o texto interno se necessário */
+  align-items: flex-start; /* Alinha o texto no topo do container */
+  /* margin-bottom: 0.5rem; */ /* Alternativa/adicional ao gap do form */
+}
+
+/* Estilo APENAS para o texto da mensagem de erro que aparece DENTRO do container */
+.errorMessageText {
+  color: #e74c3c; /* Vermelho */
+  font-size: 0.8rem; /* Tamanho menor para a mensagem de erro */
+  line-height: 1.4; /* Ajuda a garantir que o texto se encaixe no min-height */
+  width: 100%;
+  padding-left: 0.2rem; /* Pequeno recuo opcional */
+}
+
+/* --- FIM DAS CLASSES DE ERRO --- */
+
+
+/* Grupo de Input (Estilos gerais para label/input se não vierem dos componentes) */
+/* Seus componentes EmailInput/PasswordInput podem já ter estes estilos */
 .inputGroup {
 	display: flex;
 	flex-direction: column;
@@ -112,21 +122,25 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 	box-shadow: 0 0 0 2px rgba(26, 58, 109, 0.2);
 }
 
-/* Checkbox "Manter conectado" (Exemplo - adicione se necessário para o login) */
+/* Checkbox "Manter conectado" e Link "Esqueci Senha" */
 .checkboxGroup {
 	display: flex;
 	align-items: center;
 	justify-content: space-between; /* Para alinhar checkbox e link "Esqueci minha senha" */
 	font-size: 0.9rem;
 	color: #555;
-	margin-top: 0.5rem;
-	margin-bottom: 1rem;
+    /* margin-top/bottom gerenciados pelo gap do .form ou classes utilitárias (mt-X) no TSX */
+    /* margin-top: 0.5rem; */
+	/* margin-bottom: 1rem; */
+    padding-top: 0.3rem; /* Pequeno ajuste para alinhar melhor após o errorContainer */
 }
 
+/* Estilos específicos do Checkbox (se não vierem do componente Checkbox) */
 .checkboxGroup label {
 	display: flex;
 	align-items: center;
 	cursor: pointer;
+    margin-right: auto; /* Empurra o link para a direita */
 }
 
 .checkboxGroup input[type="checkbox"] {
@@ -137,6 +151,7 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 	color: #e74c3c; /* Cor vermelha/laranja */
 	text-decoration: none;
 	font-weight: 500;
+    white-space: nowrap; /* Evita quebra de linha */
 }
 
 .forgotPasswordLink:hover {
@@ -154,7 +169,7 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 	cursor: pointer;
 	font-size: 1rem;
 	font-weight: bold;
-	margin-top: 1rem; /* Espaço acima do botão */
+	/* margin-top: 1rem; */ /* Removido - gerenciado pelo gap do .form */
 	transition: background-color 0.2s ease;
 	width: 100%; /* Fazer o botão ocupar a largura do form */
 }
@@ -170,7 +185,7 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 
 /* Link para Cadastro/Login (Abaixo do botão) */
 .switchLink { /* Renomeado de loginLink para ser mais genérico */
-	margin-top: 1.5rem;
+	margin-top: 1.5rem; /* Espaço acima deste link */
 	text-align: center;
 	font-size: 0.9rem;
 	color: #555;
@@ -219,7 +234,7 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 }
 
 
-/* Mensagem de Erro (pode ser usada em qualquer painel) */
+/* Mensagem de Erro Original (pode ser usada para o erro geral se preferir fundo/borda) */
 .errorMessage {
 	color: #e74c3c; /* Vermelho */
 	background-color: #fadbd8;
@@ -227,13 +242,14 @@ ESTILOS DE CONTEÚDO (Permanecem os mesmos, mas agora aplicados aos painéis inv
 	padding: 0.8rem;
 	border-radius: 4px;
 	text-align: center;
-	margin-bottom: 1rem;
+	/* margin-bottom: 1rem; */ /* Removido - Use .errorContainer ou gap do form */
 	font-size: 0.9rem;
 	width: 100%; /* Para ocupar a largura do form */
 	box-sizing: border-box;
+    /* Se usar esta classe dentro do .errorContainer, o container ainda previne o salto */
 }
 
-/* 
+/*
 --------------------------------------------------------------------------
 AJUSTES RESPONSIVOS (Permanecem os mesmos)
 --------------------------------------------------------------------------
@@ -246,15 +262,24 @@ AJUSTES RESPONSIVOS (Permanecem os mesmos)
 	.leftPanel,
 	.rightPanel {
 		width: 100%; /* Cada coluna ocupa a largura total */
-		min-height: 50vh; /* Altura mínima para cada */
+		min-height: auto; /* Remove min-height para permitir conteúdo fluir */
+        height: auto; /* Garante que a altura se ajuste ao conteúdo */
 		box-shadow: none; /* Remove sombra em telas pequenas */
 		padding: 2rem; /* Padding ajustado para telas menores */
+        overflow-y: visible; /* Permite que o conteúdo expanda */
 	}
 
+    .rightPanel {
+        /* Em telas pequenas, pode ser útil centralizar o conteúdo verticalmente se ele for pouco */
+        /* justify-content: flex-start; */ /* Ou mantenha center se preferir */
+        padding: 2rem 1.5rem; /* Ajusta padding lateral */
+    }
+
 	.NexusLogoContainer {
-			position: static; /* Ou ajuste o posicionamento absoluto para telas menores */
+			position: static; /* Remove posicionamento absoluto */
 			margin-bottom: 1.5rem;
-			align-self: flex-start; /* Alinha à esquerda */
+			align-self: center; /* Centraliza o logo em telas menores */
+            /* align-self: flex-start; */ /* Ou alinha à esquerda */
 	}
 
 	.contentPlaceholder {
@@ -267,5 +292,38 @@ AJUSTES RESPONSIVOS (Permanecem os mesmos)
 
 	.form {
 			max-width: 100%; /* Permite formulário usar mais largura */
+            gap: 0.8rem; /* Ajusta o espaçamento para telas menores */
 	}
+
+    .title {
+        font-size: 1.6rem; /* Título um pouco menor */
+        margin-bottom: 1rem;
+    }
+
+    .checkboxGroup {
+        font-size: 0.85rem; /* Texto do checkbox/link um pouco menor */
+        flex-wrap: wrap; /* Permite que o link vá para baixo se não couber */
+        gap: 0.5rem; /* Espaço se quebrar linha */
+    }
+
+    .forgotPasswordLink {
+         /* Garante que o link tenha espaço */
+         flex-basis: 100%; /* Faz o link ocupar a linha de baixo se quebrar */
+         text-align: right; /* Alinha à direita na nova linha */
+    }
+}
+
+/* Ajuste adicional para telas muito pequenas se necessário */
+@media (max-width: 480px) {
+    .rightPanel {
+        padding: 1.5rem 1rem;
+    }
+    .title {
+        font-size: 1.5rem;
+    }
+    .submitButton {
+        font-size: 0.9rem;
+        padding: 0.8rem 1.2rem;
+    }
+    /* Ajustes adicionais de fonte/padding aqui */
 }

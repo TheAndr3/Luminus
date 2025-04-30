@@ -1,73 +1,41 @@
 'use client';
 
-import React from 'react';
+import React, { useId } from 'react';
+import { ErrorContainer } from '@/components/errors/ErrorContainer';
+// Removido import não utilizado de ErrorComponentProps se ErrorContainer não exportar
+// import { ErrorComponentProps } from '@/types/error';
 
-/**
- * @interface BaseInputProps
- * @description Define as propriedades aceitas pelo componente BaseInput.
- * Estende as propriedades padrão do input HTML, omitindo 'onChange' para definir um tipo mais específico.
- */
+// Interface BaseInputProps (como antes)
 export interface BaseInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
-  /** Texto do label acima do input. */
   label: string;
-  /**
-   * (Opcional) Adiciona '*' ao label e atributo `required` no input.
-   * @default false
-   */
   required?: boolean;
-  /**
-   * (Opcional) Mensagem de erro a ser exibida. Aplica estilo de erro.
-   * @default null
-   */
   error?: string | null;
-  /**
-   * (Opcional) Classes CSS adicionais para o container principal (div externo).
-   * Útil para layout (largura, margens externas).
-   * @default ''
-   */
+  errorDisplayMode?: 'inline' | 'none';
+  errorContainerId?: string;
   containerClassName?: string;
-  /**
-   * (Opcional) Classes CSS (ex: Tailwind) a serem adicionadas ao elemento `<label>`.
-   * @default ''
-   */
   labelClassName?: string;
-  /**
-   * (Opcional) Classes CSS (ex: Tailwind) a serem adicionadas ao elemento `<input>`.
-   * @default ''
-   */
   inputClassName?: string;
-  /**
-   * (Opcional) Elemento React a ser renderizado no final do input (ex: ícone, botão).
-   * Deve ser um elemento que aceite a prop `className`.
-   * @default null
-   */
   endAdornment?: React.ReactNode;
-  /**
-   * Callback chamado na mudança do input.
-   * Recebe o evento original do React.
-   */
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  id?: string;
+  name?: string;
+  value?: string | number | readonly string[];
+  placeholder?: string;
+  type?: string;
+  disabled?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  autoComplete?: string;
+  autoFocus?: boolean;
 }
 
 /**
  * @component BaseInput
- * @description
- * Componente de input genérico e reutilizável para formulários.
- * Suporta label, required, error, customização de classes CSS,
- * adornments no final do input, e todas as props padrão de um input HTML.
- * É um componente controlado, onde o valor é gerenciado pelo componente pai.
- *
- * @usage
- * Use este componente como base para criar inputs customizados.
- * Passe as props necessárias para controlar o estado e a aparência.
- *
- * @example
- * <BaseInput
- *   label="Nome"
- *   value={nome}
- *   onChange={(e) => setNome(e.target.value)}
- *   required
- * />
+ * @description Input genérico. Se errorDisplayMode='inline', SEMPRE renderiza
+ * um container abaixo com altura mínima (min-h-5) para o ErrorContainer,
+ * prevenindo layout shift. O ErrorContainer interno só mostra texto se 'error' existir.
+ * Se 'none', não renderiza o container de erro.
  */
 export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
   (
@@ -75,37 +43,41 @@ export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
       label,
       required = false,
       error = null,
+      errorDisplayMode = 'inline',
+      errorContainerId: providedErrorContainerId,
       containerClassName = '',
       labelClassName = '',
       inputClassName = '',
       endAdornment = null,
       type = 'text',
       disabled = false,
+      id,
+      name,
       value,
       onChange,
       placeholder,
       minLength,
       maxLength,
       inputMode,
-      id,
-      name,
-      ...restInputProps
+      autoComplete,
+      autoFocus,
     },
     ref
   ) => {
-    // Gera um ID único para o input, usado para associar o label
-    const uniqueId = React.useId();
-    const inputId = id || `input-${uniqueId}`;
+    const uniqueInputId = useId();
+    const inputId = id || `input-${uniqueInputId}`;
+    const uniqueErrorId = useId();
+    const errorId = providedErrorContainerId || `error-${inputId}`;
 
-    // Verifica se há um adornment no final
     const hasEndAdornment = endAdornment !== null;
-
-    // Ajusta o padding direito do input para acomodar o adornment
     const paddingRightClass = hasEndAdornment ? 'pr-10' : 'pr-2.5';
 
+    const shouldRenderErrorSlot = errorDisplayMode === 'inline';
+
     return (
-      <div className={`mb-2 ${containerClassName}`}>
-        {/* Label com indicação visual de campo obrigatório */}
+      // Container principal
+      <div className={`${containerClassName}`}>
+        {/* Label */}
         <label
           htmlFor={inputId}
           className={`block text-gray-800 text-sm font-semibold mb-1 ${labelClassName}`}
@@ -114,9 +86,9 @@ export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
           {required && <span className="text-red-500"> *</span>}
         </label>
 
-        {/* Container relativo para posicionar o adornment */}
+        {/* Container relativo para input */}
         <div className="relative">
-          {/* Elemento input com props dinâmicas */}
+          {/* Input */}
           <input
             ref={ref}
             id={inputId}
@@ -130,6 +102,8 @@ export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
             minLength={minLength}
             maxLength={maxLength}
             inputMode={inputMode}
+            autoComplete={autoComplete}
+            autoFocus={autoFocus}
             className={`
               w-full p-2.5 ${paddingRightClass} text-sm
               border ${error ? 'border-red-500' : 'border-gray-300'}
@@ -139,30 +113,32 @@ export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
               ${disabled ? 'bg-gray-100 text-gray-700 cursor-not-allowed' : 'bg-white'}
               ${inputClassName}
             `}
-            {...restInputProps} // Passa quaisquer outras props HTML para o input
+            aria-invalid={!!error}
+            // Associa ao ID do erro somente se o slot for renderizado E houver erro
+            aria-describedby={shouldRenderErrorSlot && !!error ? errorId : undefined}
           />
-
-          {/* Adornment no final, se fornecido */}
+          {/* Adornment */}
           {hasEndAdornment && React.isValidElement(endAdornment) && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              {React.cloneElement(
-                endAdornment as React.ReactElement<{ className?: string }>,
-                {
-                  className: `${
-                    (endAdornment.props as { className?: string }).className || ''
-                  } pointer-events-auto`.trim(),
-                }
-              )}
-            </div>
+             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+               {React.cloneElement(
+                   endAdornment as React.ReactElement<{ className?: string }>,
+                   { className: `${(endAdornment.props as { className?: string }).className || ''} pointer-events-auto`.trim() }
+               )}
+             </div>
           )}
         </div>
 
-        {/* Mensagem de erro, exibida apenas se 'error' for fornecido */}
-        {error && (
-          <div className="mt-0.5">
-            <p className="text-red-500 text-xs">{error}</p>
-          </div>
+        {/* Container para o Error - SEMPRE renderizado se inline, com altura mínima */}
+        {/* Isso garante que o espaço esteja sempre reservado */}
+        {shouldRenderErrorSlot && (
+            <div className="w-full min-h-5 pt-0.5"> {/* Reserva espaço */}
+                <ErrorContainer
+                    id={errorId}
+                    message={error} // Passa a mensagem (pode ser null)
+                />
+            </div>
         )}
+        {/* Se errorDisplayMode for 'none', este bloco não é renderizado */}
       </div>
     );
   }

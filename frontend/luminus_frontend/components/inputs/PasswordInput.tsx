@@ -1,112 +1,129 @@
 'use client';
 
-import React, { useState } from 'react';
-import { BaseInput, BaseInputProps } from './BaseInput'; // Importa BaseInput e suas props
-import { Eye, EyeOff } from 'react-feather'; // Ícones para o toggle (instale com: npm install react-feather)
+import React, { useState, useEffect, forwardRef } from 'react';
+import { BaseInput, BaseInputProps } from './BaseInput'; // Verifique o caminho
+import { Eye, EyeOff } from 'react-feather';
 
-/**
- * @interface PasswordInputProps
- * @description Define as propriedades aceitas pelo componente PasswordInput.
- * Herda todas as propriedades de BaseInputProps, exceto 'type', 'inputMode', e 'endAdornment',
- * pois PasswordInput gerencia esses atributos internamente para sua funcionalidade específica.
- */
+// Interface atualizada
 export interface PasswordInputProps extends Omit<BaseInputProps, 'type' | 'inputMode' | 'endAdornment'> {
-  /**
-   * (Opcional) Texto para o aria-label do botão de mostrar senha.
-   * @default "Mostrar senha"
-   */
   showPasswordLabel?: string;
-  /**
-   * (Opcional) Texto para o aria-label do botão de ocultar senha.
-   * @default "Ocultar senha"
-   */
   hidePasswordLabel?: string;
-  /**
-   * (Opcional) Classes CSS adicionais para o ícone de toggle.
-   * @default 'h-5 w-5 text-gray-400'
-   */
   iconClassName?: string;
+  error?: string | null; // Erro vindo do pai (ex: validação do form)
+  requiredMessage?: string; // Mensagem customizada para campo obrigatório
+  /** Sinaliza se uma tentativa de submissão ocorreu (gerenciado pelo pai) */
+  attemptedSubmit?: boolean; // <-- NOVA PROP
 }
+
+// Função de validação de força (permanece a mesma)
+const validatePasswordStrength = (password: string): string | null => {
+  if (!password) {
+    return null;
+  }
+  const missingRequirements: string[] = [];
+  const minLength = 8;
+  const specialChars = /[!@#$%^&*(),.?":{}|<>_-]/;
+
+  if (password.length < minLength) missingRequirements.push(`mínimo ${minLength} caracteres`);
+  if (!/[A-Z]/.test(password)) missingRequirements.push("1 letra maiúscula");
+  if (!/[a-z]/.test(password)) missingRequirements.push("1 letra minúscula");
+  if (!/\d/.test(password)) missingRequirements.push("1 número");
+  if (!specialChars.test(password)) missingRequirements.push("1 caractere especial");
+
+  if (missingRequirements.length > 0) {
+    return `Senha precisa incluir: ${missingRequirements.join('; ')}.`;
+  }
+  return null;
+};
 
 /**
  * @component PasswordInput
- * @description
- * Componente especializado para entrada de senhas, construído sobre o BaseInput.
- * Inclui um botão de toggle (ícone de olho) para mostrar/ocultar a senha digitada.
- * Herda as funcionalidades de BaseInput (label, erro, required, etc.).
- * O tipo de input alterna entre 'password' e 'text' com base no estado de visibilidade.
- *
- * @usage
- * Use este componente para campos de senha em formulários.
- *
- * @example
- * <PasswordInput
- *   label="Senha"
- *   value={password}
- *   onChange={(e) => setPassword(e.target.value)}
- *   placeholder="Digite sua senha"
- *   required
- *   error={passwordError}
- * />
+ * @description Componente de senha que mostra erro de força ao digitar,
+ *              erro de campo obrigatório (se 'required' e 'attemptedSubmit' forem true),
+ *              e prioriza erro externo.
  */
-export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
+export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   (
     {
       showPasswordLabel = "Mostrar senha",
       hidePasswordLabel = "Ocultar senha",
-      iconClassName = 'h-5 w-5 text-gray-400', // Estilo padrão do ícone
-      disabled, // Pega o disabled das props
-      ...restProps // Pega todas as outras props de BaseInputProps (exceto as omitidas)
+      iconClassName = 'h-5 w-5 text-gray-400',
+      disabled,
+      onChange: parentOnChange,
+      error: externalError,
+      value,
+      required,
+      requiredMessage = "Senha é Obrigatório",
+      attemptedSubmit = false, // <-- Valor padrão da nova prop
+      ...restProps
     },
     ref
   ) => {
-    // Estado para controlar a visibilidade da senha
     const [showPassword, setShowPassword] = useState(false);
+    const [strengthValidationError, setStrengthValidationError] = useState<string | null>(null);
 
-    /** Alterna a visibilidade da senha */
     const togglePasswordVisibility = () => {
-      // Só alterna se o input não estiver desabilitado
       if (!disabled) {
         setShowPassword((prev) => !prev);
       }
     };
 
-    // Determina o tipo de input a ser passado para BaseInput
-    const inputType = showPassword ? 'text' : 'password';
+    useEffect(() => {
+      const currentPassword = typeof value === 'string' ? value : '';
+      const validationError = validatePasswordStrength(currentPassword);
+      setStrengthValidationError(validationError);
+    }, [value]);
 
-    // Cria o elemento do botão de toggle (ícone)
+    const handleInternalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (parentOnChange) {
+        parentOnChange(e);
+      }
+    };
+
+    const inputType = showPassword ? 'text' : 'password';
     const toggleButton = (
       <button
-        type="button" // Importante para não submeter o formulário
+        type="button"
         onClick={togglePasswordVisibility}
-        // Desabilita o botão se o input estiver desabilitado
         disabled={disabled}
-        // Remove o botão do fluxo de tabulação, focando no input
         tabIndex={-1}
-        // Melhora a acessibilidade com um label descritivo
         aria-label={showPassword ? hidePasswordLabel : showPasswordLabel}
-        // Aplica classes para estilo e cursor (pointer-events são gerenciados no BaseInput)
-        className={`focus:outline-none ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+        className={`focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       >
-        {showPassword ? (
-          <EyeOff className={iconClassName} aria-hidden="true" />
-        ) : (
-          <Eye className={iconClassName} aria-hidden="true" />
-        )}
+        {showPassword ? <EyeOff className={iconClassName} aria-hidden="true" /> : <Eye className={iconClassName} aria-hidden="true" />}
       </button>
     );
+
+    // --- LÓGICA DE EXIBIÇÃO DO ERRO (ATUALIZADA) ---
+    let displayError: string | null = null;
+    const isValueEmpty = !value || String(value).trim() === '';
+
+    if (externalError) {
+      // 1. PRIORIDADE MÁXIMA: Erro externo vindo do pai.
+      displayError = externalError;
+    } else if (required && isValueEmpty && attemptedSubmit) { // <-- VERIFICA attemptedSubmit AQUI
+      // 2. SEGUNDA PRIORIDADE: Campo obrigatório, vazio E HOUVE TENTATIVA DE SUBMISSÃO.
+      displayError = requiredMessage;
+    } else if (!isValueEmpty) {
+      // 3. TERCEIRA PRIORIDADE: Campo não está vazio, mostra erro de força (se houver).
+      //    Não mostramos erro de força se o campo estiver vazio.
+      displayError = strengthValidationError;
+    }
+    // 4. CASO PADRÃO: Nenhuma das condições acima. Sem erro.
 
     return (
       <BaseInput
         ref={ref}
-        // Passa o tipo dinâmico ('password' ou 'text')
         type={inputType}
-        // Passa o botão como adornment final
         endAdornment={toggleButton}
-        // Passa o estado de desabilitado
         disabled={disabled}
-        // Passa todas as outras props recebidas para o BaseInput
+        onChange={handleInternalChange}
+        error={displayError}
+        value={value ?? ''}
+        required={required} // Mantemos o required para semântica HTML e acessibilidade
         {...restProps}
+        aria-invalid={!!displayError}
+        // aria-describedby={displayError ? `${restProps.id || restProps.name}-error` : undefined}
       />
     );
   }
