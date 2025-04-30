@@ -3,6 +3,7 @@ const db = require('../bd.js');
 const {hashPassword, decryptPassword} = require('./passwordManagement.js');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
+const emailSender = require('../utils/mailSender');
 
 //Chave Publica
 const PUBLIC_KEY = process.env.PUBLIC_KEY.replace(/\\n/g, '\n');
@@ -98,7 +99,25 @@ exports.Delete = async (req, res) => {
 }
 
 exports.RecoverPassword = async (req, res) => {
-    res.status(200).send('Recuperar senha do professor');
+    const {code, email} = req.body;
+
+    try{
+        const data = new Date();
+        const professor = await db.pgSelect('professor', {professor_email:email});
+        const bd_code = await db.pgSelect('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString()});
+
+        if(bd_code[0].status == 0) {
+            bd_code[0].status = 1;
+            
+            const resp = await db.pgUpdate('verifyCode', {status:bd_code.status}, {professor_id:professor[0].id, code:code, data_sol:data.toISOString()});
+            res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY});
+        } else {
+            res.status(400).json({msg:'codigo ja utilizado'});
+        }
+    } catch (err) {
+        console.log('erro: ', err);
+        res.status(400).json({msg:'nao foi possivel atender sua solicitadao: ', err});
+    }
 }
 
 exports.Home = async (req, res) => {
@@ -107,9 +126,65 @@ exports.Home = async (req, res) => {
 }
 
 exports.SendEmail = async (req, res) => {
-    res.status(200).send(`Rota para enviar e-mail`);
+    
+    try {
+        const professor = db.pgSelect('professor', {professor_email:req.params.id});
+        if(professor) {
+            const data = new Date();
+            var code = genRandomCode(0, 9999);
+            const old_code = await db.pgSelect('verifyCode', {professor_id:professor[0].id, data_sol:data.toISOString()});
+
+            const used_codes = old_code.map((iten) => {
+                iten.code
+            })
+            
+            while (used_codes.includes(code)) {
+                code = genRandomCode(0, 9999);
+            }
+
+            emailSender.sendEmail(professor[0].professor_email, code);
+
+            try {
+                const resp = await db.pgInsert('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString, status:0});
+                res.status(200).json({msg:'email enviado'});
+            } catch(err) {
+                console.log('erro ao inserir no banco de dados: ', err);
+                res.status(400).json({msg:'erro no banco de dados, nao foi possivel atender a sua solicitacao'});
+            }
+            
+        } else {
+            res.status(400).json({msg:'professor nao cadastrado no banco de dados'});
+        }
+    } catch (err) {
+        console.log('erro: ', err);
+        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+    }
 }
 
 exports.NewPassword = async (req, res) => {
-    res.status(201).send(`Enviar nova senha`);
+    const {newPass, email} = req.body;
+
+    try {
+         //desencriptar senha 
+        const decryptedPassword = await decryptPassword(newPass);
+        //fazer hash de senha
+        const hashedPassword = await hashPassword(decryptedPassword);
+        const professor = await db.pgSelect('professor', {professor_email:email});
+        const resp = await db.pgUpdate('professor', {password:hashedPassword}, {id:professor[0].id});
+
+        res.status(201).json({msg:'password trocado com sucesso'})
+
+    } catch (err) {
+        console.log('erro: ', err);
+        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+    }
+}
+
+
+function genRandomCode(max, min) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+
 }
