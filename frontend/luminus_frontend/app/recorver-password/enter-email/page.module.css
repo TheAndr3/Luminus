@@ -76,10 +76,10 @@ body, html {
 .input{
     color:#000;
     width: 80%;
-    height: 25px;
-    border-radius: 10px;
+    height: 40px;
+    border-radius: 5px;
     border: 2px solid rgb(195, 193, 193);
-    border-radius: 9999px;
+    
 }
 
 .submitButton{
