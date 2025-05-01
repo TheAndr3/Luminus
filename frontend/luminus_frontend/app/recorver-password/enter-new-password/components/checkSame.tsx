@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import style from "@/app/recorverPassword/enterNewPassword/page.module.css";
+import style from "@/app/recorver-password/enter-new-password/page.module.css";
 import {api} from "@/services/api"
 import { redirect } from "next/navigation";
 
@@ -33,7 +33,7 @@ export default function CheckSame() {
 
 
             //teste
-            alert('Senha alterada com sucesso!'+email);// colocar depois do endpoint q maike mandar
+            alert('Senha alterada com sucesso!'+email);
             setIsLoading(true);
             //teste termina aqui
 

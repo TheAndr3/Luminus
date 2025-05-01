@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import styleOtp from "@/app/recorverPassword/recoveryCode/components/otp.module.css"
-import style from "@/app/recorverPassword/recoveryCode/page.module.css"
+import styleOtp from "@/app/recorver-password/recovery-code/components/otp.module.css"
+import style from "@/app/recorver-password/recovery-code/page.module.css"
 
 import { useRouter, useSearchParams} from "next/navigation";
 
@@ -52,7 +52,7 @@ export default function OtpFunction(){
 
             //teste
 
-            router.push(`/recorverPassword/enterNewPassword?email=${email}`)
+            router.push(`/recorver-password/enter-new-password?email=${email}`)
             alert("Código correto!"+otpConected);
             //teste termina aq
 
@@ -63,7 +63,7 @@ export default function OtpFunction(){
 
             if (response.status >= 200 && response.status < 300) {
                 if (response.data.valid) { 
-                    router.push(`/recorverPassword/enterNewPassword?email=${email}`);
+                    router.push(`/recorver-password/enter-new-password?email=${email}`);
                 } else {
                     alert("Código incorreto ou expirado!");
                 }
@@ -76,7 +76,7 @@ export default function OtpFunction(){
     }
     //função para fazer voltar a tela de inserção de email 
     function backToEnterEmail(){
-        router.push("/recorverPassword/enterEmail");
+        router.push("/recorver-password/enter-email");
     }
 
     return(
