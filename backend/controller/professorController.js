@@ -1,16 +1,16 @@
 //Controller do professor
 const db = require('../bd.js');
-const {hashPassword, decryptPassword} = require('./passwordManagement.js');
+const {hashPassword, decryptPassword} = require('../utils/passwordManagement.js');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const emailSender = require('../utils/mailSender');
 
 //Chave Publica
-const PUBLIC_KEY = process.env.PUBLIC_KEY.replace(/\\n/g, '\n');
+const PUBLIC_KEY = process.env.PUBLIC_KEY;
 
 //Enviar chave pública
 exports.GetPublicKey = async (req, res) => {
-    res.status(200).send(PUBLIC_KEY);
+    res.status(200).json({ publicKey: PUBLIC_KEY });
 }
 
 exports.Login = async (req, res) => {
@@ -19,10 +19,6 @@ exports.Login = async (req, res) => {
     try {
         // Desencriptar a senha recebida
         const decryptedPassword = await decryptPassword(password);
-
-        if (!decryptedPassword) {
-            return res.status(400).send('Erro ao desencriptar a senha');
-        }
 
         // Buscar o professor pelo email usando pgSelect
         const rows = await db.pgSelect('Professor', { email_professor: email });
@@ -52,12 +48,16 @@ exports.Login = async (req, res) => {
         //Caso dê erro, retornar o status 500 e a mensagem de erro
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro ao realizar login');
+        res.status(500).send('Erro ao realizar login:', err);
     }
 };
 
 exports.Create = async (req, res) => {
     const {email, password, name} = req.body;
+
+    if (!email || !password || !name) {
+        res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
+    }
 
     //desencriptar senha 
     const decryptedPassword = await decryptPassword(password);
@@ -80,7 +80,7 @@ exports.Create = async (req, res) => {
             res.status(409).json({message:'Esse e-mail já possui um cadastro'});
         }
     } catch (err) {
-        return res.status(400).json({ error: err.message});
+        res.status(404).json({message:'Erro ao cadastrar usuário: ', err});
     }
 }
 

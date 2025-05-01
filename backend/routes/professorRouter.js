@@ -6,7 +6,7 @@ const professorController = require('../controller/professorController.js');
 routerProfessor.get('/professor/public-key', professorController.GetPublicKey);  
 
 //Cadastro
-routerProfessor.post('/professor', professorController.Create);
+routerProfessor.post('/professor/register', professorController.Create);
 
 //Login
 routerProfessor.post('/professor/login', professorController.Login);

@@ -3,18 +3,18 @@ const routerClassroom = express.Router();
 const classroomController = require('../controller/classroomController.js');
 
 //Listar class
-routerClassroom.get('/class', classroomController.List);
+routerClassroom.get('/class/list', classroomController.List);
 
 //Obter class específica
 routerClassroom.get('/class/:id', classroomController.Get);
 
 //Criar nova class
-routerClassroom.post('/class', classroomController.Create);
+routerClassroom.post('/class/create', classroomController.Create);
 
 //Editar class
-routerClassroom.put('/class/:id', classroomController.Update);
+routerClassroom.put('/class/:id/update', classroomController.Update);
 
 //Deletar class
-routerClassroom.delete('/class/:id', classroomController.Delete);
+routerClassroom.delete('/class/:id/delete', classroomController.Delete);
 
 module.exports = routerClassroom;
