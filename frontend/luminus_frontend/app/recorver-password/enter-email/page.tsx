@@ -3,7 +3,7 @@ import logoLuminus from '@/app/Image/logoLuminus.svg';
 import style from '@/app/recorver-password/enter-email/page.module.css';
 import Link from 'next/link';
 
-import {api} from "@/services/api";
+import {sendEmail} from "@/services/api";
 import {redirect} from 'next/navigation';
 
 
@@ -25,27 +25,18 @@ export default function enterEmail(){
 
 
         //try para enviar para api
-        try{    
-            //envia o email pra api
-
+        try {
+            const response = await sendEmail(email); // Recebe diretamente o email ou undefined
             
-            const response = await api.post("/professor/send-email/:id",{id: email}) //duvida nesse post ai, no de mikey tá get, n entendi muito bem 
-        
-            if(response.status >= 200 && response.status < 300){
-                if(response.data.valid){
-                    //redireciona para a pagina de inserção de codigo
-                    redirect(`/recorver-password/recovery-code?email=${encodeURIComponent(email!)}`);
-                }
-                else{
-                    alert("Não encontramos seu email em nossos registros!");
-                }
+            if (response === email) { // Comparação direta se o email recebido é igual
+                redirect(`/recorver-password/recovery-code?email=${encodeURIComponent(email!)}`);
+            } 
+            else {
+                alert("Não encontramos seu email em nossos registros!");
             }
-            else{
-                alert("Erro! API não response");
-            }
-        
-        }catch(err){
-
+        } 
+        catch (error) {
+            alert("Erro ao verificar o email: ");
         }
         
 

@@ -6,7 +6,7 @@ import style from "@/app/recorver-password/recovery-code/page.module.css"
 
 import { useRouter, useSearchParams} from "next/navigation";
 
-import {api} from "@/services/api";
+import {sendCode} from "@/services/api";
 
 
 
@@ -57,9 +57,9 @@ export default function OtpFunction(){
             //teste termina aq
 
 
-
-
-            const response = await api.post("/professor/recorver-password/:id", {id:email, codigo: otpConected }); 
+            //comentario pq como ta dando erro com a comunicação API, vejo depois
+            /*
+            const response = await sendCode.post("/professor/recorver-password/:id", {id:email, codigo: otpConected }); 
 
             if (response.status >= 200 && response.status < 300) {
                 if (response.data.valid) { 
@@ -70,10 +70,15 @@ export default function OtpFunction(){
             } else {
                 alert("Resposta inesperada da API");
             }
+
+            */
         } 
         catch(err) {
         }
+        
     }
+
+
     //função para fazer voltar a tela de inserção de email 
     function backToEnterEmail(){
         router.push("/recorver-password/enter-email");
