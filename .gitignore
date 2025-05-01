@@ -2,4 +2,5 @@
 /frontend/luminus_frontend/node_modules
 /backend/.env*
 *.pem
+*/node_modules
 
