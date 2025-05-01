@@ -4,6 +4,7 @@ const {hashPassword, decryptPassword} = require('./passwordManagement.js');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const emailSender = require('../utils/mailSender');
+const jwt = require('jsonwebtoken');
 
 //Chave Publica
 const PUBLIC_KEY = process.env.PUBLIC_KEY.replace(/\\n/g, '\n');
@@ -108,9 +109,16 @@ exports.RecoverPassword = async (req, res) => {
 
         if(bd_code[0].status == 0) {
             bd_code[0].status = 1;
+
+            const payload = {userId: professor[0].id, email:professor[0].email, code:code, data:data}
+
+            //geracao do token a ser utilizado
+            const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
             
-            const resp = await db.pgUpdate('verifyCode', {status:bd_code.status}, {professor_id:professor[0].id, code:code, data_sol:data.toISOString()});
-            res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY});
+            //atualiza que o codigo ja foi utilizado
+            await db.pgUpdate('verifyCode', {status:bd_code.status}, {professor_id:professor[0].id, code:code, data_sol:data.toISOString()});
+
+            res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
             res.status(400).json({msg:'codigo ja utilizado'});
         }
@@ -163,16 +171,57 @@ exports.SendEmail = async (req, res) => {
 
 exports.NewPassword = async (req, res) => {
     const {newPass, email} = req.body;
+    const token = req.params.token;
 
     try {
+        
          //desencriptar senha 
         const decryptedPassword = await decryptPassword(newPass);
         //fazer hash de senha
         const hashedPassword = await hashPassword(decryptedPassword);
         const professor = await db.pgSelect('professor', {professor_email:email});
-        const resp = await db.pgUpdate('professor', {password:hashedPassword}, {id:professor[0].id});
 
-        res.status(201).json({msg:'password trocado com sucesso'})
+        //verifica se o token passado eh valido
+        try{
+            const result = jwt.verify(token, process.env.TOKEN_KEY, (err, decode) => {
+                if(err) {
+                    
+                    console.log('deu ruim: ', err);
+                    throw err;
+                } else {
+                    console.log(decode);
+                    return decode;
+                }
+            })
+            const data = new Date();
+
+            const oldTokens = await db.pgSelect('tokencode', {token:token, professor_id:professor[0].id});
+
+            //caso o token ja tenha sido utilizado
+            if(Object.values(oldTokens).length > 0) {
+                res.status(403).json({msg:'token invalido'});
+            } else {
+                //token valido e pertence aquele professor
+                if (result.professor_id == professor[0].id && result.email == email) {
+
+                    const dataToDb = {
+                        token:token,
+                        professor_id:professor[0].id
+                    }
+
+                    //insere na tabela o token ja utilizado
+                    await db.pgInsert('tokencode', dataToDb);
+                    const resp = await db.pgUpdate('professor', {password:hashedPassword}, {id:professor[0].id});
+                    res.status(201).json({msg:'password trocado com sucesso'})
+                } else {
+                    res.status(403).json({msg:'token invalido'});
+                }
+            }
+
+            
+        } catch (err) {
+            res.status(403).json({msg:'token invalido'});
+        }
 
     } catch (err) {
         console.log('erro: ', err);

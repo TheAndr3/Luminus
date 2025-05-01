@@ -153,7 +153,6 @@ create table VerifyCode(
 create table TokenCode(
 	token VARCHAR(255),
 	professor_id INT,
-	status INT,
 
 	CONSTRAINT fk_Token_Profesor FOREIGN KEY(professor_id) REFERENCES Professor(id),
 	PRIMARY KEY(token, professor_id)
