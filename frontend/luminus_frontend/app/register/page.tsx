@@ -153,7 +153,7 @@ export default function RegisterPage() { // <- Nome do componente atualizado par
           />
         </div>
 
-        <h1 className={styles.title}>REGISTRO</h1> {/* Título pode ser ajustado */}
+        <h1 className={styles.title}>CADASTRO</h1> {/* Título pode ser ajustado */}
 
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           {/* Campos do formulário (mantidos como estavam) */}
@@ -219,7 +219,7 @@ export default function RegisterPage() { // <- Nome do componente atualizado par
             className={`${styles.submitButton} mt-3`}
             disabled={isLoading}
           >
-            {isLoading ? 'Registrando...' : 'Registrar'} {/* Texto do botão ajustado */}
+            {isLoading ? 'Cadastrando...' : 'Cadastrar'} {/* Texto do botão ajustado */}
           </button>
         </form>
 
