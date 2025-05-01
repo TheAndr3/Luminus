@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import logoLuminus from '@/app/Image/logoLuminus.svg';
-import style from '@/app/recorverPassword/enterEmail/page.module.css';
+import style from '@/app/recorver-password/enter-email/page.module.css';
 import Link from 'next/link';
 
-import {api} from "@/services/api";
+import {sendEmail} from "@/services/api";
 import {redirect} from 'next/navigation';
 
 
@@ -19,33 +19,24 @@ export default function enterEmail(){
 
 
         //teste
-        redirect(`/recorverPassword/recoveryCode?email=${encodeURIComponent(email!)}`);
+        redirect(`/recorver-password/recovery-code?email=${encodeURIComponent(email!)}`);
         //teste termina aqui
 
 
 
         //try para enviar para api
-        try{    
-            //envia o email pra api
-
-            //duvida nesse post ai, no de mikey tá get, n entendi muito bem 
-            const response = await api.post("/professor/send-email/:id",{id: email}) 
-        
-            if(response.status >= 200 && response.status < 300){
-                if(response.data.valid){
-                    //redireciona para a pagina de inserção de codigo
-                    redirect(`/recorverPassword/recoveryCode?email=${encodeURIComponent(email!)}`);
-                }
-                else{
-                    alert("Não encontramos seu email em nossos registros!");
-                }
+        try {
+            const response = await sendEmail(email); // Recebe diretamente o email ou undefined
+            
+            if (response === email) { // Comparação direta se o email recebido é igual
+                redirect(`/recorver-password/recovery-code?email=${encodeURIComponent(email!)}`);
+            } 
+            else {
+                alert("Não encontramos seu email em nossos registros!");
             }
-            else{
-                alert("Erro! API não response");
-            }
-        
-        }catch(err){
-
+        } 
+        catch (error) {
+            alert("Erro ao verificar o email: ");
         }
         
 

@@ -36,7 +36,7 @@ export default function recoveryCode(){
                     
                 
                 
-                    <Link href={'/enterEmail'} className={style.link}> Não recebeu código? <span className={style.red}> Reenviar código</span></Link>
+                    <Link href={'/recorver-password/enter-email'} className={style.link}> Não recebeu código? <span className={style.red}> Reenviar código</span></Link>
                 </section>
             </div>
 

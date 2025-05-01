@@ -149,3 +149,12 @@ create table VerifyCode(
 	CONSTRAINT fk_VerifyCode_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id),
 	PRIMARY KEY(code, professor_id, data_sol)
 );
+
+create table TokenCode(
+	token VARCHAR(255),
+	professor_id INT,
+	status INT,
+
+	CONSTRAINT fk_Token_Profesor FOREIGN KEY(professor_id) REFERENCES Professor(id),
+	PRIMARY KEY(token, professor_id)
+);
