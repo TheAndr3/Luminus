@@ -14,7 +14,7 @@
 .leftPanel {
   width: 35%;
   background-color: white;
-  padding: 1rem 2.5rem;
+  padding: 4.5rem 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,7 +35,6 @@
 
 /* Container do Logo Principal (Luminus) */
 .logoContainer {
-	margin-top: 2.5rem;
   margin-bottom: 2.5rem;
   flex-shrink: 0;
   transform: scale(1.5);

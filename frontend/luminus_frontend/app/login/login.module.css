@@ -23,7 +23,7 @@
 .rightPanel {
 	width: 35%;
 	background-color: white;
-	padding: 1.5rem 2.5rem; /* Padding superior/inferior para dar espaço */
+	padding: 4.5rem 2.5rem; /* Padding superior/inferior para dar espaço */
 	display: flex;
 	flex-direction: column;
 	align-items: center;    /* Alinha logo e contentWrapper horizontalmente */
@@ -35,7 +35,7 @@
 
 /* Container do Logo Principal (Luminus - Fixo no topo) */
 .logoContainer {
-	margin-top: 2.5rem;
+
 	/*margin-bottom: rem; /* <<< Ajustado: Espaço abaixo do logo */
     align-self: center;
     flex-shrink: 0;

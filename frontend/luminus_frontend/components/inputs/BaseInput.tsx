@@ -4,7 +4,7 @@ import React, { useId } from 'react';
 // ErrorContainer não é mais necessário aqui
 
 export interface BaseInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'aria-describedby'> { // Removido error, errorDisplayMode, errorContainerId de Omit se estavam lá
-  label: string;
+  label?: string;
   required?: boolean;
   // error?: string | null; // Alternativa: manter error para passar a info, mas não usar para renderizar container
   isInvalid?: boolean; // Nova prop para indicar estado inválido (influencia estilo e aria-invalid)
