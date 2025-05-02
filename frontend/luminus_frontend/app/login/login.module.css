@@ -1,333 +1,388 @@
-/* app/login/login.module.css (Logo fixo no topo, conteúdo centralizado) */
+/*
+ * @file login.module.css
+ * @description Folha de estilos CSS Modules específica para a página de login (LoginPage.tsx).
+ *              Define o layout de dois painéis (carrossel à esquerda, formulário à direita),
+ *              com o logo principal fixo no topo do painel direito e o conteúdo do formulário
+ *              centralizado vertical e horizontalmente abaixo dele usando um wrapper.
+ *              Inclui regras para responsividade em telas menores.
+ */
 
-/* Container Principal da Página */
+/* --- Estrutura Principal da Página --- */
+
+/* Container geral que engloba toda a página de login. */
 .pageContainer {
-	display: flex;
-	min-height: 100vh;
-	background-color: #f0f2f5;
-    overflow: hidden;
-    font-family: inherit;
+	display: flex; /* Habilita Flexbox para criar o layout de duas colunas (painéis). */
+	min-height: 100vh; /* Garante que a página ocupe pelo menos toda a altura da janela do navegador. */
+	background-color: #f0f2f5; /* Define uma cor de fundo cinza claro para a página. */
+    overflow: hidden; /* Impede que barras de rolagem apareçam no container principal; a rolagem será controlada internamente nos painéis, se necessário. */
+    font-family: inherit; /* Garante que a fonte definida no elemento pai (ex: body) seja utilizada. */
 }
 
-/* Painel Esquerdo (Carousel) */
+/* Painel Esquerdo (destinado ao Carrossel de imagens). */
 .leftPanel {
-	width: 65%;
-	background-color: #1a3a6d;
-	color: white;
-	position: relative;
-	overflow: hidden;
-	padding: 0;
+	width: 65%; /* Define a largura do painel esquerdo (maior parte da tela). */
+	background-color: #1a3a6d; /* Cor de fundo azul escuro. */
+	color: white; /* Cor do texto padrão (caso haja algum texto sobreposto). */
+	position: relative; /* Necessário para posicionar elementos filhos (como .NexusLogoContainer) de forma absoluta dentro dele. */
+	overflow: hidden; /* Esconde qualquer conteúdo (imagem do carrossel) que exceda os limites do painel. */
+	padding: 0; /* Remove qualquer padding interno padrão. */
 }
 
-/* Painel Direito (Formulário) */
+/* Painel Direito (destinado ao Logo principal e ao Formulário de login). */
 .rightPanel {
-	width: 35%;
-	background-color: white;
-	padding: 4.5rem 2.5rem; /* Padding superior/inferior para dar espaço */
-	display: flex;
-	flex-direction: column;
-	align-items: center;    /* Alinha logo e contentWrapper horizontalmente */
-	/* justify-content: center; <<< CORRIGIDO: Removido daqui */
-	box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-	z-index: 1;
-	overflow-y: auto; /* Scroll se o CONTEÚDO do wrapper for muito alto */
+	width: 35%; /* Define a largura do painel direito (menor parte da tela). */
+	background-color: white; /* Cor de fundo branca. */
+	padding: 4.5rem 2.5rem; /* Espaçamento interno vertical (4.5rem) e horizontal (2.5rem) para afastar o conteúdo das bordas. */
+	display: flex; /* Habilita Flexbox para organizar seus filhos diretos (.logoContainer e .contentWrapper). */
+	flex-direction: column; /* Empilha os filhos verticalmente (logo acima do wrapper do conteúdo). */
+	align-items: center;    /* Centraliza os filhos diretos (.logoContainer, .contentWrapper) horizontalmente dentro do painel. */
+	/* justify-content: center; <<< Nota: justify-content não está sendo aplicado aqui; a centralização vertical do conteúdo é feita pelo .contentWrapper. */
+	box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); /* Adiciona uma sombra sutil à esquerda do painel para separação visual. */
+	z-index: 1; /* Garante que este painel fique acima de outros elementos com z-index menor, se houver sobreposição. */
+	overflow-y: auto; /* Habilita a rolagem vertical APENAS neste painel se o conteúdo interno (.contentWrapper) for mais alto que o espaço disponível. */
 }
 
-/* Container do Logo Principal (Luminus - Fixo no topo) */
+/* --- Logos --- */
+
+/* Container do Logo Principal (Luminus - posicionado no topo do painel DIREITO). */
 .logoContainer {
-
-	/*margin-bottom: rem; /* <<< Ajustado: Espaço abaixo do logo */
-    align-self: center;
-    flex-shrink: 0;
-    transform: scale(1.5); /* <<< Ajustado: Escala mais próxima do Register */
+	/* margin-bottom: rem; <<< Nota: O comentário original sobre ajuste de margin-bottom não está refletido em uma regra ativa aqui. O espaçamento virá implicitamente ou do padding do pai/filho. */
+    align-self: center; /* Garante a centralização horizontal (reforço para o flex container pai). */
+    flex-shrink: 0; /* Impede que o container do logo encolha se o espaço vertical for limitado. */
+    transform: scale(1.5); /* Aumenta o tamanho do logo em 50%. */
 }
 
-/* Container do Logo Secundário (Nexus - no painel ESQUERDO) */
+/* Container do Logo Secundário (Nexus - posicionado sobre o painel ESQUERDO). */
 .NexusLogoContainer {
-	position: absolute;
-	top: 1.5rem;
-	left: 2rem;
-    z-index: 2;
-    transform: scale(1.5); /* <<< CORRIGIDO: Mantido escala 0.9 como no Register */
+	position: absolute; /* Posicionamento absoluto em relação ao .leftPanel (que tem position: relative). */
+	top: 1.5rem; /* Distância do topo do painel esquerdo. */
+	left: 2rem; /* Distância da esquerda do painel esquerdo. */
+    z-index: 2; /* Garante que o logo fique sobreposto ao conteúdo do carrossel (que teria z-index menor ou 0). */
+    transform: scale(1.5); /* <<< Nota: Comentário original mencionava escala 0.9, mas a regra é 1.5. Define o tamanho do logo Nexus. */
 }
 
-/* <<< Wrapper para Conteúdo Centralizado >>> */
+/* --- Wrapper Centralizador de Conteúdo --- */
+
+/* Wrapper que engloba o Título, Formulário e Link de Cadastro no painel direito. */
 .contentWrapper {
-    width: 100%;           /* Ocupa a largura disponível */
-    max-width: 400px;      /* Mantém a largura máxima do conteúdo */
-    display: flex;
-    flex-direction: column;
-    align-items: center;    /* Centraliza SEU conteúdo horizontalmente */
-    justify-content: center;/* Centraliza SEU conteúdo verticalmente */
-    flex-grow: 1;          /* <<< FAZ OCUPAR O ESPAÇO RESTANTE NO rightPanel */
-    padding-bottom: 1rem;  /* Espaço no fim antes do scroll acabar */
+    width: 100%;           /* Faz o wrapper ocupar toda a largura disponível dentro do .rightPanel. */
+    max-width: 400px;      /* Limita a largura máxima do conteúdo dentro do wrapper para melhor legibilidade. */
+    display: flex;         /* Habilita Flexbox para organizar o conteúdo interno (título, form, link). */
+    flex-direction: column;/* Empilha o conteúdo interno verticalmente. */
+    align-items: center;    /* Centraliza horizontalmente o conteúdo interno (título, form, link). */
+    justify-content: center;/* Centraliza verticalmente o conteúdo interno dentro deste wrapper. */
+    flex-grow: 1;          /* <<< IMPORTANTE: Faz este wrapper expandir para preencher todo o espaço vertical restante no .rightPanel (depois do .logoContainer), permitindo que 'justify-content: center' funcione efetivamente para centralizar verticalmente. */
+    padding-bottom: 1rem;  /* Adiciona um pequeno espaço no final do conteúdo, antes da borda inferior ou do fim da área de rolagem. */
 }
 
-/* Título "LOGIN" (Dentro do contentWrapper) */
+/* --- Elementos Dentro do contentWrapper --- */
+
+/* Título "LOGIN". */
 .title {
-	text-align: center;
-	margin-bottom: 1rem;
-	color: #333;
-	font-weight: bold;
-	font-size: 1.5rem;
-    flex-shrink: 0;
+	text-align: center; /* Centraliza o texto dentro do elemento. */
+	margin-bottom: 1rem; /* Espaço abaixo do título, antes do formulário/erro geral. */
+	color: #333; /* Cor do texto cinza escuro. */
+	font-weight: bold; /* Texto em negrito. */
+	font-size: 1.5rem; /* Tamanho da fonte (equivalente a 24px se a base for 16px). */
+    flex-shrink: 0; /* Impede que o título encolha se o espaço vertical for limitado. */
 }
 
-/* Container para Erro Geral (Dentro do contentWrapper) */
+/* Container para a Mensagem de Erro Geral (exibido acima do formulário). */
 .generalErrorContainer {
-  width: 100%;
-  /* max-width: 400px; */ /* Já controlado pelo contentWrapper */
-  margin-bottom: 0.8rem;
-  padding: 0.6rem 0.8rem;
-  background-color: #fadbd8;
-  border: 1px solid #e74c3c;
-  border-radius: 4px;
-  display: flex;
-  justify-content: center;
-  box-sizing: border-box;
-  flex-shrink: 0;
+  width: 100%; /* Ocupa a largura total do .contentWrapper. */
+  /* max-width é herdado/limitado pelo .contentWrapper. */
+  margin-bottom: 0.8rem; /* Espaço abaixo do container de erro, antes do formulário. */
+  padding: 0.6rem 0.8rem; /* Espaçamento interno. */
+  background-color: #fadbd8; /* Fundo rosa claro, comum para indicar erro. */
+  border: 1px solid #e74c3c; /* Borda vermelha sólida. */
+  border-radius: 4px; /* Bordas levemente arredondadas. */
+  display: flex; /* Usa Flexbox para alinhar o texto interno. */
+  justify-content: center; /* Centraliza o texto horizontalmente dentro do container. */
+  box-sizing: border-box; /* Garante que padding e border não aumentem a largura efetiva do elemento. */
+  flex-shrink: 0; /* Impede que o container de erro encolha. */
 }
-/* Nota: O texto dentro usará .errorText */
+/* Nota: O texto dentro deste container usará os estilos definidos em .errorText abaixo. */
 
-/* Formulário (Dentro do contentWrapper) */
+/* Formulário de Login (<form>). */
 .form {
-	width: 100%;
-	/* max-width: 400px; */ /* Já controlado pelo contentWrapper */
-	display: flex;
-	flex-direction: column;
-	gap: 0;
-    flex-shrink: 0;
+	width: 100%; /* Ocupa a largura total do .contentWrapper. */
+	/* max-width é herdado/limitado pelo .contentWrapper. */
+	display: flex; /* Usa Flexbox para organizar os filhos (input wrappers, extra options, botão). */
+	flex-direction: column; /* Empilha os filhos verticalmente. */
+	gap: 0; /* Remove qualquer espaçamento padrão entre os filhos diretos do flex container. O espaçamento será controlado por margens ou pelos wrappers. */
+    flex-shrink: 0; /* Impede que o formulário encolha. */
 }
 
-/* --- ESTRUTURA DE INPUT E ERRO --- */
+/* --- Estrutura Comum de Input + Slot de Erro --- */
+
+/* Wrapper para agrupar cada componente de Input com seu respectivo Slot de Erro. */
 .inputWrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-   margin-bottom: 0.2rem;
+  display: flex; /* Organiza o Input e o .errorSlot. */
+  flex-direction: column; /* Coloca o Input acima do .errorSlot. */
+  width: 100%; /* Ocupa a largura total disponível no formulário. */
+   margin-bottom: 0.2rem; /* Pequeno espaço vertical entre os campos de input (wrappers). */
 }
+/* Slot (espaço reservado) abaixo do input, onde a mensagem de erro será exibida. */
 .errorSlot {
-  min-height: 1.25rem;
-  width: 100%;
-  overflow: hidden;
+  min-height: 1.25rem; /* Garante uma altura mínima fixa (~20px) para evitar que o layout "pule" quando um erro aparece/desaparece. */
+  width: 100%; /* Ocupa a largura total. */
+  overflow: hidden; /* Esconde qualquer parte da mensagem de erro que exceda a altura mínima (caso o texto seja muito longo ou tenha múltiplas linhas inesperadas). */
 }
+/* Estilo padrão para o texto das mensagens de erro (usado dentro de .errorSlot e .generalErrorContainer). */
 .errorText {
-  color: #e74c3c;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  display: block;
+  color: #e74c3c; /* Cor vermelha para indicar erro. */
+  font-size: 0.75rem; /* Tamanho de fonte pequeno (12px). */
+  line-height: 1rem; /* Altura da linha (16px), projetada para caber dentro do min-height do .errorSlot. */
+  display: block; /* Garante que o elemento (span) ocupe sua própria linha e respeite a altura da linha. */
 }
 /* --- FIM DA ESTRUTURA DE INPUT E ERRO --- */
 
 
-/* Checkbox e Link "Esqueci Senha" (Dentro do form) */
+/* --- Opções Extras (Checkbox e Link) --- */
+
+/* Container para as opções "Manter conectado" e "Esqueci minha senha". */
 .extraOptions {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	font-size: 0.8rem;
-	color: #555;
-    margin-top: 0.3rem;
-    margin-bottom: 1rem;
-    width: 100%;
-    flex-shrink: 0;
+	display: flex; /* Alinha os itens internos (o controle de checkbox e o link) lado a lado. */
+	align-items: center; /* Alinha verticalmente os itens no centro. */
+	justify-content: space-between; /* Coloca o controle de checkbox na esquerda e o link na direita. */
+	flex-wrap: wrap; /* Permite que os itens quebrem para a linha de baixo em telas muito estreitas. */
+	font-size: 0.8rem; /* Define o tamanho da fonte para esta seção. */
+	color: #555; /* Cor padrão do texto cinza. */
+    margin-top: 0.3rem; /* Pequeno espaço acima desta seção. */
+    margin-bottom: 1rem; /* Espaço abaixo desta seção, antes do botão de submit. */
+    width: 100%; /* Ocupa a largura total. */
+    flex-shrink: 0; /* Impede que encolha. */
 }
+/* Container específico para o controle "Manter conectado" (checkbox + label). */
 .rememberMeControl {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+    display: flex; /* Alinha o checkbox e o label lado a lado. */
+    align-items: center; /* Alinha verticalmente. */
+    gap: 0.3rem; /* Pequeno espaço entre o checkbox e o label. */
 }
+/* Estilização básica para o input checkbox. */
 .checkboxInput {
-	cursor: pointer;
-    width: 0.9rem;
-    height: 0.9rem;
-    vertical-align: middle;
+	cursor: pointer; /* Cursor de mãozinha para indicar interação. */
+    width: 0.9rem; /* Largura do checkbox. */
+    height: 0.9rem; /* Altura do checkbox. */
+    vertical-align: middle; /* Tenta alinhar verticalmente com o texto do label adjacente. */
 }
+/* Estilização para o label do checkbox. */
 .checkboxLabel {
-	cursor: pointer;
-    user-select: none;
-    font-size: inherit;
+	cursor: pointer; /* Cursor de mãozinha também no label (boa prática). */
+    user-select: none; /* Impede que o usuário selecione acidentalmente o texto do label. */
+    font-size: inherit; /* Usa o mesmo tamanho de fonte definido em .extraOptions. */
 }
+/* Estilização para o link "Esqueci minha senha". */
 .forgotPasswordLink {
-	color: #e74c3c;
-	text-decoration: none;
-	font-weight: bold;
-    white-space: nowrap;
-    font-size: inherit;
+	color: #e74c3c; /* Cor vermelha/laranja destacada. */
+	text-decoration: none; /* Remove o sublinhado padrão. */
+	font-weight: bold; /* Texto em negrito. */
+    white-space: nowrap; /* Impede que o texto do link quebre em múltiplas linhas. */
+    font-size: inherit; /* Usa o mesmo tamanho de fonte definido em .extraOptions. */
 }
+/* Efeito ao passar o mouse sobre o link "Esqueci minha senha". */
 .forgotPasswordLink:hover {
-	text-decoration: underline;
+	text-decoration: underline; /* Adiciona sublinhado no hover. */
 }
 
-/* Botão de Login (Dentro do form) */
+/* --- Botão de Submissão --- */
+
+/* Estilo principal do botão de login. */
 .submitButton {
-	padding: 0.6rem 1.2rem;
-	background-color: #34495e;
-	color: white;
-	border: none;
-	border-radius: 25px;
-	cursor: pointer;
-	font-size: 0.9rem;
-	font-weight: bold;
-	transition: background-color 0.2s ease;
-	width: 100%;
-    margin-top: 0;
-    flex-shrink: 0;
+	padding: 0.6rem 1.2rem; /* Espaçamento interno vertical e horizontal. */
+	background-color: #34495e; /* Cor de fundo cinza azulado escuro. */
+	color: white; /* Cor do texto branca. */
+	border: none; /* Sem borda. */
+	border-radius: 25px; /* Bordas bem arredondadas, formato de pílula. */
+	cursor: pointer; /* Cursor de mãozinha. */
+	font-size: 0.9rem; /* Tamanho da fonte. */
+	font-weight: bold; /* Texto em negrito. */
+	transition: background-color 0.2s ease; /* Efeito suave na mudança de cor de fundo no hover. */
+	width: 100%; /* Ocupa toda a largura disponível no formulário. */
+    margin-top: 0; /* Sem margem superior padrão (o espaçamento vem do .extraOptions). */
+    flex-shrink: 0; /* Impede que encolha. */
 }
+/* Classe auxiliar para adicionar margem superior (se necessário). */
 .submitButton.mt-1 {
-    margin-top: 1rem;
+    margin-top: 1rem; /* Adiciona 1rem de margem acima se esta classe for aplicada. */
 }
+/* Efeito ao passar o mouse sobre o botão (somente quando não está desabilitado). */
 .submitButton:hover:not(:disabled) {
-	background-color: #2c3e50;
+	background-color: #2c3e50; /* Cor de fundo levemente mais escura. */
 }
+/* Estilo do botão quando está no estado desabilitado. */
 .submitButton:disabled {
-	background-color: #95a5a6;
-	cursor: not-allowed;
+	background-color: #95a5a6; /* Cor de fundo cinza claro/dessaturado. */
+	cursor: not-allowed; /* Cursor indicando que não é clicável. */
 }
 
-/* Link para Cadastro (Dentro do contentWrapper, após o form) */
+/* --- Link para Cadastro --- */
+
+/* Estilo para o texto e link "Não tem uma conta? Cadastre-se". */
 .switchLink {
-	margin-top: 1.2rem;
-    /* margin-bottom: 1rem; */ /* Removido, padding do wrapper cuida disso */
-	text-align: center;
-	font-size: 0.8rem;
-	color: #555;
-    flex-shrink: 0;
+	margin-top: 1.2rem; /* Espaço acima desta seção, após o botão. */
+    /* margin-bottom: 1rem; <<< Nota: Comentário original indica remoção; o padding do contentWrapper fornece espaço final. */
+	text-align: center; /* Centraliza o texto. */
+	font-size: 0.8rem; /* Tamanho de fonte pequeno. */
+	color: #555; /* Cor cinza para o texto base. */
+    flex-shrink: 0; /* Impede que encolha. */
 }
+/* Estilo específico para o link (<a>) dentro de .switchLink. */
 .switchLink a {
-	color: #e74c3c;
-	font-weight: bold;
-	text-decoration: none;
+	color: #e74c3c; /* Cor vermelha/laranja destacada. */
+	font-weight: bold; /* Negrito. */
+	text-decoration: none; /* Sem sublinhado padrão. */
 }
+/* Efeito ao passar o mouse sobre o link "Cadastre-se". */
 .switchLink a:hover {
-	text-decoration: underline;
+	text-decoration: underline; /* Adiciona sublinhado no hover. */
 }
 
 /* --- Classes Removidas/Não Utilizadas --- */
+/* (Nenhuma classe obsoleta identificada para remoção neste arquivo específico) */
 
 
 /*
 --------------------------------------------------------------------------
 AJUSTES RESPONSIVOS (Mantendo a estrutura com contentWrapper)
+Media Query para telas com largura máxima de 768px (tablets, celulares maiores).
 --------------------------------------------------------------------------
 */
 @media (max-width: 768px) {
-	.pageContainer {
-		flex-direction: column;
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
+	/* Muda o layout geral da página para coluna única. */
+    .pageContainer {
+		flex-direction: column; /* Empilha os painéis verticalmente. */
+        height: auto; /* Altura se ajusta ao conteúdo. */
+        min-height: 100vh; /* Garante que ocupe pelo menos a altura da tela. */
+        overflow: visible; /* Permite rolagem da página inteira se necessário. */
 	}
 
+    /* Painéis ocupam largura total e altura automática. */
 	.leftPanel,
 	.rightPanel {
-		width: 100%;
-		min-height: auto;
-        height: auto;
-		box-shadow: none;
-		padding: 0;
-        max-height: none;
-        overflow-y: visible;
+		width: 100%; /* Largura total. */
+		min-height: auto; /* Altura mínima baseada no conteúdo. */
+        height: auto; /* Altura automática. */
+		box-shadow: none; /* Remove a sombra lateral. */
+		padding: 0; /* Remove o padding base (será adicionado especificamente). */
+        max-height: none; /* Remove qualquer restrição de altura máxima. */
+        overflow-y: visible; /* Remove a rolagem interna dos painéis. */
 	}
 
+    /* Configuração do Painel Esquerdo (Carrossel) no modo responsivo. */
     .leftPanel {
-        min-height: 40vh;
-        order: 2;
-        overflow: hidden;
-        position: relative;
+        min-height: 40vh; /* Define uma altura mínima para o carrossel ser visível. */
+        order: 2; /* Muda a ordem: coloca o carrossel ABAIXO do formulário. */
+        overflow: hidden; /* Mantém o overflow hidden para o conteúdo do carrossel. */
+        position: relative; /* Mantém a posição relativa para o logo Nexus. */
     }
 
+    /* Configuração do Painel Direito (Formulário) no modo responsivo. */
 	.rightPanel {
-		padding: 2rem 1.5rem; /* Padding interno mobile */
-        order: 1;
-        align-items: center; /* Mantém alinhamento horizontal */
-        /* justify-content: center; <<< NÃO APLICAR NO MOBILE */
-        /* flex-grow: 1; <<< Opcional no mobile, pode remover se não precisar */
+		padding: 2rem 1.5rem; /* Define um padding interno menor para telas mobile. */
+        order: 1; /* Muda a ordem: coloca o formulário ACIMA do carrossel. */
+        align-items: center; /* Mantém a centralização horizontal dos seus filhos diretos. */
+        /* justify-content: center; <<< Nota: Não aplicado aqui no mobile. */
+        /* flex-grow: 1; <<< Nota: Opcional/removido no mobile, pois a altura é automática. */
 	}
 
-    /* <<< Ajuste do contentWrapper no mobile >>> */
+    /* Ajuste do Wrapper de Conteúdo no modo responsivo. */
     .contentWrapper {
-        flex-grow: 0; /* Não precisa crescer, conteúdo define altura */
-        justify-content: flex-start; /* Alinha conteúdo do wrapper no topo */
-        padding-bottom: 1rem; /* Mantém padding inferior */
-        max-width: 100%; /* Permite ocupar toda a largura mobile */
+        flex-grow: 0; /* Não precisa mais expandir verticalmente, a altura é definida pelo conteúdo. */
+        justify-content: flex-start; /* Alinha o conteúdo (título, form) no TOPO do wrapper, em vez de centralizar verticalmente. */
+        padding-bottom: 1rem; /* Mantém o espaço inferior. */
+        max-width: 100%; /* Permite que o wrapper ocupe toda a largura disponível no .rightPanel. */
     }
 
+    /* Logo Nexus (no painel esquerdo) no modo responsivo. */
 	.NexusLogoContainer {
 		position: absolute;
-        top: 1rem;
-        left: 1rem;
-        transform: scale(0.8); /* Reduz um pouco em telas menores */
+        top: 1rem; /* Mais próximo do topo. */
+        left: 1rem; /* Mais próximo da esquerda. */
+        transform: scale(0.8); /* Reduz o tamanho do logo em 20%. */
 	}
 
-    .logoContainer { /* Logo Luminus */
-        margin-bottom: 1.5rem;
-        transform: scale(0.8); /* <<< CORRIGIDO: Escala menor no mobile */
+    /* Logo Luminus (no painel direito) no modo responsivo. */
+    .logoContainer {
+        margin-bottom: 1.5rem; /* Espaço abaixo do logo. */
+        transform: scale(0.8); /* <<< Nota: Comentário original mencionava correção, regra é scale(0.8). Reduz o tamanho. */
     }
 
+    /* Título no modo responsivo. */
     .title {
-        font-size: 1.3rem;
-        margin-bottom: 1rem;
+        font-size: 1.3rem; /* Reduz ligeiramente o tamanho da fonte. */
+        margin-bottom: 1rem; /* Mantém ou ajusta o espaço abaixo. */
     }
 
+    /* Formulário no modo responsivo. */
 	.form {
-		max-width: 100%;
-        padding-bottom: 0;
+		max-width: 100%; /* Largura total. */
+        padding-bottom: 0; /* Sem padding extra no final do formulário. */
 	}
 
+    /* Espaçamento entre os inputs no modo responsivo. */
     .inputWrapper {
-         margin-bottom: 0.5rem;
+         margin-bottom: 0.5rem; /* Aumenta ligeiramente o espaço entre os campos. */
     }
 
+    /* Container de erro geral no modo responsivo. */
     .generalErrorContainer {
-        max-width: 100%;
-        margin-bottom: 1rem;
+        max-width: 100%; /* Largura total. */
+        margin-bottom: 1rem; /* Mais espaço abaixo. */
     }
 
+    /* Seção de opções extras no modo responsivo. */
     .extraOptions {
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        margin-bottom: 1.2rem;
-        gap: 0.5rem 1rem;
+        font-size: 0.75rem; /* Reduz o tamanho da fonte. */
+        margin-top: 0.5rem; /* Ajusta espaço acima. */
+        margin-bottom: 1.2rem; /* Mais espaço abaixo, antes do botão. */
+        gap: 0.5rem 1rem; /* Ajusta os espaços entre os itens para possível quebra de linha. */
     }
+    /* Link "Esqueci senha" (opcional forçar quebra no mobile). */
     .forgotPasswordLink {
-         /* flex-basis: 100%; */ /* Descomente se quiser forçar quebra */
-         /* text-align: right; */
+         /* flex-basis: 100%; */ /* Descomentar esta linha se quiser que o link vá para uma nova linha. */
+         /* text-align: right; */ /* Alinha à direita se for para nova linha. */
     }
 
+    /* Botão de submit no modo responsivo. */
     .submitButton {
-        font-size: 0.9rem;
-        padding: 0.8rem 1.3rem;
-        margin-top: 0;
+        font-size: 0.9rem; /* Mantém o tamanho da fonte. */
+        padding: 0.8rem 1.3rem; /* Ajusta o padding vertical ligeiramente. */
+        margin-top: 0; /* Remove margem superior (espaço vem do .extraOptions). */
     }
 
+    /* Link para cadastro no modo responsivo. */
     .switchLink {
-        margin-top: 1.5rem;
-        margin-bottom: 1rem; /* Adiciona espaço no fim no mobile */
-        font-size: 0.8rem;
+        margin-top: 1.5rem; /* Aumenta o espaço acima. */
+        margin-bottom: 1rem; /* Adiciona espaço no final da página no mobile. */
+        font-size: 0.8rem; /* Mantém o tamanho da fonte. */
     }
 }
 
-/* Ajuste adicional para telas muito pequenas */
-@media (max-width: 480px) {
+/* Ajustes Adicionais para Telas Muito Pequenas */
+@media (max-width: 480px) { /* Aplica estas regras para larguras de 480px ou menos (celulares modo retrato). */
+    /* Reduz o padding do painel direito. */
     .rightPanel {
         padding: 1.5rem 1rem;
     }
+    /* Reduz o tamanho do título. */
     .title {
         font-size: 1.2rem;
     }
+    /* Reduz o padding do botão. */
     .submitButton {
         font-size: 0.9rem;
         padding: 0.8rem 1.2rem;
     }
+    /* Reduz e aproxima o logo Nexus das bordas. */
     .NexusLogoContainer {
         transform: scale(0.7);
         top: 0.8rem;
         left: 0.8rem;
     }
-     .logoContainer { /* Logo Luminus */
-        margin-bottom: 1rem; /* Menos espaço abaixo */
-        transform: scale(0.7); /* Ainda menor */
+    /* Reduz o logo Luminus e o espaço abaixo dele. */
+     .logoContainer {
+        margin-bottom: 1rem;
+        transform: scale(0.7);
     }
 }
