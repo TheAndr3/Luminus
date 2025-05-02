@@ -9,6 +9,12 @@ import { useRouter, useSearchParams} from "next/navigation";
 import {sendCode} from "@/services/api";
 
 
+//tipagem para recebimento da resposta da API
+interface APIresponse{
+    msg:string;
+    pb_k?:string;
+    token?:string;
+}
 
 export default function OtpFunction(){
 
@@ -40,43 +46,41 @@ export default function OtpFunction(){
         }
     }
 
+ 
+
 
     //Função para mandar o codigo para api e tratar se passa pra proxima pagina ou não
     async function codeToAPI() {
+        //Conecta o codigo otp 
         const otpConected = otp.join("");
+        //procura o recebimento do email como parametro da pagina anterior
         const email = searchParams.get('email')
         
         try {
 
-
-
             //teste
-
             router.push(`/recorver-password/enter-new-password?email=${email}`)
             alert("Código correto!"+otpConected);
             //teste termina aq
+      
 
 
-            //comentario pq como ta dando erro com a comunicação API, vejo depois
-            /*
-            const response = await sendCode.post("/professor/recorver-password/:id", {id:email, codigo: otpConected }); 
+            // Faz a chamada assíncrona para a função sendCode, passando o email e o código OTP conectado
+            const response = await sendCode(email!, otpConected) as APIresponse; 
 
-            if (response.status >= 200 && response.status < 300) {
-                if (response.data.valid) { 
-                    router.push(`/recorver-password/enter-new-password?email=${email}`);
-                } else {
-                    alert("Código incorreto ou expirado!");
-                }
+            // Verifica se a resposta da API contém o campo "valid" e se ele é verdadeiro
+            if (response.token) { 
+                // Se o código for válido, redireciona o usuário para a página de inserir uma nova senha
+                router.push(`/recorver-password/enter-new-password?email=${email}&token=${response.token}`);
             } else {
-                alert("Resposta inesperada da API");
+                // Caso o código não seja válido (incorreto ou expirado), exibe um alerta para o usuário
+                alert("Código incorreto ou expirado!");
             }
-
-            */
-        } 
-        catch(err) {
-        }
         
-    }
+        }
+        catch(err){
+
+        }
 
 
     //função para fazer voltar a tela de inserção de email 
@@ -101,4 +105,5 @@ export default function OtpFunction(){
             </div>
             
     )
+}
 }

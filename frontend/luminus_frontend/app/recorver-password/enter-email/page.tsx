@@ -26,9 +26,9 @@ export default function enterEmail(){
 
         //try para enviar para api
         try {
-            const response = await sendEmail(email); // Recebe diretamente o email ou undefined
+            const response = await sendEmail(email!); // Recebe diretamente o email ou undefined
             
-            if (response === email) { // Comparação direta se o email recebido é igual
+            if (response.status === 200) { //verifica se a response foi 200 (OK)
                 redirect(`/recorver-password/recovery-code?email=${encodeURIComponent(email!)}`);
             } 
             else {
