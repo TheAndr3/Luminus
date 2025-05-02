@@ -339,10 +339,10 @@ Media Query para telas com largura máxima de 768px (tablets, celulares maiores)
         gap: 0.5rem 1rem; /* Ajusta os espaços entre os itens para possível quebra de linha. */
     }
     /* Link "Esqueci senha" (opcional forçar quebra no mobile). */
-    .forgotPasswordLink {
+    /*.forgotPasswordLink {
          /* flex-basis: 100%; */ /* Descomentar esta linha se quiser que o link vá para uma nova linha. */
          /* text-align: right; */ /* Alinha à direita se for para nova linha. */
-    }
+    /*}
 
     /* Botão de submit no modo responsivo. */
     .submitButton {
