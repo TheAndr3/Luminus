@@ -36,7 +36,7 @@ export default function enterEmail(){
             }
         } 
         catch (error) {
-            alert("Erro ao verificar o email: ");
+            alert("Erro ao verificar email: ");
         }
         
 
