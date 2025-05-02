@@ -1,4 +1,4 @@
-/* app/cadastro/cadastro.module.css */
+/* app/cadastro/register.module.css */
 
 /* Container Principal da Página */
 .pageContainer {
@@ -6,19 +6,21 @@
   height: 100vh;
   overflow: hidden; /* Mantém a página inteira não rolável */
   background-color: #f0f2f5;
+	
+	font-family: inherit;
 }
 
 /* Coluna Esquerda (Formulário) */
 .leftPanel {
   width: 35%;
   background-color: white;
-  padding: 1rem 2.5rem; /* Reduzido ainda mais */
+  padding: 1rem 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1;
-  overflow-y: auto; /* Modificado para auto para permitir scroll apenas quando necessário */
+  overflow-y: auto;
 }
 
 /* Coluna Direita (Carrossel) */
@@ -33,9 +35,10 @@
 
 /* Container do Logo Principal (Luminus) */
 .logoContainer {
-  margin-bottom: 0.5rem; /* Reduzido ainda mais */
+	margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
   flex-shrink: 0;
-  transform: scale(0.9); /* Reduz levemente o tamanho do logo */
+  transform: scale(1.5);
 }
 
 /* Container do Logo Secundário (Nexus) */
@@ -44,16 +47,16 @@
   top: 1.5rem;
   left: 2rem;
   z-index: 2;
-  transform: scale(0.9); /* Reduz levemente o tamanho do logo */
+  transform: scale(1.5);
 }
 
 /* Título "CADASTRO" */
 .title {
   text-align: center;
-  margin-bottom: 0.5rem; /* Reduzido ainda mais */
+  margin-bottom: 0.5rem;
   color: #333;
   font-weight: bold;
-  font-size: 1.5rem; /* Reduzido */
+  font-size: 1.5rem;
   flex-shrink: 0;
 }
 
@@ -63,28 +66,64 @@
   max-width: 400px;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem; /* Reduzido ainda mais */
+  /* gap: 0.6rem; */ /* Removido ou ajustado, pois o wrapper controla o espaço */
+  gap: 0; /* Define gap como 0 pois o .inputWrapper agora lida com o espaço */
   flex-shrink: 0;
 }
 
-/* Grupo de Input (Label + Input) */
+/* --- NOVAS CLASSES --- */
+
+/* Wrapper para Input + Slot de Erro */
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Garante que o wrapper ocupe a largura */
+  /* Adicione um margin-bottom aqui se quiser espaço entre os wrappers */
+  /* margin-bottom: 0.6rem; */ /* Exemplo, ajuste conforme necessário */
+}
+
+/* Slot Reservado para Mensagem de Erro */
+.errorSlot {
+  min-height: 1.25rem; /* Reserva espaço vertical (aprox. 20px). Ajuste conforme sua fonte/design */
+  /* height: 1.25rem; */ /* Use 'height' para altura estritamente fixa se preferir */
+  width: 100%;
+  overflow: hidden;     /* Esconde texto que transbordar a altura */
+  /* margin-top: 2px; */ /* Pequeno espaço opcional acima do texto do erro */
+}
+
+/* Estilo do Texto da Mensagem de Erro */
+.errorText {
+  color: #e74c3c;     /* Cor vermelha padrão para erro */
+  font-size: 0.75rem; /* Tamanho de fonte pequeno (equiv. text-xs do Tailwind) */
+  line-height: 1rem;  /* Altura da linha para caber no min-height (equiv. leading-4) */
+  display: block;     /* Garante que o span ocupe a linha */
+  /* As propriedades abaixo são opcionais se quiser forçar uma única linha com '...' */
+  /* white-space: nowrap; */
+  /* text-overflow: ellipsis; */
+  /* overflow: hidden; */ /* Já está no .errorSlot */
+}
+
+/* --- FIM DAS NOVAS CLASSES --- */
+
+
+/* Grupo de Input (Label + Input) - Pode ser removido se não usar mais a classe .inputGroup */
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem; /* Reduzido */
+  gap: 0.2rem;
 }
 
 .inputGroup label {
   font-weight: 500;
-  font-size: 0.8rem; /* Reduzido */
+  font-size: 0.8rem;
   color: #555;
 }
 
 .inputGroup input {
-  padding: 0.6rem 0.8rem; /* Reduzido */
+  padding: 0.6rem 0.8rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 0.9rem; /* Reduzido */
+  font-size: 0.9rem;
   box-sizing: border-box;
   color: #333;
 }
@@ -97,15 +136,16 @@
 
 /* Botão de Cadastro */
 .submitButton {
-  padding: 0.6rem 1.2rem; /* Reduzido */
+  padding: 0.6rem 1.2rem;
   background-color: #34495e;
   color: white;
   border: none;
   border-radius: 25px;
   cursor: pointer;
-  font-size: 0.9rem; /* Reduzido */
+  font-size: 0.9rem;
   font-weight: bold;
-  margin-top: 0.6rem; /* Reduzido */
+  /* margin-top: 0.6rem; */ /* Removido ou ajustado */
+  margin-top: 1rem; /* Aumentado para compensar a remoção de margens/gaps */
   transition: background-color 0.2s ease;
 }
 
@@ -120,10 +160,10 @@
 
 /* Link para Login */
 .loginLink {
-  margin-top: 0.7rem; /* Reduzido */
-  margin-bottom: 0.3rem; /* Reduzido */
+  margin-top: 0.7rem;
+  margin-bottom: 0.3rem;
   text-align: center;
-  font-size: 0.8rem; /* Reduzido */
+  font-size: 0.8rem;
   color: #555;
   flex-shrink: 0;
 }
@@ -138,19 +178,19 @@
   text-decoration: underline;
 }
 
-/* Mensagem de Erro */
-.errorMessage {
+/* Mensagem de Erro - Classe antiga, pode ser removida se não for mais usada em outro lugar */
+/* .errorMessage {
   color: #e74c3c;
   background-color: #fadbd8;
   border: 1px solid #e74c3c;
-  padding: 0.4rem; /* Reduzido */
+  padding: 0.4rem;
   border-radius: 4px;
   text-align: center;
-  margin-bottom: 0.6rem; /* Reduzido */
-  font-size: 0.8rem; /* Reduzido */
-}
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+} */
 
-/* Ajustes para Telas Menores (Manter como estava, permitindo scroll) */
+/* Ajustes para Telas Menores */
 @media (max-width: 768px) {
   .pageContainer {
       flex-direction: column;
@@ -165,7 +205,7 @@
       min-height: auto;
       overflow-y: visible;
       scrollbar-gutter: auto;
-      padding: 1.5rem; /* Reduzido */
+      padding: 1.5rem;
   }
 
    .rightPanel {
@@ -174,20 +214,25 @@
 
   .form {
       max-width: 100%;
-      gap: 0.8rem; /* Reduzido */
+      /* gap: 0.8rem; */ /* Mantido como 0 ou ajuste se necessário */
+      gap: 0;
   }
 
-  .inputGroup input {
-      padding: 0.8rem 0.9rem; /* Reduzido */
+  /* Ajuste o margin-bottom do inputWrapper se necessário em telas menores */
+  /* .inputWrapper { margin-bottom: 0.8rem; } */
+
+  .inputGroup input { /* Ajuste se ainda usar .inputGroup */
+      padding: 0.8rem 0.9rem;
   }
 
    .submitButton {
-      padding: 0.8rem 1.3rem; /* Reduzido */
-      margin-top: 0.8rem; /* Reduzido */
+      padding: 0.8rem 1.3rem;
+      /* margin-top: 0.8rem; */
+      margin-top: 1.2rem; /* Ajuste conforme necessário */
   }
 
   .loginLink {
-      margin-top: 1.2rem; /* Reduzido */
+      margin-top: 1.2rem;
       margin-bottom: 0;
   }
 }

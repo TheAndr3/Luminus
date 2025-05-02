@@ -1,148 +1,182 @@
-/* login.module.css (Modificado para incluir Carousel no leftPanel) */
+/* app/login/login.module.css (Logo fixo no topo, conteúdo centralizado) */
 
 /* Container Principal da Página */
 .pageContainer {
 	display: flex;
 	min-height: 100vh;
 	background-color: #f0f2f5;
-    /* overflow-x: hidden; Se necessário, mas overflow:hidden no leftPanel é mais importante */
+    overflow: hidden;
+    font-family: inherit;
 }
 
-/* Painel Esquerdo (AZUL - Agora com Carousel) */
+/* Painel Esquerdo (Carousel) */
 .leftPanel {
 	width: 65%;
 	background-color: #1a3a6d;
 	color: white;
-	position: relative; /* <<< MANTER: Para logo Nexus e preenchimento do carrossel */
-	overflow: hidden;   /* <<< ADICIONADO: Para conter slides do carrossel */
-	/* Removemos display: flex, align, justify, padding, pois o carrossel preenche */
-    padding: 0; /* Garante que não haja espaçamento interno atrapalhando o carrossel */
-    /* display: flex; */ /* Removido */
-	/* flex-direction: column; */ /* Removido */
-	/* align-items: center;   */ /* Removido */
+	position: relative;
+	overflow: hidden;
+	padding: 0;
 }
 
-/* Painel Direito (BRANCO - Formulário) */
+/* Painel Direito (Formulário) */
 .rightPanel {
 	width: 35%;
 	background-color: white;
-	padding: 3rem 4rem; /* Manter padding original */
+	padding: 1.5rem 2.5rem; /* Padding superior/inferior para dar espaço */
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra à esquerda */
-	z-index: 1; /* Para a sombra ficar sobre o painel azul */
-	color: #333;
-    overflow-y: auto; /* <<< MANTER: Permite scroll vertical no formulário se necessário */
-    /* Adicionado para garantir que o painel possa rolar independentemente */
-    max-height: 100vh;
-    box-sizing: border-box;
+	align-items: center;    /* Alinha logo e contentWrapper horizontalmente */
+	/* justify-content: center; <<< CORRIGIDO: Removido daqui */
+	box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+	z-index: 1;
+	overflow-y: auto; /* Scroll se o CONTEÚDO do wrapper for muito alto */
 }
 
-/* Container do Logo Principal (Luminus - no painel DIREITO) */
+/* Container do Logo Principal (Luminus - Fixo no topo) */
 .logoContainer {
-	margin-bottom: 2rem;
+	margin-top: 2.5rem;
+	/*margin-bottom: rem; /* <<< Ajustado: Espaço abaixo do logo */
     align-self: center;
-    flex-shrink: 0; /* Impede que o logo encolha */
+    flex-shrink: 0;
+    transform: scale(1.5); /* <<< Ajustado: Escala mais próxima do Register */
 }
 
 /* Container do Logo Secundário (Nexus - no painel ESQUERDO) */
 .NexusLogoContainer {
-	position: absolute; /* <<< MANTER: Posicionamento sobre o carrossel */
-	top: 1.5rem;         /* Distância do topo (ajuste) */
-	left: 3rem;        /* Distância da esquerda (ajuste) */
-    z-index: 2;        /* <<< ADICIONADO: Garante que fique acima do carrossel */
+	position: absolute;
+	top: 1.5rem;
+	left: 2rem;
+    z-index: 2;
+    transform: scale(1.5); /* <<< CORRIGIDO: Mantido escala 0.9 como no Register */
 }
 
+/* <<< Wrapper para Conteúdo Centralizado >>> */
+.contentWrapper {
+    width: 100%;           /* Ocupa a largura disponível */
+    max-width: 400px;      /* Mantém a largura máxima do conteúdo */
+    display: flex;
+    flex-direction: column;
+    align-items: center;    /* Centraliza SEU conteúdo horizontalmente */
+    justify-content: center;/* Centraliza SEU conteúdo verticalmente */
+    flex-grow: 1;          /* <<< FAZ OCUPAR O ESPAÇO RESTANTE NO rightPanel */
+    padding-bottom: 1rem;  /* Espaço no fim antes do scroll acabar */
+}
 
-/* Título "LOGIN" (no painel direito) */
+/* Título "LOGIN" (Dentro do contentWrapper) */
 .title {
 	text-align: center;
-	margin-bottom: 1.5rem;
+	margin-bottom: 1rem;
 	color: #333;
 	font-weight: bold;
-	font-size: 1.8rem;
-    flex-shrink: 0; /* Impede que o título encolha */
+	font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
-/* Formulário (no painel direito) */
+/* Container para Erro Geral (Dentro do contentWrapper) */
+.generalErrorContainer {
+  width: 100%;
+  /* max-width: 400px; */ /* Já controlado pelo contentWrapper */
+  margin-bottom: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  background-color: #fadbd8;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+/* Nota: O texto dentro usará .errorText */
+
+/* Formulário (Dentro do contentWrapper) */
 .form {
 	width: 100%;
-	max-width: 400px;
-	margin: 0 auto;
+	/* max-width: 400px; */ /* Já controlado pelo contentWrapper */
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem; /* Espaçamento entre elementos do form */
-    flex-grow: 1; /* Permite que o formulário ocupe espaço vertical */
-    /* Adicione padding inferior se necessário para dar espaço ao rolar */
-    padding-bottom: 1rem;
+	gap: 0;
+    flex-shrink: 0;
 }
 
-/* --- CONTÊINER E TEXTO DE ERRO (sem alterações) --- */
-.errorContainer {
-  width: 100%;
-  min-height: 1.4em;
+/* --- ESTRUTURA DE INPUT E ERRO --- */
+.inputWrapper {
   display: flex;
-  align-items: flex-start;
-}
-.errorMessageText {
-  color: #e74c3c;
-  font-size: 0.8rem;
-  line-height: 1.4;
+  flex-direction: column;
   width: 100%;
-  padding-left: 0.2rem;
+   margin-bottom: 0.2rem;
 }
-/* --- FIM DAS CLASSES DE ERRO --- */
+.errorSlot {
+  min-height: 1.25rem;
+  width: 100%;
+  overflow: hidden;
+}
+.errorText {
+  color: #e74c3c;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  display: block;
+}
+/* --- FIM DA ESTRUTURA DE INPUT E ERRO --- */
 
 
-/* Grupo de Input (Estilos gerais - sem alterações) */
-/* ... (regras .inputGroup se aplicáveis) ... */
-
-
-/* Checkbox e Link "Esqueci Senha" (sem alterações) */
-.checkboxGroup {
+/* Checkbox e Link "Esqueci Senha" (Dentro do form) */
+.extraOptions {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	font-size: 0.9rem;
+	flex-wrap: wrap;
+	font-size: 0.8rem;
 	color: #555;
-    padding-top: 0.3rem;
-    flex-shrink: 0; /* Impede que encolha */
+    margin-top: 0.3rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    flex-shrink: 0;
 }
-.checkboxGroup label {
-	display: flex;
-	align-items: center;
+.rememberMeControl {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.checkboxInput {
 	cursor: pointer;
-    margin-right: auto;
+    width: 0.9rem;
+    height: 0.9rem;
+    vertical-align: middle;
 }
-.checkboxGroup input[type="checkbox"] {
-	margin-right: 0.5rem;
+.checkboxLabel {
+	cursor: pointer;
+    user-select: none;
+    font-size: inherit;
 }
 .forgotPasswordLink {
 	color: #e74c3c;
 	text-decoration: none;
-	font-weight: 500;
+	font-weight: bold;
     white-space: nowrap;
+    font-size: inherit;
 }
 .forgotPasswordLink:hover {
 	text-decoration: underline;
 }
 
-/* Botão de Login (sem alterações) */
+/* Botão de Login (Dentro do form) */
 .submitButton {
-	padding: 0.9rem 1.5rem;
+	padding: 0.6rem 1.2rem;
 	background-color: #34495e;
 	color: white;
 	border: none;
 	border-radius: 25px;
 	cursor: pointer;
-	font-size: 1rem;
+	font-size: 0.9rem;
 	font-weight: bold;
 	transition: background-color 0.2s ease;
 	width: 100%;
-    margin-top: 0.8rem; /* Adiciona um pouco de espaço acima do botão */
-    flex-shrink: 0; /* Impede que encolha */
+    margin-top: 0;
+    flex-shrink: 0;
+}
+.submitButton.mt-1 {
+    margin-top: 1rem;
 }
 .submitButton:hover:not(:disabled) {
 	background-color: #2c3e50;
@@ -152,14 +186,14 @@
 	cursor: not-allowed;
 }
 
-/* Link para Cadastro (Abaixo do botão - sem alterações) */
+/* Link para Cadastro (Dentro do contentWrapper, após o form) */
 .switchLink {
-	margin-top: 1.5rem;
+	margin-top: 1.2rem;
+    /* margin-bottom: 1rem; */ /* Removido, padding do wrapper cuida disso */
 	text-align: center;
-	font-size: 0.9rem;
+	font-size: 0.8rem;
 	color: #555;
-    flex-shrink: 0; /* Impede que encolha */
-    padding-bottom: 1rem; /* Espaço no fim do scroll */
+    flex-shrink: 0;
 }
 .switchLink a {
 	color: #e74c3c;
@@ -170,51 +204,12 @@
 	text-decoration: underline;
 }
 
-/* --- REMOVIDO/COMENTADO: Estilos do Placeholder do Painel Esquerdo --- */
-/*
-.contentPlaceholder {
-	text-align: center;
-	margin-top: 5rem;
-}
-.contentPlaceholder h2 {
-		font-size: 2.2rem;
-		margin-bottom: 1rem;
-		max-width: 450px;
-		line-height: 1.3;
-}
-.carouselIndicators {
-	margin-top: 2rem;
-}
-.carouselIndicators span {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
-	background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 50%;
-	margin: 0 5px;
-	cursor: pointer;
-}
-.carouselIndicators span.active {
-	background-color: white;
-}
-*/
+/* --- Classes Removidas/Não Utilizadas --- */
 
-/* Mensagem de Erro com Fundo/Borda (sem alterações) */
-.errorMessage {
-	color: #e74c3c;
-	background-color: #fadbd8;
-	border: 1px solid #e74c3c;
-	padding: 0.8rem;
-	border-radius: 4px;
-	text-align: center;
-	font-size: 0.9rem;
-	width: 100%;
-	box-sizing: border-box;
-}
 
 /*
 --------------------------------------------------------------------------
-AJUSTES RESPONSIVOS (Com ajustes para o Carousel no leftPanel)
+AJUSTES RESPONSIVOS (Mantendo a estrutura com contentWrapper)
 --------------------------------------------------------------------------
 */
 @media (max-width: 768px) {
@@ -222,85 +217,117 @@ AJUSTES RESPONSIVOS (Com ajustes para o Carousel no leftPanel)
 		flex-direction: column;
         height: auto;
         min-height: 100vh;
+        overflow: visible;
 	}
 
 	.leftPanel,
 	.rightPanel {
 		width: 100%;
-		min-height: auto; /* Reset min-height */
-        height: auto; /* Altura ajusta ao conteúdo */
+		min-height: auto;
+        height: auto;
 		box-shadow: none;
-		padding: 0; /* Reset padding geral, será definido abaixo */
-        max-height: none; /* Remove max-height */
-        overflow-y: visible; /* Scroll da página inteira */
+		padding: 0;
+        max-height: none;
+        overflow-y: visible;
 	}
 
     .leftPanel {
-        /* Mantém o carrossel visível, mas ajusta a altura mínima */
-        min-height: 40vh; /* Exemplo: Garante alguma altura para o carrossel */
-        order: 2; /* Opcional: Coloca o carrossel depois do form em telas pequenas */
-        /* Padding e overflow:hidden mantidos do estado original para o carrossel */
+        min-height: 40vh;
+        order: 2;
         overflow: hidden;
-        position: relative; /* Mantém para o logo (se ainda absoluto) */
+        position: relative;
     }
 
 	.rightPanel {
-		padding: 2rem 1.5rem; /* Padding para o formulário */
-        order: 1; /* Opcional: Coloca o formulário primeiro */
-        /* overflow-y: visible;  Garantido pelo reset geral acima */
-        /* justify-content: flex-start; */ /* Começa o conteúdo do topo */
+		padding: 2rem 1.5rem; /* Padding interno mobile */
+        order: 1;
+        align-items: center; /* Mantém alinhamento horizontal */
+        /* justify-content: center; <<< NÃO APLICAR NO MOBILE */
+        /* flex-grow: 1; <<< Opcional no mobile, pode remover se não precisar */
 	}
+
+    /* <<< Ajuste do contentWrapper no mobile >>> */
+    .contentWrapper {
+        flex-grow: 0; /* Não precisa crescer, conteúdo define altura */
+        justify-content: flex-start; /* Alinha conteúdo do wrapper no topo */
+        padding-bottom: 1rem; /* Mantém padding inferior */
+        max-width: 100%; /* Permite ocupar toda a largura mobile */
+    }
 
 	.NexusLogoContainer {
-        /* Torna o logo estático e centralizado em telas pequenas */
-		position: static;
-		/* margin-bottom: 1.5rem; */ /* Removido pois não há conteúdo abaixo */
-        /* Adiciona padding ao redor do logo dentro do leftPanel */
-        padding: 1.5rem;
-        /* Não sobrepõe mais o carrossel, fica acima dele */
-        background-color: rgba(26, 58, 109, 0.8); /* Fundo semi-transparente opcional */
-        text-align: center; /* Centraliza a imagem dentro do container */
-        z-index: auto; /* Reset z-index */
-
-        /* Ou mantenha absoluto, mas ajuste top/left */
-        /* position: absolute;
+		position: absolute;
         top: 1rem;
         left: 1rem;
-        z-index: 2; */
+        transform: scale(0.8); /* Reduz um pouco em telas menores */
 	}
+
+    .logoContainer { /* Logo Luminus */
+        margin-bottom: 1.5rem;
+        transform: scale(0.8); /* <<< CORRIGIDO: Escala menor no mobile */
+    }
+
+    .title {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
 
 	.form {
 		max-width: 100%;
-        gap: 0.8rem;
-        padding-bottom: 1rem; /* Reduz padding */
+        padding-bottom: 0;
 	}
 
-    /* Outros ajustes de fonte/tamanho podem permanecer */
-    .title {
-        font-size: 1.6rem;
+    .inputWrapper {
+         margin-bottom: 0.5rem;
+    }
+
+    .generalErrorContainer {
+        max-width: 100%;
         margin-bottom: 1rem;
     }
-    .checkboxGroup {
-        font-size: 0.85rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
+
+    .extraOptions {
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1.2rem;
+        gap: 0.5rem 1rem;
     }
     .forgotPasswordLink {
-         flex-basis: 100%;
-         text-align: right;
+         /* flex-basis: 100%; */ /* Descomente se quiser forçar quebra */
+         /* text-align: right; */
+    }
+
+    .submitButton {
+        font-size: 0.9rem;
+        padding: 0.8rem 1.3rem;
+        margin-top: 0;
+    }
+
+    .switchLink {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem; /* Adiciona espaço no fim no mobile */
+        font-size: 0.8rem;
     }
 }
 
-/* Ajuste adicional para telas muito pequenas (sem alterações necessárias aqui) */
+/* Ajuste adicional para telas muito pequenas */
 @media (max-width: 480px) {
     .rightPanel {
         padding: 1.5rem 1rem;
     }
     .title {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     .submitButton {
         font-size: 0.9rem;
         padding: 0.8rem 1.2rem;
+    }
+    .NexusLogoContainer {
+        transform: scale(0.7);
+        top: 0.8rem;
+        left: 0.8rem;
+    }
+     .logoContainer { /* Logo Luminus */
+        margin-bottom: 1rem; /* Menos espaço abaixo */
+        transform: scale(0.7); /* Ainda menor */
     }
 }

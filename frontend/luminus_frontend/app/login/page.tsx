@@ -1,20 +1,17 @@
 /**
  * @file LoginPage.tsx (ou page.tsx dentro de /login)
- * @description Página de Login de usuário com Carousel no painel esquerdo.
+ * @description Página de Login de usuário com Logo fixo e conteúdo centralizado.
  */
 'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import styles from './login.module.css'; // Estilos gerais da página/layout
+import styles from './login.module.css'; // CSS que inclui .contentWrapper
 
 // --- Importações de Componentes ---
 import { EmailInput } from '@/components/inputs/EmailInput';
 import { PasswordInput } from '@/components/inputs/PasswordInput';
-import { Checkbox } from '@/components/checkboxs/Checkbox';
-import { ErrorContainer } from '@/components/errors/ErrorContainer';
-// --- ADICIONADO: Importar o Carousel ---
 import Carousel from '@/components/carousel/Carousel';
 
 // --- Tipos ---
@@ -26,10 +23,10 @@ type FormErrors = {
 
 /**
  * @component LoginPage
- * @description Componente funcional que renderiza a página de login com carousel.
+ * @description Componente funcional que renderiza a página de login com logo fixo.
  */
 export default function LoginPage() {
-  // --- Estados (sem alterações) ---
+  // --- Estados ---
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -39,58 +36,55 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // --- Validação (sem alterações) ---
+  // --- Validação ---
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // --- ADICIONADO: Definição dos Slides para o Carousel ---
-  // Ajuste os `src` e `alt` conforme necessário para a página de login
+  // --- Slides para o Carousel ---
   const loginSlides = [
     <Image
       key="login-slide-1"
-      src="/carroselAlunos.png" // Exemplo: reutilizando slide
+      src="/carroselAlunos.png"
       alt="Bem-vindo de volta - Gerencie seus alunos"
       layout="fill"
       objectFit="cover"
-      priority // Primeira imagem
+      priority
     />,
     <Image
       key="login-slide-2"
-      src="/carroselGerencie.png" // Exemplo: reutilizando slide
+      src="/carroselGerencie.png"
       alt="Organize suas turmas e avaliações"
       layout="fill"
       objectFit="cover"
     />,
     <Image
       key="login-slide-3"
-      src="/carroselAvaliação.png" // Exemplo: reutilizando slide
+      src="/carroselAvaliação.png"
       alt="Acesse dados e insights rapidamente"
       layout="fill"
       objectFit="cover"
     />,
   ];
 
-
-  // --- Handlers (sem alterações) ---
+  // --- Handlers ---
   const handleChange = (field: 'email' | 'password') =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
       setFormData(prevData => ({ ...prevData, [field]: value }));
-      setFormErrors(prevErrors => {
-          const updatedErrors: FormErrors = { ...prevErrors, general: null };
-          if (field === 'email') updatedErrors.email = null;
-          else if (field === 'password') updatedErrors.password = null;
-          return updatedErrors;
-      });
+      setFormErrors(prevErrors => ({
+          ...prevErrors,
+          [field]: null,
+          general: null
+      }));
     };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prevData => ({ ...prevData, rememberMe: e.target.checked }));
   };
 
-  // --- Submissão (sem alterações) ---
+  // --- Submissão ---
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormErrors({});
@@ -98,131 +92,188 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const errors: FormErrors = {};
-    if (!formData.email.trim()) errors.email = 'Email é obrigatório.';
-    else if (!validateEmail(formData.email)) errors.email = 'Formato de email inválido.';
-    if (!formData.password) errors.password = 'Senha é obrigatória.';
+    if (!formData.email.trim()) {
+      errors.email = 'Email é obrigatório.';
+    } else if (!validateEmail(formData.email)) {
+      errors.email = 'Formato de email inválido.';
+    }
+    if (!formData.password) {
+        errors.password = 'Senha é obrigatória.';
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       setIsLoading(false);
+      setHasAttemptedSubmit(false);
       return;
     }
 
-    console.log('Validação de frontend OK. Submetendo Login com dados:', formData);
+    console.log('Validação OK. Submetendo Login:', formData);
     try {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        alert(`Login (simulado) realizado com sucesso!\nEmail: ${formData.email}\nManter conectado: ${formData.rememberMe}`);
-        setFormData({ email: '', password: '', rememberMe: false });
-        setFormErrors({});
-        setHasAttemptedSubmit(false);
-        // router.push('/dashboard');
-    } catch (error) {
-      console.error("Erro na simulação de login:", error);
-      setFormErrors({ general: 'Falha no login. Verifique suas credenciais.' }); // Exemplo de erro geral
+        const loginSucesso = Math.random() > 0.2;
+
+        if (loginSucesso) {
+            alert(`Login (simulado) sucesso!\nEmail: ${formData.email}\nManter: ${formData.rememberMe}`);
+            setFormData({ email: '', password: '', rememberMe: false });
+            setFormErrors({});
+            setHasAttemptedSubmit(false);
+            // router.push('/dashboard');
+        } else {
+            throw new Error("Credenciais inválidas");
+        }
+    } catch (error: any) {
+      console.error("Erro login:", error);
+      setFormErrors({ general: `Falha no login: ${error.message || 'Verifique suas credenciais.'}` });
+      setHasAttemptedSubmit(false);
     } finally {
         setIsLoading(false);
     }
   };
 
-  // --- IDs (sem alterações) ---
-  const emailInputId = 'login-email';
-  const passwordInputId = 'login-password';
-  const generalErrorId = 'general-error';
+  // --- IDs ---
+  const emailErrorId = 'login-email-error';
+  const passwordErrorId = 'login-password-error';
+  const generalErrorId = 'login-general-error';
+
+  // --- Submit Button Logic ---
+  const isAnyFieldEmpty = !formData.email.trim() || !formData.password;
+  const isSubmitDisabled = isLoading || isAnyFieldEmpty;
 
   // --- Renderização ---
   return (
-    // Container principal - removido overflow-hidden daqui se ainda estiver
     <div className={styles.pageContainer}>
 
-      {/* Painel Esquerdo: Agora com Logo Nexus e Carousel */}
+      {/* Painel Esquerdo: Carousel */}
       <div className={styles.leftPanel}>
-         {/* Logo Secundário (Nexus) - Posicionado sobre o carrossel via CSS */}
          <div className={styles.NexusLogoContainer}>
            <Image
-             src="/logo-Nexus.svg" // Logo do painel esquerdo
+             src="/logo-Nexus.svg"
              alt="Nexus Logo"
-             width={200} // Ajuste tamanho conforme necessário
-             height={40}  // Ajuste tamanho conforme necessário
+             width={200} height={40} // Ajuste conforme CSS (se usou scale)
            />
          </div>
-         {/* --- ADICIONADO: Carousel --- */}
          <Carousel autoSlide={true} autoSlideInterval={5000}>
            {loginSlides}
          </Carousel>
       </div> {/* Fim leftPanel */}
 
-      {/* Painel Direito (Formulário de Login - sem alterações estruturais) */}
+      {/* Painel Direito: Formulário de Login */}
       <div className={styles.rightPanel}>
-        {/* Logo Principal (Luminus) */}
+        {/* Logo Principal (Luminus) - Fica FORA do wrapper */}
         <div className={styles.logoContainer}>
             <Image
-                src="/logo-Luminus.svg" // Logo do painel direito
+                src="/logo-Luminus.svg"
                 alt="Luminus Logo"
-                width={200} height={50} priority
+                width={200} height={50} // Ajuste conforme CSS (se usou scale)
+                priority
             />
         </div>
-        <h1 className={styles.title}>LOGIN</h1>
-        <ErrorContainer id={generalErrorId} message={formErrors.general} />
 
-        <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          <EmailInput
-            id={emailInputId}
-            label="Email:"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange('email')}
-            required
-            disabled={isLoading}
-            name="email"
-            error={formErrors.email}
-            errorDisplayMode="inline"
-          />
+        {/* <<< INÍCIO DO CONTENT WRAPPER >>> */}
+        <div className={styles.contentWrapper}>
 
-          <PasswordInput
-            id={passwordInputId}
-            label="Senha:"
-            placeholder="Senha"
-            value={formData.password}
-            onChange={handleChange('password')}
-            required
-            disabled={isLoading}
-            name="password"
-            error={formErrors.password}
-            attemptedSubmit={hasAttemptedSubmit}
-            requiredMessage="Senha é Obrigatório"
-            errorDisplayMode="inline"
-          />
+          <h1 className={styles.title}>LOGIN</h1>
 
-          <div className={styles.checkboxGroup}>
-            <Checkbox
-              id="remember-me"
-              label="Manter conectado"
-              name="rememberMe"
-              checked={formData.rememberMe}
-              onChange={handleCheckboxChange}
-              disabled={isLoading}
-              labelClassName="text-sm text-gray-700"
-            />
-            <Link href="/forgot-password" className={styles.forgotPasswordLink}>
-              Esqueci minha senha
+          {/* Container para Erro Geral */}
+          {formErrors.general && (
+            <div role="alert" className={styles.generalErrorContainer}>
+               <span id={generalErrorId} className={styles.errorText}>
+                 {formErrors.general}
+               </span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className={styles.form} noValidate>
+            {/* Email Input com Wrapper e Error Slot */}
+            <div className={styles.inputWrapper}>
+               <EmailInput
+                 label="Email:"
+                 id="login-email"
+                 placeholder="Email"
+                 value={formData.email}
+                 onChange={handleChange('email')}
+                 required
+                 isInvalid={!!formErrors.email}
+                 aria-describedby={formErrors.email ? emailErrorId : undefined}
+                 disabled={isLoading}
+                 name="email"
+               />
+               <div className={styles.errorSlot} aria-live="polite">
+                 {formErrors.email && (
+                   <span id={emailErrorId} className={styles.errorText}>
+                     {formErrors.email}
+                   </span>
+                 )}
+               </div>
+            </div>
+
+            {/* Password Input com Wrapper e Error Slot */}
+            <div className={styles.inputWrapper}>
+               <PasswordInput
+                 label="Senha:"
+                 id="login-password"
+                 placeholder="Senha"
+                 value={formData.password}
+                 onChange={handleChange('password')}
+                 required
+                 disabled={isLoading}
+                 name="password"
+                 attemptedSubmit={hasAttemptedSubmit}
+                 isInvalid={!!formErrors.password}
+                 aria-describedby={formErrors.password ? passwordErrorId : undefined}
+               />
+               <div className={styles.errorSlot} aria-live="polite">
+                 {formErrors.password && (
+                   <span id={passwordErrorId} className={styles.errorText}>
+                     {formErrors.password}
+                   </span>
+                 )}
+               </div>
+            </div>
+
+            {/* Checkbox HTML padrão e link "Esqueci minha senha" */}
+            <div className={styles.extraOptions}>
+              <div className={styles.rememberMeControl}>
+                <input
+                  type="checkbox"
+                  id="remember-me"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleCheckboxChange}
+                  disabled={isLoading}
+                  className={styles.checkboxInput}
+                />
+                <label htmlFor="remember-me" className={styles.checkboxLabel}>
+                  Manter conectado
+                </label>
+              </div>
+              <Link href="/forgot-password" className={styles.forgotPasswordLink}>
+                Esqueci minha senha
+              </Link>
+            </div>
+
+            {/* Botão Submit */}
+            <button
+              type="submit"
+              // className={`${styles.submitButton} mt-1`} // mt-1 pode não ser mais necessário
+              className={styles.submitButton}
+              disabled={isSubmitDisabled}
+            >
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          {/* Link para Cadastro */}
+          <p className={styles.switchLink}>
+            Não tem uma conta?{' '}
+            <Link href="/register"> {/* Mantido /register como no seu último TSX */}
+              Cadastre-se
             </Link>
-          </div>
+          </p>
 
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
+        </div> {/* <<< FIM DO CONTENT WRAPPER >>> */}
 
-        <p className={styles.switchLink}>
-          Não tem uma conta?{' '}
-          <Link href="/register">
-            Cadastre-se
-          </Link>
-        </p>
       </div> {/* Fim rightPanel */}
     </div> // Fim pageContainer
   );
