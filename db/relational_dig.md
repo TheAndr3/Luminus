@@ -18,6 +18,7 @@
 | InstitutionalQuestion      | (id, instituition_id, dossier_id, section_id, description) |
 | Notification               | (id, professor_id, instituition_id, status)|
 | VerifyCode                 | (code, professor_id, data_sol, status)|
+| TokenCode                  | (token, professor_id)|
 
 ## 2. Tabela completa com os detalhes (domínios, chaves, etgitc.)
 
@@ -88,3 +89,5 @@
 |                            | professor_id         | INT              | **FK → Professor(id)**         |
 |                            | data_sol             | DATE             | —       |
 |                            | status               | INT              | — |
+| TokenCode                  | token                | VARCHAR(255)     | **PK (composta)**              |
+|                            | professor_id         | INT              | **FK → Professor(id)**         |

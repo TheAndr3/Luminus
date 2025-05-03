@@ -2,18 +2,18 @@
 /**
  * @file RecoveryCodePage.tsx
  * @description Define o componente da página para inserir o código de recuperação de senha,
- *              utilizando o componente PinInput.
- * @version 1.1 (Simplificado para foco no PinInput)
- * @date 03-05-2025
+ *              utilizando o componente PinInput. Exibe o email do usuário e o passa adiante.
+ * @version 1.2 (Exibe e repassa email da URL)
+ * @date 06-05-2024 // Data atualizada
  * @author Pedro e Armando (Adaptado)
  */
 
 'use client';
 
-import React, { useState } from 'react'; // Removido useEffect por enquanto
+import React, { useState, useEffect } from 'react'; // useEffect pode ser útil se precisar reagir a mudanças no email
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // <<< Adicionado useSearchParams
 import styles from './recoveryCode.module.css'; // <<< Assume que este CSS existe
 
 // --- Importações de Componentes Customizados ---
@@ -28,11 +28,12 @@ const PIN_LENGTH = 4; // Define o tamanho do PIN aqui
  */
 export default function RecoveryCodePage() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // <<< Hook para ler parâmetros da URL
+  const email = searchParams.get('email'); // <<< Pega o valor do parâmetro 'email' da URL
 
-  // --- Estados do Componente (Simplificado) ---
-  const [pin, setPin] = useState(''); // Estado para o valor do PIN
+  // --- Estados do Componente ---
+  const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // Estados de erro e `attemptedSubmit` removidos temporariamente para simplificar
 
   // --- Slides para o Carrossel ---
   const recoverySlides = [
@@ -41,35 +42,36 @@ export default function RecoveryCodePage() {
     <Image key="recovery-slide-3" src="/carroselAvaliação.png" alt="Insira o código recebido" layout="fill" objectFit="cover" />,
   ];
 
-  // --- Manipulador de Mudança do PIN (Simplificado) ---
+  // --- Manipulador de Mudança do PIN ---
   const handlePinChange = (value: string) => {
     setPin(value);
-    // Lógica de limpeza de erros removida por enquanto
   };
 
-  // --- Submissão do Formulário (Simplificado) ---
+  // --- Submissão do Formulário ---
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     console.log('Tentando verificar PIN (simulação básica):', pin);
+    console.log('Email recebido da URL:', email); // Log para verificar se o email foi pego
 
     // --- Lógica de validação e API será adicionada depois ---
     // Simulação rápida:
     setTimeout(() => {
       if (pin === '1234') { // Exemplo de PIN correto (substitua pela lógica real)
         console.log('PIN correto! (Simulado)');
-        router.push('/forgot-password/reset-password'); // Redireciona
+        // <<< MODIFICADO: Adiciona o email como query parameter na URL de destino
+        const targetUrl = `/forgot-password/reset-password?email=${encodeURIComponent(email || '')}`;
+        router.push(targetUrl); // Redireciona com o email
       } else {
         console.log('PIN incorreto! (Simulado)');
         alert('Código PIN inválido (Simulação)'); // Feedback simples por enquanto
         setIsLoading(false);
       }
-      // setIsLoading(false); // Desativar loading (já feito no else e no redirecionamento)
+      // setIsLoading(false); // Já tratado nos branches acima
     }, 1000);
   };
 
-  // --- Lógica para Desabilitar Botão (Simplificado) ---
-  // Desabilita apenas se estiver carregando ou se o PIN não estiver completo
+  // --- Lógica para Desabilitar Botão ---
   const isSubmitDisabled = isLoading || pin.length !== PIN_LENGTH;
 
   // --- Renderização do Componente ---
@@ -95,7 +97,9 @@ export default function RecoveryCodePage() {
         <div className={styles.contentWrapper}>
           <h1 className={styles.title}>VERIFICAR CÓDIGO</h1>
           <p className={styles.instructionText}>
-            Digite o código de {PIN_LENGTH} dígitos enviado para o seu email.
+            Digite o PIN de {PIN_LENGTH} dígitos enviado para o seu email:{' '}
+            {/* <<< MODIFICADO: Exibe o email pego da URL */}
+            {email && <strong className={styles.emailDisplay || ''}>{email}</strong>}
           </p>
 
           {/* Formulário */}
@@ -106,25 +110,20 @@ export default function RecoveryCodePage() {
                 length={PIN_LENGTH}
                 value={pin}
                 onChange={handlePinChange}
-                // Props de erro removidas temporariamente (onErrorChange, isInvalid, aria-describedby, attemptedSubmit)
                 disabled={isLoading}
                 autoFocus
                 name="recovery_code"
-                // --- Estilização Essencial via CSS Modules ---
-                // É CRUCIAL que essas classes existam no seu RecoveryCode.module.css
-                inputContainerClassName={styles.pinInputGroup || ''} // Adicionei fallback para evitar erro se a classe não existir
-                inputClassName={styles.pinDigitInput || ''}          // Adicionei fallback
-                // ----------------------------------------------
+                inputContainerClassName={styles.pinInputGroup || ''}
+                inputClassName={styles.pinDigitInput || ''}
             />
-            {/* Container de erro específico do PIN removido temporariamente */}
 
-            {/* Espaçamento Manual (Alternativa enquanto não há container de erro) */}
+            {/* Espaçamento Manual */}
             <div style={{ height: '1.25rem', marginBottom: '0.8rem' }}></div>
 
             {/* Botão de Submissão */}
             <button
               type="submit"
-              className={`${styles.submitButton} ${styles.mt1}`} // Mantive mt1 para espaçamento
+              className={`${styles.submitButton} ${styles.mt1}`}
               disabled={isSubmitDisabled}
             >
               {isLoading ? 'Verificando...' : 'Verificar Código'}
@@ -138,7 +137,8 @@ export default function RecoveryCodePage() {
                 Reenviar código
             </button>
              {' ou '}
-            <Link href="/forgot-password/enter-email">
+            {/* <<< MODIFICADO: Passa o email de volta para a página anterior se necessário */}
+            <Link href={`/forgot-password/enter-email?email=${encodeURIComponent(email || '')}`}>
               Digite outro email
             </Link>
           </p>

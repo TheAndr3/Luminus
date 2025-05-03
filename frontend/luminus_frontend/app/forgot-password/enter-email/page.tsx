@@ -118,7 +118,9 @@ export default function EnterEmailPage() {
             setFormErrors({});
 
             // <<< --- 3. NAVEGAR PARA A ROTA DE CÓDIGO DE RECUPERAÇÃO --- >>>
-            router.push('/forgot-password/recovery-code');
+						const encodedEmail = encodeURIComponent(formData.email);
+						router.push(`/forgot-password/recovery-code?email=${encodedEmail}`);
+            //router.push('/forgot-password/recovery-code');
             // <<< --- FIM DA ALTERAÇÃO --- >>>
 
         } else {

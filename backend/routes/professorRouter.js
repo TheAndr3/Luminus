@@ -2,17 +2,14 @@ const express = require('express');
 const routerProfessor = express.Router();
 const professorController = require('../controller/professorController.js');
 
-//Solicitar chave publica
-routerProfessor.get('/professor/get/public-key', professorController.GetPublicKey);  
-
 //Enviar chave Publica
-routerProfessor.post('/professor/post/public-key', professorController.SendPublicKey);  
+routerProfessor.get('/professor/public-key', professorController.GetPublicKey);  
+
+//Cadastro
+routerProfessor.post('/professor/register', professorController.Create);
 
 //Login
 routerProfessor.post('/professor/login', professorController.Login);
-
-//Cadastro
-routerProfessor.post('/professor', professorController.Create);
 
 //Perfil
 routerProfessor.get('/professor/:id', professorController.GetProfile);
@@ -24,12 +21,12 @@ routerProfessor.delete('/professor/:id', professorController.Delete);
 routerProfessor.get('/professor/:id/home', professorController.Home);
 
 //Recuperar senha
-routerProfessor.post('/professor/recover-password/:id', professorController.RecoverPassword);
+routerProfessor.post('/professor/recover-password', professorController.RecoverPassword);
 
 //Enviar email
 routerProfessor.get('/professor/send-email/:id', professorController.SendEmail);
 
 //Nova Senha
-routerProfessor.post('/professor/new-password/:id', professorController.NewPassword);
+routerProfessor.post('/professor/new-password/:token', professorController.NewPassword);
 
 module.exports = routerProfessor;
