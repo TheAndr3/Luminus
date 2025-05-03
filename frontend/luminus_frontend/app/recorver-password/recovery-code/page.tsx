@@ -1,5 +1,5 @@
 import Image from "next/image";
-import logoimg from "@/app/Image/logoLuminus.svg"
+import logoimg from "@/public/logo-Luminus.svg";
 import style from "./page.module.css";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -31,7 +31,7 @@ export default function recoveryCode(){
 
 
                     <div className={style.buttonContainer}> 
-                        <OtpFunction/>
+                        {/*<OtpFunction/>*/}
                     </div>
                     
                 
