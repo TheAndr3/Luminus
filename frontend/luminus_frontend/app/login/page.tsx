@@ -334,7 +334,7 @@ export default function LoginPage() {
                 </label>
               </div>
               {/* Link para a página de recuperação de senha */}
-              <Link href="/forgot-password" className={styles.forgotPasswordLink}>
+              <Link href="/forgot-password/enter-email" className={styles.forgotPasswordLink}>
                 Esqueci minha senha
               </Link>
             </div>

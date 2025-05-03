@@ -4,8 +4,8 @@
  * @description Define o componente da página para solicitar o email do usuário
  *              (ex: para recuperação de senha). Utiliza layout similar à LoginPage,
  *              mas com seu próprio CSS Module (EnterEmail.module.css).
- * @version 1.1
- * @date 02-05-2025
+ * @version 1.2 // <<< Versão atualizada
+ * @date 02-05-2025 // <<< Data atualizada (ou mantenha a original)
  * @author Pedro e Armando
  */
 
@@ -18,12 +18,13 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // <<< --- 1. IMPORTAR useRouter ---
 // --- IMPORTANTE: Importa o NOVO CSS Module específico ---
-import styles from './EnterEmail.module.css'; // <<< Atualizado
+import styles from './enterEmail.module.css';
 
 // --- Importações de Componentes Customizados ---
-import { EmailInput } from '@/components/inputs/EmailInput'; // <<< Usa EmailInput conforme pedido
-import Carousel from '@/components/carousel/Carousel';     // Reutiliza o Carousel
+import { EmailInput } from '@/components/inputs/EmailInput';
+import Carousel from '@/components/carousel/Carousel';
 
 // --- Tipos ---
 type FormErrors = {
@@ -37,56 +38,57 @@ type FormErrors = {
  *              Usa layout de dois painéis definido em EnterEmail.module.css.
  */
 export default function EnterEmailPage() {
-  // --- Estados do Componente (Mesma lógica da LoginPage) ---
+  const router = useRouter(); // <<< --- 2. INSTANCIAR O ROUTER ---
+
+  // --- Estados do Componente ---
   const [formData, setFormData] = useState({ email: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- Função Auxiliar de Validação (Mesma lógica da LoginPage) ---
+  // --- Função Auxiliar de Validação ---
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // --- Slides para o Carrossel (Pode reutilizar ou adaptar) ---
+  // --- Slides para o Carrossel ---
   const enterEmailSlides = [
     <Image
       key="enter-email-slide-1"
-      src="/carroselAlunos.png" // Adapte se necessário
+      src="/carroselAlunos.png"
       alt="Recupere seu acesso"
       layout="fill" objectFit="cover" priority
     />,
     <Image
       key="enter-email-slide-2"
-      src="/carroselGerencie.png" // Adapte se necessário
+      src="/carroselGerencie.png"
       alt="Processo simples e rápido"
       layout="fill" objectFit="cover"
     />,
     <Image
       key="enter-email-slide-3"
-      src="/carroselAvaliação.png" // Adapte se necessário
+      src="/carroselAvaliação.png"
       alt="Insira seu email para continuar"
       layout="fill" objectFit="cover"
     />,
   ];
 
-  // --- Manipuladores de Eventos (Mesma lógica da LoginPage) ---
+  // --- Manipuladores de Eventos ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
       setFormData({ email: value });
-      // Limpa erros ao digitar
       setFormErrors(prevErrors => ({
           ...prevErrors,
-          email: null, // Limpa erro específico do email
-          general: null  // Limpa erro geral
+          email: null,
+          general: null
       }));
     };
 
-  // --- Submissão do Formulário (Mesma lógica da LoginPage, com simulação) ---
+  // --- Submissão do Formulário ---
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormErrors({}); // Limpa erros anteriores
-    setIsLoading(true); // Ativa carregamento
+    setFormErrors({});
+    setIsLoading(true);
 
     // --- Validação Client-Side ---
     const errors: FormErrors = {};
@@ -100,7 +102,7 @@ export default function EnterEmailPage() {
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       setIsLoading(false);
-      return; // Interrompe se houver erros
+      return;
     }
 
     // --- Tentativa de Envio (Simulação) ---
@@ -108,24 +110,33 @@ export default function EnterEmailPage() {
     try {
         // Simula chamada de API
         await new Promise(resolve => setTimeout(resolve, 1000));
-        // Simula sucesso/falha (substitua pela lógica real)
-        const sucessoEnvio = Math.random() > 0.2; // 80% chance de sucesso
+        const sucessoEnvio = true;
 
         if (sucessoEnvio) {
-            alert(`Sucesso (simulado)! Se o email ${formData.email} estiver cadastrado, você receberá um link.`);
-            // Aqui você pode redirecionar ou mostrar uma mensagem de sucesso permanente
-            setFormErrors({}); // Limpa erros em caso de sucesso
-            // setFormData({ email: '' }); // Opcional: Limpar campo
+            alert(`Sucesso (simulado)! Redirecionando para a página de código de recuperação.`);
+            // alert(`Sucesso (simulado)! Se o email ${formData.email} estiver cadastrado, você receberá um PIN de confirmação.`); // << REMOVIDO ALERT
+            setFormErrors({});
+
+            // <<< --- 3. NAVEGAR PARA A ROTA DE CÓDIGO DE RECUPERAÇÃO --- >>>
+            router.push('/forgot-password/recovery-code');
+            // <<< --- FIM DA ALTERAÇÃO --- >>>
+
         } else {
-            // Simula erro da API
             throw new Error("Email não encontrado ou falha ao enviar.");
         }
     } catch (error: any) {
       console.error("Erro durante a solicitação (simulado):", error);
-      // Define erro geral para exibição
       setFormErrors({ general: `Falha na solicitação: ${error.message || 'Tente novamente mais tarde.'}` });
     } finally {
-      setIsLoading(false); // Garante desativar carregamento
+      // Importante: Não desativar o loading aqui se o redirecionamento ocorrer,
+      // pois o componente será desmontado. Mas se o envio falhar, precisa desativar.
+      // A lógica atual já faz isso corretamente no bloco catch e se a validação falhar.
+      // Adicionamos a desativação no 'finally' apenas para garantir em caso de erro inesperado
+      // antes do redirecionamento ou se o 'sucessoEnvio' for falso.
+       if (!router) setIsLoading(false); // Só desativa se não for redirecionar (ou se erro) - router check pode não ser necessário aqui, mas seguro.
+       // Simplificação: A lógica original no catch/validação já cobre a falha.
+       // O finally só será útil se o envio FALHAR. Se tiver sucesso, o componente desmonta.
+       setIsLoading(false); // Desativar sempre no finally é mais seguro se a navegação falhar por algum motivo raro.
     }
   };
 
@@ -138,12 +149,11 @@ export default function EnterEmailPage() {
 
   // --- Renderização do Componente ---
   return (
-    // USA O NOVO CSS MODULE importado como 'styles'
     <div className={styles.pageContainer}>
 
       {/* Painel Esquerdo: Carrossel e Logo Nexus */}
       <div className={styles.leftPanel}>
-         <div className={styles.NexusLogoContainer}> {/* Usa classe do EnterEmail.module.css */}
+         <div className={styles.NexusLogoContainer}>
            <Image src="/logo-Nexus.svg" alt="Nexus Logo" width={200} height={40}/>
          </div>
          <Carousel autoSlide={true} autoSlideInterval={5000}>
@@ -152,52 +162,52 @@ export default function EnterEmailPage() {
       </div>
 
       {/* Painel Direito: Logo Luminus Fixo e Formulário Centralizado */}
-      <div className={styles.rightPanel}> {/* Usa classe do EnterEmail.module.css */}
+      <div className={styles.rightPanel}>
         {/* Logo Luminus */}
-        <div className={styles.logoContainer}> {/* Usa classe do EnterEmail.module.css */}
+        <div className={styles.logoContainer}>
             <Image src="/logo-Luminus.svg" alt="Luminus Logo" width={200} height={50} priority />
         </div>
 
         {/* Wrapper de Conteúdo */}
-        <div className={styles.contentWrapper}> {/* Usa classe do EnterEmail.module.css */}
+        <div className={styles.contentWrapper}>
 
           {/* Título Adaptado */}
           <h1 className={styles.title}>RECUPERAR SENHA</h1>
 
           {/* Instrução adicional */}
-          <p className={styles.instructionText}> {/* Usa classe do EnterEmail.module.css */}
-            Digite seu email cadastrado para receber o link de recuperação.
+          <p className={styles.instructionText}>
+            Digite seu email cadastrado para receber o PIN de recuperação.
           </p>
 
           {/* Container para Erro Geral */}
           {formErrors.general && (
-            <div role="alert" className={styles.generalErrorContainer}> {/* Usa classe do EnterEmail.module.css */}
-               <span id={generalErrorId} className={styles.errorText}> {/* Usa classe do EnterEmail.module.css */}
+            <div role="alert" className={styles.generalErrorContainer}>
+               <span id={generalErrorId} className={styles.errorText}>
                  {formErrors.general}
                </span>
             </div>
           )}
 
           {/* Formulário */}
-          <form onSubmit={handleSubmit} className={styles.form} noValidate> {/* Usa classe do EnterEmail.module.css */}
+          <form onSubmit={handleSubmit} className={styles.form} noValidate>
             {/* Campo de Email usando EmailInput */}
-            <div className={styles.inputWrapper}> {/* Usa classe do EnterEmail.module.css */}
-               <EmailInput // <<< COMPONENTE EMAILINPUT SENDO USADO
+            <div className={styles.inputWrapper}>
+               <EmailInput
                  label="Email:"
-                 id="recover-email" // ID único
+                 id="recover-email"
                  placeholder="Digite seu email cadastrado"
                  value={formData.email}
-                 onChange={handleChange} // Handler para atualizar estado
-                 required // Obrigatório
-                 isInvalid={!!formErrors.email} // Estilo de erro
-                 aria-describedby={formErrors.email ? emailErrorId : undefined} // Acessibilidade
-                 disabled={isLoading} // Desabilitado durante loading
-                 name="email" // Nome do campo
+                 onChange={handleChange}
+                 required
+                 isInvalid={!!formErrors.email}
+                 aria-describedby={formErrors.email ? emailErrorId : undefined}
+                 disabled={isLoading}
+                 name="email"
                />
                {/* Slot de Erro */}
-               <div className={styles.errorSlot} aria-live="polite"> {/* Usa classe do EnterEmail.module.css */}
+               <div className={styles.errorSlot} aria-live="polite">
                  {formErrors.email && (
-                   <span id={emailErrorId} className={styles.errorText}> {/* Usa classe do EnterEmail.module.css */}
+                   <span id={emailErrorId} className={styles.errorText}>
                      {formErrors.email}
                    </span>
                  )}
@@ -207,18 +217,17 @@ export default function EnterEmailPage() {
             {/* Botão de Submissão Adaptado */}
             <button
               type="submit"
-              // Adiciona margem superior pois não há 'extraOptions' aqui
-              className={`${styles.submitButton}`} // Usa classes do EnterEmail.module.css (Aqui tinha um erro, mas apagar nao mudou nada)
-              disabled={isSubmitDisabled} // Desabilita se carregando ou campo vazio
+              className={`${styles.submitButton}`}
+              disabled={isSubmitDisabled}
             >
-              {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
+              {isLoading ? 'Enviando...' : 'Enviar PIN de Recuperação'}
             </button>
           </form>
 
           {/* Link para voltar ao Login */}
-          <p className={styles.switchLink}> {/* Usa classe do EnterEmail.module.css */}
+          <p className={styles.switchLink}>
             Lembrou sua senha?{' '}
-            <Link href="/login"> {/* Ajuste a rota se necessário */}
+            <Link href="/login">
               Voltar para Login
             </Link>
           </p>
