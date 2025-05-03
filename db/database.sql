@@ -19,6 +19,7 @@ create table Dossier(
 	id SERIAL,
 	professor_id INTEGER, 
 	name VARCHAR(255) UNIQUE NOT NULL,
+	description TEXT, 
 	evaluation_method VARCHAR(50),
 	FOREIGN KEY(professor_id) REFERENCES Professor(id),
 	PRIMARY KEY(id, professor_id)
@@ -97,6 +98,7 @@ create table InstitutionalDossier(
 	id SERIAL,
 	institution_id INT,
 	name VARCHAR(255) UNIQUE NOT NULL,
+	description TEXT,
 	evaluation_method VARCHAR(50),
 
 	FOREIGN KEY(institution_id) REFERENCES Institution(id),
