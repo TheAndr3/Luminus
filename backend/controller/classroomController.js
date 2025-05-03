@@ -70,7 +70,7 @@ exports.Update = async (req, res) => {
 
       await db.pgUpdate('classroom', payload, ['id', 'professor_id']);
 
-      res.status(200).json({ msg: 'classe atualizada com sucesso' });
+      res.status(200).json({ msg: 'turma atualizada com sucesso' });
     } else {
       res.status(400).json({ msg: 'id de professor invalido' });
     }
@@ -82,6 +82,17 @@ exports.Update = async (req, res) => {
 
 
 exports.Delete = async (req, res) => {
-  const id = req.params.id;
-  res.status(204).send(); 
-}
+  try {
+    const payload = {
+      id: req.params.id,
+      professor_id: req.body.professor_id
+    };
+
+    await db.pgDelete('classroom', payload);
+
+    res.status(200).json({ msg: 'turma removida com sucesso' });
+  } catch (error) {
+    res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+  }
+};
+

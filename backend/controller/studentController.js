@@ -83,11 +83,20 @@ exports.Update = async (req, res) => {
   };
   
 
-exports.Delete = async (req, res) => {
-    const id = req.params.id;
-    const class_id = req.params.classid;
-    res.status(204).send(); 
-}
+  exports.Delete = async (req, res) => {
+    try {
+      const payload = {
+        id: req.params.id
+      };
+  
+      await db.pgDelete('student', payload);
+  
+      res.status(200).json({ msg: 'estudante removido com sucesso' });
+    } catch (error) {
+      res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+    }
+  };
+  
 
 exports.ImportCsv = async (req, res) => {
     const class_id = req.params.class_id;
