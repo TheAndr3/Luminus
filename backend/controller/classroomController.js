@@ -53,9 +53,33 @@ exports.Create = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-  const id = req.params.id;
-  res.status(200).send(`Rota de editar turma ${id}`);
-}
+  try {
+    const professor = await db.pgSelect('professor', { id: req.body.professor_id });
+
+    if (Object.values(professor).length > 0) {
+      const payload = {
+        id: req.params.id,
+        professor_id: req.body.professor_id,
+        name: req.body.name,
+        description: req.body.description,
+        season: req.body.season,
+        institution: req.body.institution,
+        dossier_id: req.body.dossier_id,
+        dossier_professor_id: req.body.dossier_professor_id
+      };
+
+      await db.pgUpdate('classroom', payload, ['id', 'professor_id']);
+
+      res.status(200).json({ msg: 'classe atualizada com sucesso' });
+    } else {
+      res.status(400).json({ msg: 'id de professor invalido' });
+    }
+  } catch (error) {
+    res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+  }
+};
+
+
 
 exports.Delete = async (req, res) => {
   const id = req.params.id;

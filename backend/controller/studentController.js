@@ -68,10 +68,20 @@ exports.Create = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-    const id = req.params.id;
-    const class_id = req.params.classid;
-    res.status(200).send(`Rota de editar turma ${id}`);
-}
+    try {
+      const payload = {
+        id: req.params.id,
+        name: req.body.name
+      };
+  
+      await db.pgUpdate('student', payload, ['id']);
+  
+      res.status(200).json({ msg: 'estudante atualizado com sucesso' });
+    } catch (error) {
+      res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
+    }
+  };
+  
 
 exports.Delete = async (req, res) => {
     const id = req.params.id;
