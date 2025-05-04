@@ -81,7 +81,7 @@ exports.Create = async (req, res) => {
             res.status(409).json({message:'Esse e-mail já possui um cadastro'});
         }
     } catch (err) {
-        res.status(404).json({message:'Erro ao cadastrar usuário: ', err});
+        res.status(500).json({message:'Erro ao cadastrar usuário: ', err});
     }
 }
 
@@ -120,7 +120,7 @@ exports.RecoverPassword = async (req, res) => {
         }
     } catch (err) {
         console.log('erro: ', err);
-        res.status(400).json({msg:'nao foi possivel atender sua solicitadao: ', err});
+        res.status(400).json({msg:'nao foi possivel atender sua solicitacao: ', err});
     }
 }
 
