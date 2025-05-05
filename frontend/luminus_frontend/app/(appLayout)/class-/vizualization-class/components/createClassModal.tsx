@@ -11,7 +11,7 @@ import Image from "next/image"; // Importa o componente Image do Next.js para us
 import { createClass } from "@/services/api";
 
 
-export default function dialogPage() {
+export default function DialogPage() {
     const [save, setSave] = useState(false); // Estado para controlar se os dados estão sendo salvos
 
     const [open, setOpen] = useState(false); // Estado para controlar se o dialog está aberto ou fechado
@@ -81,8 +81,8 @@ export default function dialogPage() {
                     handleDialogClose(); // Chama a função para resetar os campos quando o dialog é fechado
                 }
             }}>
-                <DialogTrigger>
-                    <Button> Abrir dialog test </Button> {/* Botão para abrir o dialog */}
+                <DialogTrigger >
+                    <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-2 py-1 h-7"> Adicionar turma   +</Button> {/* Botão para abrir o dialog */}
                 </DialogTrigger>
                 <DialogOverlay className="fixed inset-0 bg-gray-400/10 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
 

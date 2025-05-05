@@ -1,21 +1,24 @@
 "use client"
 
-import { Button } from "@/components/ui/button";
-import { redirect } from "next/navigation";
+import {SubHeader} from "@/app/(appLayout)/class-/vizualization-class/components/subHeader"
+import DialogPage from "./components/createClassModal";
 
 
 
 
 
 export default function vizualizationClass(){
-    function teste(){
-        redirect("/class-/vizualization-class/dialog")
-    }
  
     return(
         <div>
-            <h1> Teste teste</h1>   
-            <Button onClick={teste}> Clique aqui TESTE</Button>
+            <div className="flex items-center justify-center mt-10 w-[80%] ml-auto bg-gray-200">
+                <h1 className="text-4xl font-bold"> Turmas </h1>
+
+                
+            </div>
+            <SubHeader></SubHeader>
+             
+            
         </div>
     )
 }
