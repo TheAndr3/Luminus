@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_URL = "https://localhost:3000";
 
 //excluir quando terminar as rotas abaixo
-export const api = axios.create( {baseURL: "https://localhost:3000"})
+export const api = axios.create( {baseURL: API_URL})
 
 
 
@@ -79,3 +79,21 @@ export async function newPassoword(email: string, newPass: string, token:string)
     }
 }
 
+
+
+
+
+//criação de turma
+export async function createClass(data:{ name: string; course: string; semester: string; institutio?:string}) {
+    try {
+        // Faz uma requisição POST para o endpoint do back-end, passando as informações como parametro
+        const response = await axios.post(`${API_URL}`); //PRECISO SABER QUAL O ENDPOINT
+        
+        // Retorna os dados da resposta da API
+        return response.data;
+    }
+    catch(erro) {
+        // Se ocorrer algum erro na requisição (como falha de rede ou erro no servidor), lança uma exceção
+        throw new Error("Erro na requisição");
+    }
+}
