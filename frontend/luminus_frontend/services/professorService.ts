@@ -48,9 +48,9 @@ interface NewPasswordResponse {
 
 
 //FUNÇÕES
-export const LoginProfessor = async (payload: LoginPayLoad): Promise<LoginResponse> => {
+export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponse> => {
     try {
-      const response = await api.post('professor/login', payload);
+      const response = await api.post('professor/login', payLoad);
       return response.data.professor;
     } catch (error: any) {
       const message = error.response?.data || 'Erro ao fazer login';

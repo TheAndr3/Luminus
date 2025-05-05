@@ -10,7 +10,7 @@ exports.List = async (req, res) => {
   }
     catch (err) {
       console.log(err)
-      res.status(400).json({msg:'falha ao atender solicitacao'});
+      res.status(400).json({msg:'Falha ao atender solicitação'});
     }
   
 }
