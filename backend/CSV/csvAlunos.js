@@ -1,5 +1,4 @@
-const db = require('../models');
-const Student = db.Student;
+const db = require('../bd');
 
 exports.ImportCsv = async(req, res) => {
     const classId = req.params.classid;
