@@ -1,5 +1,5 @@
 // Importa o tipo Turma para tipagem dos dados
-import { Turma } from "@/app/(appLayout)/class-/vizualization-class/components/types";
+import { Turma } from "@/app/(appLayout)/class-/components/types";
 // Importa o componente responsável por abrir o modal de criação de turmas
 import DialogPage from "./createClassModal";
 

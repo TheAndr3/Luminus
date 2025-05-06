@@ -1,94 +1,141 @@
-'use client';
+"use client" // Habilita o uso de recursos do lado do cliente (ex: useState) no Next.js 13+
 
-import { useState } from 'react';
+// Importa o componente da lista de turmas
+import ListClass from "./components/listClass";
+// Importa o tipo Turma para tipar os dados corretamente
+import { Turma } from "@/app/(appLayout)/class-/components/types";
+// Importa o hook useState para controle de estado
+import { useState } from "react";
+import GridClass from "./components/gridClass";
+import { Filter, LayoutGrid } from "lucide-react";
 
-type Turma = {
-  id: number;
-  disciplina: string;
-  codigo: string;
-  dossie: string;
-};
+export default function VizualizationClass() {
+  // Cria uma lista fictícia com 30 turmas para simular os dados (mock)
+  const mockClass: Turma[] = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    disciplina: 'Matematica',
+    codigo: `EXA502 - TP${i + 1}`,
+    dossie: `Dossiê Turma ${i + 1}`,
+    selected: false, // Inicia como não selecionada
+  }));
 
-const mockTurmas: Turma[] = Array.from({ length: 9 }, (_, i) => ({
-  id: i,
-  disciplina: 'Álgebra',
-  codigo: 'EXA502 - TP01',
-  dossie: 'Dossiê Turma 1',
-}));
+  // Estado que controla o modo de visualização (lista ou grade)
+  const [visualization, setVisualization] = useState<'grid' | 'list'>('list');
 
-export default function TurmasPage() {
-  const [visualizacao, setVisualizacao] = useState<'grid' | 'list'>('grid');
+  // Estado que armazena todas as turmas (com seleção)
+  const [classi, setClassi] = useState(mockClass);
+
+  // Estado que controla qual página está sendo exibida
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Quantas turmas serão exibidas por página
+  const turmasPorPagina = 6;
+
+  // Cálculo do total de páginas baseado na quantidade de turmas
+  const totalPages = Math.ceil(classi.length / turmasPorPagina);
+
+  // Índice inicial para cortar a lista de turmas visíveis da página atual
+  const startIndex = (currentPage - 1) * turmasPorPagina;
+
+  // Fatia a lista de turmas de acordo com a página atual
+  const turmasVisiveis = classi.slice(startIndex, startIndex + turmasPorPagina);
+
+  // Verifica se todas as turmas visíveis estão selecionadas
+  const isAllSelected = turmasVisiveis.every((t) => t.selected);
+
+  // Alterna a seleção de todas as turmas da página atual
+  const toggleSelectAll = () => {
+    const newSelected = !isAllSelected; // Inverte o estado atual
+    const novaLista = classi.map((turma, index) => {
+      if (index >= startIndex && index < startIndex + turmasPorPagina) {
+        return { ...turma, selected: newSelected }; // Atualiza apenas as visíveis
+      }
+      return turma; // Mantém as outras inalteradas
+    });
+    setClassi(novaLista); // Atualiza o estado com a nova lista
+  };
+
+  // Alterna a seleção individual de uma turma
+  const toggleOne = (id: number) => {
+    setClassi((prev) =>
+      prev.map((turma) =>
+        turma.id === id ? { ...turma, selected: !turma.selected } : turma
+      )
+    );
+  };
+
+  // Filtro para buscar turmas
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para armazenar o termo de busca
+
+  const filteredClasses = turmasVisiveis.filter((turma) =>
+    turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    turma.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold text-center mb-6">Turmas</h1>
+    <div>
+      {/* Cabeçalho da página */}
+      <div className="flex items-center justify-center mt-10 w-full ml-auto ">
+        <h1 className="text-4xl font-bold"> Turmas </h1>
+      </div>
 
       {/* Filtro e controles */}
       <div className="flex items-center justify-between mb-4">
         <input
           type="text"
           placeholder="Search for class"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)} // Atualiza o termo de busca
           className="border p-2 rounded w-1/2"
         />
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setVisualizacao('list')}
-            className={`p-2 rounded border ${visualizacao === 'list' ? 'bg-blue-200' : ''}`}
-          >
-            📄 Lista
-          </button>
-          <button
-            onClick={() => setVisualizacao('grid')}
-            className={`p-2 rounded border ${visualizacao === 'grid' ? 'bg-blue-200' : ''}`}
-          >
-            🧱 Grade
-          </button>
-          <button className="bg-gray-300 px-4 py-2 rounded">Adicionar Turma ➕</button>
+        <div className="flex items-center gap-2 mr-50 ">
+
+          <Filter onClick={() => setVisualization('list')}
+              className={`cursor-pointer p-1 rounded-full w-7 h-7
+                ${visualization === 'list' ? 'bg-blue-200' : 'bg-gray-300 hover:bg-gray-400'}
+                text-black`}
+            />
+          <LayoutGrid onClick={() => setVisualization('grid')}
+              className={`cursor-pointer p-1 rounded-full w-7 h-7
+                ${visualization === 'grid' ? 'bg-blue-200' : 'bg-gray-300 hover:bg-gray-400'}
+                text-black`}
+            />
+          
         </div>
       </div>
 
-      {/* Visualização */}
-      {visualizacao === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {mockTurmas.map((turma) => (
-            <div key={turma.id} className="bg-[#0A2B3D] text-white rounded p-4 shadow-md">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="text-sm">📘 {turma.disciplina}</div>
-                  <div className="text-xs text-gray-300">{turma.codigo}</div>
-                </div>
-                <input type="checkbox" />
-              </div>
-              <button className="mt-2 bg-gray-200 text-black px-2 py-1 rounded w-full text-sm">
-                {turma.dossie}
-              </button>
-            </div>
-          ))}
+      {/* Visualização em Lista */}
+      {visualization === 'list' && (
+        <div className="px-10 flex items-center justify-center mt-10 ml-auto">
+          <ListClass
+            turmas={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
+            toggleSelectAll={toggleSelectAll}
+            toggleOne={toggleOne}
+            isAllSelected={isAllSelected}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+          />
         </div>
-      ) : (
-        <table className="w-full text-left border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-sm text-gray-600">
-              <th></th>
-              <th>Disciplina</th>
-              <th>Turma</th>
-              <th>Dossiê</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mockTurmas.map((turma) => (
-              <tr
-                key={turma.id}
-                className="bg-[#0A2B3D] text-white rounded px-4 py-2"
-              >
-                <td className="p-2"><input type="checkbox" /></td>
-                <td className="p-2">📘 {turma.disciplina}</td>
-                <td className="p-2">{turma.codigo}</td>
-                <td className="p-2">{turma.dossie}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      )}
+
+      {/* Visualização em Grade */}
+      {visualization === 'grid' && (
+        <div className="px-10 flex items-center justify-center mt-10 ml-auto">
+          <GridClass
+            turmas={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
+            toggleSelectAll={toggleSelectAll}
+            toggleOne={toggleOne}
+            isAllSelected={isAllSelected}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+
+          />
+
+          ))
+        </div>
       )}
     </div>
   );
