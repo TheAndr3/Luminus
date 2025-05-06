@@ -84,25 +84,29 @@ export default function ResetPasswordPage() {
   }, [searchParams]);
 
 
-  // --- Slides para o Carrossel (Adaptados) ---
+    // --- Slides para o Carrossel ---
   const resetPasswordSlides = [
     <Image
-      key="reset-slide-1"
-      src="/carroselAlunos.png" // Reutilize ou use imagens específicas
-      alt="Defina sua nova senha com segurança"
-      layout="fill" objectFit="cover" priority
+      key="reg-slide-1"
+      src="/carroselAlunos.png"
+      alt="Alunos utilizando a plataforma"
+      fill
+      priority
+      style={{ objectFit: "cover" }}
     />,
     <Image
-      key="reset-slide-2"
-      src="/carroselGerencie.png" // Reutilize ou use imagens específicas
-      alt="Proteja seu acesso à plataforma"
-      layout="fill" objectFit="cover"
+      key="reg-slide-2"
+      src="/carroselGerencie.png"
+      alt="Interface de gerenciamento da plataforma"
+      fill
+      style={{ objectFit: "cover" }}
     />,
     <Image
-      key="reset-slide-3"
-      src="/carroselAvaliação.png" // Reutilize ou use imagens específicas
-      alt="Siga as instruções para criar uma senha forte"
-      layout="fill" objectFit="cover"
+      key="reg-slide-3"
+      src="/carroselAvaliação.png"
+      alt="Tela de avaliação de desempenho"
+      fill
+      style={{ objectFit: "cover" }}
     />,
   ];
 

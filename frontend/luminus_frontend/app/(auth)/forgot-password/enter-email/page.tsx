@@ -51,27 +51,31 @@ export default function EnterEmailPage() {
     return emailRegex.test(email);
   };
 
-  // --- Slides para o Carrossel ---
-  const enterEmailSlides = [
-    <Image
-      key="enter-email-slide-1"
-      src="/carroselAlunos.png"
-      alt="Recupere seu acesso"
-      layout="fill" objectFit="cover" priority
-    />,
-    <Image
-      key="enter-email-slide-2"
-      src="/carroselGerencie.png"
-      alt="Processo simples e rápido"
-      layout="fill" objectFit="cover"
-    />,
-    <Image
-      key="enter-email-slide-3"
-      src="/carroselAvaliação.png"
-      alt="Insira seu email para continuar"
-      layout="fill" objectFit="cover"
-    />,
-  ];
+   // --- Slides para o Carrossel ---
+ const enterEmailSlides = [
+   <Image
+     key="reg-slide-1"
+     src="/carroselAlunos.png"
+     alt="Alunos utilizando a plataforma"
+     fill
+     priority
+     style={{ objectFit: "cover" }}
+   />,
+   <Image
+     key="reg-slide-2"
+     src="/carroselGerencie.png"
+     alt="Interface de gerenciamento da plataforma"
+     fill
+     style={{ objectFit: "cover" }}
+   />,
+   <Image
+     key="reg-slide-3"
+     src="/carroselAvaliação.png"
+     alt="Tela de avaliação de desempenho"
+     fill
+     style={{ objectFit: "cover" }}
+   />,
+ ];
 
   // --- Manipuladores de Eventos ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

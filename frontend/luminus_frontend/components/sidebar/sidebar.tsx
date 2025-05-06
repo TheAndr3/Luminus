@@ -59,7 +59,7 @@ const Sidebar = () => {
   // --- Mock Logout Handler (Replace with actual logout function) ---
   const handleLogout = () => {
     console.log("Logout triggered");
-    // router.push('/logout'); // Or call your auth logout method
+    router.push('/login'); // Or call your auth logout method
   };
 
   // Determine Avatar Fallback (e.g., initials)

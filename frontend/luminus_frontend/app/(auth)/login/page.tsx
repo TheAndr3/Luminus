@@ -88,28 +88,31 @@ export default function LoginPage() {
     return emailRegex.test(email);
   };
 
-  // --- Slides para o Carrossel ---
-  // Array de elementos `Image` para serem usados no painel esquerdo.
-  const loginSlides = [
-    <Image
-      key="login-slide-1"
-      src="/carroselAlunos.png"
-      alt="Bem-vindo de volta - Gerencie seus alunos com facilidade"
-      layout="fill" objectFit="cover" priority // `priority` para carregar a primeira imagem mais rápido
-    />,
-    <Image
-      key="login-slide-2"
-      src="/carroselGerencie.png"
-      alt="Organize suas turmas, avaliações e acompanhe o progresso"
-      layout="fill" objectFit="cover"
-    />,
-    <Image
-      key="login-slide-3"
-      src="/carroselAvaliação.png"
-      alt="Acesse dados e insights importantes rapidamente para tomar decisões informadas"
-      layout="fill" objectFit="cover"
-    />,
-  ];
+   // --- Slides para o Carrossel ---
+ const loginSlides = [
+   <Image
+     key="reg-slide-1"
+     src="/carroselAlunos.png"
+     alt="Alunos utilizando a plataforma"
+     fill
+     priority
+     style={{ objectFit: "cover" }}
+   />,
+   <Image
+     key="reg-slide-2"
+     src="/carroselGerencie.png"
+     alt="Interface de gerenciamento da plataforma"
+     fill
+     style={{ objectFit: "cover" }}
+   />,
+   <Image
+     key="reg-slide-3"
+     src="/carroselAvaliação.png"
+     alt="Tela de avaliação de desempenho"
+     fill
+     style={{ objectFit: "cover" }}
+   />,
+ ];
 
   // --- Manipuladores de Eventos ---
 
