@@ -35,11 +35,30 @@ export default function RecoveryCodePage() {
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- Slides para o Carrossel ---
+    // --- Slides para o Carrossel ---
   const recoverySlides = [
-    <Image key="recovery-slide-1" src="/carroselAlunos.png" alt="Verifique sua identidade" layout="fill" objectFit="cover" priority />,
-    <Image key="recovery-slide-2" src="/carroselGerencie.png" alt="Processo seguro e rápido" layout="fill" objectFit="cover" />,
-    <Image key="recovery-slide-3" src="/carroselAvaliação.png" alt="Insira o código recebido" layout="fill" objectFit="cover" />,
+    <Image
+      key="reg-slide-1"
+      src="/carroselAlunos.png"
+      alt="Alunos utilizando a plataforma"
+      fill
+      priority
+      style={{ objectFit: "cover" }}
+    />,
+    <Image
+      key="reg-slide-2"
+      src="/carroselGerencie.png"
+      alt="Interface de gerenciamento da plataforma"
+      fill
+      style={{ objectFit: "cover" }}
+    />,
+    <Image
+      key="reg-slide-3"
+      src="/carroselAvaliação.png"
+      alt="Tela de avaliação de desempenho"
+      fill
+      style={{ objectFit: "cover" }}
+    />,
   ];
 
   // --- Manipulador de Mudança do PIN ---

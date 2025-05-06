@@ -95,11 +95,30 @@ export default function RegisterPage() {
   const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   // --- Slides para o Carrossel ---
-  const registerSlides = [
-    <Image key="reg-slide-1" src="/carroselAlunos.png" alt="Alunos utilizando a plataforma" layout="fill" objectFit="cover" priority />,
-    <Image key="reg-slide-2" src="/carroselGerencie.png" alt="Interface de gerenciamento da plataforma" layout="fill" objectFit="cover" />,
-    <Image key="reg-slide-3" src="/carroselAvaliação.png" alt="Tela de avaliação de desempenho" layout="fill" objectFit="cover" />,
-  ];
+const registerSlides = [
+  <Image
+    key="reg-slide-1"
+    src="/carroselAlunos.png"
+    alt="Alunos utilizando a plataforma"
+    fill
+    priority
+    style={{ objectFit: "cover" }}
+  />,
+  <Image
+    key="reg-slide-2"
+    src="/carroselGerencie.png"
+    alt="Interface de gerenciamento da plataforma"
+    fill
+    style={{ objectFit: "cover" }}
+  />,
+  <Image
+    key="reg-slide-3"
+    src="/carroselAvaliação.png"
+    alt="Tela de avaliação de desempenho"
+    fill
+    style={{ objectFit: "cover" }}
+  />,
+];
 
   // --- Manipuladores de Eventos ---
 
