@@ -8,7 +8,8 @@ export function SubHeader() {
   // Cria o componente 'SubHeader', que é um subtítulo ou barra com opções que será renderizado na tela.
 
   return (
-    <div className="mt-10 flex gap-48 w-[80%] ml-auto p-4 rounded">
+    <div className="mt-10 flex gap-42 w-[80%] ml-auto p-4 rounded">
+
 
       <h3>Selecionar todos</h3>
       {/* Cria o título "Selecionar todos" */}
@@ -19,7 +20,7 @@ export function SubHeader() {
       <h3>Dossiê</h3>
       {/* Cria o título "Dossiê" */}
       
-      <DialogPage></DialogPage>
+      
       {/* Renderiza o componente 'DialogPage', que é o modal de criação de turma ou algo relacionado, no final da barra. */}
     </div>
   );
