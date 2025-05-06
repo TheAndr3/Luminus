@@ -65,7 +65,13 @@ exports.List = async(req, res) => {
 
 exports.Get = async (req, res) => {
   const id = req.params.id;
-  res.status(200).send(`Rota para obter o dossiê ${id}`);
+
+  try {
+    const dossier = await db.pgDossieSelect(id);
+    res.status(200).json({msg:'sucesso', data:dossier});
+  } catch (error) {
+    res.status(400).json({msg:'falha no envio da solicitação'})
+  }
 }
 
 exports.Update = async (req, res) => {
