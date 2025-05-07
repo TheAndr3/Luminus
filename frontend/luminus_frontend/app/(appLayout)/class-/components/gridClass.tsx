@@ -1,6 +1,7 @@
 import { Turma } from '@/app/(appLayout)/class-/components/types';
 import DialogPage from './createClassModal';
 import PageController from './paginationController';
+import ClassViewMode from './classViewMode';
 
 type GridTurmasProps = {
   turmas: Turma[];
@@ -10,6 +11,9 @@ type GridTurmasProps = {
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
+
+  visualization: string
+  setVisualization: (set: 'grid' | 'list') => void;
 };
 
 export default function GridTurmas({
@@ -20,6 +24,8 @@ export default function GridTurmas({
   currentPage,
   totalPages,
   setCurrentPage,
+  visualization,
+  setVisualization
 }: GridTurmasProps) {
   return (
     <div className="w-full">
@@ -34,6 +40,13 @@ export default function GridTurmas({
           <span className="text-lg font-semibold">Selecionar todos</span>
         </div>
         <div className="flex gap-2">
+
+            {/*Renderização tipo de visualização das turmas (lista ou grade) */}
+            <ClassViewMode
+              visualization={visualization}
+              setVisualization={setVisualization}
+            />
+
           <DialogPage/>
         </div>
         

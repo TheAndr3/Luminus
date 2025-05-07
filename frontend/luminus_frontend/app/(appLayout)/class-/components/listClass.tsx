@@ -3,6 +3,7 @@ import { Turma } from "@/app/(appLayout)/class-/components/types";
 // Importa o componente responsável por abrir o modal de criação de turmas
 import DialogPage from "./createClassModal";
 import PageController from "./paginationController";
+import ClassViewMode from "./classViewMode";
 
 // Define o tipo das props recebidas pelo componente ListClass
 type ListTurmasProps = {
@@ -13,6 +14,9 @@ type ListTurmasProps = {
   currentPage: number;                 // Página atual
   totalPages: number;                  // Número total de páginas
   setCurrentPage: (page: number) => void; // Função para mudar a página
+
+  visualization: string
+  setVisualization:  (set: 'grid' | 'list') => void;
 };
 
 // Componente principal da tabela de turmas
@@ -23,7 +27,9 @@ export default function ListClass({
   isAllSelected,
   currentPage,
   totalPages,
-  setCurrentPage
+  setCurrentPage,
+  visualization,
+  setVisualization
 }: ListTurmasProps) {
   return (
     <div className="w-full">
@@ -43,7 +49,18 @@ export default function ListClass({
             <th className="px-2">Turma</th>
             <th className="px-2 flex items-center justify-between">
               <span>Dossiê</span>
-              <DialogPage /> {/* Botão/modal para criar nova turma */}
+
+              <div className="flex gap-2">
+              
+                {/*Renderização tipo de visualização das turmas (lista ou grade) */}
+                <ClassViewMode
+                  visualization={visualization}
+                  setVisualization={setVisualization}
+                />
+              
+                <DialogPage/>
+                
+              </div>
             </th>
           </tr>
         </thead>

@@ -90,16 +90,7 @@ export default function VizualizationClass() {
           onChange={(e) => setSearchTerm(e.target.value)} // Atualiza o termo de busca
           className="border p-2 rounded w-1/2"
         />
-        <div className="flex items-center gap-2 mr-50 ">
-
-          {/*Renderização tipo de visualização das turmas (lista ou grade) */}
-          <ClassViewMode
-            visualization={visualization}
-            setVisualization={setVisualization}
-          />
-
-          
-        </div>
+        
       </div>
 
       {/* Renderização visualização de Lista */}
@@ -113,6 +104,8 @@ export default function VizualizationClass() {
             currentPage={currentPage}
             totalPages={totalPages}
             setCurrentPage={setCurrentPage}
+            visualization={visualization}
+            setVisualization={setVisualization}
           />
         </div>
       )}
@@ -128,6 +121,9 @@ export default function VizualizationClass() {
             currentPage={currentPage}
             totalPages={totalPages}
             setCurrentPage={setCurrentPage}
+
+            visualization={visualization}
+            setVisualization={setVisualization}
 
           />
 
