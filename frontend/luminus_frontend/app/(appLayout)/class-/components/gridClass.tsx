@@ -36,6 +36,7 @@ export default function GridTurmas({
         <div className="flex gap-2">
           <DialogPage/>
         </div>
+        
       </div>
 
       {/* GRID */}

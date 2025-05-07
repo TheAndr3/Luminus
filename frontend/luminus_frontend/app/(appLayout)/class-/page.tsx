@@ -7,7 +7,8 @@ import { Turma } from "@/app/(appLayout)/class-/components/types";
 // Importa o hook useState para controle de estado
 import { useState } from "react";
 import GridClass from "./components/gridClass";
-import { Filter, LayoutGrid } from "lucide-react";
+import { LayoutGrid, Menu } from "lucide-react";
+import ClassViewMode from "./components/classViewMode";
 
 export default function VizualizationClass() {
   // Cria uma lista fictícia com 30 turmas para simular os dados (mock)
@@ -91,21 +92,17 @@ export default function VizualizationClass() {
         />
         <div className="flex items-center gap-2 mr-50 ">
 
-          <Filter onClick={() => setVisualization('list')}
-              className={`cursor-pointer p-1 rounded-full w-7 h-7
-                ${visualization === 'list' ? 'bg-blue-200' : 'bg-gray-300 hover:bg-gray-400'}
-                text-black`}
-            />
-          <LayoutGrid onClick={() => setVisualization('grid')}
-              className={`cursor-pointer p-1 rounded-full w-7 h-7
-                ${visualization === 'grid' ? 'bg-blue-200' : 'bg-gray-300 hover:bg-gray-400'}
-                text-black`}
-            />
+          {/*Renderização tipo de visualização das turmas (lista ou grade) */}
+          <ClassViewMode
+            visualization={visualization}
+            setVisualization={setVisualization}
+          />
+
           
         </div>
       </div>
 
-      {/* Visualização em Lista */}
+      {/* Renderização visualização de Lista */}
       {visualization === 'list' && (
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <ListClass
@@ -120,7 +117,7 @@ export default function VizualizationClass() {
         </div>
       )}
 
-      {/* Visualização em Grade */}
+      {/* Rederização visualização de Grade */}
       {visualization === 'grid' && (
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <GridClass
