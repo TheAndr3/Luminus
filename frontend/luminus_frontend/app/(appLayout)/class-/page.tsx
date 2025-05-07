@@ -20,6 +20,7 @@ export default function VizualizationClass() {
     dossie: `Dossiê Turma ${i + 1}`,
     selected: false, // Inicia como não selecionada
   }));
+  
 
   // Estado que controla o modo de visualização (lista ou grade)
   const [visualization, setVisualization] = useState<'grid' | 'list'>('list');
