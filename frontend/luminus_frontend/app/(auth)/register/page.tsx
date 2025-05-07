@@ -3,20 +3,17 @@
  * @file RegisterPage.tsx
  * @description Define o componente da página de cadastro de novos usuários.
  *              Inclui formulário com validação (usuário, email, senha), interação com
- *              componentes de input customizados, simulação de chamada de API e
+ *              componentes de input customizados, chamada de API para registro e
  *              navegação para a página de confirmação de email após um cadastro bem-sucedido.
- * @version 1.1 (Removido campo de telefone)
- * @date 02-05-2025 (ou data atual)
- * @author Pedro e Andre
+ * @version 1.2 (Integração com API de Cadastro)
+ * @date 03-05-2024
+ * @author Pedro e Andre (com modificações para integração)
  */
 
-/*
--------------------------- FALTA INTEGRAÇÃO COM A API --------------------------
-*/
 // Diretiva de Componente de Cliente.
 'use client';
 
-import React, { useState } from 'react'; // Removido useEffect se não for mais necessário
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -28,60 +25,42 @@ import { TextInput } from '@/components/inputs/TextInput';
 import { EmailInput } from '@/components/inputs/EmailInput';
 import { PasswordInput } from '@/components/inputs/PasswordInput';
 
+// --- Importação do Serviço de API ---
+// AJUSTE O CAMINHO CONFORME A ESTRUTURA DO SEU PROJETO
+// Exemplo: se services está na raiz do projeto: import { RegisterProfessor, CreatePayLoad } from '../../../services/authService';
+// Exemplo: se services está em src/services: import { RegisterProfessor, CreatePayLoad } from '@/services/authService'; (se tiver alias configurado)
+import { RegisterProfessor, CreatePayLoad } from '../../../services/professorService'; // <<< ADICIONADO: Importação do serviço e tipo
+
 // --- Tipos ---
 
 /**
  * @type FormErrors
  * @description Define a estrutura para armazenar erros de validação do formulário
- *              detectados na página (campos obrigatórios, formato email, senhas não coincidem).
- *              *Campo 'contactNumber' removido.*
+ *              detectados na página ou retornados pela API.
  */
 type FormErrors = {
   username?: string | null;
   email?: string | null;
-  // contactNumber?: string | null; // <<< REMOVIDO
   password?: string | null;
   confirmPassword?: string | null;
+  api?: string | null; // <<< ADICIONADO: Para erros gerais da API
 };
 
 /**
  * @type InternalErrors
  * @description Define a estrutura para armazenar erros comunicados pelos componentes filhos
- *              via `onErrorChange` (ex: erro de força da senha).
- *              *Campo 'contactNumber' removido.*
+ *              via `onErrorChange`.
  */
 type InternalErrors = {
     password?: string | null;
-    // contactNumber?: string | null; // <<< REMOVIDO
 };
 
-/**
- * @component RegisterPage
- * @description Componente funcional que renderiza a página de cadastro completa.
- *
- * Responsabilidades:
- * - Exibir o formulário de cadastro com campos para usuário, email e senha.
- * - Gerenciar o estado dos dados do formulário (`formData`).
- * - Gerenciar o estado dos erros de validação (`formErrors`, `internalErrors`).
- * - Gerenciar o estado de carregamento (`isLoading`) durante a submissão.
- * - Controlar se uma tentativa de submissão já ocorreu (`attemptedSubmit`).
- * - Utilizar componentes de input customizados, passando props e recebendo erros.
- * - Realizar validações no lado do cliente ao submeter o formulário.
- * - Simular uma chamada de API para registrar o usuário.
- * - Em caso de sucesso, navegar programaticamente para a página `/confirm-email`.
- * - Exibir um carrossel de imagens.
- *
- * *Campo de telefone foi removido desta versão.*
- */
 export default function RegisterPage() {
   const router = useRouter();
 
-  // --- Estados do Componente ---
-  // Estado para os dados do formulário. *Campo 'contactNumber' removido.*
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    // contactNumber: '', // <<< REMOVIDO
     password: '',
     confirmPassword: ''
   });
@@ -90,149 +69,159 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
-  // --- Funções Auxiliares ---
-  /** Valida o formato básico de um endereço de email usando Regex. */
   const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // --- Slides para o Carrossel ---
-const registerSlides = [
-  <Image
-    key="reg-slide-1"
-    src="/carroselAlunos.png"
-    alt="Alunos utilizando a plataforma"
-    fill
-    priority
-    style={{ objectFit: "cover" }}
-  />,
-  <Image
-    key="reg-slide-2"
-    src="/carroselGerencie.png"
-    alt="Interface de gerenciamento da plataforma"
-    fill
-    style={{ objectFit: "cover" }}
-  />,
-  <Image
-    key="reg-slide-3"
-    src="/carroselAvaliação.png"
-    alt="Tela de avaliação de desempenho"
-    fill
-    style={{ objectFit: "cover" }}
-  />,
-];
+  const registerSlides = [
+    <Image
+      key="reg-slide-1"
+      src="/carroselAlunos.png"
+      alt="Alunos utilizando a plataforma"
+      fill
+      priority
+      style={{ objectFit: "cover" }}
+    />,
+    <Image
+      key="reg-slide-2"
+      src="/carroselGerencie.png"
+      alt="Interface de gerenciamento da plataforma"
+      fill
+      style={{ objectFit: "cover" }}
+    />,
+    <Image
+      key="reg-slide-3"
+      src="/carroselAvaliação.png"
+      alt="Tela de avaliação de desempenho"
+      fill
+      style={{ objectFit: "cover" }}
+    />,
+  ];
 
-  // --- Manipuladores de Eventos ---
-
-  /**
-   * Handler genérico para atualizar o estado `formData`.
-   * @param field A chave do campo no estado `formData` a ser atualizado.
-   * @returns Uma função que recebe o evento `ChangeEvent` do input.
-   */
-  const handleChange = (field: keyof Omit<typeof formData, 'contactNumber'>) => // <<< Tipo Atualizado
+  const handleChange = (field: keyof typeof formData) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
       setFormData(prevData => ({ ...prevData, [field]: value }));
-      if (formErrors[field]) {
-          setFormErrors(prevErrors => ({ ...prevErrors, [field]: null }));
+      // Limpa o erro do campo específico ao digitar
+      if (formErrors[field as keyof FormErrors]) { // Usamos 'as' aqui pois 'field' é de formData, mas queremos acessar FormErrors
+          setFormErrors(prevErrors => ({ ...prevErrors, [field as keyof FormErrors]: null }));
       }
+      // Limpa o erro de confirmação de senha se a senha ou a confirmação for alterada
       if ((field === 'password' || field === 'confirmPassword') && formErrors.confirmPassword) {
         setFormErrors(prevErrors => ({ ...prevErrors, confirmPassword: null }));
       }
+      // <<< ADICIONADO: Limpa o erro geral da API ao interagir com o formulário >>>
+      if (formErrors.api) {
+        setFormErrors(prevErrors => ({ ...prevErrors, api: null }));
+      }
     };
 
-  /**
-   * Callback para receber erros internos (atualmente apenas de PasswordInput).
-   * @param field A chave do campo no estado `internalErrors`.
-   * @param errorMessage A mensagem de erro recebida do filho, ou null.
-   */
   const handleInternalError = (field: keyof InternalErrors, errorMessage: string | null) => {
       setInternalErrors(prev => ({ ...prev, [field]: errorMessage }));
+      // Se um erro interno for reportado (e não for nulo), limpa um possível erro de API para evitar confusão.
+      if (errorMessage && formErrors.api) {
+        setFormErrors(prevErrors => ({ ...prevErrors, api: null }));
+      }
   };
 
-  // --- Submissão do Formulário ---
-
-  /**
-   * Handler para o evento de submissão do formulário.
-   * Realiza validações (sem telefone), simula API e navega.
-   * @param event O evento de submissão do formulário.
-   */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAttemptedSubmit(true);
+    // Limpa apenas os erros de formulário da tentativa anterior.
+    // Erros internos são gerenciados pelo `handleInternalError` e persistem até que o componente filho os limpe.
     setFormErrors({});
-    setInternalErrors({});
+    // <<< MODIFICADO: Não resetar internalErrors aqui. Eles são estados dos componentes filhos. >>>
+    // setInternalErrors({}); // Removido para persistir erros internos como força da senha
+
     const errors: FormErrors = {};
 
-    // --- Validações Client-Side (sem telefone) ---
     if (!formData.username.trim()) errors.username = 'Nome de usuário é obrigatório.';
-
     if (!formData.email.trim()) errors.email = 'Email é obrigatório.';
     else if (!validateEmail(formData.email)) errors.email = 'Formato de email inválido.';
-
-    // <<< Seção de validação de telefone REMOVIDA >>>
-    // const phoneDigits = unformatPhoneNumber(formData.contactNumber);
-    // if (!formData.contactNumber.trim()) errors.contactNumber = 'Número de contato é obrigatório.';
-    // else if (phoneDigits.length < 10 || phoneDigits.length > 11) errors.contactNumber = 'Telefone inválido (10 ou 11 dígitos).';
-
     if (!formData.password) errors.password = 'Senha é obrigatória.';
-
     if (!formData.confirmPassword) errors.confirmPassword = 'Confirmação de senha é obrigatória.';
     else if (formData.password && formData.password !== formData.confirmPassword) errors.confirmPassword = 'As senhas não coincidem.';
-    // --- Fim Validações ---
 
-    // --- Integração com Erros Internos (apenas senha) ---
-    if (internalErrors.password) errors.password = internalErrors.password;
-    // <<< Verificação de internalErrors.contactNumber REMOVIDA >>>
+    // Integração com Erros Internos (ex: força da senha do PasswordInput)
+    // Esta verificação agora usa o estado `internalErrors` que não foi resetado.
+    if (internalErrors.password) {
+      errors.password = internalErrors.password;
+    }
 
-    // --- Verificação Final e Submissão ---
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setIsLoading(false);
+      setIsLoading(false); // Garante que o loading pare se houver erro de validação client-side
       return;
     }
 
     setIsLoading(true);
-    // Log dos dados validados. *'contactNumberDigits' removido.*
-    console.log('Dados do Registro Validados (prontos para envio):', formData );
+
+    // <<< MODIFICADO: Lógica de chamada à API >>>
+    // Construir o payload para a API
+    const payload: CreatePayLoad = {
+      name: formData.username,
+      email_professor: formData.email,
+      password: formData.password,
+    };
+
+    console.log('Enviando dados para registro via API:', payload);
 
     try {
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simula API call
-        console.log('Registro simulado com sucesso!');
+      // Chamada real à API de registro
+      const response = await RegisterProfessor(payload);
+      console.log('Registro via API bem-sucedido:', response.message);
 
-        // Navegação Pós-Sucesso (inalterada)
-        const confirmUrl = `/confirm-email?email=${encodeURIComponent(formData.email)}`;
-        router.push(confirmUrl);
+      const confirmUrl = `/confirm-email?email=${encodeURIComponent(formData.email)}`;
+      router.push(confirmUrl);
 
-        // Opcional: Resetar form
-        // setFormData({ username: '', email: '', password: '', confirmPassword: '' }); // <<< Atualizado
-        // setAttemptedSubmit(false);
+      // Opcional: Resetar form após sucesso
+      // setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+      // setAttemptedSubmit(false);
 
-    } catch (error) {
-        console.error("Erro na simulação de registro:", error);
-        setFormErrors({ email: 'Ocorreu um erro ao tentar registrar. Tente novamente.' });
-        setIsLoading(false);
+    } catch (error: any) { // Captura o erro lançado pelo serviço RegisterProfessor
+      console.error("Erro no registro via API:", error);
+      // Exibe a mensagem de erro da API. `error.message` deve vir do `throw new Error(message)` no seu serviço.
+      setFormErrors(prevErrors => ({
+        ...prevErrors, // Mantém outros erros de campo se houver (embora geralmente não devam coexistir com erro de API)
+        api: error.message || 'Ocorreu um erro ao tentar registrar. Por favor, tente novamente mais tarde.'
+      }));
     } finally {
-        // setIsLoading(false); // Pode ser redundante
+      setIsLoading(false); // Garante que o loading seja desativado em qualquer cenário
     }
   };
 
-  // --- IDs para Acessibilidade (sem telefone) ---
   const usernameErrorId = 'username-error';
   const emailErrorId = 'email-error';
-  // const contactNumberErrorId = 'contactNumber-error'; // <<< REMOVIDO
   const passwordErrorId = 'password-error';
   const confirmPasswordErrorId = 'confirmPassword-error';
+  const apiErrorId = 'api-general-error'; // <<< ADICIONADO: ID para erro da API
 
   const displayPasswordError = formErrors.password || internalErrors.password;
   const isPasswordInvalid = !!displayPasswordError;
 
-  // --- Lógica para Desabilitar o Botão de Submit (sem telefone) ---
-  // Verifica se algum campo essencial está vazio. *'contactNumber' removido.*
   const isAnyFieldEmpty = !formData.username.trim() || !formData.email.trim() || !formData.password.trim() || !formData.confirmPassword.trim();
-  // Botão desabilitado se carregando, algum campo vazio, ou houver erros. *Verificação de 'contactNumber' removida.*
-  const isSubmitDisabled = isLoading || isAnyFieldEmpty || !!internalErrors.password || !!formErrors.password || !!formErrors.confirmPassword || !!formErrors.email || !!formErrors.username;
+
+  // <<< MODIFICADO: Lógica para desabilitar o botão de submit >>>
+  // Botão desabilitado se:
+  // - Carregando (isLoading).
+  // - Qualquer campo essencial estiver vazio (isAnyFieldEmpty) - checagem básica antes mesmo de validar.
+  // - Houver erros internos de componentes (ex: senha fraca detectada pelo PasswordInput).
+  // - Houver erros de validação de formulário (formErrors para campos específicos).
+  // - Houver um erro geral retornado pela API (formErrors.api).
+  const hasClientSideFieldErrors = !!formErrors.username || !!formErrors.email || !!formErrors.password || !!formErrors.confirmPassword;
+  const hasInternalComponentErrors = !!internalErrors.password; // Adicionar outros se PasswordInput ou outros componentes emitirem mais erros internos
+
+  const isSubmitDisabled =
+    isLoading ||
+    isAnyFieldEmpty || // Desabilita se campos obrigatórios estiverem vazios
+    hasInternalComponentErrors || // Desabilita se houver erros internos dos inputs (ex: força da senha)
+    (attemptedSubmit && (hasClientSideFieldErrors || !!formErrors.api)); // Após tentativa de submit, desabilita se houver erros de formulário ou da API.
+                                                                      // Se não quiser desabilitar por campos vazios após a primeira tentativa, remova isAnyFieldEmpty e confie nas mensagens de erro.
+                                                                      // A lógica pode ser simplificada para:
+                                                                      // isLoading || isAnyFieldEmpty || hasInternalComponentErrors || hasClientSideFieldErrors || !!formErrors.api;
+                                                                      // Vou usar esta mais simples e direta:
+  // const isSubmitDisabled = isLoading || isAnyFieldEmpty || hasInternalComponentErrors || hasClientSideFieldErrors || !!formErrors.api;
 
 
-  // --- Renderização do Componente (sem telefone) ---
+  // --- Renderização do Componente ---
   return (
     <div className={styles.pageContainer}>
       <div className={styles.leftPanel}>
@@ -241,7 +230,6 @@ const registerSlides = [
         </div>
         <h1 className={styles.title}>CADASTRO</h1>
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          {/* Campo Usuário */}
           <div className={styles.inputWrapper}>
             <TextInput
               label="Usuário:" id="username" placeholder="Nome"
@@ -255,7 +243,6 @@ const registerSlides = [
             </div>
           </div>
 
-          {/* Campo Email */}
           <div className={styles.inputWrapper}>
              <EmailInput
                label="Email:" id="email" placeholder="Email"
@@ -269,24 +256,23 @@ const registerSlides = [
              </div>
           </div>
 
-          {/* Campo Senha */}
           <div className={styles.inputWrapper}>
              <PasswordInput
                label="Senha:" id="password" placeholder="Mínimo 8 caracteres"
                value={formData.password} onChange={handleChange('password')}
                required minLength={8} disabled={isLoading} name="password"
                onErrorChange={(err) => handleInternalError('password', err)}
-               externalError={formErrors.password}
+               externalError={formErrors.password} // Passa o erro do form (ex: 'senha obrigatória')
                attemptedSubmit={attemptedSubmit}
-               isInvalid={isPasswordInvalid}
-               aria-describedby={isPasswordInvalid ? passwordErrorId : undefined}
+               isInvalid={isPasswordInvalid} // Controla o estilo de erro baseado em formError ou internalError
+               aria-describedby={displayPasswordError ? passwordErrorId : undefined}
              />
              <div className={styles.errorSlot} aria-live="polite">
+                {/* displayPasswordError já combina formErrors.password e internalErrors.password */}
                 {displayPasswordError && (<span id={passwordErrorId} className={styles.errorText}>{displayPasswordError}</span>)}
              </div>
           </div>
 
-          {/* Campo Confirmar Senha */}
           <div className={styles.inputWrapper}>
              <PasswordInput
                label="Confirme a senha:" id="confirmPassword" placeholder="Digite novamente sua senha"
@@ -294,14 +280,30 @@ const registerSlides = [
                required minLength={8} isInvalid={!!formErrors.confirmPassword}
                aria-describedby={formErrors.confirmPassword ? confirmPasswordErrorId : undefined}
                disabled={isLoading} name="confirmPassword"
+               // Este PasswordInput não precisa de onErrorChange se for só para confirmação de match
              />
              <div className={styles.errorSlot} aria-live="polite">
                 {formErrors.confirmPassword && (<span id={confirmPasswordErrorId} className={styles.errorText}>{formErrors.confirmPassword}</span>)}
              </div>
           </div>
 
-          {/* Botão de Submissão */}
-          <button type="submit" className={`${styles.submitButton} mt-1`} disabled={isSubmitDisabled}>
+          {/* <<< ADICIONADO: Local para exibir erro geral da API >>> */}
+          {formErrors.api && (
+            <div className={`${styles.errorSlot} ${styles.apiErrorSlot}`} aria-live="assertive"> {/* `assertive` para anunciar imediatamente */}
+              <span id={apiErrorId} className={styles.errorText}>{formErrors.api}</span>
+            </div>
+          )}
+
+          <button type="submit" className={`${styles.submitButton} mt-1`} disabled={
+            isLoading || // Desabilitado se carregando
+            isAnyFieldEmpty || // Desabilitado se qualquer campo estiver vazio (validação básica)
+            !!internalErrors.password || // Desabilitado se houver erro interno da senha (ex: fraca)
+            !!formErrors.username || // Desabilitado se houver erro no campo username
+            !!formErrors.email || // Desabilitado se houver erro no campo email
+            !!formErrors.password || // Desabilitado se houver erro no campo senha (vindo do submit)
+            !!formErrors.confirmPassword || // Desabilitado se houver erro na confirmação de senha
+            !!formErrors.api // Desabilitado se houver erro da API
+          }>
             {isLoading ? 'Cadastrando...' : 'Cadastrar'}
           </button>
         </form>
