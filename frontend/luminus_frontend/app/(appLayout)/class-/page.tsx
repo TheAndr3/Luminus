@@ -9,6 +9,7 @@ import { useState } from "react";
 import GridClass from "./components/gridClass";
 import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
+import { BaseInput } from "@/components/inputs/BaseInput";
 
 export default function VizualizationClass() {
   // Cria uma lista fictícia com 30 turmas para simular os dados (mock)
@@ -82,16 +83,17 @@ export default function VizualizationClass() {
       </div>
 
       {/* Filtro e controles */}
-      <div className="flex items-center justify-between mb-4">
-        <input
+      <div className="flex justify-center items-center mb-4">
+        <BaseInput
           type="text"
-          placeholder="Search for class"
+          placeholder="Procure pela turma"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)} // Atualiza o termo de busca
-          className="border p-2 rounded w-1/2"
-        />
-        
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border p-2 rounded w-250"
+        ></BaseInput>
       </div>
+
+
 
       {/* Renderização visualização de Lista */}
       {visualization === 'list' && (
