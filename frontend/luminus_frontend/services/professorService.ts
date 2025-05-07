@@ -43,7 +43,7 @@ interface NewPasswordPayLoad {
 }
 
 interface NewPasswordResponse {
-    msg: string;  // Mensagem de sucesso ou erro
+    msg: string;
 }
 
 

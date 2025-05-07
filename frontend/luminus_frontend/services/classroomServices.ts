@@ -1,5 +1,6 @@
 import {api} from './api';
 
+//CRIAR CLASSE
 interface CreatePayLoad {
     professor_Id: number,
     name: string,
@@ -12,6 +13,7 @@ interface CreateResponse {
     msg: string
 }
 
+//OBTER CLASSE
 interface GetClassroomResponse {
     id: number;
     professor_id: number;
@@ -21,6 +23,7 @@ interface GetClassroomResponse {
     institution: string;
 }
 
+//FUNÇÕES
 export const CreateClassroom = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
     try {
         const response = await api.post('/classroom/create', payLoad);
