@@ -1,4 +1,5 @@
 import {api} from './api';
+import { encryptWithPublicKey } from '../utils/crypto';
 
 //LOGIN
 interface LoginPayLoad {
@@ -50,7 +51,18 @@ interface NewPasswordResponse {
 //FUNÇÕES
 export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponse> => {
     try {
-      const response = await api.post('professor/login', payLoad);
+      // 1. Buscar chave pública
+      const publicKey = await getPublicKey();
+
+      // 2. Criptografar senha
+      const encryptedPassword = await encryptWithPublicKey(publicKey, payLoad.password);
+
+      // 3. Enviar para backend
+      const response = await api.post('/professor/login', {
+        email: payLoad.email_professor,
+        password: encryptedPassword
+      });
+
       return response.data.professor;
     } catch (error: any) {
       const message = error.response?.data || 'Erro ao fazer login';
@@ -60,11 +72,22 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
 
 export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
     try {
-        const response = await api.post('/professor/register', payLoad);
-        return response.data;
+      // 1. Buscar chave pública
+      const publicKey = await getPublicKey();
+
+      // 2. Criptografar senha
+      const encryptedPassword = await encryptWithPublicKey(publicKey, payLoad.password);
+
+      // 3. Enviar para backend
+      const response = await api.post('/professor/login', {
+        email: payLoad.email_professor,
+        password: encryptedPassword,
+        name: payLoad.name
+      });
+      return response.data;
     } catch (error: any) {
-        const message = error.response?.data || 'Erro ao cadastrar';
-        throw new Error(message);
+      const message = error.response?.data || 'Erro ao cadastrar';
+      throw new Error(message);
     }
 }
 
@@ -98,13 +121,20 @@ export const SendRecoveryEmail = async (email: string): Promise<string> => {
 }
 
 export const UpdatePassword = async (payload: NewPasswordPayLoad, token: string): Promise<NewPasswordResponse> => {
-    try {
-      const response = await api.post(`/professor/new-password/${token}`, payload);
+  try {
+      const publicKey = await getPublicKey();
+      const encryptedPassword = await encryptWithPublicKey(publicKey, payload.newPass);
+
+      const response = await api.post(`/professor/new-password/${token}`, {
+          newPass: encryptedPassword,
+          email: payload.email
+      });
+
       return response.data;
-    } catch (error: any) {
+  } catch (error: any) {
       const message = error.response?.data?.msg || 'Erro ao trocar a senha';
       throw new Error(message);
-    }
+  }
 }
   
   
