@@ -1,5 +1,6 @@
 import { Turma } from '@/app/(appLayout)/class-/components/types';
 import DialogPage from './createClassModal';
+import PageController from './paginationController';
 
 type GridTurmasProps = {
   turmas: Turma[];
@@ -63,38 +64,14 @@ export default function GridTurmas({
         ))}
       </div>
 
-      {/* PAGINAÇÃO */}
-      <div className="flex justify-end mt-6 gap-2">
-        <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-          onClick={() => setCurrentPage(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          Anterior
-        </button>
 
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i}
-            className={`px-3 py-1 rounded ${
-              currentPage === i + 1
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-black"
-            }`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {/* Renderização do paginationController*/}
+      <PageController
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
 
-        <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-          onClick={() => setCurrentPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Próxima
-        </button>
-      </div>
     </div>
   );
 }

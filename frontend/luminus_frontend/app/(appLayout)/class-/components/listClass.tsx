@@ -2,6 +2,7 @@
 import { Turma } from "@/app/(appLayout)/class-/components/types";
 // Importa o componente responsável por abrir o modal de criação de turmas
 import DialogPage from "./createClassModal";
+import PageController from "./paginationController";
 
 // Define o tipo das props recebidas pelo componente ListClass
 type ListTurmasProps = {
@@ -70,39 +71,12 @@ export default function ListClass({
         </tbody>
       </table>
 
-      {/* PAGINAÇÃO */}
-      <div className="flex justify-end mt-4 gap-2">
-        {/* Botão "Anterior" */}
-        <button
-          className="px-2 py-1 bg-gray-300 rounded disabled:opacity-50"
-          onClick={() => setCurrentPage(currentPage - 1)}
-          disabled={currentPage === 1} // Desabilita se já estiver na primeira página
-        >
-          Anterior
-        </button>
-
-        {/* Botões numerados para cada página */}
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i}
-            className={`px-3 py-1 rounded ${
-              currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-            }`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
-
-        {/* Botão "Próxima" */}
-        <button
-          className="px-2 py-1 bg-gray-300 rounded disabled:opacity-50"
-          onClick={() => setCurrentPage(currentPage + 1)}
-          disabled={currentPage === totalPages} // Desabilita se for a última página
-        >
-          Próxima
-        </button>
-      </div>
+     {/* Renderização do paginationController*/}
+           <PageController
+             currentPage={currentPage}
+             totalPages={totalPages}
+             setCurrentPage={setCurrentPage}
+           />
     </div>
   );
 }
