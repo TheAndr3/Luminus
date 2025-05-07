@@ -48,7 +48,7 @@ async function pgInsert(table, data) {
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeHolder = keys.map((_,i) => `$${i+1}`).join(', ');
-    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES(${placeHolder})`;
+    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES(${placeHolder}) RETURNING ${keys.join(', ')};`;
 
 
     const client = await connect();
@@ -75,4 +75,44 @@ async function pgUpdate(table, data, keys) {
     const client = await connect();
     return await client.query(query, values);
 }
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate}
+
+async function pgDossieSelect(id) {
+    const query = `
+    SELECT 
+    json_build_object(
+        'id', d.id,
+        'name', d.name,
+        'description', d.description,
+        'evaluation_method', d.evaluation_method,
+        'sections', json_agg(
+        DISTINCT jsonb_build_object(
+            'id', s.id,
+            'name', s.name,
+            'description', s.description,
+            'weigth', s.weigth,
+            'questions', (
+            SELECT COALESCE(json_agg(
+                jsonb_build_object(
+                'id', q.id,
+                'description', q.description
+                )
+            ), '[]'::json)
+            FROM question q
+            WHERE q.section_id = s.id AND q.dossier_id = d.id
+            )
+        )
+        )
+    ) AS dossier
+    FROM dossier d
+    LEFT JOIN section s ON s.dossier_id = d.id
+    WHERE d.id = $1
+    GROUP BY d.id, d.name;
+`;
+
+    const client = await connect();
+
+    const data = await client.query(query, [id]);
+    return data.rows;
+}
+
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect}
