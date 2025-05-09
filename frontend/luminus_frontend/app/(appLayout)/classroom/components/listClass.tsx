@@ -38,16 +38,17 @@ export default function ListClass({
         <thead>
           <tr className="text-sm text-gray-600">
             {/* Checkbox que seleciona todas as turmas da página atual */}
-            <th className="w-[50px] px-2">
+            <th className="w-[0px] px-2">
               <input
                 type="checkbox"
                 onChange={toggleSelectAll}
                 checked={!!isAllSelected} // Cast para booleano
+                className="w-6 h-6 accent-blue-600"
               />
             </th>
-            <th className="px-2">Disciplina</th>
-            <th className="px-2">Turma</th>
-            <th className="px-2 flex items-center justify-between">
+            <th className="px-2 text-lg">Disciplina</th>
+            <th className="px-2 text-lg">Turma</th>
+            <th className="px-2 text-lg flex items-center justify-between">
               <span>Dossiê</span>
 
               <div className="flex gap-2">
@@ -77,12 +78,13 @@ export default function ListClass({
                   type="checkbox"
                   checked={!!turma.selected}
                   onChange={() => toggleOne(turma.id)} // Alterna seleção
+                  className="w-6 h-6 accent-blue-600"
                 />
               </td>
               {/* Dados da turma */}
-              <td className="p-4">{turma.disciplina}</td>
-              <td className="p-2">{turma.codigo}</td>
-              <td className="p-2">{turma.dossie}</td>
+              <td className="p-3 text-2xl">{turma.disciplina}</td>
+              <td className="p-2 text-2xl">{turma.codigo}</td>
+              <td className="p-2 text-2xl">{turma.dossie}</td>
             </tr>
           ))}
         </tbody>

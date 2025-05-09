@@ -62,7 +62,7 @@ export default function GridTurmas({
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
                 <div className="text-xl mb-1">👥</div>
-                <div className="text-sm">{turma.disciplina}</div>
+                <div className="text-2xl">{turma.disciplina}</div>
                 <div className="text-xs text-gray-300">{turma.codigo}</div>
               </div>
               <input
