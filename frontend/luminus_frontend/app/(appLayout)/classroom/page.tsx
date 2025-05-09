@@ -3,7 +3,7 @@
 // Importa o componente da lista de turmas
 import ListClass from "./components/listClass";
 // Importa o tipo Turma para tipar os dados corretamente
-import { Turma } from "@/app/(appLayout)/class-/components/types";
+import { Turma } from "@/app/(appLayout)/classroom/components/types";
 // Importa o hook useState para controle de estado
 import { useState } from "react";
 import GridClass from "./components/gridClass";

@@ -1,4 +1,4 @@
-import { Turma } from '@/app/(appLayout)/class-/components/types';
+import { Turma } from '@/app/(appLayout)/classroom/components/types';
 import DialogPage from './createClassModal';
 import PageController from './paginationController';
 import ClassViewMode from './classViewMode';
