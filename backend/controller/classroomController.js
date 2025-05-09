@@ -83,13 +83,15 @@ exports.Update = async (req, res) => {
 exports.Delete = async (req, res) => {
   try {
     const payload = {
-      id: req.params.id,
+      classroom_id: req.params.id,
       professor_id: req.body.professor_id
     };
 
-    await db.pgDelete('classroom', payload);
+    await db.pgDelete('appraisal', payload);
+    await db.pgDelete('classroom_student', payload);
+    await db.pgDelete('classroom', { id: payload.classroom_id, professor_id: payload.professor_id });
 
-    res.status(200).json({ msg: 'turma removida com sucesso' });
+    res.status(200).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
     res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
   }
