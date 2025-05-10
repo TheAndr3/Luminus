@@ -52,8 +52,19 @@ interface NewPasswordResponse {
 //Login
 export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponse> => {
   try {
-    const response = await api.post('professor/login', payLoad);
+    //pegar chave pública
+    const publicKey = await getPublicKey();
+
+    //encriptar senha
+    const encryptedPassword = await encryptWithPublicKey(publicKey, payLoad.password);
+
+    //enviar dados na rota
+    const response = await api.post('professor/login', {
+      ...payLoad,
+      password: encryptedPassword
+    });
     return response.data.professor;
+
   } catch (error: any) {
     const message = error.response?.data?.message || 'Erro ao fazer login';
     throw new Error(message);
@@ -63,29 +74,26 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
 //Cadastrar
 export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
   try {
-    console.log('Email:', payLoad.email_professor);
-    console.log('Password:', payLoad.password);
-    console.log('Name:', payLoad.name);
-    if (!payLoad.email_professor || !payLoad.password || !payLoad.name) {
-      throw new Error('Os campos precisam estar preenchidos corretamente1');
-    }
-
+    //pegar chave pública
     const publicKey = await getPublicKey();
+
+    //encriptar senha
     const encryptedPassword = await encryptWithPublicKey(publicKey, payLoad.password);
 
+    //enviar dados na rota
     const response = await api.post('/professor/register', {
       ...payLoad,
       password: encryptedPassword,
     });
-    console.log('Resposta do servidor:', response.data);
-
     return response.data;
+
   } catch (error: any) {
     const message = error.response?.data?.message || 'Erro ao cadastrar';
     throw new Error(message);
   }
 }
 
+//Pegar chave pública
 export const getPublicKey = async (): Promise<string> => {
   try {
     const response = await api.get('/professor/public-key');
@@ -96,6 +104,7 @@ export const getPublicKey = async (): Promise<string> => {
   }
 }
 
+//Recuperar senha
 export const RecoverPassword = async (payload: RecoverPasswordPayLoad): Promise<RecoverPasswordResponse> => {
   try {
     const response = await api.post('/professor/recover-password', payload);
@@ -106,6 +115,7 @@ export const RecoverPassword = async (payload: RecoverPasswordPayLoad): Promise<
   }
 }
 
+//Enviar recuperação de email
 export const SendRecoveryEmail = async (email: string): Promise<string> => {
   try {
     const response = await api.get(`/professor/send-email/${email}`);
@@ -116,6 +126,7 @@ export const SendRecoveryEmail = async (email: string): Promise<string> => {
   }
 }
 
+//atualizar senha
 export const UpdatePassword = async (payload: NewPasswordPayLoad, token: string): Promise<NewPasswordResponse> => {
   try {
     const response = await api.post(`/professor/new-password/${token}`, payload);
