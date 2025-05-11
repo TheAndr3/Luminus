@@ -59,6 +59,43 @@ export default function VizualizationClass() {
     setClassi(novaLista); // Atualiza o estado com a nova lista
   };
 
+
+  // Função para deletar turmas selecionadas
+  const handleDeleteClass = async () => {
+    // Filtra os IDs das turmas selecionadas
+    const idsToDelete = classi
+      .filter(turma => turma.selected)
+      .map(turma => turma.id);
+
+    if (idsToDelete.length === 0) return;
+
+    // Confirmação antes de excluir
+    if (!confirm(`Tem certeza que deseja excluir ${idsToDelete.length} turma(s)?`)) {
+      return;
+    }
+
+
+    try {
+      // Simulação de chamada API (substitua pelo seu código real)
+      console.log("Turmas a serem excluídas:", idsToDelete);
+      // await api.delete('/turmas', { data: { ids: idsToDelete } });
+      
+      // Atualiza o estado removendo as turmas excluídas
+      setClassi(prev => prev.filter(turma => !turma.selected));
+      
+      // Reseta a página para a primeira se necessário
+      if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
+        setCurrentPage(1);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir turmas:", error);
+      alert("Ocorreu um erro ao excluir as turmas");
+    } finally {
+    }
+  };
+
+
+
   // Alterna a seleção individual de uma turma
   const toggleOne = (id: number) => {
     setClassi((prev) =>
@@ -110,6 +147,8 @@ export default function VizualizationClass() {
             setCurrentPage={setCurrentPage}
             visualization={visualization}
             setVisualization={setVisualization}
+
+            onDeleteClass={handleDeleteClass}
           />
         </div>
       )}

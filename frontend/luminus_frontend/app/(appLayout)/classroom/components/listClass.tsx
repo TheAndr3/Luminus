@@ -28,6 +28,9 @@ type ListTurmasProps = {
   setCurrentPage: (page: number) => void; // Função para navegar entre páginas
   visualization: string                // Modo de visualização atual ('grid' ou 'list')
   setVisualization: (set: 'grid' | 'list') => void; // Função para alterar visualização
+
+  onDeleteClass: () => void;
+
 };
 
 // Componente principal que renderiza a lista de turmas
@@ -40,7 +43,8 @@ export default function ListClass({
   totalPages,
   setCurrentPage,
   visualization,
-  setVisualization
+  setVisualization,
+  onDeleteClass
 }: ListTurmasProps) {
   // Estado que controla se há turmas selecionadas (para mostrar o painel de ações)
   const [hasSelected, setHasSelected] = useState(false);
@@ -132,7 +136,7 @@ export default function ListClass({
       />
 
       {/* Painel de ações que aparece apenas quando há turmas selecionadas */}
-      {hasSelected && <ActionPanel />}
+      {hasSelected && <ActionPanel onDeleted={onDeleteClass}/>}
     </div>
   );
 }
