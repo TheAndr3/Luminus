@@ -168,6 +168,8 @@ export default function VizualizationClass() {
             visualization={visualization}
             setVisualization={setVisualization}
 
+            onDeleteClass={handleDeleteClass}
+
           />
 
           ))
