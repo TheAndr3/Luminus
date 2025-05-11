@@ -2,10 +2,9 @@ import { Trash2, Download, Archive, BarChart2 } from "lucide-react";
 
 interface ActionPanelProps{
     onDeleted: () => void
-    activated?: boolean
 }
 
-export default function ActionPanel( {onDeleted, activated} : ActionPanelProps) {
+export default function ActionPanel( {onDeleted} : ActionPanelProps) {
 
     
         return (

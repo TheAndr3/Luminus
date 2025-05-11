@@ -5,6 +5,8 @@ import ClassViewMode from './classViewMode';
 
 import class_icon from "@/components/icon/icon_turma.svg"
 import Image from "next/image";
+import { useEffect, useState } from 'react';
+import ActionPanel from './actionPainel';
 
 type GridTurmasProps = {
   turmas: Turma[];
@@ -14,9 +16,10 @@ type GridTurmasProps = {
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
-
   visualization: string
   setVisualization: (set: 'grid' | 'list') => void;
+
+  onDeleteClass: () => void;
 };
 
 export default function GridTurmas({
@@ -28,8 +31,20 @@ export default function GridTurmas({
   totalPages,
   setCurrentPage,
   visualization,
-  setVisualization
+  setVisualization,
+  onDeleteClass
+
 }: GridTurmasProps) {
+
+const [hasSelected, setHasSelected] = useState(false);
+
+    // Efeito que verifica sempre que a lista de turmas muda
+    // para atualizar o estado hasSelected
+    useEffect(() => {
+      // Verifica se existe pelo menos uma turma selecionada
+      setHasSelected(turmas.some(turma => turma.selected));
+    }, [turmas]); // Executa sempre que o array de turmas mudar
+
   return (
     <div className="w-full ">
       {/* Título e barra de ferramentas */}
@@ -61,7 +76,7 @@ export default function GridTurmas({
         {turmas.map((turma) => (
           <div
             key={turma.id}
-            className="bg-[#0A2B3D] text-white rounded-lg p-4 shadow-md flex flex-col justify-between w-80 h-50"
+            className="bg-[#0A2B3D] text-white rounded-lg p-3 shadow-md flex flex-col justify-between w-80 h-46"
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
@@ -86,7 +101,7 @@ export default function GridTurmas({
               {turma.dossie}
             </button>
           </div>
-        ))}
+        ))} 
       </div>
 
 
@@ -96,6 +111,11 @@ export default function GridTurmas({
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
+
+      <div className=''>
+        {/* Painel de ações que aparece apenas quando há turmas selecionadas */}
+        {hasSelected && <ActionPanel onDeleted={onDeleteClass}/>}
+      </div>
 
     </div>
   );
