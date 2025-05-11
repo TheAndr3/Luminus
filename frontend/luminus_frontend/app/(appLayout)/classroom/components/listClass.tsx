@@ -5,6 +5,12 @@ import DialogPage from "./createClassModal";
 import PageController from "./paginationController";
 import ClassViewMode from "./classViewMode";
 
+import class_icon from "@/components/icon/icon_turma.svg"
+
+
+
+import Image from "next/image";
+
 // Define o tipo das props recebidas pelo componente ListClass
 type ListTurmasProps = {
   turmas: Turma[];                      // Lista de turmas visíveis (paginadas)
@@ -46,6 +52,7 @@ export default function ListClass({
                 className="w-6 h-6 accent-blue-600"
               />
             </th>
+            <th className="px-2 text-lg">Selecionar todos</th>
             <th className="px-2 text-lg">Disciplina</th>
             <th className="px-2 text-lg">Turma</th>
             <th className="px-2 text-lg flex items-center justify-between">
@@ -82,9 +89,17 @@ export default function ListClass({
                 />
               </td>
               {/* Dados da turma */}
-              <td className="p-3 text-2xl">{turma.disciplina}</td>
-              <td className="p-2 text-2xl">{turma.codigo}</td>
-              <td className="p-2 text-2xl">{turma.dossie}</td>
+              
+              <td className="p-2 flex items-center">
+                <Image src={class_icon} alt="icone turma" className="w-10 h-10" />
+              </td>
+
+
+
+
+              <td className="p-2 text-xl">{turma.disciplina}</td>
+              <td className="p-2 text-xl">{turma.codigo}</td>
+              <td className="p-2 text-xl">{turma.dossie}</td>
             </tr>
           ))}
         </tbody>

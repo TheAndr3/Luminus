@@ -28,7 +28,7 @@ export default function GridTurmas({
   setVisualization
 }: GridTurmasProps) {
   return (
-    <div className="w-full">
+    <div className="w-full bg-red-200">
       {/* Título e barra de ferramentas */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">

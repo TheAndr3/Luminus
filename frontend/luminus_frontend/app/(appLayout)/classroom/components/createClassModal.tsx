@@ -84,7 +84,7 @@ export default function DialogPage() {
                 <DialogTrigger >
                     <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-2 py-1 h-7"> Adicionar turma   +</Button> {/* Botão para abrir o dialog */}
                 </DialogTrigger>
-                <DialogOverlay className="fixed inset-0 bg-gray-400/10 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
+                <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
 
                 <DialogContent>
                     <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
