@@ -32,7 +32,8 @@ export default function VizualizationClass() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Quantas turmas serão exibidas por página
-  const turmasPorPagina = 6;
+  const turmasPorPagina = visualization === 'grid' ? 8 : 6;
+
 
   // Cálculo do total de páginas baseado na quantidade de turmas
   const totalPages = Math.ceil(classi.length / turmasPorPagina);
@@ -79,7 +80,7 @@ export default function VizualizationClass() {
   return (
     <div>
       {/* Cabeçalho da página */}
-      <div className="flex items-center justify-center mt-10 w-full ml-auto ">
+      <div className="flex items-center justify-center mt-5 w-full ml-auto ">
         <h1 className="text-4xl font-bold"> Turmas </h1>
       </div>
 

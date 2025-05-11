@@ -3,6 +3,9 @@ import DialogPage from './createClassModal';
 import PageController from './paginationController';
 import ClassViewMode from './classViewMode';
 
+import class_icon from "@/components/icon/icon_turma.svg"
+import Image from "next/image";
+
 type GridTurmasProps = {
   turmas: Turma[];
   toggleSelectAll: () => void;
@@ -28,7 +31,7 @@ export default function GridTurmas({
   setVisualization
 }: GridTurmasProps) {
   return (
-    <div className="w-full bg-red-200">
+    <div className="w-full ">
       {/* Título e barra de ferramentas */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
@@ -36,6 +39,7 @@ export default function GridTurmas({
             type="checkbox"
             checked={isAllSelected}
             onChange={toggleSelectAll}
+            className="w-6 h-6 accent-blue-600"
           />
           <span className="text-lg font-semibold">Selecionar todos</span>
         </div>
@@ -53,25 +57,32 @@ export default function GridTurmas({
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 px-1 max-w-1xl mx-auto">
         {turmas.map((turma) => (
           <div
             key={turma.id}
-            className="bg-[#0A2B3D] text-white rounded-lg p-8 shadow-md flex flex-col justify-between"
+            className="bg-[#0A2B3D] text-white rounded-lg p-4 shadow-md flex flex-col justify-between w-80 h-50"
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
-                <div className="text-xl mb-1">👥</div>
-                <div className="text-2xl">{turma.disciplina}</div>
-                <div className="text-xs text-gray-300">{turma.codigo}</div>
+
+                <div className="p-2 flex items-center">
+                <Image src={class_icon} alt="icone turma" className=" w-16 h-16" />
+                <div className="text-xl text-gray-300 ml-3">{turma.disciplina} <br/> {turma.codigo}</div>
+                
+                </div>
+
+
+                
               </div>
               <input
                 type="checkbox"
                 checked={turma.selected}
                 onChange={() => toggleOne(turma.id)}
+                className="w-6 h-6 accent-blue-600"
               />
             </div>
-            <button className="mt-2 bg-gray-200 text-black px-3 py-1 rounded text-sm">
+            <button className="mb-4 bg-gray-200 text-black px-1 py-1 rounded-2xl text-sm">
               {turma.dossie}
             </button>
           </div>
