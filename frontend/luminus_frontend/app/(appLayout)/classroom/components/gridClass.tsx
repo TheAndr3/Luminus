@@ -41,7 +41,7 @@ export default function GridTurmas({
             onChange={toggleSelectAll}
             className="w-6 h-6 accent-blue-600"
           />
-          <span className="text-lg font-semibold">Selecionar todos</span>
+          <span className="px-2 text-lg">Selecionar todos</span>
         </div>
         <div className="flex gap-2">
 
@@ -82,7 +82,7 @@ export default function GridTurmas({
                 className="w-6 h-6 accent-blue-600"
               />
             </div>
-            <button className="mb-4 bg-gray-200 text-black px-1 py-1 rounded-2xl text-sm">
+            <button className="mb-4 bg-gray-200 text-black px-1 py-1 rounded-2xl text-sm hover:bg-gray-400">
               {turma.dossie}
             </button>
           </div>
