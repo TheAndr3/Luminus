@@ -10,18 +10,32 @@ import {
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog"
 
-// Definição da interface das props do componente
+/**
+ * Interface que define as propriedades do componente ArchiveConfirmation
+ * @prop {boolean} open - Controla a visibilidade do diálogo
+ * @prop {() => void} onCancel - Callback acionado ao cancelar a ação
+ * @prop {() => void} onConfirm - Callback acionado ao confirmar a ação
+ * @prop {number} total - Quantidade total de itens selecionados
+ * @prop {string} [title] - Título opcional da turma (para single selection)
+ * @prop {string} [code] - Código opcional da turma (para single selection)
+ * @prop {string} description - Descrição principal da ação
+ */
 interface ArchiveConfirmationProps {
-  open: boolean          // Controla se o diálogo está aberto ou fechado
-  onCancel: () => void   // Função chamada ao cancelar (fechar o diálogo)
-  onConfirm: () => void  // Função chamada ao confirmar a exclusão
-  total: number          // Número total de itens/turmas a serem excluídos
+  open: boolean
+  onCancel: () => void
+  onConfirm: () => void
+  total: number
   title?: string
-  code?:string
+  code?: string
   description: string
 }
 
-// Componente de diálogo de confirmação de exclusão
+/**
+ * Componente de diálogo para confirmação de arquivamento
+ * - Exibe mensagem contextual (diferente para single/multi selection)
+ * - Oferece ações de cancelar ou confirmar
+ * - Estilizado com tema vermelho para ações destrutivas
+ */
 export function ArchiveConfirmation({
   open,
   onCancel,
@@ -32,33 +46,36 @@ export function ArchiveConfirmation({
   description
 }: ArchiveConfirmationProps) {
   return (
-    // Componente principal do diálogo
+    // Componente base do AlertDialog
     <AlertDialog 
-      open={open}               // Controla a visibilidade
-      onOpenChange={onCancel}   // Fecha o diálogo quando muda o estado (cancelar)
+      open={open}               // Controla visibilidade
+      onOpenChange={onCancel}   // Fecha ao clicar fora/ESC
     >
-      <AlertDialogOverlay className="fixed inset-0 bg-gray-900/40 " />
-      {/* Container do conteúdo (estilizado com fundo vermelho) */}
-      <AlertDialogContent className="bg-[#D72638] text-white  h-45">
-        
-        {/* Cabeçalho do diálogo */}
+      {/* Overlay semi-transparente */}
+      <AlertDialogOverlay className="fixed inset-0 bg-gray-900/40" />
+      
+      {/* Container principal do conteúdo */}
+      <AlertDialogContent className="bg-[#D72638] text-white h-45">
+        {/* Cabeçalho com mensagem dinâmica */}
         <AlertDialogHeader>
-          {/* Título com contagem dinâmica de turmas */}
           <AlertDialogTitle className="text-center text-lg mt-6">
+            {/* Renderização condicional da mensagem */}
             {description} {title} {code}
           </AlertDialogTitle>
         </AlertDialogHeader>
 
-        {/* Rodapé com botões de ação */}
+        {/* Área de ações - botões alinhados ao centro */}
         <AlertDialogFooter className="flex justify-center gap-4 mt-4 mx-auto">
-          {/* Botão de cancelar - estilizado em branco com texto vermelho */}
-          <AlertDialogCancel className="bg-[#D9D9D9] text-lg text-red-600 px-10 py-2 rounded-md">
+          {/* Botão de cancelar */}
+          <AlertDialogCancel 
+            className="bg-[#D9D9D9] text-lg text-red-600 px-10 py-2 rounded-md"
+          >
             Cancelar
           </AlertDialogCancel>
 
-          {/* Botão de ação principal - estilizado igual mas com handler de confirmação */}
+          {/* Botão principal de ação */}
           <AlertDialogAction
-            onClick={onConfirm}  // Dispara a função de confirmação
+            onClick={onConfirm}
             className="bg-[#D9D9D9] text-lg text-black px-13 py-2 rounded-md"
           >
             Arquivar

@@ -1,150 +1,65 @@
 "use client" // Habilita o uso de recursos do lado do cliente (ex: useState) no Next.js 13+
 
-// Importa o componente da lista de turmas
+// Componentes e tipos
 import ListClass from "./components/listClass";
-// Importa o tipo Turma para tipar os dados corretamente
 import { Classroom } from "@/app/(appLayout)/classroom/components/types";
-// Importa o hook useState para controle de estado
 import { useState } from "react";
 import GridClass from "./components/gridClass";
 import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
-
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 
-
 export default function VizualizationClass() {
-  // Cria uma lista fictícia com 30 turmas para simular os dados (mock)
+  // ============ ESTADOS ============
+  // Mock de dados - DEVERIA SER SUBSTITUÍDO POR CHAMADA API
   const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
     id: i,
     disciplina: 'Matematica',
     codigo: `EXA502 - TP${i + 1}`,
     dossie: `Dossiê Turma ${i + 1}`,
-    selected: false, // Inicia como não selecionada
+    selected: false,
   }));
   
+  const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
+  const [classi, setClassi] = useState(mockClass); // Lista de turmas
+  const [currentPage, setCurrentPage] = useState(1); // Paginação
+  const turmasPorPagina = visualization === 'grid' ? 8 : 6; // Itens por página
+  const [confirmOpen, setConfirmOpen] = useState(false); // Controle do modal de delete
+  const [idsToDelete, setIdsToDelete] = useState<number[]>([]); // IDs para deletar
+  const [archiveConfirmation, setarchiveConfirmation] = useState(false) // Modal de arquivamento
+  const [idsToArchive, setIdsToArchive] = useState<number[]>([]); // IDs para arquivar
+  const [titleClass, setTitleClass] = useState<string | undefined>(undefined); // Info da turma
+  const [classDescription, setClassDescription] = useState("") // Descrição para modal
+  const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
+  const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
 
-  // Estado que controla o modo de visualização (lista ou grade)
-  const [visualization, setVisualization] = useState<'grid' | 'list'>('list');
-
-  // Estado que armazena todas as turmas (com seleção)
-  const [classi, setClassi] = useState(mockClass);
-
-  // Estado que controla qual página está sendo exibida
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Quantas turmas serão exibidas por página
-  const turmasPorPagina = visualization === 'grid' ? 8 : 6;
-
-
-  // Cálculo do total de páginas baseado na quantidade de turmas
+  // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(classi.length / turmasPorPagina);
-
-  // Índice inicial para cortar a lista de turmas visíveis da página atual
   const startIndex = (currentPage - 1) * turmasPorPagina;
-
-  // Fatia a lista de turmas de acordo com a página atual
   const turmasVisiveis = classi.slice(startIndex, startIndex + turmasPorPagina);
-
-  // Verifica se todas as turmas visíveis estão selecionadas
   const isAllSelected = turmasVisiveis.every((t) => t.selected);
+  const filteredClasses = turmasVisiveis.filter((turma) =>
+    turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    turma.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
-
-
-  const [archiveConfirmation, setarchiveConfirmation] = useState(false)
-  const [idsToArchive, setIdsToArchive] = useState<number[]>([]);
-
-  const [titleClass, setTitleClass] = useState<string | undefined>(undefined);
-
-  const [classDescription, setClassDescription] = useState("")
-  const [codeClass, setCodeClass] = useState<string | undefined>(undefined);
-
-
-
-
-
-  // Alterna a seleção de todas as turmas da página atual
+  // ============ FUNÇÕES ============
+  // Alterna seleção de todas as turmas visíveis
   const toggleSelectAll = () => {
-    const newSelected = !isAllSelected; // Inverte o estado atual
+    const newSelected = !isAllSelected;
     const novaLista = classi.map((turma, index) => {
       if (index >= startIndex && index < startIndex + turmasPorPagina) {
-        return { ...turma, selected: newSelected }; // Atualiza apenas as visíveis
+        return { ...turma, selected: newSelected };
       }
-      return turma; // Mantém as outras inalteradas
+      return turma;
     });
-    setClassi(novaLista); // Atualiza o estado com a nova lista
+    setClassi(novaLista);
   };
 
-
-        // Função para preparar a exclusão de turmas selecionadas
-    const handleDeleteClass = async () => {
-        // Filtra as turmas selecionadas e mapeia apenas os IDs
-        const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
-
-        // Se não houver turmas selecionadas, sai da função
-        if (selecionadas.length === 0) return;
-
-        // Atualiza o estado com os IDs das turmas a serem excluídas
-        setIdsToDelete(selecionadas);
-        // Abre o modal de confirmação
-        setConfirmOpen(true);
-    };
-    
-    const confirmDeletion = async () => {
-        try {
-            // Log dos IDs que serão excluídos (para debug)
-            console.log("Excluir:", idsToDelete);
-            
-            // Atualiza o estado removendo as turmas com IDs selecionados
-            setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
-
-            // Verifica se a página atual ficaria vazia após a exclusão
-            // Caso positivo, retorna para a primeira página
-            if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
-                setCurrentPage(1);
-            }
-        } catch (error) {
-            // Tratamento de erro genérico
-            console.error("Erro ao excluir turmas:", error);
-            alert("Erro ao excluir.");
-        } finally {
-            // Fecha o modal de confirmação independentemente de sucesso ou falha
-            setConfirmOpen(false);
-        }
-    };
-
-    const archiveHandle = async () => {
-      // Filtra as turmas selecionadas e mapeia apenas os IDs
-        const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
-
-        // Se não houver turmas selecionadas, sai da função
-        if (selecionadas.length === 0) return;
-
-        if (selecionadas.length === 1) {
-          const turmaSelecionada = classi.find(turma => turma.id === selecionadas[0]);
-
-          setTitleClass(turmaSelecionada?.disciplina);
-          setCodeClass(turmaSelecionada?.codigo);
-          setClassDescription("Tem certeza que deseja arquivar a turma: ");
-        } else {
-          setTitleClass(undefined);
-          setCodeClass(undefined);
-          setClassDescription("Tem certeza que deseja arquivar as turmas selecionadas?"); 
-        }
-
-        // Atualiza o estado com os IDs das turmas a serem arquivadas
-        setIdsToArchive(selecionadas);
-        // Abre o modal de confirmação
-        setarchiveConfirmation(true);
-    }
-
-
-  // Alterna a seleção individual de uma turma
+  // Alterna seleção individual
   const toggleOne = (id: number) => {
     setClassi((prev) =>
       prev.map((turma) =>
@@ -153,23 +68,93 @@ export default function VizualizationClass() {
     );
   };
 
-  // Filtro para buscar turmas
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para armazenar o termo de busca
+  // ============ CHAMADAS À API (FALTANTES) ============
+  // 1. Aqui deveria ter uma chamada para carregar as turmas inicialmente
+  // useEffect(() => {
+  //   const fetchTurmas = async () => {
+  //     const response = await fetch('/api/turmas');
+  //     const data = await response.json();
+  //     setClassi(data);
+  //   };
+  //   fetchTurmas();
+  // }, []);
 
-  const filteredClasses = turmasVisiveis.filter((turma) =>
-    turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    turma.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Prepara turmas para exclusão
+  const handleDeleteClass = async () => {
+    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
+    if (selecionadas.length === 0) return;
+    setIdsToDelete(selecionadas);
+    setConfirmOpen(true);
+  };
+  
+  // 2. Aqui deveria ter a chamada real para a API de exclusão
+  const confirmDeletion = async () => {
+    try {
+      console.log("Excluir:", idsToDelete);
+      
+      // CHAMADA À API FALTANTE:
+      // await fetch('/api/turmas/delete', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ ids: idsToDelete }),
+      //   headers: { 'Content-Type': 'application/json' }
+      // });
+
+      // Atualização otimista do estado
+      setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
+
+      if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
+        setCurrentPage(1);
+      }
+    } catch (error) {
+      console.error("Erro ao excluir turmas:", error);
+      alert("Erro ao excluir.");
+    } finally {
+      setConfirmOpen(false);
+    }
+  };
+
+  // Prepara turmas para arquivamento
+  const archiveHandle = async () => {
+    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
+    if (selecionadas.length === 0) return;
+
+    if (selecionadas.length === 1) {
+      const turmaSelecionada = classi.find(turma => turma.id === selecionadas[0]);
+      setTitleClass(turmaSelecionada?.disciplina);
+      setCodeClass(turmaSelecionada?.codigo);
+      setClassDescription("Tem certeza que deseja arquivar a turma: ");
+    } else {
+      setTitleClass(undefined);
+      setCodeClass(undefined);
+      setClassDescription("Tem certeza que deseja arquivar as turmas selecionadas?"); 
+    }
+
+    setIdsToArchive(selecionadas);
+    setarchiveConfirmation(true);
+  }
+
+  // 3. Aqui deveria ter a chamada real para a API de arquivamento
+  // const confirmArchive = async () => {
+  //   try {
+  //     await fetch('/api/turmas/archive', {
+  //       method: 'POST',
+  //       body: JSON.stringify({ ids: idsToArchive }),
+  //       headers: { 'Content-Type': 'application/json' }
+  //     });
+  //     // Atualizar estado conforme necessário
+  //   } catch (error) {
+  //     console.error("Erro ao arquivar turmas:", error);
+  //   }
+  // };
 
   return (
     <div>
-      {/* Cabeçalho da página */}
+      {/* Cabeçalho */}
       <div className="flex items-center justify-center mt-5 w-full ml-auto ">
         <h1 className="text-4xl font-bold"> Turmas </h1>
       </div>
 
-      {/* Filtro e controles */}
+      {/* Barra de busca */}
       <div className="flex justify-center items-center mb-4">
         <BaseInput
           type="text"
@@ -180,13 +165,11 @@ export default function VizualizationClass() {
         ></BaseInput>
       </div>
 
-
-
-      {/* Renderização visualização de Lista */}
+      {/* Renderização condicional */}
       {visualization === 'list' && (
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <ListClass
-            classrooms={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
+            classrooms={filteredClasses}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
             isAllSelected={isAllSelected}
@@ -195,36 +178,31 @@ export default function VizualizationClass() {
             setCurrentPage={setCurrentPage}
             visualization={visualization}
             setVisualization={setVisualization}
-
             onDeleteClass={handleDeleteClass}
             toArchiveClass={archiveHandle}
           />
         </div>
       )}
 
-      {/* Rederização visualização de Grade */}
       {visualization === 'grid' && (
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <GridClass
-            classrooms={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
+            classrooms={filteredClasses}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
             isAllSelected={isAllSelected}
             currentPage={currentPage}
             totalPages={totalPages}
             setCurrentPage={setCurrentPage}
-
             visualization={visualization}
             setVisualization={setVisualization}
-
             onDeleteClass={handleDeleteClass}
             toArchiveClass={archiveHandle}
-
           />
-
-          ))
         </div>
       )}
+
+      {/* Modais */}
       <ConfirmDeleteDialog
         open={confirmOpen}
         onCancel={() => setConfirmOpen(false)}
@@ -235,15 +213,12 @@ export default function VizualizationClass() {
       <ArchiveConfirmation
         open={archiveConfirmation}
         onCancel={() => setarchiveConfirmation(false)}
-        onConfirm={archiveHandle}
+        onConfirm={archiveHandle} // Deveria chamar confirmArchive
         total={idsToArchive.length}
         title={titleClass}
         code={codeClass}
         description={classDescription}
       />
-
-        
-      
     </div>
   );
 }
