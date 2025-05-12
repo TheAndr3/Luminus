@@ -1,4 +1,4 @@
-export type Turma = {
+export type Classroom = {
     selected: unknown;
     id: number;
     disciplina: string;

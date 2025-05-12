@@ -6,7 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { use, useState } from "react"; // Importa hooks do React
 
 import { Pencil } from "lucide-react";
-import class_icon from "@/components/icon/icon_turma.svg" // Importa o ícone da turma em formato SVG
+import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { createClass } from "@/services/api";
 

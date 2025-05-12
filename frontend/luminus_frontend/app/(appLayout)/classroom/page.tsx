@@ -3,17 +3,19 @@
 // Importa o componente da lista de turmas
 import ListClass from "./components/listClass";
 // Importa o tipo Turma para tipar os dados corretamente
-import { Turma } from "@/app/(appLayout)/classroom/components/types";
+import { Classroom } from "@/app/(appLayout)/classroom/components/types";
 // Importa o hook useState para controle de estado
 import { useState } from "react";
 import GridClass from "./components/gridClass";
 import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
 import { BaseInput } from "@/components/inputs/BaseInput";
+import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
+
 
 export default function VizualizationClass() {
   // Cria uma lista fictícia com 30 turmas para simular os dados (mock)
-  const mockClass: Turma[] = Array.from({ length: 30 }, (_, i) => ({
+  const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
     id: i,
     disciplina: 'Matematica',
     codigo: `EXA502 - TP${i + 1}`,
@@ -47,6 +49,11 @@ export default function VizualizationClass() {
   // Verifica se todas as turmas visíveis estão selecionadas
   const isAllSelected = turmasVisiveis.every((t) => t.selected);
 
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
+
+
   // Alterna a seleção de todas as turmas da página atual
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected; // Inverte o estado atual
@@ -60,39 +67,43 @@ export default function VizualizationClass() {
   };
 
 
-  // Função para deletar turmas selecionadas
-  const handleDeleteClass = async () => {
-    // Filtra os IDs das turmas selecionadas
-    const idsToDelete = classi
-      .filter(turma => turma.selected)
-      .map(turma => turma.id);
+        // Função para preparar a exclusão de turmas selecionadas
+    const handleDeleteClass = async () => {
+        // Filtra as turmas selecionadas e mapeia apenas os IDs
+        const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
 
-    if (idsToDelete.length === 0) return;
+        // Se não houver turmas selecionadas, sai da função
+        if (selecionadas.length === 0) return;
 
-    // Confirmação antes de excluir
-    if (!confirm(`Tem certeza que deseja excluir ${idsToDelete.length} turma(s)?`)) {
-      return;
-    }
+        // Atualiza o estado com os IDs das turmas a serem excluídas
+        setIdsToDelete(selecionadas);
+        // Abre o modal de confirmação
+        setConfirmOpen(true);
+    };
+    
+    const confirmDeletion = async () => {
+        try {
+            // Log dos IDs que serão excluídos (para debug)
+            console.log("Excluir:", idsToDelete);
+            
+            // Atualiza o estado removendo as turmas com IDs selecionados
+            setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
 
+            // Verifica se a página atual ficaria vazia após a exclusão
+            // Caso positivo, retorna para a primeira página
+            if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
+                setCurrentPage(1);
+            }
+        } catch (error) {
+            // Tratamento de erro genérico
+            console.error("Erro ao excluir turmas:", error);
+            alert("Erro ao excluir.");
+        } finally {
+            // Fecha o modal de confirmação independentemente de sucesso ou falha
+            setConfirmOpen(false);
+        }
+    };
 
-    try {
-      // Simulação de chamada API (substitua pelo seu código real)
-      console.log("Turmas a serem excluídas:", idsToDelete);
-      // await api.delete('/turmas', { data: { ids: idsToDelete } });
-      
-      // Atualiza o estado removendo as turmas excluídas
-      setClassi(prev => prev.filter(turma => !turma.selected));
-      
-      // Reseta a página para a primeira se necessário
-      if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
-        setCurrentPage(1);
-      }
-    } catch (error) {
-      console.error("Erro ao excluir turmas:", error);
-      alert("Ocorreu um erro ao excluir as turmas");
-    } finally {
-    }
-  };
 
 
 
@@ -138,7 +149,7 @@ export default function VizualizationClass() {
       {visualization === 'list' && (
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <ListClass
-            turmas={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
+            classrooms={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
             isAllSelected={isAllSelected}
@@ -157,7 +168,7 @@ export default function VizualizationClass() {
       {visualization === 'grid' && (
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <GridClass
-            turmas={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
+            classrooms={filteredClasses} // Aplica o filtro de busca nas turmas visíveis
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
             isAllSelected={isAllSelected}
@@ -175,6 +186,15 @@ export default function VizualizationClass() {
           ))
         </div>
       )}
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={confirmDeletion}
+        total={idsToDelete.length}
+      />
+
+
+      
     </div>
   );
 }
