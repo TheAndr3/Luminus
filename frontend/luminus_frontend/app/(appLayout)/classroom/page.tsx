@@ -12,6 +12,8 @@ import ClassViewMode from "./components/classViewMode";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 
+import {ArchiveConfirmation} from "./components/archiveConfirmation"
+
 
 export default function VizualizationClass() {
   // Cria uma lista fictícia com 30 turmas para simular os dados (mock)
@@ -52,6 +54,18 @@ export default function VizualizationClass() {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
+
+
+  const [archiveConfirmation, setarchiveConfirmation] = useState(false)
+  const [idsToArchive, setIdsToArchive] = useState<number[]>([]);
+
+  const [titleClass, setTitleClass] = useState<string | undefined>(undefined);
+
+  const [classDescription, setClassDescription] = useState("")
+  const [codeClass, setCodeClass] = useState<string | undefined>(undefined);
+
+
+
 
 
   // Alterna a seleção de todas as turmas da página atual
@@ -104,7 +118,30 @@ export default function VizualizationClass() {
         }
     };
 
+    const archiveHandle = async () => {
+      // Filtra as turmas selecionadas e mapeia apenas os IDs
+        const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
 
+        // Se não houver turmas selecionadas, sai da função
+        if (selecionadas.length === 0) return;
+
+        if (selecionadas.length === 1) {
+          const turmaSelecionada = classi.find(turma => turma.id === selecionadas[0]);
+
+          setTitleClass(turmaSelecionada?.disciplina);
+          setCodeClass(turmaSelecionada?.codigo);
+          setClassDescription("Tem certeza que deseja arquivar a turma: ");
+        } else {
+          setTitleClass(undefined);
+          setCodeClass(undefined);
+          setClassDescription("Tem certeza que deseja arquivar as turmas selecionadas?"); 
+        }
+
+        // Atualiza o estado com os IDs das turmas a serem arquivadas
+        setIdsToArchive(selecionadas);
+        // Abre o modal de confirmação
+        setarchiveConfirmation(true);
+    }
 
 
   // Alterna a seleção individual de uma turma
@@ -160,6 +197,7 @@ export default function VizualizationClass() {
             setVisualization={setVisualization}
 
             onDeleteClass={handleDeleteClass}
+            toArchiveClass={archiveHandle}
           />
         </div>
       )}
@@ -180,6 +218,7 @@ export default function VizualizationClass() {
             setVisualization={setVisualization}
 
             onDeleteClass={handleDeleteClass}
+            toArchiveClass={archiveHandle}
 
           />
 
@@ -193,7 +232,17 @@ export default function VizualizationClass() {
         total={idsToDelete.length}
       />
 
+      <ArchiveConfirmation
+        open={archiveConfirmation}
+        onCancel={() => setarchiveConfirmation(false)}
+        onConfirm={archiveHandle}
+        total={idsToArchive.length}
+        title={titleClass}
+        code={codeClass}
+        description={classDescription}
+      />
 
+        
       
     </div>
   );

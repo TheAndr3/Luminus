@@ -30,6 +30,7 @@ type ListclassroomsProps = {
   setVisualization: (set: 'grid' | 'list') => void; // Função para alterar visualização
 
   onDeleteClass: () => void;
+  toArchiveClass: () => void;
 
 };
 
@@ -44,7 +45,8 @@ export default function ListClass({
   setCurrentPage,
   visualization,
   setVisualization,
-  onDeleteClass
+  onDeleteClass,
+  toArchiveClass
 }: ListclassroomsProps) {
   // Estado que controla se há classrooms selecionadas (para mostrar o painel de ações)
   const [hasSelected, setHasSelected] = useState(false);
@@ -136,7 +138,7 @@ export default function ListClass({
       />
 
       {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
-      {hasSelected && <ActionPanel onDeleted={onDeleteClass}/>}
+      {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>}
     </div>
   );
 }

@@ -20,6 +20,7 @@ type GridclassroomsProps = {
   setVisualization: (set: 'grid' | 'list') => void;
 
   onDeleteClass: () => void;
+  toArchiveClass: () => void;
 };
 
 export default function Gridclassrooms({
@@ -32,7 +33,8 @@ export default function Gridclassrooms({
   setCurrentPage,
   visualization,
   setVisualization,
-  onDeleteClass
+  onDeleteClass,
+  toArchiveClass
 
 }: GridclassroomsProps) {
 
@@ -114,7 +116,7 @@ const [hasSelected, setHasSelected] = useState(false);
 
       <div className=''>
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
-        {hasSelected && <ActionPanel onDeleted={onDeleteClass}/>}
+        {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>}
       </div>
 
     </div>
