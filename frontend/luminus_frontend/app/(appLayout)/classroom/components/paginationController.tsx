@@ -16,11 +16,11 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
   return (
     <div>
       {/* Container dos controles de paginação */}
-      <div className="flex justify-end mt-6 gap-2">
+      <div className="flex items-center justify-end mt-6 gap-2">
         
         {/* Botão de página anterior */}
         <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+          className="border px-3 py-1 rounded-full"
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1} // Desativa se já estiver na primeira página
         >
@@ -31,7 +31,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         <input
           type="text" // Poderia ser type="number", mas manter "text" permite lidar melhor com vazio e validação
           placeholder="Page"
-          className="border px-2 py-1 rounded w-16 text-sm"
+          className="border px-3 py-1 rounded w-16 text-sm"
           value={inputController} // Valor controlado pelo estado local
           onChange={(e) => {
             const value = e.target.value;
@@ -56,9 +56,9 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             key={i}
-            className={`px-3 py-1 rounded ${
+            className={`border px-3 py-1 rounded-full ${
               currentPage === i + 1
-                ? "bg-blue-500 text-white" // Estilo diferente para a página atual
+                ? "bg-[#101828] text-white" // Estilo diferente para a página atual
                 : "bg-gray-200 text-black"
             }`}
             onClick={() => setCurrentPage(i + 1)} // Altera a página ao clicar
@@ -69,7 +69,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
 
         {/* Botão de próxima página */}
         <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+          className="border px-3 py-1 rounded-full"
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages} // Desativa se já estiver na última página
         >
