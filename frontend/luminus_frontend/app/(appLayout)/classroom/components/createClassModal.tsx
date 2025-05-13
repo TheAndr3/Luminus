@@ -6,7 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { use, useState } from "react"; // Importa hooks do React
 
 import { Pencil } from "lucide-react";
-import class_icon from "@/components/icon/icon_turma.svg" // Importa o ícone da turma em formato SVG
+import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { createClass } from "@/services/api";
 
@@ -84,39 +84,47 @@ export default function DialogPage() {
                 <DialogTrigger >
                     <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-2 py-1 h-7"> Adicionar turma   +</Button> {/* Botão para abrir o dialog */}
                 </DialogTrigger>
-                <DialogOverlay className="fixed inset-0 bg-gray-400/10 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
+                <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
 
                 <DialogContent>
-                    <DialogContent className="max-w-4xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                    <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
 
                         {/* Header do dialog */}
-                        <div className="flex items-center gap-2 justify-center mb-6">
-                            <div className=" bg-white w-12 h-12 rounded-lg ">
-                                <Image 
-                                    src={class_icon} // Ícone da turma
-                                    alt="icone turma"
-                                    className="w-12 h-12 bg-white-200">
-                                </Image>
-                            </div>
-                            
-                            {editing ? (
-                                <input 
-                                    className="text-2xl font-bold border: 2px solid white" 
-                                    value={titulo}
-                                    onChange={(e) => setTitulo(e.target.value)} // Atualiza o valor do título
-                                />
-                            ) : (
-                                <span className="text-2xl font-bold"> {titulo} </span> // Exibe o título
-                            )}
-                            <Pencil className="w-5 h-5 text-white cursor-pointer" onClick={() => {setEditing(!editing)}}/> {/* Ícone de edição */}
+                        <div className="relative mb-6">
+                        {/* Imagem fixa à esquerda */}
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
+                            <Image 
+                            src={class_icon}
+                            alt="icone turma"
+                            className="w-12 h-12"
+                            />
                         </div>
+
+                        {/* Conteúdo centralizado */}
+                        <div className="flex items-center gap-2 justify-center">
+                            {editing ? (
+                            <input 
+                                className="text-4xl font-bold"
+                                value={titulo}
+                                onChange={(e) => setTitulo(e.target.value)}
+                            />
+                            ) : (
+                            <span className="text-4xl font-bold"> {titulo} </span>
+                            )}
+                            <Pencil 
+                            className="w-5 h-5 text-white cursor-pointer" 
+                            onClick={() => setEditing(!editing)} 
+                            />
+                        </div>
+                        </div>
+
 
                         {/* Campos de input */}
                         <div className="grid grid-cols-2 gap-4 m-6 ">
                             <div className="flex items-center gap-3 "> 
-                                <label className="text-sm">Disciplina:</label> {/* Label para o campo Disciplina */}
+                                <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
                                 <BaseInput 
-                                    className="w-70 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-lg "
+                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder="Ex: EXA 702 - TPO1" 
                                     value={inputDisc} // Valor do input Disciplina
                                     onChange={(e) => setInputDisc(e.target.value)} // Atualiza o valor do input
@@ -124,19 +132,19 @@ export default function DialogPage() {
                             </div>
 
                             <div className="flex items-center gap-3 ml-8">
-                                <label className="text-sm">Instituição:</label> {/* Label para o campo Instituição */}
+                                <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
                                 <BaseInput
-                                    className="w-70 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-lg "
+                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder="Insira o nome da instituição (opcional)"
                                     value={inputInst} // Valor do input Instituição
                                     onChange={(e) => setinputInst(e.target.value)} // Atualiza o valor do input
                                 />
                             </div>
 
-                            <div className="flex items-center gap-5">
-                                <label className="text-sm">Período:</label> {/* Label para o campo Período */}
+                            <div className="flex items-center gap-8">
+                                <label className="text-2xl">Período:</label> {/* Label para o campo Período */}
                                 <BaseInput 
-                                    className="w-70 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-lg "
+                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder="23.2"
                                     value={inputPer} // Valor do input Período
                                     onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
@@ -145,7 +153,7 @@ export default function DialogPage() {
 
                             {/* Botão para importar CSV */}
                             <div className="flex items-center justify-end gap-2">
-                                <label className="text-sm">Nenhum arquivo: </label> 
+                                <label className="text-2xl">Nenhum arquivo: </label> 
                                 <ImportCSVButton/>
                             </div>
                         </div>

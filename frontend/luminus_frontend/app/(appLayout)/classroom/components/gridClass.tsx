@@ -1,23 +1,30 @@
-import { Turma } from '@/app/(appLayout)/classroom/components/types';
+import { Classroom } from '@/app/(appLayout)/classroom/components/types';
 import DialogPage from './createClassModal';
 import PageController from './paginationController';
 import ClassViewMode from './classViewMode';
 
-type GridTurmasProps = {
-  turmas: Turma[];
+import class_icon from "@/components/icon/icon_classroom.svg"
+import Image from "next/image";
+import { useEffect, useState } from 'react';
+import ActionPanel from './actionPainel';
+
+type GridclassroomsProps = {
+  classrooms: Classroom[];
   toggleSelectAll: () => void;
   toggleOne: (id: number) => void;
   isAllSelected: boolean;
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
-
   visualization: string
   setVisualization: (set: 'grid' | 'list') => void;
+
+  onDeleteClass: () => void;
+  toArchiveClass: () => void;
 };
 
-export default function GridTurmas({
-  turmas,
+export default function Gridclassrooms({
+  classrooms,
   toggleSelectAll,
   toggleOne,
   isAllSelected,
@@ -25,10 +32,23 @@ export default function GridTurmas({
   totalPages,
   setCurrentPage,
   visualization,
-  setVisualization
-}: GridTurmasProps) {
+  setVisualization,
+  onDeleteClass,
+  toArchiveClass
+
+}: GridclassroomsProps) {
+
+const [hasSelected, setHasSelected] = useState(false);
+
+    // Efeito que verifica sempre que a lista de classrooms muda
+    // para atualizar o estado hasSelected
+    useEffect(() => {
+      // Verifica se existe pelo menos uma classroom selecionada
+      setHasSelected(classrooms.some(classroom => classroom.selected));
+    }, [classrooms]); // Executa sempre que o array de classrooms mudar
+
   return (
-    <div className="w-full">
+    <div className="w-full ">
       {/* Título e barra de ferramentas */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
@@ -36,12 +56,13 @@ export default function GridTurmas({
             type="checkbox"
             checked={isAllSelected}
             onChange={toggleSelectAll}
+            className="w-6 h-6 accent-blue-600"
           />
-          <span className="text-lg font-semibold">Selecionar todos</span>
+          <span className="px-2 text-lg">Selecionar todos</span>
         </div>
         <div className="flex gap-2">
 
-            {/*Renderização tipo de visualização das turmas (lista ou grade) */}
+            {/*Renderização tipo de visualização das classrooms (lista ou grade) */}
             <ClassViewMode
               visualization={visualization}
               setVisualization={setVisualization}
@@ -53,29 +74,36 @@ export default function GridTurmas({
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
-        {turmas.map((turma) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 px-1 max-w-1xl mx-auto">
+        {classrooms.map((classroom) => (
           <div
-            key={turma.id}
-            className="bg-[#0A2B3D] text-white rounded-lg p-8 shadow-md flex flex-col justify-between"
+            key={classroom.id}
+            className="bg-[#0A2B3D] text-white rounded-lg p-3 shadow-md flex flex-col justify-between w-80 h-46"
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
-                <div className="text-xl mb-1">👥</div>
-                <div className="text-sm">{turma.disciplina}</div>
-                <div className="text-xs text-gray-300">{turma.codigo}</div>
+
+                <div className="p-2 flex items-center">
+                <Image src={class_icon} alt="icone classroom" className=" w-16 h-16" />
+                <div className="text-xl text-gray-300 ml-3">{classroom.disciplina} <br/> {classroom.codigo}</div>
+                
+                </div>
+
+
+                
               </div>
               <input
                 type="checkbox"
-                checked={turma.selected}
-                onChange={() => toggleOne(turma.id)}
+                checked={classroom.selected}
+                onChange={() => toggleOne(classroom.id)}
+                className="w-6 h-6 accent-blue-600"
               />
             </div>
-            <button className="mt-2 bg-gray-200 text-black px-3 py-1 rounded text-sm">
-              {turma.dossie}
+            <button className="mb-4 bg-gray-200 text-black px-1 py-1 rounded-2xl text-sm hover:bg-gray-400">
+              {classroom.dossie}
             </button>
           </div>
-        ))}
+        ))} 
       </div>
 
 
@@ -85,6 +113,11 @@ export default function GridTurmas({
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
+
+      <div className=''>
+        {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
+        {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>}
+      </div>
 
     </div>
   );

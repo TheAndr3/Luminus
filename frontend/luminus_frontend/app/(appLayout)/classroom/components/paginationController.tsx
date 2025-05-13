@@ -42,7 +42,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
             } else {
               // Converte para número
               const num = parseInt(value, 10);
-              if (!isNaN(num) && num <= totalPages) {
+              if (!isNaN(num) && num <= totalPages && num > 0) {
                 // Atualiza página e estado apenas se for número válido e dentro do limite
                 setCurrentPage(num);
                 setInputController(num);
