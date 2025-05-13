@@ -1,0 +1,16 @@
+.pageContainer {
+  display: flex; /* Usa Flexbox para layout em colunas (left/right panels) */
+  height: 100vh; /* Ocupa toda a altura da viewport */
+  overflow: hidden; /* Impede a rolagem da página inteira (rolagem interna nos painéis se necessário) */
+  background-color: #2c76e6; /* Cor de fundo cinza claro para a página */
+  font-family: inherit; /* Garante que a fonte definida no body ou pai seja usada */
+}
+
+.header{
+  display: flex; /* Usa Flexbox para layout em colunas (left/right panels) */
+  height: 35; /* Ocupa toda a altura da viewport */
+  overflow: hidden; /* Impede a rolagem da página inteira (rolagem interna nos painéis se necessário) */
+  background-color: #ec3360; /* Cor de fundo cinza claro para a página */
+  font-family: inherit; /* Garante que a fonte definida no body ou pai seja usada */
+  color: white
+}
