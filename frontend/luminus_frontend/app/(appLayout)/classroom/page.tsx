@@ -156,7 +156,7 @@ export default function VizualizationClass() {
       </div>
 
       {/* Barra de busca */}
-      <div className="flex justify-center items-center mb-4 p-4">
+      <div className="flex justify-center items-center mb-4 ">
         <BaseInput
           type="text"
           placeholder="Procure pela turma"
