@@ -2,7 +2,7 @@ const express = require('express');
 const routerStudent = express.Router();
 const studenController = require('../controller/studentController.js');
 
-//Listar studantes de uma tumar
+//Listar studantes de uma turma
 routerStudent.get('/student/:classid/list', studenController.List);
 
 //Obter um estudante especifico
