@@ -61,3 +61,29 @@ exports.Delete = async (req, res) => {
   const id = req.params.id;
   res.status(204).send(); 
 }
+
+exports.AssociateDossier = async (req, res) => {
+  const classId = req.params.classid;
+  const dossierId = req.params.dossierid;
+
+  try {
+    //Verifica se o dossiê existe e obtém o professor_id
+    const dossier = await db.pgFindOne('Dossier', { id: dossierId });
+    if (!dossier) {
+      return res.status(404).json({ msg: 'Dossiê não encontrado' });
+    }
+
+    //Atualiza a classe com os dois campos exigidos pela FK composta
+    await db.pgUpdate(
+      'Classroom',
+      { id: classId },
+      { dossier_id: dossier.id, dossier_professor_id: dossier.professor_id }
+    );
+
+    return res.status(200).json({ msg: 'Dossiê associado' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: 'Erro ao associar dossiê' });
+  }
+};
+

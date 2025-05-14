@@ -49,7 +49,7 @@ exports.Login = async (req, res) => {
         //Caso dê erro, retornar o status 500 e a mensagem de erro
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro ao realizar login:', err);
+       return res.status(500).send('Erro ao realizar login:', err);
     }
 };
 
@@ -57,7 +57,7 @@ exports.Create = async (req, res) => {
     const {email, password, name} = req.body;
 
     if (!email || !password || !name) {
-        res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
+        return res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
     }
 
     //desencriptar senha 
@@ -76,9 +76,9 @@ exports.Create = async (req, res) => {
                 password: hashedPassword, 
                 name: name
             });
-            res.status(201).json({message:'Usuário criado com sucesso!'});
+            return res.status(201).json({message:'Usuário criado com sucesso!'});
         } else {
-            res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+            return res.status(409).json({message:'Esse e-mail já possui um cadastro'});
         }
     } catch (err) {
         res.status(500).json({message:'Erro ao cadastrar usuário: ', err});
