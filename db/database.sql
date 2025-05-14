@@ -58,13 +58,14 @@ create table Appraisal(
 	id SERIAL,
 	student_id INT,
 	professor_id INT,
+	classroom_id INT,
 	points REAL,
 	filling_date date NOT NULL,
 
 	CONSTRAINT fk_Appraisal_Student FOREIGN KEY(student_id) REFERENCES Student(id),
 	CONSTRAINT fk_Appraisal_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id),
-
-	PRIMARY KEY(id, student_id, professor_id)
+	CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id) REFERENCES Classroom(id),
+	PRIMARY KEY(id, student_id, professor_id, classroom_id)
 );
 
 create table Classroom(
