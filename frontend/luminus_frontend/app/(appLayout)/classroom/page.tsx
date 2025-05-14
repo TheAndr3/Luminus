@@ -155,13 +155,13 @@ export default function VizualizationClass() {
       </div>
 
       {/* Barra de busca */}
-      <div className="flex justify-center items-center mb-4">
+      <div className="flex justify-center items-center mb-4 p-4">
         <BaseInput
           type="text"
           placeholder="Procure pela turma"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border p-2 rounded w-250"
+          className="border rounded-full w-250 px-4 py-2"
         ></BaseInput>
       </div>
 

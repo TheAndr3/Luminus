@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { darkenHexColor } from '@/utils/colorHover';
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { Header } from "./components/Header";
+import { ActionBar} from "./components/Action-bar";
 import { Folder, User, ClipboardEdit, Plus } from "lucide-react";
 import styles from './selected-classroom.module.css'; // Importa estilos CSS Modules específicos para esta página
 
@@ -17,10 +19,15 @@ interface Dossie {
 
 
 
+
 export default function VisualizacaoAlunos() {
 
+
   /*LÓGICA PARA GET E SET DE CORES*/
-  const color = "#ec3360"
+  
+  const color = "#ec3360";
+  const hoverColor = darkenHexColor(color, 25); //escurece cor para hover
+  const classTitle = "Álgebra EXA 502";
 
   const [dossies, setDossies] = useState<Dossie[]>(
     Array.from({ length: 10 }, (_, i) => ({
@@ -52,29 +59,11 @@ export default function VisualizacaoAlunos() {
       {/* Main content */}
       <div className="flex-1 bg-white p-4">
 
-        <Header title="Álgebra EXA 502" color={color} />
+        {/* Header */}
+        <Header title={classTitle} mainColor={color} hoverColor = {hoverColor} />
 
-        {/* Search bar */}
-        {/* Barra de busca */}
-        <div className="flex justify-center items-center mb-4">
-          <BaseInput
-            type="text"
-            placeholder="Procure pela turma"
-            //value={searchTerm}
-            //onChange={(e) => setSearchTerm(e.target.value)}
-            className="border p-2 rounded w-250"
-          ></BaseInput>
-        </div>
-
-        {/* Buttons on top right */}
-        <div className="flex justify-end mt-4 space-x-2">
-          <Button variant="secondary" className="bg-[#ec3360] text-white">
-            <Plus size={16} className="mr-1" /> Adicionar Dossiê
-          </Button>
-          <Button variant="secondary" className="bg-[#ec3360] text-white">
-            <ClipboardEdit size={16} className="mr-1" /> Editar Turma
-          </Button>
-        </div>
+        {/* Barra de ação */}
+        <ActionBar mainColor={color} hoverColor = {hoverColor}/>
 
         {/* Tabela de alunos */}
       <div className="mt-6">
