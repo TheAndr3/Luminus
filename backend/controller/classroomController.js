@@ -81,19 +81,45 @@ exports.Update = async (req, res) => {
 };
 
 exports.Delete = async (req, res) => {
-  try {
+
+  const id = req.params.id;
+    try {
     const payload = {
       classroom_id: req.params.id,
       professor_id: req.body.professor_id
     };
 
     await db.pgDelete('appraisal', payload);
-    await db.pgDelete('classroom_student', payload);
+    await db.pgDelete('classroomstudent', payload);
     await db.pgDelete('classroom', { id: payload.classroom_id, professor_id: payload.professor_id });
 
     res.status(200).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
     res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+}
+
+exports.AssociateDossier = async (req, res) => {
+  const classId = req.params.classid;
+  const dossierId = req.params.dossierid;
+
+  try {
+    //Verifica se o dossiê existe e obtém o professor_id
+    const dossier = await db.pgFindOne('Dossier', { id: dossierId });
+    if (!dossier) {
+      return res.status(404).json({ msg: 'Dossiê não encontrado' });
+    }
+
+    //Atualiza a classe com os dois campos exigidos pela FK composta
+    await db.pgUpdate(
+      'Classroom',
+      { id: classId },
+      { dossier_id: dossier.id, dossier_professor_id: dossier.professor_id }
+    );
+
+    return res.status(200).json({ msg: 'Dossiê associado' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: 'Erro ao associar dossiê' });
   }
 };
 
