@@ -127,8 +127,10 @@ exports.Delete = async (req, res) => {
   
   try {
     const resp = await db.pgDelete('dossier', {id:id});
+    res.status(204).json({msg:'sucess'});
   } catch (error) {
-    
+    console.log(error);
+    res.status(400).json({msg:"falha ao remover o dossie"});
   }
-  res.status(204).send();
+  
 }
