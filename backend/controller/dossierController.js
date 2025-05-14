@@ -76,10 +76,61 @@ exports.Get = async (req, res) => {
 
 exports.Update = async (req, res) => {
   const id = req.params.id;
-  res.status(200).send(`Rota para atualizar o dossiê ${id}`);
+  const body = req.body;
+
+  try {
+    const haveAssociationInAnyClass = await db.pgSelect('appraisal', {dossier_id:id})
+
+    if (haveAssociationInAnyClass.length > 0) {
+      res.status(400).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'})
+    } else {
+      const sections = body.sections;
+
+      for (let i = 0; i < sections.length; i++) {
+        var section = sections[i]
+
+        var questions = section.questions;
+
+        for(let j=0; j < questions.length; j++){
+          var question = questions[j];
+          var payload = {description:question.description};
+
+          try {
+            const resp = db.pgUpdate('question', payload, {id:question.id});
+          } catch (error) {
+            console.log(error);
+            res.status(500).json({msg:'erro interno do servidor'});
+          }
+        }
+        var payload = {
+            name:section.name,
+            weigth:section.weigth,
+            description:section.description
+          }
+        try {
+          const resp = db.pgUpdate('section', payload, {id:section.id});
+        } catch (error) {
+          console.log(error)
+          res.status(500).json({msg:'erro interno do banco de dados'});
+        }
+      }
+      res.status(202).json({msg:'sucess'});
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({msg:'erro no envio das informações'})
+  }
 }
 
 exports.Delete = async (req, res) => {
   const id = req.params.id;
-  res.status(204).send();
+  
+  try {
+    const resp = await db.pgDelete('dossier', {id:id});
+    res.status(204).json({msg:'sucess'});
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({msg:"falha ao remover o dossie"});
+  }
+  
 }
