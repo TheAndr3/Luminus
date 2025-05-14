@@ -1,40 +1,40 @@
-// Importação do tipo classroom para tipagem dos dados
-import {Classroom} from "@/app/(appLayout)/classroom/components/types"
-// Componente para o modal de criação de classrooms
+// Importação do tipo Classroom para tipagem dos dados que serão manipulados
+import { Classroom } from "@/app/(appLayout)/classroom/components/types";
+// Importação do modal para criar novas classrooms
 import DialogPage from "./createClassModal";
-// Componente de controle de paginação
+// Importação do componente de controle de paginação
 import PageController from "./paginationController";
-// Componente para alternar entre visualização em lista ou grade
+// Importação do componente que alterna entre visualização em lista ou grade
 import ClassViewMode from "./classViewMode";
-
-// Ícone padrão para as classrooms
-import class_icon from "@/components/icon/icon_classroom.svg"
-
-// Componente de imagem otimizada do Next.js
+// Ícone padrão para representar as classrooms
+import class_icon from "@/components/icon/icon_classroom.svg";
+// Importação do componente de imagem otimizada do Next.js
 import Image from "next/image";
-// Painel de ações que aparece quando classrooms são selecionadas
+// Painel de ações que aparece quando alguma classroom é selecionada
 import ActionPanel from "./actionPainel";
-// Hooks do React para efeitos colaterais e estado
+// Importação dos hooks do React para efeitos colaterais e estado
 import { useEffect, useState } from "react";
-// Componente com ações disponíveis para cada classroom
+// Importação do componente com ações disponíveis para cada classroom
 import ClassroomActions from "./classroomActions";
+// Importação do componente de input base (campo de texto)
+import { BaseInput } from "@/components/inputs/BaseInput";
 
 // Tipagem das props que o componente ListClass recebe
 type ListclassroomsProps = {
-  classrooms: Classroom[];                      // Lista de classrooms visíveis (paginadas)
-  toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
-  toggleOne: (id: number) => void;             // Alterna a seleção de uma classroom específica
-  isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
-  currentPage: number;                         // Página atual
-  totalPages: number;                          // Total de páginas
-  setCurrentPage: (page: number) => void;      // Função para trocar de página
-  visualization: string;                       // Modo atual de visualização ('grid' ou 'list')
-  setVisualization: (set: 'grid' | 'list') => void; // Troca o modo de visualização
-  onDeleteClass: () => void;                   // Função para deletar classrooms
-  toArchiveClass: () => void;                  // Função para arquivar classrooms
+  classrooms: Classroom[];  // Lista de classrooms
+  toggleSelectAll: () => void;  // Função para selecionar/desmarcar todas as classrooms
+  toggleOne: (id: number) => void;  // Função para selecionar/desmarcar uma classroom específica
+  isAllSelected: boolean;  // Flag que indica se todas as classrooms estão selecionadas
+  currentPage: number;  // Página atual de exibição
+  totalPages: number;  // Total de páginas
+  setCurrentPage: (page: number) => void;  // Função para mudar a página atual
+  visualization: string;  // Tipo de visualização (lista ou grade)
+  setVisualization: (set: "grid" | "list") => void;  // Função para mudar o tipo de visualização
+  onDeleteClass: () => void;  // Função para deletar a classroom selecionada
+  toArchiveClass: () => void;  // Função para arquivar a classroom selecionada
 };
 
-// Componente principal que renderiza a lista de classrooms
+// Componente principal ListClass para renderizar a lista de classrooms
 export default function ListClass({
   classrooms,
   toggleSelectAll,
@@ -46,52 +46,48 @@ export default function ListClass({
   visualization,
   setVisualization,
   onDeleteClass,
-  toArchiveClass
+  toArchiveClass,
 }: ListclassroomsProps) {
-  // Controla se há classrooms selecionadas para exibir o painel de ações
+  // Estado local para verificar se algum item está selecionado
   const [hasSelected, setHasSelected] = useState(false);
-
-  // ID da classroom atualmente com hover (para mostrar ações)
-  const [hovered, sethovered] = useState(Number);
-
-  // ID da classroom em modo de edição
+  // Estado local para controlar qual classroom está sendo "hovered" (passando o mouse por cima)
+  const [hovered, setHovered] = useState<number | null>(null);
+  // Estado local para controlar se estamos editando uma classroom
   const [editingId, setEditingId] = useState<number | null>(null);
-  // Dados temporários editados durante a edição
+  // Estado para armazenar os dados editados de uma classroom
   const [editedData, setEditedData] = useState<Partial<Classroom>>({});
 
-  // Atualiza o estado de seleção sempre que a lista muda
+  // UseEffect para verificar se alguma classroom está selecionada e atualizar o estado hasSelected
   useEffect(() => {
-    setHasSelected(classrooms.some(classroom => classroom.selected));
+    setHasSelected(classrooms.some((classroom) => classroom.selected));
   }, [classrooms]);
 
-  // Alterna a seleção de uma única classroom
+  // Função para alternar o estado de seleção de uma classroom individual
   const handleToggleOne = (id: number) => {
     toggleOne(id);
   };
 
-  // Alterna a seleção de todas as classrooms da página
+  // Função para alternar o estado de seleção de todas as classrooms
   const handleToggleAll = () => {
     toggleSelectAll();
   };
 
-  // Ainda não implementado: lógica para entrar no modo de edição
-  const handleEdit = () => {
-    // A lógica pode ser implementada dentro do componente ClassroomActions
+  // Função para salvar as edições feitas em uma classroom (ainda não implementada)
+  const handleSave = () => {
+    // A lógica de salvamento pode ser implementada aqui
   };
 
-  // Cancela o modo de edição
+  // Função para cancelar a edição e limpar os dados
   const handleCancel = () => {
     setEditingId(null);
-    setEditedData({});
+    setEditedData({
+      disciplina: '',
+      codigo: '',
+      dossie: '',
+    });
   };
 
-  // Salva os dados editados
-  const handleSave = () => {
-    console.log("Salvando alterações:", editingId, editedData);
-    setEditingId(null);
-  };
-
-  // Atualiza os campos editados conforme o usuário digita
+  // Função para lidar com a alteração de dados de uma classroom enquanto ela está sendo editada
   const handleInputChange = (field: keyof Classroom, value: string) => {
     setEditedData((prev) => ({
       ...prev,
@@ -101,87 +97,103 @@ export default function ListClass({
 
   return (
     <div className="w-full">
-      {/* Cabeçalho da tabela */}
+      {/* Tabela para exibir as classrooms */}
       <table className="w-full text-left border-separate border-spacing-y-2">
         <thead>
           <tr className="text-sm text-gray-600">
-            {/* Checkbox para selecionar todos */}
-            <th className="w-[0px] px-2">
+            {/* Coluna de checkbox para selecionar todas as classrooms */}
+            <th className="w-[0px] px-2 gap-10">
               <input
                 type="checkbox"
-                onChange={handleToggleAll}
-                checked={!!isAllSelected}
+                onChange={handleToggleAll}  // Função chamada ao alterar o estado de seleção
+                checked={!!isAllSelected}  // Verifica se todas estão selecionadas
                 className="w-6 h-6 accent-blue-600"
               />
             </th>
-            <th className="px-2 text-lg">Selecionar todos</th>
+            {/* Cabeçalho para selecionar todos */}
+            <th className="px-2 text-lg ">Selecionar todos</th>
+            {/* Cabeçalhos para as colunas de Disciplina, Turma e Dossiê */}
             <th className="px-2 text-lg">Disciplina</th>
             <th className="px-2 text-lg">Turma</th>
             <th className="px-2 text-lg flex items-center justify-between">
               <span>Dossiê</span>
-              <div className="flex gap-2 fixed top-43 left-325 z-50">
+              <div className="flex gap-2 absolute right-16">
+                {/* Componente de alternância de visualização (lista ou grade) */}
                 <ClassViewMode
                   visualization={visualization}
                   setVisualization={setVisualization}
                 />
-                <DialogPage/>
+                {/* Componente para abrir o modal de criação de novas classrooms */}
+                <DialogPage />
               </div>
             </th>
           </tr>
         </thead>
-
         <tbody>
-          {/* Renderiza uma linha para cada classroom */}
+          {/* Mapeamento das classrooms para exibir suas informações */}
           {classrooms.map((classroom) => (
             <tr
               key={classroom.id}
-              onMouseEnter={()=> sethovered(classroom.id)}
-              onMouseLeave={() => sethovered(-1)}
-              className="bg-[#0A2B3D] text-white rounded px-4 py-2"
+              onMouseEnter={() => setHovered(classroom.id)}  // Quando passar o mouse por cima, altera o estado de "hovered"
+              onMouseLeave={() => setHovered(null)}  // Quando sair o mouse, retorna ao estado inicial
+              className="bg-[#0A2B3D] text-white rounded px-4 py-2 "
             >
-              {/* Checkbox individual */}
+              {/* Coluna de checkbox para seleção de cada classroom */}
               <td className="p-2 w-[50px]">
                 <input
                   type="checkbox"
-                  checked={!!classroom.selected}
-                  onChange={() => handleToggleOne(classroom.id)}
+                  checked={!!classroom.selected}  // Verifica se essa classroom está selecionada
+                  onChange={() => handleToggleOne(classroom.id)}  // Chama a função para alternar o estado de seleção dessa classroom
                   className="w-6 h-6 accent-blue-600"
                 />
               </td>
-              {/* Ícone da classroom */}
+              {/* Exibe o ícone da classroom */}
               <td className="p-2 flex items-center">
-                <Image src={class_icon} alt="icone classroom" className="w-10 h-10" />
+                <Image
+                  src={class_icon}
+                  alt="icone classroom"
+                  className="w-10 h-10"
+                />
               </td>
 
-              {/* Modo de edição ou exibição */}
+              {/* Se a classroom estiver sendo editada, exibe campos de edição */}
               {editingId === classroom.id ? (
                 <>
                   <td className="p-2">
-                    <input
+                    <BaseInput
                       type="text"
-                      value={editedData.disciplina || ""}
-                      onChange={(e) => handleInputChange("disciplina", e.target.value)}
-                      className="text-black px-2 py-1 rounded"
+                      value={editedData.disciplina || ""}  // Valor atual do campo disciplina
+                      onChange={(e) =>
+                        handleInputChange("disciplina", e.target.value)}  // Função chamada ao digitar no campo
+                      className="focus:border-transparent transition text-gray-900 font-medium bg-white rounded-2xl"
                     />
                   </td>
                   <td className="p-2">
-                    <input
+                    <BaseInput
                       type="text"
-                      value={editedData.codigo || ""}
-                      onChange={(e) => handleInputChange("codigo", e.target.value)}
-                      className="text-black px-2 py-1 rounded"
+                      value={editedData.codigo || ""}  // Valor atual do campo código
+                      onChange={(e) => handleInputChange("codigo", e.target.value)}  // Função chamada ao digitar no campo
+                      className="focus:border-transparent transition text-gray-900 font-medium bg-white rounded-2xl"
                     />
                   </td>
-                  <td className="p-2">
-                    <input
-                      type="text"
-                      value={editedData.dossie || ""}
-                      onChange={(e) => handleInputChange("dossie", e.target.value)}
-                      className="text-black px-2 py-1 rounded"
-                    />
+                  <td className="p-2 flex gap-2 items-center">
+                    {/* Botões de salvar e cancelar */}
+                    <button
+                      className="bg-green-500 text-white px-4 py-1 rounded-2xl hover:bg-green-700"
+                      onClick={handleSave}
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-2 py-1 rounded-2xl hover:bg-red-700"
+                      onClick={handleCancel}
+                    >
+                      Cancelar
+                    </button>
                   </td>
                 </>
               ) : (
+                // Caso contrário, exibe as informações normais da classroom
                 <>
                   <td className="p-2 text-xl">{classroom.disciplina}</td>
                   <td className="p-2 text-xl">{classroom.codigo}</td>
@@ -189,12 +201,12 @@ export default function ListClass({
                 </>
               )}
 
-              {/* Exibe as ações ao passar o mouse */}
-              <td className="p-2">
+              {/* Coluna com ícones de ações (edição, exclusão, etc.) */}
+              <td className="p-1 w-8">
                 {hovered === classroom.id && editingId !== classroom.id && (
                   <ClassroomActions
                     classroomId={classroom.id}
-                    onEdit={handleEdit}
+                    onEdit={() => setEditingId(classroom.id)}  // Ao clicar para editar, altera o estado de edição
                   />
                 )}
               </td>
@@ -203,15 +215,17 @@ export default function ListClass({
         </tbody>
       </table>
 
-      {/* Paginação */}
+      {/* Componente de controle de página */}
       <PageController
         currentPage={currentPage}
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
 
-      {/* Painel de ações aparece se houver seleção */}
-      {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} />}
+      {/* Exibe o painel de ações quando há seleções */}
+      {hasSelected && (
+        <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} />
+      )}
     </div>
   );
 }
