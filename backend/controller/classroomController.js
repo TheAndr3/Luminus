@@ -53,11 +53,47 @@ exports.Create = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-  const id = req.params.id;
-  res.status(200).send(`Rota de editar turma ${id}`);
-}
+  try {
+    const professor = await db.pgSelect('professor', { id: req.body.professor_id });
+
+    if (Object.values(professor).length > 0) {
+      const payload = {};
+      
+      if (req.body.name) payload.name = req.body.name;
+      if (req.body.description) payload.description = req.body.description;
+      if (req.body.season) payload.season = req.body.season;
+      if (req.body.institution) payload.institution = req.body.institution;
+      if (req.body.dossier_id) payload.dossier_id = req.body.dossier_id;
+      if (req.body.dossier_professor_id) payload.dossier_professor_id = req.body.dossier_professor_id;
+
+      await db.pgUpdate('classroom', payload, { 
+        id: req.params.id,
+        professor_id: req.body.professor_id 
+      });
+
+      res.status(200).json({ msg: 'turma atualizada com sucesso' });
+    } else {
+      res.status(400).json({ msg: 'id de professor invalido' });
+    }
+  } catch (error) {
+    res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+  }
+};
 
 exports.Delete = async (req, res) => {
-  const id = req.params.id;
-  res.status(204).send(); 
-}
+  try {
+    const payload = {
+      classroom_id: req.params.id,
+      professor_id: req.body.professor_id
+    };
+
+    await db.pgDelete('appraisal', payload);
+    await db.pgDelete('classroom_student', payload);
+    await db.pgDelete('classroom', { id: payload.classroom_id, professor_id: payload.professor_id });
+
+    res.status(200).json({ msg: 'turma e registros relacionados removidos com sucesso' });
+  } catch (error) {
+    res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+  }
+};
+

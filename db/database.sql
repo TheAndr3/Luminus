@@ -54,6 +54,20 @@ create table Student(
 	name VARCHAR(255) NOT NULL
 );
 
+create table Appraisal(
+	id SERIAL,
+	student_id INT,
+	professor_id INT,
+	classroom_id INT,
+	points REAL,
+	filling_date date NOT NULL,
+
+	CONSTRAINT fk_Appraisal_Student FOREIGN KEY(student_id) REFERENCES Student(id), ON DELETE CASCADE ON UPDATE CASCADE
+	CONSTRAINT fk_Appraisal_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id), ON DELETE CASCADE ON UPDATE CASCADE
+	CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id) REFERENCES Classroom(id), ON DELETE CASCADE ON UPDATE CASCADE
+	PRIMARY KEY(id, student_id, professor_id, classroom_id)
+);
+
 create table Classroom(
 	id SERIAL,
 	professor_id INT,
