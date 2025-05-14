@@ -16,22 +16,22 @@ import Image from "next/image";
 import ActionPanel from "./actionPainel";
 // Hooks do React para efeitos colaterais e estado
 import { useEffect, useState } from "react";
+// Componente com ações disponíveis para cada classroom
+import ClassroomActions from "./classroomActions";
 
-// Tipo das propriedades recebidas pelo componente ListClass
+// Tipagem das props que o componente ListClass recebe
 type ListclassroomsProps = {
-  classrooms: Classroom[];                      // Lista de classrooms visíveis (já paginadas)
-  toggleSelectAll: () => void;         // Função para selecionar/deselecionar todas da página atual
-  toggleOne: (id: number) => void;     // Função para alternar seleção de uma classroom específica
-  isAllSelected: boolean;              // Flag que indica se todas classrooms da página estão selecionadas
-  currentPage: number;                 // Número da página atual
-  totalPages: number;                  // Total de páginas disponíveis
-  setCurrentPage: (page: number) => void; // Função para navegar entre páginas
-  visualization: string                // Modo de visualização atual ('grid' ou 'list')
-  setVisualization: (set: 'grid' | 'list') => void; // Função para alterar visualização
-
-  onDeleteClass: () => void;
-  toArchiveClass: () => void;
-
+  classrooms: Classroom[];                      // Lista de classrooms visíveis (paginadas)
+  toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
+  toggleOne: (id: number) => void;             // Alterna a seleção de uma classroom específica
+  isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
+  currentPage: number;                         // Página atual
+  totalPages: number;                          // Total de páginas
+  setCurrentPage: (page: number) => void;      // Função para trocar de página
+  visualization: string;                       // Modo atual de visualização ('grid' ou 'list')
+  setVisualization: (set: 'grid' | 'list') => void; // Troca o modo de visualização
+  onDeleteClass: () => void;                   // Função para deletar classrooms
+  toArchiveClass: () => void;                  // Função para arquivar classrooms
 };
 
 // Componente principal que renderiza a lista de classrooms
@@ -48,53 +48,82 @@ export default function ListClass({
   onDeleteClass,
   toArchiveClass
 }: ListclassroomsProps) {
-  // Estado que controla se há classrooms selecionadas (para mostrar o painel de ações)
+  // Controla se há classrooms selecionadas para exibir o painel de ações
   const [hasSelected, setHasSelected] = useState(false);
 
-  // Efeito que verifica sempre que a lista de classrooms muda
-  // para atualizar o estado hasSelected
-  useEffect(() => {
-    // Verifica se existe pelo menos uma classroom selecionada
-    setHasSelected(classrooms.some(classroom => classroom.selected));
-  }, [classrooms]); // Executa sempre que o array de classrooms mudar
+  // ID da classroom atualmente com hover (para mostrar ações)
+  const [hovered, sethovered] = useState(Number);
 
-  // Handler para selecionar/deselecionar uma classroom específica
+  // ID da classroom em modo de edição
+  const [editingId, setEditingId] = useState<number | null>(null);
+  // Dados temporários editados durante a edição
+  const [editedData, setEditedData] = useState<Partial<Classroom>>({});
+
+  // Atualiza o estado de seleção sempre que a lista muda
+  useEffect(() => {
+    setHasSelected(classrooms.some(classroom => classroom.selected));
+  }, [classrooms]);
+
+  // Alterna a seleção de uma única classroom
   const handleToggleOne = (id: number) => {
-    toggleOne(id); // Chama a função passada via props
+    toggleOne(id);
   };
 
-  // Handler para selecionar/deselecionar todas as classrooms
+  // Alterna a seleção de todas as classrooms da página
   const handleToggleAll = () => {
-    toggleSelectAll(); // Chama a função passada via props
+    toggleSelectAll();
+  };
+
+  // Ainda não implementado: lógica para entrar no modo de edição
+  const handleEdit = () => {
+    // A lógica pode ser implementada dentro do componente ClassroomActions
+  };
+
+  // Cancela o modo de edição
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditedData({});
+  };
+
+  // Salva os dados editados
+  const handleSave = () => {
+    console.log("Salvando alterações:", editingId, editedData);
+    setEditingId(null);
+  };
+
+  // Atualiza os campos editados conforme o usuário digita
+  const handleInputChange = (field: keyof Classroom, value: string) => {
+    setEditedData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   return (
     <div className="w-full">
-      {/* Tabela que lista todas as classrooms */}
+      {/* Cabeçalho da tabela */}
       <table className="w-full text-left border-separate border-spacing-y-2">
         <thead>
           <tr className="text-sm text-gray-600">
-            {/* Checkbox para selecionar todas as classrooms */}
+            {/* Checkbox para selecionar todos */}
             <th className="w-[0px] px-2">
               <input
                 type="checkbox"
-                onChange={handleToggleAll} // Handler para seleção total
-                checked={!!isAllSelected} // Controlado pelo estado
+                onChange={handleToggleAll}
+                checked={!!isAllSelected}
                 className="w-6 h-6 accent-blue-600"
               />
             </th>
             <th className="px-2 text-lg">Selecionar todos</th>
             <th className="px-2 text-lg">Disciplina</th>
-            <th className="px-2 text-lg">classroom</th>
+            <th className="px-2 text-lg">Turma</th>
             <th className="px-2 text-lg flex items-center justify-between">
               <span>Dossiê</span>
-              <div className="flex gap-2">
-                {/* Componente para alternar entre visualizações */}
+              <div className="flex gap-2 fixed top-43 left-325 z-50">
                 <ClassViewMode
                   visualization={visualization}
                   setVisualization={setVisualization}
                 />
-                {/* Botão para abrir modal de criação de nova classroom */}
                 <DialogPage/>
               </div>
             </th>
@@ -102,18 +131,20 @@ export default function ListClass({
         </thead>
 
         <tbody>
-          {/* Mapeia cada classroom para uma linha na tabela */}
+          {/* Renderiza uma linha para cada classroom */}
           {classrooms.map((classroom) => (
             <tr
-              key={classroom.id} // Chave única para otimização do React
+              key={classroom.id}
+              onMouseEnter={()=> sethovered(classroom.id)}
+              onMouseLeave={() => sethovered(-1)}
               className="bg-[#0A2B3D] text-white rounded px-4 py-2"
             >
-              {/* Checkbox individual para cada classroom */}
+              {/* Checkbox individual */}
               <td className="p-2 w-[50px]">
                 <input
                   type="checkbox"
-                  checked={!!classroom.selected} // Controlado pelo estado da classroom
-                  onChange={() => handleToggleOne(classroom.id)} // Handler para seleção individual
+                  checked={!!classroom.selected}
+                  onChange={() => handleToggleOne(classroom.id)}
                   className="w-6 h-6 accent-blue-600"
                 />
               </td>
@@ -121,24 +152,66 @@ export default function ListClass({
               <td className="p-2 flex items-center">
                 <Image src={class_icon} alt="icone classroom" className="w-10 h-10" />
               </td>
-              {/* Dados da classroom */}
-              <td className="p-2 text-xl">{classroom.disciplina}</td>
-              <td className="p-2 text-xl">{classroom.codigo}</td>
-              <td className="p-2 text-xl">{classroom.dossie}</td>
+
+              {/* Modo de edição ou exibição */}
+              {editingId === classroom.id ? (
+                <>
+                  <td className="p-2">
+                    <input
+                      type="text"
+                      value={editedData.disciplina || ""}
+                      onChange={(e) => handleInputChange("disciplina", e.target.value)}
+                      className="text-black px-2 py-1 rounded"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="text"
+                      value={editedData.codigo || ""}
+                      onChange={(e) => handleInputChange("codigo", e.target.value)}
+                      className="text-black px-2 py-1 rounded"
+                    />
+                  </td>
+                  <td className="p-2">
+                    <input
+                      type="text"
+                      value={editedData.dossie || ""}
+                      onChange={(e) => handleInputChange("dossie", e.target.value)}
+                      className="text-black px-2 py-1 rounded"
+                    />
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td className="p-2 text-xl">{classroom.disciplina}</td>
+                  <td className="p-2 text-xl">{classroom.codigo}</td>
+                  <td className="p-2 text-xl">{classroom.dossie}</td>
+                </>
+              )}
+
+              {/* Exibe as ações ao passar o mouse */}
+              <td className="p-2">
+                {hovered === classroom.id && editingId !== classroom.id && (
+                  <ClassroomActions
+                    classroomId={classroom.id}
+                    onEdit={handleEdit}
+                  />
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Componente de paginação */}
+      {/* Paginação */}
       <PageController
         currentPage={currentPage}
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
 
-      {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
-      {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>}
+      {/* Painel de ações aparece se houver seleção */}
+      {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} />}
     </div>
   );
 }

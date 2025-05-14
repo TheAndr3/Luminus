@@ -34,6 +34,7 @@ export default function VizualizationClass() {
   const [classDescription, setClassDescription] = useState("") // Descrição para modal
   const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
   const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
+  
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(classi.length / turmasPorPagina);
