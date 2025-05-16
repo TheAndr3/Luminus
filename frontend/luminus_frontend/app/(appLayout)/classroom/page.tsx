@@ -162,13 +162,13 @@ export default function VizualizationClass() {
           placeholder="Procure pela turma"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border rounded-full w-250 px-4 py-2"
+          className="border rounded-full w-250 px-[4vh] py-[vh]"
         ></BaseInput>
       </div>
 
       {/* Renderização condicional */}
       {visualization === 'list' && (
-        <div className="px-10 flex items-center justify-center mt-10 ml-auto">
+        <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
           <ListClass
             classrooms={filteredClasses}
             toggleSelectAll={toggleSelectAll}
@@ -186,7 +186,7 @@ export default function VizualizationClass() {
       )}
 
       {visualization === 'grid' && (
-        <div className="px-10 flex items-center justify-center mt-10 ml-auto">
+        <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
           <GridClass
             classrooms={filteredClasses}
             toggleSelectAll={toggleSelectAll}

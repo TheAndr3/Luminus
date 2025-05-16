@@ -20,7 +20,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         
         {/* Botão de página anterior */}
         <button
-          className="border px-3 py-1 rounded-full"
+          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600"
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1} // Desativa se já estiver na primeira página
         >
@@ -56,10 +56,10 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             key={i}
-            className={`border px-3 py-1 rounded-full ${
+            className={`border px-[2vh] py-[1vh] rounded-full ${
               currentPage === i + 1
                 ? "bg-[#101828] text-white" // Estilo diferente para a página atual
-                : "bg-gray-200 text-black"
+                : "bg-gray-200 text-black hover:bg-gray-600"
             }`}
             onClick={() => setCurrentPage(i + 1)} // Altera a página ao clicar
           >
@@ -69,7 +69,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
 
         {/* Botão de próxima página */}
         <button
-          className="border px-3 py-1 rounded-full"
+          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600"
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages} // Desativa se já estiver na última página
         >

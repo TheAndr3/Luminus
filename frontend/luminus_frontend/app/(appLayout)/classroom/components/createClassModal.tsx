@@ -82,7 +82,7 @@ export default function DialogPage() {
                 }
             }}>
                 <DialogTrigger >
-                    <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-2 py-1 h-7"> Adicionar turma   +</Button> {/* Botão para abrir o dialog */}
+                    <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[2vh] py-[1vh] h-7"> Adicionar turma   +</Button> {/* Botão para abrir o dialog */}
                 </DialogTrigger>
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
 
@@ -160,7 +160,7 @@ export default function DialogPage() {
 
                         {/* Botão "Concluir" */}
                         <div className="flex justify-end mr-7">
-                            <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-2 py-1 h-7">
+                            <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
                                 Concluir
                             </Button>
                         </div>

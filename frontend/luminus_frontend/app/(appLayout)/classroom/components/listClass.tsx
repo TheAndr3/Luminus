@@ -111,13 +111,13 @@ export default function ListClass({
               />
             </th>
             {/* Cabeçalho para selecionar todos */}
-            <th className="px-2 text-lg ">Selecionar todos</th>
+            <th className="px-2vh text-lg ">Selecionar todos</th>
             {/* Cabeçalhos para as colunas de Disciplina, Turma e Dossiê */}
-            <th className="px-2 text-lg">Disciplina</th>
-            <th className="px-2 text-lg">Turma</th>
-            <th className="px-2 text-lg flex items-center justify-between">
-              <span>Dossiê</span>
-              <div className="flex gap-2 absolute right-16">
+            <th className="px-2vh text-lg absolute left-[35vw]">Disciplina</th>
+            <th className="px-2vh text-lg absolute left-[54vw]">Turma</th>
+            <th className="px-2vh text-lg flex items-center mt-4">
+              <span className="absolute left-[74vw]">Dossiê</span>
+              <div className="flex gap-2 absolute right-[10vh] top-[22vh]">
                 {/* Componente de alternância de visualização (lista ou grade) */}
                 <ClassViewMode
                   visualization={visualization}
@@ -136,7 +136,7 @@ export default function ListClass({
               key={classroom.id}
               onMouseEnter={() => setHovered(classroom.id)}  // Quando passar o mouse por cima, altera o estado de "hovered"
               onMouseLeave={() => setHovered(null)}  // Quando sair o mouse, retorna ao estado inicial
-              className="bg-[#0A2B3D] text-white rounded px-4 py-2 "
+              className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh] "
             >
               {/* Coluna de checkbox para seleção de cada classroom */}
               <td className="p-2 w-[50px]">
@@ -215,12 +215,14 @@ export default function ListClass({
         </tbody>
       </table>
 
-      {/* Componente de controle de página */}
-      <PageController
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
+      <div className="absolute right-[5vw] top-[83vh]">
+        {/* Componente de controle de página */}
+        <PageController
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
+      </div>
 
       {/* Exibe o painel de ações quando há seleções */}
       {hasSelected && (
