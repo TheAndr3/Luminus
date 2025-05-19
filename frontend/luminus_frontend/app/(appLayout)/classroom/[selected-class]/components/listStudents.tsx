@@ -21,33 +21,32 @@ import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomAc
 import { Classroom } from "../../components/types";
 
 // Tipagem das props que o componente ListClass recebe
-type ListStudentsProps = {
-  students: Students[];                      // Lista de alunos visíveis (paginadas)
+interface ListStudentsProps {
+  students: Students[];                        // Lista de alunos visíveis (paginadas)
+
   toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
   toggleOne: (id: number) => void;             // Alterna a seleção de um aluno específico
+  onDeleteStudents: () => void;                // Função para deletar alunos  onDeleteStudents: () => void;                   // Função para deletar alunos
+  
   isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
   currentPage: number;                         // Página atual
   totalPages: number;                          // Total de páginas
   setCurrentPage: (page: number) => void;      // Função para trocar de página
-  visualization: string;                       // NE
-  setVisualization: (set: 'grid' | 'list') => void; // NE
-  onDeleteClass: () => void;                   // Função para deletar alunos
-  toArchiveClass: () => void;                  // NA
+
 };
 
 // Componente principal que renderiza a lista de studentss
-export default function ListClass({
+export default function ListStudents({
   students,
+
   toggleSelectAll,
   toggleOne,
+  onDeleteStudents,
+
   isAllSelected,
   currentPage,
   totalPages,
   setCurrentPage,
-  visualization,
-  setVisualization,
-  onDeleteClass,
-  toArchiveClass
 }: ListStudentsProps) {
   // Controla se há studentss selecionadas para exibir o painel de ações
   const [hasSelected, setHasSelected] = useState(false);
@@ -120,13 +119,6 @@ export default function ListClass({
             <th className="px-2 text-lg">Turma</th>
             <th className="px-2 text-lg flex items-center justify-between">
               <span>Dossiê</span>
-              <div className="flex gap-2 fixed top-43 left-325 z-50">
-                <ClassViewMode
-                  visualization={visualization}
-                  setVisualization={setVisualization}
-                />
-                <DialogPage/>
-              </div>
             </th>
           </tr>
         </thead>
@@ -210,9 +202,6 @@ export default function ListClass({
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
-
-      {/* Painel de ações aparece se houver seleção */}
-      {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} />}
     </div>
   );
 }

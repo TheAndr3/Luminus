@@ -28,7 +28,7 @@ export default function VisualizacaoAlunos() {
 
   /*LÓGICA PARA GET E SET DE CORES*/
   
-  const color = "#ec3360";
+  const color = "#ec3360"// #df355f;#2c76e6"//
   const hoverColor = darkenHexColor(color, 25); //escurece cor para hover
   const classTitle = "Álgebra EXA 502";
 
@@ -196,14 +196,11 @@ export default function VisualizacaoAlunos() {
             students={filteredClasses}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
+            onDeleteStudents={handleDeleteClass}
             isAllSelected={isAllSelected}
             currentPage={currentPage}
             totalPages={totalPages}
             setCurrentPage={setCurrentPage}
-            visualization={visualization}
-            setVisualization={setVisualization}
-            onDeleteClass={handleDeleteClass}
-            toArchiveClass={archiveHandle}
           />
         </div>
       </div>
