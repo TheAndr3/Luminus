@@ -68,7 +68,7 @@ export function ArchiveConfirmation({
         <AlertDialogFooter className="flex justify-center gap-4 mt-4 mx-auto">
           {/* Botão de cancelar */}
           <AlertDialogCancel 
-            className="bg-[#D9D9D9] text-lg text-red-600 px-10 py-2 rounded-md"
+            className="bg-[#D9D9D9] text-lg text-red-600 px-[4vh] py-[2vh] rounded-md"
           >
             Cancelar
           </AlertDialogCancel>
@@ -76,7 +76,7 @@ export function ArchiveConfirmation({
           {/* Botão principal de ação */}
           <AlertDialogAction
             onClick={onConfirm}
-            className="bg-[#D9D9D9] text-lg text-black px-13 py-2 rounded-md"
+            className="bg-[#D9D9D9] text-lg text-black px-[5vh] py-[2vh] rounded-md"
           >
             Arquivar
           </AlertDialogAction>

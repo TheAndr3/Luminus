@@ -50,7 +50,7 @@ const [hasSelected, setHasSelected] = useState(false);
   return (
     <div className="w-full ">
       {/* Título e barra de ferramentas */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -58,9 +58,9 @@ const [hasSelected, setHasSelected] = useState(false);
             onChange={toggleSelectAll}
             className="w-6 h-6 accent-blue-600"
           />
-          <span className="px-2 text-lg">Selecionar todos</span>
+          <span className="px-[2vh] text-lg">Selecionar todos</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 absolute right-[5vw] top-[22vh]">
 
             {/*Renderização tipo de visualização das classrooms (lista ou grade) */}
             <ClassViewMode
@@ -74,7 +74,7 @@ const [hasSelected, setHasSelected] = useState(false);
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 px-1 max-w-1xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 vw-1 max-w-1xl mx-auto">
         {classrooms.map((classroom) => (
           <div
             key={classroom.id}
@@ -99,7 +99,7 @@ const [hasSelected, setHasSelected] = useState(false);
                 className="w-6 h-6 accent-blue-600"
               />
             </div>
-            <button className="mb-4 bg-gray-200 text-black px-1 py-1 rounded-2xl text-sm hover:bg-gray-400">
+            <button className="mb-4 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400">
               {classroom.dossie}
             </button>
           </div>
@@ -107,12 +107,14 @@ const [hasSelected, setHasSelected] = useState(false);
       </div>
 
 
-        {/* Renderização do paginationController*/}
-      <PageController
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
+       <div className='absolute right-[10vh] top-[83vh]'>
+         {/* Renderização do paginationController*/}
+          <PageController
+            currentPage={currentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+          />
+       </div>
 
       <div className=''>
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}

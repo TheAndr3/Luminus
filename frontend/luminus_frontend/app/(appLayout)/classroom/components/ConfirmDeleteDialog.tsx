@@ -46,14 +46,14 @@ export function ConfirmDeleteDialog({
         {/* Rodapé com botões de ação */}
         <AlertDialogFooter className="flex justify-center gap-4 mt-4 mx-auto">
           {/* Botão de cancelar - estilizado em branco com texto vermelho */}
-          <AlertDialogCancel className="bg-[#D9D9D9] text-lg text-red-600 px-10 py-2 rounded-md">
+          <AlertDialogCancel className="bg-[#D9D9D9] text-lg text-red-600 px-[4vh] py-[2vh] rounded-md">
             Cancelar
           </AlertDialogCancel>
 
           {/* Botão de ação principal - estilizado igual mas com handler de confirmação */}
           <AlertDialogAction
             onClick={onConfirm}  // Dispara a função de confirmação
-            className="bg-[#D9D9D9] text-lg text-black px-13 py-2 rounded-md"
+            className="bg-[#D9D9D9] text-lg text-black px-[6vh] py-[2vh] rounded-md"
           >
             Excluir
           </AlertDialogAction>
