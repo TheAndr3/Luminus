@@ -10,7 +10,9 @@ exports.List = async (req, res) => {
   }
     catch (err) {
       console.log(err)
+
       res.status(400).json({msg:'falha ao atender solicitacao'});
+
     }
   
 }
@@ -122,4 +124,5 @@ exports.AssociateDossier = async (req, res) => {
     return res.status(500).json({ msg: 'Erro ao associar dossiê' });
   }
 };
+
 

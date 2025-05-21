@@ -132,6 +132,7 @@ exports.Update = async (req, res) => {
   };
   
 
+
 exports.ImportCsv = async (req, res) => {
     const class_id = req.params.class_id;
     res.status(201).send("Rota de criar turma");

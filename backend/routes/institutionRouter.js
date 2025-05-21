@@ -17,6 +17,11 @@ routerInstitution.get('/institution/:id/dossier', institutionController.GetDossi
 //Ver perfil da instituição
 routerInstitution.get('/institution/:id/profile', institutionController.Profile);
 
+
+// Cadastro de instituicao
+routerInstitution.post('/institution/:id/register', institutionController.Create);
+
+
 // Cadastro de instituicao
 routerInstitution.post('/institution/:id/register', institutionController.Create);
 

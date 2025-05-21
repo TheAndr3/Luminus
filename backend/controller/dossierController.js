@@ -124,7 +124,7 @@ exports.Update = async (req, res) => {
 
 exports.Delete = async (req, res) => {
   const id = req.params.id;
-  
+
   try {
     const resp = await db.pgDelete('dossier', {id:id});
     res.status(204).json({msg:'sucess'});
