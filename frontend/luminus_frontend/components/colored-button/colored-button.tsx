@@ -1,35 +1,49 @@
-import { ReactNode, useState } from 'react';
-import { Download, Filter } from 'lucide-react';
+import { ReactNode, useState, MouseEventHandler } from 'react'; 
 
-interface ColoredButtonProps { //NÃO FAÇO A MÍNIMA IDEIA PQ ISSO ACONTECEU, SÓ SEI QUE O INTERPRETADOR ESTAVA DANDO ERRO PORQUE ESTOU PASSANO O ÍCONE COMO UM PARÂMETRO NULL
+interface ColoredButtonProps {
   mainColor?: string;
   hoverColor?: string;
   text?: string;
   icon?: ReactNode;
-  haveBorder?: boolean
+  haveBorder?: boolean;
+  onClick?: MouseEventHandler<HTMLButtonElement>; // <<< ADICIONADO AQUI
+  className?: string; 
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 export function ColoredButton({
   mainColor = '',
   hoverColor = '',
   text = '',
-  icon = null, // <- agora é um JSX pronto
+  icon = null,
   haveBorder = false,
+  onClick, 
+  className, 
+  disabled,  
+  type = "button", 
 }: ColoredButtonProps) {
     
     const [isHovered, setIsHovered] = useState(false);
     
+    // Combina classes internas com externas, se houver
+    const combinedClassName = `text-white flex items-center gap-1 px-3 py-1 rounded-full border text-sm transition-all duration-300 ease-in-out ${className || ''}`.trim();
+
     return (
-      <button 
+      <button
+        type={type} // Adicionado
+        disabled={disabled} // Adicionado
+        onClick={onClick} 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
-            backgroundColor: isHovered ? hoverColor : mainColor,
+            backgroundColor: disabled ? '#A0A0A0' : (isHovered ? hoverColor : mainColor), 
+            borderColor: haveBorder ? (isHovered ? hoverColor : mainColor) : 'transparent', 
         }}
-        className={`text-white flex items-center gap-1 px-3 py-1 rounded-full border text-sm transition-all duration-300 ease-in-out`}>    
-            {icon && icon} {/* Se mandou ícone, mostra ele */}
-            {text}
-    </button>
-
+        className={combinedClassName}
+      >    
+        {icon && icon}
+        {text}
+      </button>
     );
   }
