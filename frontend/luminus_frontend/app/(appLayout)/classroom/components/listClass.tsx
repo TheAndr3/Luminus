@@ -202,7 +202,9 @@ export default function ListClass({
               )}
 
               {/* Coluna com ícones de ações (edição, exclusão, etc.) */}
-              <td className="p-1 w-8">
+              <td 
+                className="p-1 w-8"
+              >
                 {hovered === classroom.id && editingId !== classroom.id && (
                   <ClassroomActions
                     classroomId={classroom.id}
