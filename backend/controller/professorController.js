@@ -11,7 +11,9 @@ const PUBLIC_KEY = process.env.PUBLIC_KEY;
 
 //Enviar chave pública
 exports.GetPublicKey = async (req, res) => {
+  
    return res.status(200).json({ publicKey: PUBLIC_KEY });
+
 }
 
 exports.Login = async (req, res) => {
@@ -49,12 +51,22 @@ exports.Login = async (req, res) => {
         //Caso dê erro, retornar o status 500 e a mensagem de erro
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro ao realizar login:', err);
+       return res.status(500).send('Erro ao realizar login:', err);
+
     }
 };
 
 exports.Create = async (req, res) => {
     const { email_professor, password, name } = req.body;
+
+
+    if (!email_professor || !password || !name) {
+        return res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
+    }
+
+    //desencriptar senha 
+    const decryptedPassword = await decryptPassword(password);
+
 
     // Verificar se todos os campos foram preenchidos
     if (!email_professor || !password || !name) {

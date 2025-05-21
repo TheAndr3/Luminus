@@ -19,6 +19,7 @@ exports.Create = async (req, res) => {
         password: hashedPassword
       });
 
+
       res.status(201).json({ message: 'Instituição cadastrada com sucesso!' });
     } else {
       res.status(409).json({ message: 'Esse e-mail já possui um cadastro' });
@@ -26,6 +27,7 @@ exports.Create = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erro ao cadastrar instituição' });
+
   }
 }
 
