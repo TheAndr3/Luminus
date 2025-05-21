@@ -8,7 +8,7 @@ import { use, useState } from "react"; // Importa hooks do React
 import { Pencil } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
-import { createClass } from "@/services/api";
+//import { createClass } from "@/services/api";
 import { InputMissingDialog } from "./inputMissingDialog";
 
 
@@ -38,6 +38,8 @@ export default function DialogPage() {
     }
 
 
+    
+
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
@@ -45,6 +47,7 @@ export default function DialogPage() {
 
         // Verifica se os campos Disciplina e Período estão preenchidos
         if (inputDisc && inputPer && titulo != title) {
+            /* 
             //tenta enviar os dados colhidos para o back
             try{
                 const newClassData = {
@@ -65,12 +68,13 @@ export default function DialogPage() {
             catch(err){
                 alert("Erro ao salvar dados, tente novamente!")
                 // Mensagem de erro caso a requisição falhe
-            }    
+            }   
+            */ 
         } else {
             setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
     }
-
+    
 
     return (
         <>

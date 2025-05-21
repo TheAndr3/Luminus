@@ -62,6 +62,9 @@ export default function ListClass({
   // Estado que guarda a turma atualmente sendo editada (ou null se nenhuma)
   const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
 
+
+  const [lockHover, setLockHover] = useState(false);
+
   // useEffect que atualiza o estado hasSelected sempre que a lista de turmas muda
   // Ele verifica se alguma turma está selecionada e atualiza o estado local
   useEffect(() => {
@@ -120,8 +123,8 @@ export default function ListClass({
           {classrooms.map((classroom) => (
             <tr
               key={classroom.id}
-              onMouseEnter={() => setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
-              onMouseLeave={() => setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
+              onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
+              onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
               className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh] "
             >
               {/* Checkbox para selecionar essa turma individualmente */}
@@ -160,6 +163,7 @@ export default function ListClass({
                       onClick={() => {
                         setOpenEditingModal(true);  // Abre o modal de edição
                         setEditingClassroom(classroom);  // Define qual turma está sendo editada
+                        setLockHover(true)
                       }}
                     >
                       <Pencil size={18} />
@@ -168,7 +172,7 @@ export default function ListClass({
                     {/* Modal de edição da turma */}
                     <EditClassModal
                       open={openEditingModal}
-                      onCancel={() => setOpenEditingModal(false)}  // Fecha o modal ao cancelar
+                      onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
                       classroom={{
                         id: classroom.id,
                         name: classroom.disciplina,

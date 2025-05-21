@@ -50,6 +50,8 @@ export default function Gridclassrooms({
   // Estado que guarda a turma atualmente sendo editada (ou null se nenhuma)
   const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
 
+  const [lockHover, setLockHover] = useState(false)
+
     // Efeito que verifica sempre que a lista de classrooms muda
     // para atualizar o estado hasSelected
     useEffect(() => {
@@ -88,8 +90,8 @@ export default function Gridclassrooms({
         {classrooms.map((classroom) => (
           <div
             key={classroom.id}
-            onMouseEnter={() => setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
-            onMouseLeave={() => setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
+            onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
+            onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
             className="bg-[#0A2B3D] text-white rounded-lg p-3 shadow-md flex flex-col justify-between w-80 h-46"
 
           >
@@ -122,6 +124,7 @@ export default function Gridclassrooms({
                         onClick={() => {
                           setOpenEditingModal(true);  // Abre o modal de edição
                           setEditingClassroom(classroom);  // Define qual turma está sendo editada
+                          setLockHover(true);
                         }}
                       >
                         <Pencil size={18} />
@@ -130,7 +133,7 @@ export default function Gridclassrooms({
                       {/* Modal de edição da turma */}
                       <EditClassModal
                         open={openEditingModal}
-                        onCancel={() => setOpenEditingModal(false)}  // Fecha o modal ao cancelar
+                        onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
                         classroom={{
                           id: classroom.id,
                           name: classroom.disciplina,
