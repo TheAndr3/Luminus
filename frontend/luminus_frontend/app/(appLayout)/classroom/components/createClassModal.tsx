@@ -9,6 +9,7 @@ import { Pencil } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { createClass } from "@/services/api";
+import { InputMissingDialog } from "./inputMissingDialog";
 
 
 export default function DialogPage() {
@@ -24,6 +25,8 @@ export default function DialogPage() {
     let title = "Digite o nome da turma"
     const [titulo, setTitulo] = useState(title) // Estado para armazenar o título (nome da turma)
     const [editing, setEditing] = useState(false); // Estado para controlar se o título está sendo editado
+
+    const [missingDialog, setMissingDialog] = useState(false);
 
 
     // Função que reseta os campos dos inputs quando o dialog é fechado
@@ -61,13 +64,10 @@ export default function DialogPage() {
             }
             catch(err){
                 alert("Erro ao salvar dados, tente novamente!")
-            }
-
-
-
-            
+                // Mensagem de erro caso a requisição falhe
+            }    
         } else {
-            alert("Por favor, preencha os campos!"); // Exibe alerta se algum campo obrigatório não foi preenchido
+            setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
     }
 
@@ -105,7 +105,7 @@ export default function DialogPage() {
                             {editing ? (
                             <input 
                                 className="text-4xl font-bold"
-                                value={titulo}
+                                placeholder={titulo}
                                 onChange={(e) => setTitulo(e.target.value)}
                             />
                             ) : (
@@ -146,6 +146,7 @@ export default function DialogPage() {
                                 <BaseInput 
                                     className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder="23.2"
+                                    type="number"
                                     value={inputPer} // Valor do input Período
                                     onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
                                 />
@@ -163,7 +164,15 @@ export default function DialogPage() {
                             <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
                                 Concluir
                             </Button>
+
+                            
                         </div>
+
+                            <InputMissingDialog
+                                open={missingDialog}
+                                onConfirm={() => setMissingDialog(false)}
+                            />
+                        
 
                     </DialogContent>
                 </DialogContent>

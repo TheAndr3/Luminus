@@ -7,6 +7,8 @@ import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
 import ActionPanel from './actionPainel';
+import { Pencil } from 'lucide-react';
+import EditClassModal from './editClassModal';
 
 type GridclassroomsProps = {
   classrooms: Classroom[];
@@ -38,7 +40,15 @@ export default function Gridclassrooms({
 
 }: GridclassroomsProps) {
 
-const [hasSelected, setHasSelected] = useState(false);
+  const [hasSelected, setHasSelected] = useState(false);
+  // Estado que armazena o id da turma que está sendo "hovered" (mouse sobre ela)
+  const [hovered, setHovered] = useState<number | null>(null);
+
+    // Estado para controlar a abertura do modal de edição
+  const [openEditingModal, setOpenEditingModal] = useState(false);
+
+  // Estado que guarda a turma atualmente sendo editada (ou null se nenhuma)
+  const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
 
     // Efeito que verifica sempre que a lista de classrooms muda
     // para atualizar o estado hasSelected
@@ -78,27 +88,70 @@ const [hasSelected, setHasSelected] = useState(false);
         {classrooms.map((classroom) => (
           <div
             key={classroom.id}
+            onMouseEnter={() => setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
+            onMouseLeave={() => setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
             className="bg-[#0A2B3D] text-white rounded-lg p-3 shadow-md flex flex-col justify-between w-80 h-46"
+
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
 
                 <div className="p-2 flex items-center">
-                <Image src={class_icon} alt="icone classroom" className=" w-16 h-16" />
-                <div className="text-xl text-gray-300 ml-3">{classroom.disciplina} <br/> {classroom.codigo}</div>
-                
+                  <Image src={class_icon} alt="icone classroom" className=" w-16 h-16" />
+                  <div className="text-xl text-gray-300 ml-3">{classroom.disciplina} <br/> {classroom.codigo}</div>
+                  
                 </div>
-
-
-                
+ 
               </div>
-              <input
-                type="checkbox"
-                checked={classroom.selected}
-                onChange={() => toggleOne(classroom.id)}
-                className="w-6 h-6 accent-blue-600"
-              />
+              
+              <div className="flex flex-col gap-2">
+                    <input
+                    type="checkbox"
+                    checked={classroom.selected}
+                    onChange={() => toggleOne(classroom.id)}
+                    className="w-6 h-6 accent-blue-600"
+                  />
+
+                  {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
+                <td className="p-1 w-8">
+                  {hovered === classroom.id && (
+                    <>
+                      {/* Botão de edição com ícone de lápis */}
+                      <button
+                        className="hover:text-yellow-400"
+                        onClick={() => {
+                          setOpenEditingModal(true);  // Abre o modal de edição
+                          setEditingClassroom(classroom);  // Define qual turma está sendo editada
+                        }}
+                      >
+                        <Pencil size={18} />
+                      </button>
+
+                      {/* Modal de edição da turma */}
+                      <EditClassModal
+                        open={openEditingModal}
+                        onCancel={() => setOpenEditingModal(false)}  // Fecha o modal ao cancelar
+                        classroom={{
+                          id: classroom.id,
+                          name: classroom.disciplina,
+                          course: classroom.codigo,
+                          institution: classroom.dossie,
+                        }}
+                      />
+                    </>
+                  )}
+                </td>
+                  
+              </div>
+                
+
             </div>
+
+
+
+            
+
+
             <button className="mb-4 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400">
               {classroom.dossie}
             </button>
