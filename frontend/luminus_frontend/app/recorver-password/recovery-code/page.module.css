@@ -1,0 +1,155 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Arial', sans-serif;
+  }
+
+
+  .container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+  }
+
+
+  .left_panel{
+    width: 1206px;
+    height: 1080px;
+    flex: 1;
+    background: linear-gradient(to bottom, #1e3a8a, #1e40af);
+    color: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+
+.right_panel {
+    background: white;               
+    display: flex;                   
+    flex-direction: column;          
+    align-items: center;               
+    justify-content: center;           
+    padding: 2rem;                    
+    width: 34%;   
+    height: 100vh;                    
+}
+
+
+.section{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 400px;
+  align-items: center;
+}
+
+.logo{
+    width: 300px;
+    height: 116.71px;
+    margin-bottom: 24px;
+    margin-top: -100px;
+
+}
+
+.title{
+    font-size: 34px;
+    font-weight: bold;
+    margin-bottom: 24px;
+    text-align: center;
+    color: #000;
+}
+
+
+.text{
+  color:black;
+  text-align: left;
+  display: flex;
+  width: 80%;
+  font-size: 20px;
+}
+
+
+.link{
+  color: black;
+  font-weight: bold;
+  text-decoration: none;
+  text-align: center;
+
+  
+  font-size: 14px;
+  display: flex; 
+  width: 70%;
+}
+
+.red{
+  color: red;
+}
+
+
+
+
+.buttonContainer{
+    display: flex;
+    gap: 20px;
+
+    flex-direction: column;          
+    align-items: center;               
+    justify-content: center; 
+
+
+}
+
+.buttonBack{
+    padding: 10px 50px;
+    font-size: 16px;
+
+    margin-right: px;
+
+    width: 50%;
+    background-color:rgb(175, 175, 175);
+    color: black;
+    border: none;
+    border-radius: 100px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.5%;
+
+}
+
+.buttonBack:hover{
+  background-color: #374151;
+  color: white;
+  transform: scale(1.05);
+}
+
+
+.buttonGo{
+  padding: 10px 50px;
+  font-size: 16px;
+  width: 50%;
+  background-color: #374151;
+  color: white;
+  border: none;
+  border-radius: 100px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.5%;
+
+}
+
+.buttonGo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonGo:hover{
+    background-color: rgb(175, 175, 175);
+    color: #000;
+    transform: scale(1.05);
+}
