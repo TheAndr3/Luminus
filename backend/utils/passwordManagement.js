@@ -18,6 +18,7 @@ async function hashPassword(password) {
         console.error('Erro ao criar hash:', err);
     }
 }
+}
 
 async function decryptPassword(password) {  
     try {

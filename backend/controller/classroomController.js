@@ -99,6 +99,7 @@ exports.Delete = async (req, res) => {
   } catch (error) {
     res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
 }
+}
 
 exports.AssociateDossier = async (req, res) => {
   const classId = req.params.classid;
