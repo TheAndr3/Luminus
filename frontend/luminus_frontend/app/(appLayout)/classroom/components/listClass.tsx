@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 // Modal para editar uma turma
 import EditClassModal from "./editClassModal";
 // Ícone de lápis para representar a ação de editar
-import { Pencil } from "lucide-react";
+import { Archive, Download, Pencil, Trash } from "lucide-react";
 
 
 // Definição do tipo das propriedades que o componente ListClass recebe
@@ -100,10 +100,10 @@ export default function ListClass({
             <th className="px-2vh text-lg ">Selecionar todos</th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
-            <th className="px-2vh text-lg absolute left-[35vw]">Disciplina</th>
-            <th className="px-2vh text-lg absolute left-[54vw]">Turma</th>
+            <th className="px-2vh text-lg absolute left-[33vw]">Disciplina</th>
+            <th className="px-2vh text-lg absolute left-[50vw]">Turma</th>
             <th className="px-2vh text-lg flex items-center mt-4">
-              <span className="absolute left-[74vw]">Dossiê</span>
+              <span className="absolute left-[70vw]">Dossiê</span>
 
               {/* Área com botões para alternar visualização e criar nova turma */}
               <div className="flex gap-2 absolute right-[10vh] top-[22vh]">
@@ -154,7 +154,7 @@ export default function ListClass({
               </>
 
               {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-              <td className="p-1 w-8">
+              <td className="p-1 w-[5vw] flex gap-2">
                 {hovered === classroom.id && (
                   <>
                     {/* Botão de edição com ícone de lápis */}
@@ -166,8 +166,37 @@ export default function ListClass({
                         setLockHover(true)
                       }}
                     >
-                      <Pencil size={18} />
+                      <Pencil />
                     </button>
+                    
+                    <button
+                      className="hover:text-yellow-400"
+                      onClick={()=> {
+                        classroom.selected = true;
+                        onDeleteClass()
+                      }}
+                    >
+                      <Trash></Trash>
+                    </button>
+
+
+                    <button
+                      className="hover:text-yellow-400"
+                      onClick={()=> {
+                        classroom.selected = true;
+                        toArchiveClass();
+                      }}
+                    >
+                      <Archive></Archive>
+                    </button>
+
+                    <button
+                      className="hover:text-yellow-400"
+                    >
+
+                      <Download></Download>
+                    </button>
+                    
 
                     {/* Modal de edição da turma */}
                     <EditClassModal

@@ -7,7 +7,7 @@ import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
 import ActionPanel from './actionPainel';
-import { Pencil } from 'lucide-react';
+import { Archive, Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
 
 type GridclassroomsProps = {
@@ -86,13 +86,13 @@ export default function Gridclassrooms({
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-4 vw-1 max-w-1xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-[2vw] gap-x-[2vh] vw-1 max-w-1xl mx-auto">
         {classrooms.map((classroom) => (
           <div
             key={classroom.id}
             onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
             onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
-            className="bg-[#0A2B3D] text-white rounded-lg p-3 shadow-md flex flex-col justify-between w-80 h-46"
+            className="bg-[#0A2B3D] text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-80 h-46"
 
           >
             <div className="flex justify-between items-start mb-2">
@@ -129,6 +129,36 @@ export default function Gridclassrooms({
                       >
                         <Pencil size={18} />
                       </button>
+                        
+                      <button
+                        className="hover:text-yellow-400"
+                        onClick={()=> {
+                          classroom.selected = true;
+                          onDeleteClass()
+                        }}
+                      >
+                        <Trash size={18}></Trash>
+                      
+                      </button>
+
+                      <button
+                        className="hover:text-yellow-400"
+                        onClick={()=> {
+                          classroom.selected = true;
+                          toArchiveClass();
+                        }}
+                        >
+                          <Archive size={18}></Archive>
+                        </button>
+                      
+                        <button
+                          className="hover:text-yellow-400"
+                        >
+                      
+                          <Download size={18}></Download>
+                        </button>
+                                          
+                      
 
                       {/* Modal de edição da turma */}
                       <EditClassModal
