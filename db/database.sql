@@ -46,7 +46,7 @@ create table Question(
 	description TEXT NOT NULL,
 
 	CONSTRAINT fk_Question_Section FOREIGN KEY(section_id, dossier_id) REFERENCES Section(id, dossier_id) ON DELETE CASCADE ON UPDATE CASCADE, 
-	PRIMARY KEY(id, section_id)
+	PRIMARY KEY(id, section_id, dossier_id)
 );
 
 create table Student(
@@ -66,6 +66,25 @@ create table Appraisal(
 	CONSTRAINT fk_Appraisal_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id), ON DELETE CASCADE ON UPDATE CASCADE
 	CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id) REFERENCES Classroom(id), ON DELETE CASCADE ON UPDATE CASCADE
 	PRIMARY KEY(id, student_id, professor_id, classroom_id)
+);
+
+create table Evaluation(
+	id SERIAL,
+	student_id INT,
+	professor_id INT,
+	classroom_id INT,
+	dossier_id INT,
+	section_id INT,
+	question_id INT,
+	appraisal_id INT,
+
+	question_option INT,
+
+	CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, professor_id, classroom_id) REFERENCES Appraisal(id, student_id, professor_id, classroom_id),
+	CONSTRAINT fk_Evauation_Question FOREIGN KEY(question_id, section_id, dossier_id) REFERENCES Question(id, section_id, dossier_id),
+
+	PRIMARY KEY(id, appraisal_id, question_id, section_id, dossier_id)
+
 );
 
 create table Classroom(
@@ -93,19 +112,6 @@ create table ClassroomStudent(
 
 	PRIMARY KEY(classroom_id, student_id, professor_id)
 
-);
-
-create table Appraisal(
-	id SERIAL,
-	student_id INT,
-	professor_id INT,
-	classroom_id INT,
-	points REAL,
-	filling_date date NOT NULL,
-
-	CONSTRAINT fk_Appraisal_StudentClassroom FOREIGN KEY(classroom_id, student_id, professor_id) REFERENCES ClassroomStudent(classroom_id, student_id, professor_id) ON DELETE CASCADE ON UPDATE CASCADE,
-
-	PRIMARY KEY(id, student_id, professor_id)
 );
 
 create table InstitutionalDossier(
@@ -141,7 +147,7 @@ create table InstitutionalQuestion(
 
 	CONSTRAINT fk_InstitutionalQuestion_InstitutionalSection FOREIGN KEY(section_id, dossier_id) REFERENCES InstitutionalSection(id, dossier_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	CONSTRAINT fk_InstitutionalQuestion_Institution FOREIGN KEY(institution_id) REFERENCES Institution(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(id, section_id)
+	PRIMARY KEY(id, section_id, dossier_id)
 );
 
 create table Notification(
