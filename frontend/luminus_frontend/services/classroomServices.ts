@@ -5,7 +5,7 @@ interface CreatePayLoad {
     professor_Id: number,
     name: string,
     description: string,
-    season: number,
+    season: string,
     institution: string
 }
 
@@ -60,7 +60,7 @@ export const ListClassroom = async (professorID: number): Promise<GetClassroomRe
 export const UpdateClassroom = async (id: number, data: {
     name?: string;
     description?: string;
-    season?: number;
+    season?: string;
     institution?: string;
 }): Promise<CreateResponse> => {
     try {

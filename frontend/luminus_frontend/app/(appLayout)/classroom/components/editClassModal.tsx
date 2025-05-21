@@ -19,7 +19,7 @@ import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image"; 
 // Componente otimizado do Next.js para exibir imagens
 
-import { createClass, editClass } from "@/services/api";
+import { CreateClassroom, UpdateClassroom } from "@/services/classroomServices";
 import { InputMissingDialog } from "./inputMissingDialog";
 // Função para fazer requisição à API para criar/editar a turma
 
@@ -48,8 +48,9 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
 
     // Estados locais para armazenar os valores digitados nos inputs
     const [nameClassroomModal, setnameClassroomModal] = useState('') 
-    const [courseClassroomModal, setcourseClassroomModal] = useState('') 
-    const [institutionClassroomModal, setinstitutionClassroomModal] = useState('') 
+    const [descriptionClassroomModal, setDescriptionClassroomModal] = useState('') 
+    const [seasonClassroomModal, setSeasonClassroomModal] = useState('') 
+    const [institutionClassroomModal, setInstitutionClassroomModal] = useState('') 
 
     const [editing, setEditing] = useState(false); 
     // Estado que poderia ser usado para controlar edição do título (não utilizado no momento)
@@ -59,8 +60,9 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     // Função para resetar os campos dos inputs ao fechar o modal
     const handleDialogClose = () => {
         setnameClassroomModal(''); // Limpa campo Disciplina
-        setinstitutionClassroomModal(''); // Limpa campo Turma
-        setcourseClassroomModal(''); // Limpa campo Instituição
+        setSeasonClassroomModal(''); // Limpa campo Turma
+        setDescriptionClassroomModal(''); // Limpa campo Instituição
+        setInstitutionClassroomModal(''); // Limpa campo Instituição
     }
 
 
@@ -76,20 +78,20 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
             try {
                 // Monta o objeto com dados para enviar ao backend
                 const newClassData = {
-                    id: classroom.id,
-                    course: nameClassroomModal,
-                    semester: institutionClassroomModal,
-                    institution: courseClassroomModal || undefined
+                    name: nameClassroomModal,
+                    description: descriptionClassroomModal,
+                    season: seasonClassroomModal,
+                    institution: institutionClassroomModal || undefined
                 }
 
                 // Chama a API para salvar os dados da turma
-                const response = await editClass(newClassData);
+                const response = await UpdateClassroom(classroom.id, newClassData);
 
                 // Se a resposta for sucesso, fecha o modal e avisa o usuário
-                if(response.status >= 200 && response.status < 300){
-                    onCancel() // Fecha o modal
-                    alert("Dados salvos com sucesso!"); // Mensagem de sucesso
-                    handleDialogClose(); // Limpa os campos do formulário
+                if(response.msg) {
+                    onCancel();
+                    alert("Dados salvos com sucesso!");
+                    handleDialogClose();
                 }
             } catch(err) {
                 alert("Erro ao salvar dados, tente novamente!")
@@ -151,8 +153,8 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                                 <BaseInput
                                     className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder={classroom.institution} // Placeholder da instituição atual
-                                    value={courseClassroomModal} // Valor do input Instituição
-                                    onChange={(e) => setcourseClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                                    value={descriptionClassroomModal} // Valor do input Instituição
+                                    onChange={(e) => setDescriptionClassroomModal(e.target.value)} // Atualiza estado ao digitar
                                 />
                             </div>
 
@@ -162,7 +164,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                                     className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder={classroom.course} // Placeholder com valor atual do curso
                                     value={institutionClassroomModal} // Valor do input Turma
-                                    onChange={(e) => setinstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                                    onChange={(e) => setInstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
                                 />
                             </div>
 

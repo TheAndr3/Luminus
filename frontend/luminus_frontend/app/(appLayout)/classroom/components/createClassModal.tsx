@@ -8,8 +8,10 @@ import { use, useState } from "react"; // Importa hooks do React
 import { Pencil } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
-import { createClass } from "@/services/api";
+import { CreateClassroom} from "@/services/classroomServices";
 import { InputMissingDialog } from "./inputMissingDialog";
+
+
 
 
 export default function DialogPage() {
@@ -48,18 +50,18 @@ export default function DialogPage() {
             //tenta enviar os dados colhidos para o back
             try{
                 const newClassData = {
+                    professor_Id: 1, // TODO: pegar do usuário
                     name: titulo,
-                    course: inputDisc,
-                    semester: inputPer,
-                    institution: inputInst || undefined
+                    description: inputDisc,
+                    season: inputPer,
+                    institution: inputInst || ''
                 }
 
-                const response = await createClass(newClassData);
-                //status 200 = OK no post
-                if(response.status >= 200 && response.status < 300){
-                    setOpen(false); // Fecha o dialog se os campos estiverem preenchidos
-                    alert("Dados salvos com sucesso!"); // Exibe alerta de sucesso
-                    handleDialogClose(); // Reseta os campos dos inputs
+                const response = await CreateClassroom(newClassData);
+                if(response.msg) {
+                    setOpen(false);
+                    alert("Dados salvos com sucesso!");
+                    handleDialogClose();
                 }
             }
             catch(err){
