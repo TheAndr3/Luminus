@@ -40,6 +40,8 @@ export default function DialogPage() {
     }
 
 
+    
+
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
@@ -47,6 +49,7 @@ export default function DialogPage() {
 
         // Verifica se os campos Disciplina e Período estão preenchidos
         if (inputDisc && inputPer && titulo != title) {
+            /* 
             //tenta enviar os dados colhidos para o back
             try{
                 const newClassData = {
@@ -67,12 +70,13 @@ export default function DialogPage() {
             catch(err){
                 alert("Erro ao salvar dados, tente novamente!")
                 // Mensagem de erro caso a requisição falhe
-            }    
+            }   
+            */ 
         } else {
             setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
     }
-
+    
 
     return (
         <>

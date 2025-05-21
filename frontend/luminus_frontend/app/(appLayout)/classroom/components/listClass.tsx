@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 // Modal para editar uma turma
 import EditClassModal from "./editClassModal";
 // Ícone de lápis para representar a ação de editar
-import { Pencil } from "lucide-react";
+import { Archive, Download, Pencil, Trash } from "lucide-react";
 
 
 // Definição do tipo das propriedades que o componente ListClass recebe
@@ -62,6 +62,9 @@ export default function ListClass({
   // Estado que guarda a turma atualmente sendo editada (ou null se nenhuma)
   const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
 
+
+  const [lockHover, setLockHover] = useState(false);
+
   // useEffect que atualiza o estado hasSelected sempre que a lista de turmas muda
   // Ele verifica se alguma turma está selecionada e atualiza o estado local
   useEffect(() => {
@@ -97,10 +100,10 @@ export default function ListClass({
             <th className="px-2vh text-lg ">Selecionar todos</th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
-            <th className="px-2vh text-lg absolute left-[35vw]">Disciplina</th>
-            <th className="px-2vh text-lg absolute left-[54vw]">Turma</th>
+            <th className="px-2vh text-lg absolute left-[33vw]">Disciplina</th>
+            <th className="px-2vh text-lg absolute left-[50vw]">Turma</th>
             <th className="px-2vh text-lg flex items-center mt-4">
-              <span className="absolute left-[74vw]">Dossiê</span>
+              <span className="absolute left-[68vw]">Dossiê</span>
 
               {/* Área com botões para alternar visualização e criar nova turma */}
               <div className="flex gap-2 absolute right-[10vh] top-[22vh]">
@@ -120,8 +123,8 @@ export default function ListClass({
           {classrooms.map((classroom) => (
             <tr
               key={classroom.id}
-              onMouseEnter={() => setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
-              onMouseLeave={() => setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
+              onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
+              onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
               className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh] "
             >
               {/* Checkbox para selecionar essa turma individualmente */}
@@ -151,7 +154,7 @@ export default function ListClass({
               </>
 
               {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-              <td className="p-1 w-8">
+              <td className="p-1 w-[5vw] flex gap-2">
                 {hovered === classroom.id && (
                   <>
                     {/* Botão de edição com ícone de lápis */}
@@ -160,15 +163,47 @@ export default function ListClass({
                       onClick={() => {
                         setOpenEditingModal(true);  // Abre o modal de edição
                         setEditingClassroom(classroom);  // Define qual turma está sendo editada
+                        setLockHover(true)
                       }}
                     >
-                      <Pencil size={18} />
+                      <Pencil />
                     </button>
+                    
+                    <button
+                      className="hover:text-yellow-400"
+                      onClick={()=> {
+                        classroom.selected = true;
+                        onDeleteClass()
+                        classroom.selected = false;
+                      }}
+                    >
+                      <Trash></Trash>
+                    </button>
+
+
+                    <button
+                      className="hover:text-yellow-400"
+                      onClick={()=> {
+                        classroom.selected = true;
+                        toArchiveClass();
+                        classroom.selected = false;
+                      }}
+                    >
+                      <Archive></Archive>
+                    </button>
+
+                    <button
+                      className="hover:text-yellow-400"
+                    >
+
+                      <Download></Download>
+                    </button>
+                    
 
                     {/* Modal de edição da turma */}
                     <EditClassModal
                       open={openEditingModal}
-                      onCancel={() => setOpenEditingModal(false)}  // Fecha o modal ao cancelar
+                      onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
                       classroom={{
                         id: classroom.id,
                         name: classroom.disciplina,

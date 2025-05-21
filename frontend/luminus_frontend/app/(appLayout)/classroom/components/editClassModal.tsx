@@ -67,6 +67,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
 
 
 
+
     /* --------------------------API---------------------------------------------------------- */
     // Função chamada quando o usuário clica no botão "Concluir"
     const handleClick = async () => {
@@ -75,6 +76,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
 
         // Verifica se os campos obrigatórios foram preenchidos
         if (nameClassroomModal && institutionClassroomModal) {
+            /*
             try {
                 // Monta o objeto com dados para enviar ao backend
                 const newClassData = {
@@ -97,7 +99,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                 alert("Erro ao salvar dados, tente novamente!")
                 // Mensagem de erro caso a requisição falhe
             }
-            
+            */
         } else {
             setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
