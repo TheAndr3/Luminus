@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "axios": "^1.9.0",
-    "@heroicons/react": "^2.2.0"
+
+    "@heroicons/react": "^2.2.0",
+    "axios": "^1.9.0"
   }
 }

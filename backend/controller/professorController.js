@@ -11,7 +11,9 @@ const PUBLIC_KEY = process.env.PUBLIC_KEY;
 
 //Enviar chave pública
 exports.GetPublicKey = async (req, res) => {
-    res.status(200).json({ publicKey: PUBLIC_KEY });
+  
+   return res.status(200).json({ publicKey: PUBLIC_KEY });
+
 }
 
 exports.Login = async (req, res) => {
@@ -49,41 +51,54 @@ exports.Login = async (req, res) => {
         //Caso dê erro, retornar o status 500 e a mensagem de erro
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erro ao realizar login:', err);
+       return res.status(500).send('Erro ao realizar login:', err);
+
     }
 };
 
 exports.Create = async (req, res) => {
-    const {email, password, name} = req.body;
+    const { email_professor, password, name } = req.body;
 
-    if (!email || !password || !name) {
-        res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
+
+    if (!email_professor || !password || !name) {
+        return res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
     }
 
     //desencriptar senha 
     const decryptedPassword = await decryptPassword(password);
 
-    //fazer hash de senha
-    const hashedPassword = await hashPassword(decryptedPassword);
 
-    //cadastrar
+    // Verificar se todos os campos foram preenchidos
+    if (!email_professor || !password || !name) {
+        return res.status(400).json({ message: "Os campos precisam estar preenchidos corretamente" });
+    }
+
     try {
-        const verification = await db.pgSelect('Professor', {professor_email:email});
+        // Desencriptar a senha
+        const decryptedPassword = await decryptPassword(password);
+
+        // Fazer hash da senha
+        const hashedPassword = await hashPassword(decryptedPassword);
+
+        // Verificar se o email já está cadastrado
+        const verification = await db.pgSelect('Professor', { email_professor: email_professor });
 
         if (verification.length === 0) {
+            // Cadastrar o professor no Banco de dados
             await db.pgInsert('Professor', {
-                professor_email: email, 
-                password: hashedPassword, 
+                email_professor: email_professor,
+                password: hashedPassword,
                 name: name
             });
-            res.status(201).json({message:'Usuário criado com sucesso!'});
+            return res.status(201).json({ message: 'Usuário criado com sucesso!' });
         } else {
-            res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+            return res.status(409).json({ message: 'Esse e-mail já possui um cadastro' });
         }
     } catch (err) {
-        res.status(500).json({message:'Erro ao cadastrar usuário: ', err});
+        console.error('Erro ao cadastrar professor:', err);
+        return res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
     }
-}
+};
 
 exports.GetProfile = async (req, res) => {
     const id = req.params.id;

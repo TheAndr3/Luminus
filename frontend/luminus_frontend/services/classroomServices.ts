@@ -54,4 +54,3 @@ export const ListClassroom = async (professorID: number): Promise<GetClassroomRe
     throw new Error(message);
     }
 }
-
