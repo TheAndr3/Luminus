@@ -6,7 +6,7 @@ interface CreatePayLoad {
     name: string,
     description: string,
     season: number,
-    institution: number
+    institution: string
 }
 
 interface CreateResponse {
@@ -30,7 +30,7 @@ export const CreateClassroom = async (payLoad: CreatePayLoad): Promise<CreateRes
         return response.data;
     } catch (error:any) {
         const message = error.response?.data || 'Erro ao criar classe';
-      throw new Error(message);
+        throw new Error(message);
     }
 }
 
@@ -45,12 +45,51 @@ export const GetClassroom = async (id: number): Promise<GetClassroomResponse> =>
     }
 }
 
+//listar as turmas
 export const ListClassroom = async (professorID: number): Promise<GetClassroomResponse[]> => {
     try {
         const response = await api.get(`/classroom/list/${professorID}`);
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao listar turmas';
-    throw new Error(message);
+        throw new Error(message);
+    }
+}
+
+//atualizar uma turma
+export const UpdateClassroom = async (id: number, data: {
+    name?: string;
+    description?: string;
+    season?: number;
+    institution?: string;
+}): Promise<CreateResponse> => {
+    try {
+        const response = await api.put(`/classroom/${id}/update`, data);
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao atualizar turma';
+        throw new Error(message);
+    }
+}
+
+//deletar uma turma
+export const DeleteClassroom = async (id: number): Promise<CreateResponse> => {
+    try {
+        const response = await api.delete(`/classroom/${id}/delete`);
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao deletar turma';
+        throw new Error(message);
+    }
+}
+
+//associar um dossiê a uma turma
+export const AssociateDossier = async (classId: number, dossierId: number): Promise<CreateResponse> => {
+    try {
+        const response = await api.put(`/classroom/${classId}/associate-dossier/${dossierId}`);
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao associar dossiê';
+        throw new Error(message);
     }
 }

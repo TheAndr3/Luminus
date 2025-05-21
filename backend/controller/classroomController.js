@@ -83,7 +83,6 @@ exports.Update = async (req, res) => {
 };
 
 exports.Delete = async (req, res) => {
-
   const id = req.params.id;
     try {
     const payload = {
@@ -98,7 +97,8 @@ exports.Delete = async (req, res) => {
     res.status(200).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
     res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
-}
+  }
+};
 
 exports.AssociateDossier = async (req, res) => {
   const classId = req.params.classid;
