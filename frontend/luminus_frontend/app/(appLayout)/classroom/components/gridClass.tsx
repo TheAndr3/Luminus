@@ -135,6 +135,7 @@ export default function Gridclassrooms({
                         onClick={()=> {
                           classroom.selected = true;
                           onDeleteClass()
+                          classroom.selected = false;
                         }}
                       >
                         <Trash size={18}></Trash>
@@ -146,6 +147,7 @@ export default function Gridclassrooms({
                         onClick={()=> {
                           classroom.selected = true;
                           toArchiveClass();
+                          classroom.selected = false;
                         }}
                         >
                           <Archive size={18}></Archive>

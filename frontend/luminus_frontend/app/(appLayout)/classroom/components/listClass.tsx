@@ -103,7 +103,7 @@ export default function ListClass({
             <th className="px-2vh text-lg absolute left-[33vw]">Disciplina</th>
             <th className="px-2vh text-lg absolute left-[50vw]">Turma</th>
             <th className="px-2vh text-lg flex items-center mt-4">
-              <span className="absolute left-[70vw]">Dossiê</span>
+              <span className="absolute left-[68vw]">Dossiê</span>
 
               {/* Área com botões para alternar visualização e criar nova turma */}
               <div className="flex gap-2 absolute right-[10vh] top-[22vh]">
@@ -174,6 +174,7 @@ export default function ListClass({
                       onClick={()=> {
                         classroom.selected = true;
                         onDeleteClass()
+                        classroom.selected = false;
                       }}
                     >
                       <Trash></Trash>
@@ -185,6 +186,7 @@ export default function ListClass({
                       onClick={()=> {
                         classroom.selected = true;
                         toArchiveClass();
+                        classroom.selected = false;
                       }}
                     >
                       <Archive></Archive>
