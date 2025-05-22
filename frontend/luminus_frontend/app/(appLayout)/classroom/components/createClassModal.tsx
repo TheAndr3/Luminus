@@ -8,7 +8,10 @@ import { use, useState } from "react"; // Importa hooks do React
 import { Pencil } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
-import { createClass } from "@/services/api";
+import { CreateClassroom} from "@/services/classroomServices";
+import { InputMissingDialog } from "./inputMissingDialog";
+
+
 
 
 export default function DialogPage() {
@@ -25,6 +28,8 @@ export default function DialogPage() {
     const [titulo, setTitulo] = useState(title) // Estado para armazenar o título (nome da turma)
     const [editing, setEditing] = useState(false); // Estado para controlar se o título está sendo editado
 
+    const [missingDialog, setMissingDialog] = useState(false);
+
 
     // Função que reseta os campos dos inputs quando o dialog é fechado
     const handleDialogClose = () => {
@@ -35,6 +40,8 @@ export default function DialogPage() {
     }
 
 
+    
+
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
@@ -42,35 +49,34 @@ export default function DialogPage() {
 
         // Verifica se os campos Disciplina e Período estão preenchidos
         if (inputDisc && inputPer && titulo != title) {
+            /* 
             //tenta enviar os dados colhidos para o back
             try{
                 const newClassData = {
+                    professor_Id: 1, // TODO: pegar do usuário
                     name: titulo,
-                    course: inputDisc,
-                    semester: inputPer,
-                    institution: inputInst || undefined
+                    description: inputDisc,
+                    season: inputPer,
+                    institution: inputInst || ''
                 }
 
-                const response = await createClass(newClassData);
-                //status 200 = OK no post
-                if(response.status >= 200 && response.status < 300){
-                    setOpen(false); // Fecha o dialog se os campos estiverem preenchidos
-                    alert("Dados salvos com sucesso!"); // Exibe alerta de sucesso
-                    handleDialogClose(); // Reseta os campos dos inputs
+                const response = await CreateClassroom(newClassData);
+                if(response.msg) {
+                    setOpen(false);
+                    alert("Dados salvos com sucesso!");
+                    handleDialogClose();
                 }
             }
             catch(err){
                 alert("Erro ao salvar dados, tente novamente!")
-            }
-
-
-
-            
+                // Mensagem de erro caso a requisição falhe
+            }   
+            */ 
         } else {
-            alert("Por favor, preencha os campos!"); // Exibe alerta se algum campo obrigatório não foi preenchido
+            setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
     }
-
+    
 
     return (
         <>
@@ -105,7 +111,7 @@ export default function DialogPage() {
                             {editing ? (
                             <input 
                                 className="text-4xl font-bold"
-                                value={titulo}
+                                placeholder={titulo}
                                 onChange={(e) => setTitulo(e.target.value)}
                             />
                             ) : (
@@ -146,6 +152,7 @@ export default function DialogPage() {
                                 <BaseInput 
                                     className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                     placeholder="23.2"
+                                    type="number"
                                     value={inputPer} // Valor do input Período
                                     onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
                                 />
@@ -163,7 +170,15 @@ export default function DialogPage() {
                             <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
                                 Concluir
                             </Button>
+
+                            
                         </div>
+
+                            <InputMissingDialog
+                                open={missingDialog}
+                                onConfirm={() => setMissingDialog(false)}
+                            />
+                        
 
                     </DialogContent>
                 </DialogContent>

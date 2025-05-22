@@ -25,7 +25,7 @@ export default function VizualizationClass() {
   const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
   const [classi, setClassi] = useState(mockClass); // Lista de turmas
   const [currentPage, setCurrentPage] = useState(1); // Paginação
-  const turmasPorPagina = visualization === 'grid' ? 8 : 6; // Itens por página
+  const turmasPorPagina = visualization === 'grid' ? 6 : 6; // Itens por página
   const [confirmOpen, setConfirmOpen] = useState(false); // Controle do modal de delete
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]); // IDs para deletar
   const [archiveConfirmation, setarchiveConfirmation] = useState(false) // Modal de arquivamento
