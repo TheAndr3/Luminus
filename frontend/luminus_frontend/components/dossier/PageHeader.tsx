@@ -20,10 +20,6 @@ const BackIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Você pode criar ícones semelhantes para "Editar" e "Visualizar" ou usar texto.
-// const PencilIcon = ({ className }: { className?: string }) => <span className={className}>✎</span>;
-// const EyeIcon = ({ className }: { className?: string }) => <span className={className}>👁️</span>;
-
 interface PageHeaderProps {
   isEditing: boolean;
   onBackClick: () => void;
@@ -46,12 +42,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   isEditing,
   onBackClick,
   onToggleEditMode,
-  className = '', // Default para string vazia para evitar 'undefined'
+  className = '',
   backButtonClassName = '',
   backButtonIconClassName = '',
   toggleButtonClassName = '',
-  editModeText = 'Editar', // Default text
-  viewModeText = 'Visualizar', // Default text
+  editModeText = 'Editar',
+  viewModeText = 'Visualizar',
 }) => {
   return (
     <header className={className}>
@@ -63,9 +59,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       >
         <BackIcon className={backButtonIconClassName} />
       </button>
-
-      {/* Você pode adicionar um slot para título aqui se desejar */}
-      {/* <div>{titleSlot}</div> */}
 
       <button
         type="button"

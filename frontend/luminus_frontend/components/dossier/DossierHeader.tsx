@@ -1,42 +1,41 @@
 // components/DossierHeader.tsx
 import React from 'react';
+import { EvaluationConcept } from '../../types/dossier'; // Ajuste o caminho se necessário
 
 interface DossierHeaderProps {
   title: string;
   description: string;
   isEditing: boolean;
+  evaluationConcept: EvaluationConcept; // NOVO
   onTitleChange: (newTitle: string) => void;
   onDescriptionChange: (newDescription: string) => void;
+  onEvaluationConceptChange: (concept: EvaluationConcept) => void; // NOVO
 
-  /** Classe CSS para o container principal do DossierHeader */
   className?: string;
-
-  /** Classe CSS para o elemento de texto do título (ex: h1) quando não está editando */
   titleTextClassName?: string;
-  /** Classe CSS para o input do título quando está editando */
   titleInputClassName?: string;
-
-  /**
-   * Classe CSS para a linha divisória que aparece abaixo do título e acima do label "Descrição".
-   * Conforme a imagem original.
-   */
   titleDescriptionDividerClassName?: string;
-
-  /** Classe CSS para o rótulo "Descrição" */
   descriptionLabelClassName?: string;
-
-  /** Classe CSS para o elemento de texto da descrição (ex: p) quando não está editando */
   descriptionTextClassName?: string;
-  /** Classe CSS para o textarea da descrição quando está editando */
   descriptionTextareaClassName?: string;
+
+  // Novas classes para o seletor de conceito
+  evaluationConceptContainerClassName?: string;
+  evaluationConceptLabelTextClassName?: string; // Para o texto "Conceito de Avaliação:"
+  evaluationConceptRadioGroupClassName?: string;
+  evaluationConceptRadioLabelClassName?: string;
+  evaluationConceptRadioInputClassName?: string;
+  evaluationConceptDisplayClassName?: string; // Para mostrar o conceito em modo visualização
 }
 
 const DossierHeader: React.FC<DossierHeaderProps> = ({
   title,
   description,
   isEditing,
+  evaluationConcept,
   onTitleChange,
   onDescriptionChange,
+  onEvaluationConceptChange,
   className = '',
   titleTextClassName = '',
   titleInputClassName = '',
@@ -44,6 +43,12 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
   descriptionLabelClassName = '',
   descriptionTextClassName = '',
   descriptionTextareaClassName = '',
+  evaluationConceptContainerClassName = '',
+  evaluationConceptLabelTextClassName = '',
+  evaluationConceptRadioGroupClassName = '',
+  evaluationConceptRadioLabelClassName = '',
+  evaluationConceptRadioInputClassName = '',
+  evaluationConceptDisplayClassName = '',
 }) => {
   return (
     <div className={className}>
@@ -61,12 +66,58 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
         <h1 className={titleTextClassName}>{title}</h1>
       )}
 
-      {/* Linha divisória entre Título e label "Descrição" */}
+      {/* Seletor de Conceito de Avaliação */}
+      <div className={evaluationConceptContainerClassName}>
+        {isEditing ? (
+          <>
+            {evaluationConceptLabelTextClassName && (
+              <p id="evaluation-concept-label" className={evaluationConceptLabelTextClassName}>
+                Conceito de Avaliação:
+              </p>
+            )}
+            <div role="radiogroup" aria-labelledby="evaluation-concept-label" className={evaluationConceptRadioGroupClassName}>
+              <label className={evaluationConceptRadioLabelClassName}>
+                <input
+                  type="radio"
+                  name="evaluationConcept"
+                  value="numerical"
+                  checked={evaluationConcept === 'numerical'}
+                  onChange={() => onEvaluationConceptChange('numerical')}
+                  className={evaluationConceptRadioInputClassName}
+                />
+                Numeral (0.0 - 10.0)
+              </label>
+              <label className={evaluationConceptRadioLabelClassName}>
+                <input
+                  type="radio"
+                  name="evaluationConcept"
+                  value="letter"
+                  checked={evaluationConcept === 'letter'}
+                  onChange={() => onEvaluationConceptChange('letter')}
+                  className={evaluationConceptRadioInputClassName}
+                />
+                Conceito (A, B, C...)
+              </label>
+            </div>
+          </>
+        ) : (
+          <>
+            {evaluationConceptLabelTextClassName && (
+              <p className={evaluationConceptLabelTextClassName} style={{ fontWeight: 'normal', marginBottom: '2px' }}>
+                Conceito de Avaliação:
+              </p>
+            )}
+            <p className={evaluationConceptDisplayClassName}>
+              {evaluationConcept === 'numerical' ? 'Numeral (0.0 - 10.0)' : 'Conceito (A, B, C...)'}
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Linha divisória */}
       {titleDescriptionDividerClassName && <hr className={titleDescriptionDividerClassName} />}
 
       {/* Label "Descrição" */}
-      {/* Renderiza o label "Descrição" se uma classe for fornecida para ele,
-          imitando a estrutura visual da imagem. */}
       {descriptionLabelClassName && (
         <label htmlFor="dossier-description-field" className={descriptionLabelClassName}>
           Descrição
@@ -76,21 +127,18 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
       {/* Campo da Descrição */}
       {isEditing ? (
         <textarea
-          id="dossier-description-field" // id para o htmlFor do label
+          id="dossier-description-field"
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
           className={descriptionTextareaClassName}
           aria-label="Descrição do Dossiê"
           placeholder="Digite a descrição do dossiê"
-          rows={3} // Um valor padrão, pode ser sobrescrito por CSS
+          rows={3}
         />
       ) : (
         <p id="dossier-description-field" className={descriptionTextClassName}>
           {description}
         </p>
-        // Se a descrição for uma string vazia, o <p> será renderizado vazio.
-        // A estilização CSS (ex: min-height, border) pode fazer com que ele
-        // apareça como uma linha, similar à imagem original.
       )}
     </div>
   );

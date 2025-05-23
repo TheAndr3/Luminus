@@ -1,245 +1,173 @@
 // components/Section.tsx
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef } from 'react';
 import EditableField from './EditableField';
 import SectionItem from './SectionItem';
-import ActionSidebar from './ActionSidebar';
-// Supondo que você tenha tipos definidos para os itens
-import { ItemData } from '../../types/dossier';
-
-
+import { ItemData } from '../../types/dossier'; // Ajuste o caminho se necessário
 
 interface SectionProps {
-  id: string; // ID da seção
+  id: string;
   title: string;
+  weight: string; // NOVO
   items: ItemData[];
   isEditing: boolean;
-  /** ID do item atualmente selecionado *globalmente*. A sidebar aparecerá se este ID pertencer a um item desta seção. */
   selectedItemId: string | null;
-  /** Chamado quando um item desta seção é clicado/selecionado. */
-  onItemSelect: (itemId: string | null) => void; // Passa null para desselecionar
 
-  // Callbacks para o título da seção
+  onItemSelect: (itemId: string | null) => void;
   onTitleChange: (newTitle: string) => void;
+  onWeightChange: (newWeight: string) => void; // NOVO
+  onItemChange: (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => void;
+  onSectionAreaClick?: (sectionId: string) => void;
 
-  // Callbacks para serem passados à ActionSidebar (operam nesta seção ou no item selecionado)
-  onItemAdd: () => void; // Adiciona um novo item a esta seção
-  onItemChange: (itemId: string, field: 'description' | 'value', newValue: string) => void;
-  onItemDelete: (itemId: string) => void; // Deleta o item com o ID fornecido (o selecionado)
-  onAddNewSection: () => void; // Duplica esta seção
-  onSectionSettings: () => void; // Configurações desta seção
-  onDeleteSection: () => void; // Deleta esta seção
-
-  // Callbacks para quando o Section clica na sua área (não na sidebar nem item)
-  // Pode ser usado para destacar a seção, mas não para a sidebar de item
-  onSectionAreaClick?: () => void;
-
-
-  // Props de estilização
   className?: string;
-  /** Classe para o contêiner que envolve o título e a lista de itens, útil para a barra rosa lateral */
   contentWrapperClassName?: string;
-  isSectionSelectedForStyling?: boolean; // Para aplicar a barra rosa, por exemplo
-  selectedSectionStylingClassName?: string; // Classe da barra rosa
+  isSectionSelectedForStyling: boolean;
+  selectedSectionStylingClassName?: string;
 
-  // Estilização do título da seção
-  titleContainerClassName?: string;
-  titleEditableFieldClassName?: string; // Classe geral para o EditableField do título
+  titleAndWeightContainerClassName?: string; // NOVO
+  titleContainerClassName?: string; // Mantido para o EditableField do título em si
+  titleEditableFieldClassName?: string;
   titleTextClassName?: string;
   titleInputClassName?: string;
   titlePlaceholder?: string;
 
-  // Estilização da lista de itens
-  itemsListClassName?: string;
+  weightFieldContainerClassName?: string; // NOVO
+  weightEditableFieldClassName?: string;  // NOVO
+  weightTextClassName?: string;           // NOVO
+  weightInputClassName?: string;          // NOVO
+  weightPlaceholder?: string;             // NOVO
 
-  // Props de estilização para SectionItem (serão passadas para cada SectionItem)
+  itemsListClassName?: string;
   sectionItemClassName?: string;
   sectionItemSelectedClassName?: string;
-  descriptionFieldContainerClassName?: string;
-  descriptionTextDisplayClassName?: string;
-  descriptionInputClassName?: string;
-  valueFieldContainerClassName?: string;
-  valueTextDisplayClassName?: string;
-  valueInputClassName?: string;
-
-  // Props de estilização para ActionSidebar
-  actionSidebarContainerClassName?: string;
-  actionSidebarButtonClassName?: string;
-  // ...outras classes específicas para botões da ActionSidebar
-  actionSidebarDisabledButtonClassName?: string;
-  actionSidebarAddItemButtonClassName?: string;
-  actionSidebarDuplicateSectionButtonClassName?: string;
-  actionSidebarSectionSettingsButtonClassName?: string;
-  actionSidebarDeleteItemButtonClassName?: string;
-  actionSidebarDeleteSectionButtonClassName?: string;
+  sectionItemDescriptionFieldContainerClassName?: string;
+  sectionItemDescriptionTextDisplayClassName?: string;
+  sectionItemDescriptionInputClassName?: string;
+  // Props de valor do SectionItem podem ser omitidas aqui se showValueField for sempre false
 }
 
 const Section: React.FC<SectionProps> = ({
-  id: sectionId, // Renomeando para evitar conflito com id de item
+  id: sectionId,
   title,
+  weight, // NOVO
   items,
   isEditing,
   selectedItemId,
   onItemSelect,
   onTitleChange,
-  onItemAdd,
+  onWeightChange, // NOVO
   onItemChange,
-  onItemDelete,
-  onAddNewSection,
-  onSectionSettings,
-  onDeleteSection,
   onSectionAreaClick,
   className = '',
   contentWrapperClassName = '',
-  isSectionSelectedForStyling = false,
+  isSectionSelectedForStyling,
   selectedSectionStylingClassName = '',
-  titleContainerClassName = '',
+  titleAndWeightContainerClassName = '', // NOVO
+  titleContainerClassName = '', // Mantido
   titleEditableFieldClassName = '',
   titleTextClassName = '',
   titleInputClassName = '',
   titlePlaceholder = 'Título da Seção',
+  weightFieldContainerClassName = '', // NOVO
+  weightEditableFieldClassName = '',  // NOVO
+  weightTextClassName = '',           // NOVO
+  weightInputClassName = '',          // NOVO
+  weightPlaceholder = 'Peso %',      // NOVO
   itemsListClassName = '',
   sectionItemClassName = '',
   sectionItemSelectedClassName = '',
-  descriptionFieldContainerClassName,
-  descriptionTextDisplayClassName,
-  descriptionInputClassName,
-  valueFieldContainerClassName,
-  valueTextDisplayClassName,
-  valueInputClassName,
-  actionSidebarContainerClassName,
-  actionSidebarButtonClassName,
-  actionSidebarDisabledButtonClassName,
-  actionSidebarAddItemButtonClassName,
-  actionSidebarDuplicateSectionButtonClassName,
-  actionSidebarSectionSettingsButtonClassName,
-  actionSidebarDeleteItemButtonClassName,
-  actionSidebarDeleteSectionButtonClassName,
+  sectionItemDescriptionFieldContainerClassName,
+  sectionItemDescriptionTextDisplayClassName,
+  sectionItemDescriptionInputClassName,
 }) => {
   const sectionRef = useRef<HTMLDivElement>(null);
-  // Usaremos um map de refs para os itens, se necessário, ou um seletor de ID.
-  // Mais simples: o SectionItem selecionado terá uma ref especial.
-  const selectedItemRef = useRef<HTMLDivElement | null>(null);
-  const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number } | null>(null);
-
-  const currentSelectedItemExistsInSection = items.some(item => item.id === selectedItemId);
-
-  useEffect(() => {
-    if (isEditing && currentSelectedItemExistsInSection && selectedItemRef.current && sectionRef.current) {
-      const sectionRect = sectionRef.current.getBoundingClientRect();
-      const itemRect = selectedItemRef.current.getBoundingClientRect();
-
-      const top = itemRect.top - sectionRect.top;
-      // Ajuste este valor para posicionar a sidebar corretamente ao lado do item
-      // Um valor negativo a empurra para fora da borda direita da seção.
-      // Considere a largura da sidebar.
-      const desiredRightOffset = -80; // Ex: -(largura_sidebar + gap)
-
-      setSidebarPosition({
-        top: top,
-        right: desiredRightOffset,
-      });
-    } else {
-      setSidebarPosition(null);
-    }
-    // A dependência `items` é importante se o item selecionado for removido.
-  }, [selectedItemId, isEditing, items, currentSelectedItemExistsInSection]);
 
   const handleLocalItemSelect = (itemId: string) => {
-    // Se o item clicado já é o selecionado, desselecione-o. Senão, selecione-o.
-    if (itemId === selectedItemId) {
-      onItemSelect(null);
-    } else {
-      onItemSelect(itemId);
+    if (isEditing) { // A seleção de item só faz sentido no modo de edição
+      if (selectedItemId === itemId) {
+        onItemSelect(null); // Desselecionar se já selecionado
+      } else {
+        onItemSelect(itemId);
+      }
     }
   };
 
   const handleSectionClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    // Evita chamar onSectionAreaClick se o clique foi em um item ou na sidebar
-    // Isso é uma simplificação. Uma verificação mais robusta usaria event.target e .closest()
-    if (event.target === event.currentTarget && onSectionAreaClick) {
-        onSectionAreaClick();
+    const targetElement = event.target as HTMLElement;
+
+    // Verifica se o clique foi dentro de um input, textarea, ou em um SectionItem diretamente
+    const isInput = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA';
+    const clickedOnItemContainer = targetElement.closest(`[id^="dossier-item-"]`); // Verifica se clicou em um item
+
+    if (!isInput && !clickedOnItemContainer && onSectionAreaClick && isEditing) {
+        onSectionAreaClick(sectionId);
     }
   };
+
 
   const combinedSectionClasses = [
     className,
     isSectionSelectedForStyling ? selectedSectionStylingClassName : ''
   ].filter(Boolean).join(' ');
 
-
   return (
     <div ref={sectionRef} className={combinedSectionClasses} onClick={handleSectionClick} style={{ position: 'relative' }}>
-      <div className={contentWrapperClassName}> {/* Wrapper para a barra lateral rosa e conteúdo */}
-        <div className={titleContainerClassName}>
-          <EditableField
-            value={title}
-            isEditing={isEditing}
-            onChange={onTitleChange}
-            placeholder={titlePlaceholder}
-            ariaLabel={`Título da seção ${sectionId}`}
-            className={titleEditableFieldClassName}
-            textDisplayClassName={titleTextClassName}
-            inputClassName={titleInputClassName}
-          />
+      <div className={contentWrapperClassName}>
+        <div className={`${titleAndWeightContainerClassName}`}>
+          <div className={titleContainerClassName} style={{ flexGrow: 1 }}>
+            <EditableField
+              value={title}
+              isEditing={isEditing}
+              onChange={onTitleChange}
+              placeholder={titlePlaceholder}
+              ariaLabel={`Título da seção ${sectionId}`}
+              className={titleEditableFieldClassName}
+              textDisplayClassName={titleTextClassName}
+              inputClassName={titleInputClassName}
+            />
+          </div>
+          {isEditing ? (
+            <div className={weightFieldContainerClassName}>
+              <EditableField
+                value={weight}
+                isEditing={true} // Sempre editável quando o container pai (isEditing) está ativo
+                onChange={onWeightChange}
+                placeholder={weightPlaceholder}
+                ariaLabel={`Peso da seção ${sectionId}`}
+                className={weightEditableFieldClassName}
+                inputClassName={weightInputClassName}
+              />
+            </div>
+          ) : (
+            weight && <div className={weightTextClassName}>{weight}</div>
+          )}
         </div>
 
         <div className={itemsListClassName}>
           {items.map((item) => {
             const isItemSelected = item.id === selectedItemId;
             return (
-              // Wrapper para a ref do item selecionado
-              <div key={item.id} ref={isItemSelected ? selectedItemRef : null}>
-                <SectionItem
-                  id={item.id}
-                  description={item.description}
-                  value={item.value}
-                  isEditing={isEditing}
-                  isSelected={isItemSelected}
-                  onSelect={() => handleLocalItemSelect(item.id)}
-                  onDescriptionChange={(newDesc) => onItemChange(item.id, 'description', newDesc)}
-                  onValueChange={(newVal) => onItemChange(item.id, 'value', newVal)}
-                  // Passando classes para SectionItem
-                  className={sectionItemClassName}
-                  selectedClassName={sectionItemSelectedClassName}
-                  descriptionFieldContainerClassName={descriptionFieldContainerClassName}
-                  descriptionTextDisplayClassName={descriptionTextDisplayClassName}
-                  descriptionInputClassName={descriptionInputClassName}
-                  valueFieldContainerClassName={valueFieldContainerClassName}
-                  valueTextDisplayClassName={valueTextDisplayClassName}
-                  valueInputClassName={valueInputClassName}
-                />
-              </div>
+              // O div wrapper foi removido, key agora está no SectionItem
+              <SectionItem
+                key={item.id}
+                id={item.id}
+                description={item.description}
+                value={item.value}
+                isEditing={isEditing}
+                isSelected={isItemSelected}
+                onSelect={() => handleLocalItemSelect(item.id)}
+                onDescriptionChange={(newDesc) => onItemChange(sectionId, item.id, 'description', newDesc)}
+                onValueChange={(newVal) => onItemChange(sectionId, item.id, 'value', newVal)}
+                showValueField={false} // Explicitamente não mostrar o campo de valor por agora
+                className={sectionItemClassName}
+                selectedClassName={sectionItemSelectedClassName}
+                descriptionFieldContainerClassName={sectionItemDescriptionFieldContainerClassName}
+                descriptionTextDisplayClassName={sectionItemDescriptionTextDisplayClassName}
+                descriptionInputClassName={sectionItemDescriptionInputClassName}
+              />
             );
           })}
         </div>
       </div>
-
-      {isEditing && currentSelectedItemExistsInSection && sidebarPosition && (
-        <div style={{ position: 'absolute', top: sidebarPosition.top, right: sidebarPosition.right, zIndex: 10 }}>
-          <ActionSidebar
-            isVisible={true} // Já verificado acima
-            onAddItemToSection={onItemAdd}
-            onAddNewSection={onAddNewSection}
-            onSectionSettings={onSectionSettings}
-            onDeleteSection={onDeleteSection}
-            canDeleteItem={!!selectedItemId} // Se selectedItemId é truthy, então um item está selecionado
-            onDeleteItemFromSection={() => {
-              if (selectedItemId) {
-                onItemDelete(selectedItemId);
-              }
-            }}
-            // Passando classes para ActionSidebar
-            className={actionSidebarContainerClassName}
-            buttonClassName={actionSidebarButtonClassName}
-            disabledButtonClassName={actionSidebarDisabledButtonClassName}
-            addItemButtonClassName={actionSidebarAddItemButtonClassName}
-            duplicateSectionButtonClassName={actionSidebarDuplicateSectionButtonClassName}
-            sectionSettingsButtonClassName={actionSidebarSectionSettingsButtonClassName}
-            deleteItemButtonClassName={actionSidebarDeleteItemButtonClassName}
-            deleteSectionButtonClassName={actionSidebarDeleteSectionButtonClassName}
-          />
-        </div>
-      )}
     </div>
   );
 };

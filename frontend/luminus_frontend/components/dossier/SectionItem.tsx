@@ -1,47 +1,30 @@
 // components/SectionItem.tsx
 import React from 'react';
-import EditableField from './EditableField'; // Supondo que está na mesma pasta ou ajuste o caminho
+import EditableField from './EditableField';
 
 interface SectionItemProps {
-  /** ID único do item. */
   id: string;
-  /** Texto à esquerda (descrição do item). */
   description: string;
-  /** Valor à direita (e.g., "30%", "Sim"). Convertido para string internamente para EditableField. */
-  value: string | number;
-  /** Se true, os campos são editáveis. */
+  value: string | number; // Mantido para dados, mas não visível por padrão
   isEditing: boolean;
-  /** Se true, o item é visualmente destacado como selecionado. */
   isSelected: boolean;
-  /** Chamado quando o item é clicado (para seleção). */
   onSelect: () => void;
-  /** Chamado quando a descrição do item é alterada. */
   onDescriptionChange: (newDescription: string) => void;
-  /** Chamado quando o valor do item é alterado. */
-  onValueChange: (newValue: string) => void; // EditableField sempre retorna string
+  onValueChange: (newValue: string) => void; // Mantido para dados
 
-  /** Classe CSS para o container principal do SectionItem. */
+  showValueField?: boolean; // NOVO: para controle futuro da visibilidade do campo valor
+
   className?: string;
-  /** Classe CSS aplicada ao container principal quando o item está selecionado. */
   selectedClassName?: string;
-
-  // Props para passar para os EditableFields internos
-  /** Classe CSS para o container do EditableField da descrição. */
   descriptionFieldContainerClassName?: string;
-  /** Classe CSS para o texto de exibição do EditableField da descrição. */
   descriptionTextDisplayClassName?: string;
-  /** Classe CSS para o input do EditableField da descrição. */
   descriptionInputClassName?: string;
-
-  /** Classe CSS para o container do EditableField do valor. */
-  valueFieldContainerClassName?: string;
-  /** Classe CSS para o texto de exibição do EditableField do valor. */
-  valueTextDisplayClassName?: string;
-  /** Classe CSS para o input do EditableField do valor. */
-  valueInputClassName?: string;
-
-  /** Placeholders para os campos editáveis */
   descriptionPlaceholder?: string;
+
+  // Props de valor (opcionais agora, para uso futuro)
+  valueFieldContainerClassName?: string;
+  valueTextDisplayClassName?: string;
+  valueInputClassName?: string;
   valuePlaceholder?: string;
 }
 
@@ -54,16 +37,17 @@ const SectionItem: React.FC<SectionItemProps> = ({
   onSelect,
   onDescriptionChange,
   onValueChange,
+  showValueField = false, // Default para não mostrar o campo de valor
   className = '',
   selectedClassName = '',
   descriptionFieldContainerClassName = '',
   descriptionTextDisplayClassName = '',
   descriptionInputClassName = '',
-  valueFieldContainerClassName = '',
-  valueTextDisplayClassName = '',
-  valueInputClassName = '',
   descriptionPlaceholder = 'Descrição do item',
-  valuePlaceholder = 'Valor',
+  valueFieldContainerClassName = '', // Mantém para uso futuro
+  valueTextDisplayClassName = '',   // Mantém para uso futuro
+  valueInputClassName = '',         // Mantém para uso futuro
+  valuePlaceholder = 'Valor',      // Mantém para uso futuro
 }) => {
   const itemClasses = [
     className,
@@ -73,51 +57,65 @@ const SectionItem: React.FC<SectionItemProps> = ({
     .join(' ')
     .trim();
 
-  // EditableField espera string, então convertemos o valor.
-  // A lógica de conversão de volta para número, se necessário, ficaria no componente pai.
   const stringValue = String(value);
 
-  const handleItemClick = () => {
-    if (isEditing) { // A seleção só faz sentido no modo de edição para interagir com a ActionSidebar
-      onSelect();
+  const handleItemClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    // Permite clique para seleção apenas no modo de edição
+    if (isEditing) {
+      // Evita que o clique no input/textarea do EditableField desfaça a seleção do item
+      // Isso pode ser mais robusto verificando se event.target é um input/textarea
+      const targetTagName = (event.target as HTMLElement).tagName.toLowerCase();
+      if (targetTagName !== 'input' && targetTagName !== 'textarea') {
+        onSelect();
+      }
     }
-    // Poderia ter uma lógica diferente para cliques fora do modo de edição, se necessário
   };
+
+  const handleDescriptionChange = (newDescription: string) => {
+    onDescriptionChange(newDescription);
+  };
+
+  const handleValueChangeInternal = (newValue: string) => {
+    onValueChange(newValue);
+  };
+
 
   return (
     <div
+      id={`dossier-item-${id}`} // ID para a ActionSidebar encontrar o elemento
       className={itemClasses}
       onClick={handleItemClick}
-      // Adicionar tabIndex se for torná-lo focável via teclado para seleção, especialmente se não houver inputs focáveis dentro
-      // tabIndex={isEditing ? 0 : -1}
-      // onKeyDown={(e) => { if (isEditing && (e.key === 'Enter' || e.key === ' ')) onSelect(); }}
-      // role={isEditing ? "button" : undefined} // Se clicável para seleção
-      aria-current={isSelected ? 'true' : undefined} // Para indicar seleção a tecnologias assistivas
+      aria-current={isSelected ? 'true' : undefined}
+      style={{ display: 'flex', alignItems: 'center', width: '100%' }}
     >
-      <div className={descriptionFieldContainerClassName}>
+      <div className={descriptionFieldContainerClassName} style={{ flexGrow: 1, width: '100%' }}>
         <EditableField
           value={description}
           isEditing={isEditing}
-          onChange={onDescriptionChange}
+          onChange={handleDescriptionChange}
           placeholder={descriptionPlaceholder}
           ariaLabel={`Descrição para o item ${id}`}
-          // Passando as classes específicas para o EditableField da descrição
           textDisplayClassName={descriptionTextDisplayClassName}
           inputClassName={descriptionInputClassName}
         />
       </div>
-      <div className={valueFieldContainerClassName}>
-        <EditableField
-          value={stringValue}
-          isEditing={isEditing}
-          onChange={onValueChange} // EditableField sempre retorna string
-          placeholder={valuePlaceholder}
-          ariaLabel={`Valor para o item ${id}`}
-          // Passando as classes específicas para o EditableField do valor
-          textDisplayClassName={valueTextDisplayClassName}
-          inputClassName={valueInputClassName}
-        />
-      </div>
+
+      {showValueField && (
+        <div
+          className={valueFieldContainerClassName}
+          style={{ minWidth: '80px', textAlign: 'right', marginLeft: '15px', flexShrink: 0 }}
+        >
+          <EditableField
+            value={stringValue}
+            isEditing={isEditing}
+            onChange={handleValueChangeInternal}
+            placeholder={valuePlaceholder}
+            ariaLabel={`Valor para o item ${id}`}
+            textDisplayClassName={valueTextDisplayClassName}
+            inputClassName={valueInputClassName}
+          />
+        </div>
+      )}
     </div>
   );
 };
