@@ -81,6 +81,11 @@ export default function ListClass({
     toggleSelectAll();
   };
 
+  const handleClickPageStudent = (id: number) => {
+    alert("Turma "+ id + "Selecionada")
+    //pesquisar sobre cache que mano maike falou
+  }
+
   return (
     <div className="w-full">
       {/* Tabela que exibe as turmas com seus dados */}
@@ -126,9 +131,10 @@ export default function ListClass({
               onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
               onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
               className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh] "
+              onClick={() => handleClickPageStudent(classroom.id)}
             >
               {/* Checkbox para selecionar essa turma individualmente */}
-              <td className="p-2 w-[50px]">
+              <td className="p-2 w-[50px]" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="checkbox"
                   checked={!!classroom.selected}  // Marca se a turma está selecionada
@@ -154,13 +160,14 @@ export default function ListClass({
               </>
 
               {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-              <td className="p-1 w-[5vw] flex gap-2">
+              <td className="p-1 w-[5vw] flex gap-2" onClick={(e) => e.stopPropagation()}>
                 {hovered === classroom.id && (
                   <>
                     {/* Botão de edição com ícone de lápis */}
                     <button
                       className="hover:text-yellow-400"
                       onClick={() => {
+                        
                         setOpenEditingModal(true);  // Abre o modal de edição
                         setEditingClassroom(classroom);  // Define qual turma está sendo editada
                         setLockHover(true)

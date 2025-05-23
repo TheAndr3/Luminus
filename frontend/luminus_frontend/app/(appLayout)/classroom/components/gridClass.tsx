@@ -59,6 +59,12 @@ export default function Gridclassrooms({
       setHasSelected(classrooms.some(classroom => classroom.selected));
     }, [classrooms]); // Executa sempre que o array de classrooms mudar
 
+
+  const handleClickPageStudent = (id: number) => {
+    alert("Turma "+ id + "Selecionada")
+    //pesquisar sobre cache que mano maike falou
+  }
+
   return (
     <div className="w-full ">
       {/* Título e barra de ferramentas */}
@@ -93,7 +99,7 @@ export default function Gridclassrooms({
             onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
             onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
             className="bg-[#0A2B3D] text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46"
-
+            onClick={() => handleClickPageStudent(classroom.id)}
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
@@ -106,7 +112,7 @@ export default function Gridclassrooms({
  
               </div>
               
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2" onClick={(e)=>e.stopPropagation()}>
                     <input
                     type="checkbox"
                     checked={classroom.selected}
@@ -115,7 +121,7 @@ export default function Gridclassrooms({
                   />
 
                   {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-                <td className="p-1 w-8">
+                <td className="p-1 w-8" onClick={(e)=> e.stopPropagation()}>
                   {hovered === classroom.id && (
                     <>
                       {/* Botão de edição com ícone de lápis */}
@@ -182,7 +188,12 @@ export default function Gridclassrooms({
 
             </div>
 
-            <button className="mb-4 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400">
+            <button className="mb-4 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400" 
+              onClick={(e)=>e.stopPropagation()
+
+                
+              }
+            >
               {classroom.dossie}
             </button>
           </div>
