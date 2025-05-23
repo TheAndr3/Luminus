@@ -20,6 +20,8 @@ import EditClassModal from "./editClassModal";
 // Ícone de lápis para representar a ação de editar
 import { Archive, Download, Pencil, Trash } from "lucide-react";
 
+import { useRouter } from "next/navigation"; 
+
 
 // Definição do tipo das propriedades que o componente ListClass recebe
 type ListclassroomsProps = {
@@ -65,6 +67,8 @@ export default function ListClass({
 
   const [lockHover, setLockHover] = useState(false);
 
+  const router = useRouter()
+
   // useEffect que atualiza o estado hasSelected sempre que a lista de turmas muda
   // Ele verifica se alguma turma está selecionada e atualiza o estado local
   useEffect(() => {
@@ -82,7 +86,10 @@ export default function ListClass({
   };
 
   const handleClickPageStudent = (id: number) => {
-    alert("Turma "+ id + "Selecionada")
+    
+    router.push(`/classroom/${id+1}`)
+    
+    
     //pesquisar sobre cache que mano maike falou
   }
 

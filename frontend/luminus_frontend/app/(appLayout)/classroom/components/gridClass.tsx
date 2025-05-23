@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import ActionPanel from './actionPainel';
 import { Archive, Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
+import { useRouter } from 'next/navigation';
 
 type GridclassroomsProps = {
   classrooms: Classroom[];
@@ -52,6 +53,8 @@ export default function Gridclassrooms({
 
   const [lockHover, setLockHover] = useState(false)
 
+  const router = useRouter()
+
     // Efeito que verifica sempre que a lista de classrooms muda
     // para atualizar o estado hasSelected
     useEffect(() => {
@@ -61,7 +64,8 @@ export default function Gridclassrooms({
 
 
   const handleClickPageStudent = (id: number) => {
-    alert("Turma "+ id + "Selecionada")
+
+    router.push(`/classroom/${id+1}`)
     //pesquisar sobre cache que mano maike falou
   }
 
