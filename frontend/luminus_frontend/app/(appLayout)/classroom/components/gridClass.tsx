@@ -182,11 +182,6 @@ export default function Gridclassrooms({
 
             </div>
 
-
-
-            
-
-
             <button className="mb-4 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400">
               {classroom.dossie}
             </button>
