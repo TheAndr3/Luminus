@@ -93,7 +93,7 @@ export default function ListClass({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full -mt-5">
       {/* Tabela que exibe as turmas com seus dados */}
       <table className="w-full text-left border-separate border-spacing-y-2">
         <thead>
@@ -229,7 +229,7 @@ export default function ListClass({
       </table>
 
       {/* Controlador de paginação */}
-      <div className="-mt-6">
+      <div className="-mt-5">
         <PageController
           currentPage={currentPage}
           totalPages={totalPages}
@@ -238,7 +238,7 @@ export default function ListClass({
       </div>
 
       {/* Painel de ações que aparece quando há turmas selecionadas */}
-      <div className="-mt-11">
+      <div className="-mt-10">
         {hasSelected && (
           <ActionPanel
             onDeleted={onDeleteClass}
