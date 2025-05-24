@@ -156,52 +156,54 @@ export default function VizualizationClass() {
       </div>
 
       {/* Barra de busca */}
-      <div className="flex justify-center items-center mb-4 ">
+      <div className="flex justify-center items-center my-[2vh] mb-[4vh]">
         <BaseInput
           type="text"
           placeholder="Procure pela turma"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border rounded-full w-250 px-[4vh] py-[vh]"
+          className="border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
         ></BaseInput>
       </div>
 
       {/* Renderização condicional */}
-      {visualization === 'list' && (
-        <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
-          <ListClass
-            classrooms={filteredClasses}
-            toggleSelectAll={toggleSelectAll}
-            toggleOne={toggleOne}
-            isAllSelected={isAllSelected}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            setCurrentPage={setCurrentPage}
-            visualization={visualization}
-            setVisualization={setVisualization}
-            onDeleteClass={handleDeleteClass}
-            toArchiveClass={archiveHandle}
-          />
-        </div>
-      )}
+      <div className="-mt-4">
+        {visualization === 'list' && (
+          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
+            <ListClass
+              classrooms={filteredClasses}
+              toggleSelectAll={toggleSelectAll}
+              toggleOne={toggleOne}
+              isAllSelected={isAllSelected}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentPage}
+              visualization={visualization}
+              setVisualization={setVisualization}
+              onDeleteClass={handleDeleteClass}
+              toArchiveClass={archiveHandle}
+            />
+          </div>
+        )}
 
-      {visualization === 'grid' && (
-        <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
-          <GridClass
-            classrooms={filteredClasses}
-            toggleSelectAll={toggleSelectAll}
-            toggleOne={toggleOne}
-            isAllSelected={isAllSelected}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            setCurrentPage={setCurrentPage}
-            visualization={visualization}
-            setVisualization={setVisualization}
-            onDeleteClass={handleDeleteClass}
-            toArchiveClass={archiveHandle}
-          />
-        </div>
-      )}
+        {visualization === 'grid' && (
+          <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
+            <GridClass
+              classrooms={filteredClasses}
+              toggleSelectAll={toggleSelectAll}
+              toggleOne={toggleOne}
+              isAllSelected={isAllSelected}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentPage}
+              visualization={visualization}
+              setVisualization={setVisualization}
+              onDeleteClass={handleDeleteClass}
+              toArchiveClass={archiveHandle}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Modais */}
       <ConfirmDeleteDialog
