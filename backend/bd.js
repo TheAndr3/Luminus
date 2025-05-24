@@ -172,7 +172,14 @@ async function pgAppraisalUpdate(data) {
         for (let i = 0; i < evaluations.length; i++) {
             const ev = evaluations[i];
             
+            pgInsert('Evaluation', ev);
         }
+
+        const payload = {
+            points: data.points,
+            filling_date: data.filling_date
+        };
+        return await pgUpdate('Appraisal', payload, {id:data.id});
     } catch (error) {
         throw error
     }
