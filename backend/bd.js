@@ -144,13 +144,13 @@ async function pgDossieUpdate(data) {
 }
 
 async function pgAppraisalSelect(id) {
-    const query = 'SELECT (id, appraisal_id, section_id, question_id, question_option) FROM Evaluation WHERE appraisal_id == $1';
+    const query = 'SELECT * FROM Evaluation WHERE appraisal_id == $1';
 
     const client = await connect();
 
     const response = await client.query(query, [id]);
     const data = response.rows;
-    var result = {id:data[0].appraisal_id, sections:[]}
+    var result = {id:data[0].appraisal_id, sections:[], dossier_id:data[0].dossier_id, student_id:data[0].student_id, professor_id:data[0].professor_id,};
     for(let i=0; i < data.length; i++){
         var row = data[i];
 
@@ -165,10 +165,17 @@ async function pgAppraisalSelect(id) {
 
 async function pgAppraisalUpdate(data) {
     try {
-        
+        await pgDelete('Evaluation', {appraisal_id:data.id});
+
+        var evaluations = data.evaluation;
+
+        for (let i = 0; i < evaluations.length; i++) {
+            const ev = evaluations[i];
+            
+        }
     } catch (error) {
         throw error
     }
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect}
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate};
