@@ -10,6 +10,7 @@ import ClassViewMode from "./components/classViewMode";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
+import { ErroMessageDialog } from "./components/erroMessageDialog";
 
 export default function VizualizationClass() {
   // ============ ESTADOS ============
@@ -34,6 +35,10 @@ export default function VizualizationClass() {
   const [classDescription, setClassDescription] = useState("") // Descrição para modal
   const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
   const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
+
+  const [missingDialog, setMissingDialog] = useState(false); //para abrir dialog de erro
+  const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
+  
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(classi.length / turmasPorPagina);
@@ -94,12 +99,20 @@ export default function VizualizationClass() {
     try {
       console.log("Excluir:", idsToDelete);
       
-      // CHAMADA À API FALTANTE:
-      // await fetch('/api/turmas/delete', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ ids: idsToDelete }),
-      //   headers: { 'Content-Type': 'application/json' }
-      // });
+      /*
+      try {
+        const response = await axios.post('/api/turmas/delete', {
+          ids: idsToDelete,
+        });
+
+        //mensagem de delete complete
+        return response.data;
+      } catch (error: any) {
+        setMessageErro("Erro ao excluir os dados desejados!")
+        setMissingDialog(true) 
+      }
+      
+      */
 
       // Atualização otimista do estado
       setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
@@ -145,7 +158,9 @@ export default function VizualizationClass() {
   //     });
   //     // Atualizar estado conforme necessário
   //   } catch (error) {
-  //     console.error("Erro ao arquivar turmas:", error);
+  //    setMessageErro("Erro ao arquivar os dados desejados!")
+  //    setMissingDialog(true) 
+
   //   }
   // };
 
@@ -157,52 +172,54 @@ export default function VizualizationClass() {
       </div>
 
       {/* Barra de busca */}
-      <div className="flex justify-center items-center mb-4 ">
+      <div className="flex justify-center items-center my-[2vh] mb-[4vh]">
         <BaseInput
           type="text"
           placeholder="Procure pela turma"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border rounded-full w-250 px-[4vh] py-[vh]"
+          className="border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
         ></BaseInput>
       </div>
 
       {/* Renderização condicional */}
-      {visualization === 'list' && (
-        <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
-          <ListClass
-            classrooms={filteredClasses}
-            toggleSelectAll={toggleSelectAll}
-            toggleOne={toggleOne}
-            isAllSelected={isAllSelected}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            setCurrentPage={setCurrentPage}
-            visualization={visualization}
-            setVisualization={setVisualization}
-            onDeleteClass={handleDeleteClass}
-            toArchiveClass={archiveHandle}
-          />
-        </div>
-      )}
+      <div className="-mt-4">
+        {visualization === 'list' && (
+          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
+            <ListClass
+              classrooms={filteredClasses}
+              toggleSelectAll={toggleSelectAll}
+              toggleOne={toggleOne}
+              isAllSelected={isAllSelected}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentPage}
+              visualization={visualization}
+              setVisualization={setVisualization}
+              onDeleteClass={handleDeleteClass}
+              toArchiveClass={archiveHandle}
+            />
+          </div>
+        )}
 
-      {visualization === 'grid' && (
-        <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
-          <GridClass
-            classrooms={filteredClasses}
-            toggleSelectAll={toggleSelectAll}
-            toggleOne={toggleOne}
-            isAllSelected={isAllSelected}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            setCurrentPage={setCurrentPage}
-            visualization={visualization}
-            setVisualization={setVisualization}
-            onDeleteClass={handleDeleteClass}
-            toArchiveClass={archiveHandle}
-          />
-        </div>
-      )}
+        {visualization === 'grid' && (
+          <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
+            <GridClass
+              classrooms={filteredClasses}
+              toggleSelectAll={toggleSelectAll}
+              toggleOne={toggleOne}
+              isAllSelected={isAllSelected}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentPage}
+              visualization={visualization}
+              setVisualization={setVisualization}
+              onDeleteClass={handleDeleteClass}
+              toArchiveClass={archiveHandle}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Modais */}
       <ConfirmDeleteDialog
@@ -221,6 +238,15 @@ export default function VizualizationClass() {
         code={codeClass}
         description={classDescription}
       />
+
+      <ErroMessageDialog
+        open={missingDialog}
+        onConfirm={() => setMissingDialog(false)}
+        description={messageErro}
+      />
+
+
+
     </div>
   );
 }
