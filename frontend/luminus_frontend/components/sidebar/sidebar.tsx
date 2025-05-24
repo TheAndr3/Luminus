@@ -35,7 +35,7 @@ import {
 // --- Existing navigation data ---
 const navigation = [
   { name: 'Home', href: '/home', icon: HomeIcon },
-  { name: 'Turmas', href: '/class-', icon: UsersIcon },
+  { name: 'Turmas', href: '/classroom', icon: UsersIcon },
   { name: 'Dossie', href: '/dossie', icon: FolderIcon },
 ];
 

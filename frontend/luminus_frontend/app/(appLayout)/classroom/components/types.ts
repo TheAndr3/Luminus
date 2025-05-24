@@ -1,5 +1,5 @@
-export type Turma = {
-    selected: unknown;
+export type Classroom = {
+    selected: boolean;
     id: number;
     disciplina: string;
     codigo: string;

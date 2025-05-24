@@ -136,9 +136,11 @@ export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
             className={`
               w-full p-2.5 ${paddingRightClass} text-sm outline-none  /* Estilos base e padding direito ajustado */
               border ${isInvalid ? 'border-red-500' : 'border-gray-300'} /* Borda vermelha se inválido, cinza caso contrário */
-              rounded-md focus:ring-2 focus:ring-green-500 /* Arredondamento e anel de foco verde */
+              rounded-full focus:ring-2 focus:ring-green-500 /* Arredondamento e anel de foco verde */
               focus:border-transparent transition                  /* Transição suave e borda transparente no foco */
               text-gray-900 font-medium                          /* Cor e peso da fonte do texto digitado */
+              py-2
+              px-4
               ${disabled ? 'bg-gray-100 text-gray-700 cursor-not-allowed' : 'bg-white'} /* Estilos para estado desabilitado */
               ${inputClassName}                                  /* Aplica classes CSS customizadas ao input */
             `}
