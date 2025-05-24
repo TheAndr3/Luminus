@@ -125,74 +125,73 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> 
 
                 {/* Conteúdo do modal */}
-                <DialogContent>
-                    <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                    <DialogTitle className="sr-only">Editar Turma</DialogTitle>
 
-                        {/* Cabeçalho do modal */}
-                        <div className="relative mb-6">
-                            {/* Ícone fixo à esquerda */}
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
-                                <Image 
-                                    src={class_icon}
-                                    alt="icone turma"
-                                    className="w-12 h-12"
-                                />
-                            </div>
-
-                            {/* Título centralizado */}
-                            <div className="flex items-center gap-2 justify-center">
-                                <span className="text-4xl font-bold"> {title} </span>
-                            </div>
+                    {/* Cabeçalho do modal */}
+                    <div className="relative mb-6">
+                        {/* Ícone fixo à esquerda */}
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
+                            <Image 
+                                src={class_icon}
+                                alt="icone turma"
+                                className="w-12 h-12"
+                            />
                         </div>
 
-                        {/* Formulário dividido em duas colunas */}
-                        <div className="grid grid-cols-2 gap-4 m-6 ">
-                            <div className="flex items-center gap-3 "> 
-                                <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
-                                <BaseInput 
-                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                    placeholder={classroom.name} // Placeholder recebe o valor atual da turma
-                                    value={nameClassroomModal} // Valor do input Disciplina
-                                    onChange={(e) => setnameClassroomModal(e.target.value)} // Atualiza estado ao digitar
-                                />
-                            </div>
+                        {/* Título centralizado */}
+                        <div className="flex items-center gap-2 justify-center">
+                            <span className="text-4xl font-bold"> {title} </span>
+                        </div>
+                    </div>
 
-                            <div className="flex items-center gap-3 ml-8">
-                                <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
-                                <BaseInput
-                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                    placeholder={classroom.institution} // Placeholder da instituição atual
-                                    value={descriptionClassroomModal} // Valor do input Instituição
-                                    onChange={(e) => setDescriptionClassroomModal(e.target.value)} // Atualiza estado ao digitar
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-12">
-                                <label className="text-2xl">Turma:</label> {/* Label para o campo Turma */}
-                                <BaseInput 
-                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                    placeholder={classroom.course} // Placeholder com valor atual do curso
-                                    value={institutionClassroomModal} // Valor do input Turma
-                                    onChange={(e) => setInstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
-                                />
-                            </div>
-
+                    {/* Formulário dividido em duas colunas */}
+                    <div className="grid grid-cols-2 gap-4 m-6 ">
+                        <div className="flex items-center gap-3 "> 
+                            <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
+                            <BaseInput 
+                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
+                                placeholder={classroom.name} // Placeholder recebe o valor atual da turma
+                                value={nameClassroomModal} // Valor do input Disciplina
+                                onChange={(e) => setnameClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                            />
                         </div>
 
-                        {/* Botão para concluir a edição */}
-                        <div className="flex justify-end mr-7">
-                            <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
-                                {messageButton}
-                            </Button>
+                        <div className="flex items-center gap-3 ml-8">
+                            <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
+                            <BaseInput
+                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
+                                placeholder={classroom.institution} // Placeholder da instituição atual
+                                value={descriptionClassroomModal} // Valor do input Instituição
+                                onChange={(e) => setDescriptionClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                            />
                         </div>
 
-                        <ErroMessageDialog
-                            open={missingDialog}
-                            onConfirm={() => setMissingDialog(false)}
-                            description={messageErro}
-                        />
+                        <div className="flex items-center gap-12">
+                            <label className="text-2xl">Turma:</label> {/* Label para o campo Turma */}
+                            <BaseInput 
+                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
+                                placeholder={classroom.course} // Placeholder com valor atual do curso
+                                value={institutionClassroomModal} // Valor do input Turma
+                                onChange={(e) => setInstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                            />
+                        </div>
 
-                    </DialogContent>
+                    </div>
+
+                    {/* Botão para concluir a edição */}
+                    <div className="flex justify-end mr-7">
+                        <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
+                            {messageButton}
+                        </Button>
+                    </div>
+
+                    <ErroMessageDialog
+                        open={missingDialog}
+                        onConfirm={() => setMissingDialog(false)}
+                        description={messageErro}
+                    />
+
                 </DialogContent>
             </Dialog>
         </>
