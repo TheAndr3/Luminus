@@ -122,7 +122,7 @@ export default function Gridclassrooms({
                   />
 
                   {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-                <td className="p-1 w-8 relative" onClick={(e)=> e.stopPropagation()}>
+                <div className="p-1 w-8 relative" onClick={(e)=> e.stopPropagation()}>
                   {hovered === classroom.id && (
                     <div className="absolute right-0 top-0 flex flex-col gap-2 bg-[#0A2B3D]">
                       {/* Botão de edição com ícone de lápis */}
@@ -180,7 +180,7 @@ export default function Gridclassrooms({
                       />
                     </div>
                   )}
-                </td>
+                </div>
                   
               </div> 
 
@@ -204,9 +204,13 @@ export default function Gridclassrooms({
         />
       </div>
 
-      <div className="-mt-11">
+      <div className="relative">
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
-        {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>}
+        {hasSelected && (
+          <div className="absolute bottom-1 left">
+            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>
+          </div>
+        )}
       </div>
 
     </div>
