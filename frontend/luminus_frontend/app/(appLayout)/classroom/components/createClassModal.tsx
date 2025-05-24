@@ -9,7 +9,7 @@ import { Pencil } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { CreateClassroom} from "@/services/classroomServices";
-import { InputMissingDialog } from "./inputMissingDialog";
+import { ErroMessageDialog } from "./erroMessageDialog";
 
 
 
@@ -29,6 +29,9 @@ export default function DialogPage() {
     const [editing, setEditing] = useState(false); // Estado para controlar se o título está sendo editado
 
     const [missingDialog, setMissingDialog] = useState(false);
+    const [messageErro, setMessageErro] = useState("");
+
+    const [messageButton, setMessageButton] = useState("Concluir");
 
 
     // Função que reseta os campos dos inputs quando o dialog é fechado
@@ -45,11 +48,11 @@ export default function DialogPage() {
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
-        setTimeout(() => setSave(false), 3000); // Desmarca o salvamento após 3 segundos
+        setTimeout(() => {setSave(false); setMessageButton("Carregando...")}); // Desmarca o salvamento após 3 segundos
 
         // Verifica se os campos Disciplina e Período estão preenchidos
         if (inputDisc && inputPer && titulo != title) {
-            /* 
+            
             //tenta enviar os dados colhidos para o back
             try{
                 const newClassData = {
@@ -68,11 +71,14 @@ export default function DialogPage() {
                 }
             }
             catch(err){
-                alert("Erro ao salvar dados, tente novamente!")
-                // Mensagem de erro caso a requisição falhe
+                setMessageErro("Impossivel salvar os dados. Por favor, tente novamente!")
+                setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
+                setMessageButton("Concluir")
+
             }   
-            */ 
+            
         } else {
+            setMessageErro("Por favor, Preencha todos os campos adequadamente !")
             setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
     }
@@ -168,15 +174,16 @@ export default function DialogPage() {
                         {/* Botão "Concluir" */}
                         <div className="flex justify-end mr-7">
                             <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
-                                Concluir
+                                {messageButton}
                             </Button>
 
                             
                         </div>
 
-                            <InputMissingDialog
+                            <ErroMessageDialog
                                 open={missingDialog}
                                 onConfirm={() => setMissingDialog(false)}
+                                description={messageErro}
                             />
                         
 

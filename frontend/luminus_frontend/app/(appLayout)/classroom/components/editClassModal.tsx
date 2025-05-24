@@ -20,8 +20,11 @@ import Image from "next/image";
 // Componente otimizado do Next.js para exibir imagens
 
 import { CreateClassroom, UpdateClassroom } from "@/services/classroomServices";
-import { InputMissingDialog } from "./inputMissingDialog";
-// Função para fazer requisição à API para criar/editar a turma
+import { ErroMessageDialog } from "./erroMessageDialog";
+
+
+
+
 
 
 // Define a tipagem das props que o componente EditClassModal vai receber
@@ -56,6 +59,9 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     // Estado que poderia ser usado para controlar edição do título (não utilizado no momento)
 
     const [missingDialog, setMissingDialog] = useState(false);
+    const [messageErro, setMessageErro] = useState("");
+
+    const [messageButton, setMessageButton] = useState("Concluir");
 
     // Função para resetar os campos dos inputs ao fechar o modal
     const handleDialogClose = () => {
@@ -72,11 +78,11 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     // Função chamada quando o usuário clica no botão "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que está salvando para, por exemplo, desabilitar botões
-        setTimeout(() => setSave(false), 3000); // Remove o estado de salvando após 3 segundos (simulação)
-
+        setTimeout(() => {setSave(false); setMessageButton("Carregando...")}); // Remove o estado de salvando após 3 segundos (simulação)
+        
         // Verifica se os campos obrigatórios foram preenchidos
         if (nameClassroomModal && institutionClassroomModal) {
-            /*
+
             try {
                 // Monta o objeto com dados para enviar ao backend
                 const newClassData = {
@@ -96,11 +102,12 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                     handleDialogClose();
                 }
             } catch(err) {
-                alert("Erro ao salvar dados, tente novamente!")
-                // Mensagem de erro caso a requisição falhe
+                setMessageErro("Impossivel salvar os dados editados. Por favor, tente novamente!")
+                setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
+                setMessageButton("Concluir")
             }
-            */
         } else {
+            setMessageErro("Por favor, Preencha todos os campos adequadamente !")
             setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
         }
         
@@ -175,13 +182,14 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                         {/* Botão para concluir a edição */}
                         <div className="flex justify-end mr-7">
                             <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
-                                Concluir
+                                {messageButton}
                             </Button>
                         </div>
 
-                        <InputMissingDialog
+                        <ErroMessageDialog
                             open={missingDialog}
                             onConfirm={() => setMissingDialog(false)}
+                            description={messageErro}
                         />
 
                     </DialogContent>

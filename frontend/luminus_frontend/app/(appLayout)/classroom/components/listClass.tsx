@@ -20,6 +20,9 @@ import EditClassModal from "./editClassModal";
 // Ícones para as ações de editar, excluir, arquivar e download
 import { Archive, Download, Pencil, Trash } from "lucide-react";
 
+import { useRouter } from "next/navigation"; 
+
+
 // Definição do tipo das propriedades que o componente ListClass recebe
 type ListclassroomsProps = {
   classrooms: Classroom[];  // Lista das turmas a serem exibidas
@@ -63,6 +66,8 @@ export default function ListClass({
   // Estado que controla se o hover está bloqueado (ex: quando um modal está aberto)
   const [lockHover, setLockHover] = useState(false);
 
+  const router = useRouter()
+
   // useEffect que atualiza o estado hasSelected sempre que a lista de turmas muda
   // Ele verifica se alguma turma está selecionada e atualiza o estado local
   useEffect(() => {
@@ -78,6 +83,14 @@ export default function ListClass({
   const handleToggleAll = () => {
     toggleSelectAll();
   };
+
+  const handleClickPageStudent = (id: number) => {
+    
+    router.push(`/classroom/${id+1}`)
+    
+    
+    //pesquisar sobre cache que mano maike falou
+  }
 
   return (
     <div className="w-full">
@@ -123,9 +136,10 @@ export default function ListClass({
               onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
               onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
               className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh] "
+              onClick={() => handleClickPageStudent(classroom.id)}
             >
               {/* Checkbox para selecionar essa turma individualmente */}
-              <td className="p-2 w-[50px]">
+              <td className="p-2 w-[50px]" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="checkbox"
                   checked={!!classroom.selected}  // Marca se a turma está selecionada
@@ -151,13 +165,14 @@ export default function ListClass({
               </>
 
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
-              <td className="p-1 w-[5vw]">
+              <td className="p-1 w-[5vw]" onClick={(e) => e.stopPropagation()}>
                 {hovered === classroom.id && (
                   <div className="flex gap-2 justify-end mr-2">
                     {/* Botões de ação: editar, excluir, arquivar e download */}
                     <button
                       className="hover:text-yellow-400"
                       onClick={() => {
+                        
                         setOpenEditingModal(true);  // Abre o modal de edição
                         setEditingClassroom(classroom);  // Define qual turma está sendo editada
                         setLockHover(true)
