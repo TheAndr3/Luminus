@@ -93,101 +93,102 @@ export default function DialogPage() {
                     handleDialogClose(); // Chama a função para resetar os campos quando o dialog é fechado
                 }
             }}>
-                <DialogTrigger >
-                    <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[2vh] py-[1vh] h-7"> Adicionar turma   +</Button> {/* Botão para abrir o dialog */}
+                <DialogTrigger asChild>
+                    <div className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
+                        Adicionar turma&nbsp;&nbsp;+
+                    </div>
                 </DialogTrigger>
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
 
-                <DialogContent>
-                    <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                    <DialogTitle className="sr-only">Criar Nova Turma</DialogTitle>
 
-                        {/* Header do dialog */}
-                        <div className="relative mb-6">
-                        {/* Imagem fixa à esquerda */}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
-                            <Image 
-                            src={class_icon}
-                            alt="icone turma"
-                            className="w-12 h-12"
+                    {/* Header do dialog */}
+                    <div className="relative mb-6">
+                    {/* Imagem fixa à esquerda */}
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
+                        <Image 
+                        src={class_icon}
+                        alt="icone turma"
+                        className="w-12 h-12"
+                        />
+                    </div>
+
+                    {/* Conteúdo centralizado */}
+                    <div className="flex items-center gap-2 justify-center">
+                        {editing ? (
+                        <input 
+                            className="text-4xl font-bold"
+                            placeholder={titulo}
+                            onChange={(e) => setTitulo(e.target.value)}
+                        />
+                        ) : (
+                        <span className="text-4xl font-bold"> {titulo} </span>
+                        )}
+                        <Pencil 
+                        className="w-5 h-5 text-white cursor-pointer" 
+                        onClick={() => setEditing(!editing)} 
+                        />
+                    </div>
+                    </div>
+
+
+                    {/* Campos de input */}
+                    <div className="grid grid-cols-2 gap-4 m-6 ">
+                        <div className="flex items-center gap-3 "> 
+                            <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
+                            <BaseInput 
+                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
+                                placeholder="Ex: EXA 702 - TPO1" 
+                                value={inputDisc} // Valor do input Disciplina
+                                onChange={(e) => setInputDisc(e.target.value)} // Atualiza o valor do input
                             />
                         </div>
 
-                        {/* Conteúdo centralizado */}
-                        <div className="flex items-center gap-2 justify-center">
-                            {editing ? (
-                            <input 
-                                className="text-4xl font-bold"
-                                placeholder={titulo}
-                                onChange={(e) => setTitulo(e.target.value)}
-                            />
-                            ) : (
-                            <span className="text-4xl font-bold"> {titulo} </span>
-                            )}
-                            <Pencil 
-                            className="w-5 h-5 text-white cursor-pointer" 
-                            onClick={() => setEditing(!editing)} 
+                        <div className="flex items-center gap-3 ml-8">
+                            <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
+                            <BaseInput
+                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
+                                placeholder="Insira o nome da instituição (opcional)"
+                                value={inputInst} // Valor do input Instituição
+                                onChange={(e) => setinputInst(e.target.value)} // Atualiza o valor do input
                             />
                         </div>
-                        </div>
 
-
-                        {/* Campos de input */}
-                        <div className="grid grid-cols-2 gap-4 m-6 ">
-                            <div className="flex items-center gap-3 "> 
-                                <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
-                                <BaseInput 
-                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                    placeholder="Ex: EXA 702 - TPO1" 
-                                    value={inputDisc} // Valor do input Disciplina
-                                    onChange={(e) => setInputDisc(e.target.value)} // Atualiza o valor do input
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-3 ml-8">
-                                <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
-                                <BaseInput
-                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                    placeholder="Insira o nome da instituição (opcional)"
-                                    value={inputInst} // Valor do input Instituição
-                                    onChange={(e) => setinputInst(e.target.value)} // Atualiza o valor do input
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-8">
-                                <label className="text-2xl">Período:</label> {/* Label para o campo Período */}
-                                <BaseInput 
-                                    className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                    placeholder="23.2"
-                                    type="number"
-                                    value={inputPer} // Valor do input Período
-                                    onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
-                                />
-                            </div>
-
-                            {/* Botão para importar CSV */}
-                            <div className="flex items-center justify-end gap-2">
-                                <label className="text-2xl">Nenhum arquivo: </label> 
-                                <ImportCSVButton/>
-                            </div>
-                        </div>
-
-                        {/* Botão "Concluir" */}
-                        <div className="flex justify-end mr-7">
-                            <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
-                                {messageButton}
-                            </Button>
-
-                            
-                        </div>
-
-                            <ErroMessageDialog
-                                open={missingDialog}
-                                onConfirm={() => setMissingDialog(false)}
-                                description={messageErro}
+                        <div className="flex items-center gap-8">
+                            <label className="text-2xl">Período:</label> {/* Label para o campo Período */}
+                            <BaseInput 
+                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
+                                placeholder="23.2"
+                                type="number"
+                                value={inputPer} // Valor do input Período
+                                onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
                             />
+                        </div>
+
+                        {/* Botão para importar CSV */}
+                        <div className="flex items-center justify-end gap-2">
+                            <label className="text-2xl">Nenhum arquivo: </label> 
+                            <ImportCSVButton/>
+                        </div>
+                    </div>
+
+                    {/* Botão "Concluir" */}
+                    <div className="flex justify-end mr-7">
+                        <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
+                            {messageButton}
+                        </Button>
+
                         
+                    </div>
 
-                    </DialogContent>
+                        <ErroMessageDialog
+                            open={missingDialog}
+                            onConfirm={() => setMissingDialog(false)}
+                            description={messageErro}
+                        />
+                    
+
                 </DialogContent>
             </Dialog>
         </>
