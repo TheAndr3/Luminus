@@ -115,4 +115,60 @@ async function pgDossieSelect(id) {
     return data.rows;
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect}
+async function pgDossieUpdate(data) {
+
+    try {
+        await pgDelete('Section',{dossie_id:data.id});
+
+        var sections = data.sections;
+
+        for(let i = 0; i < sections.length; i++){
+            var section = sections[i];
+            await pgInsert('section', section);
+            
+            for (let j = 0; j < section.questions.length; j++) {
+                var question = section.questions[j];
+                await pgInsert('question', question)
+            }
+        }
+        const payload = {
+            name: data.name,
+            description: data.description,
+            evaluation_method: data.evaluation_method
+        };
+        const data = pgUpdate('dossier',payload, {id:data.id})
+    } catch (error) {
+        throw error;
+    }
+    
+}
+
+async function pgAppraisalSelect(id) {
+    const query = 'SELECT (id, appraisal_id, section_id, question_id, question_option) FROM Evaluation WHERE appraisal_id == $1';
+
+    const client = await connect();
+
+    const response = await client.query(query, [id]);
+    const data = response.rows;
+    var result = {id:data[0].appraisal_id, sections:[]}
+    for(let i=0; i < data.length; i++){
+        var row = data[i];
+
+        if(!Object.keys(result.sections).find(row.section_id)) {
+            result.sections[row.section_id] = []
+        }
+        result.sections[row.section_id].push({question:row.question_id, option: row.question_option, evaluation:row.id})
+        
+    }
+    return result;
+}
+
+async function pgAppraisalUpdate(data) {
+    try {
+        
+    } catch (error) {
+        throw error
+    }
+}
+
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect}
