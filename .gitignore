@@ -3,5 +3,5 @@
 /backend/.env*
 /frontend/luminus_frontend/components/geladeira
 *.pem
-/*node_modules
+/frontend/luminus_frontend/node_modules
 
