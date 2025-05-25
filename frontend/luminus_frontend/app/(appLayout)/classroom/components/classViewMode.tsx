@@ -1,5 +1,5 @@
-// Importa o ícone LayoutGrid da biblioteca lucide-react
-import { LayoutGrid } from "lucide-react";
+// Importa os ícones LayoutGrid e List da biblioteca lucide-react
+import { LayoutGrid, List } from "lucide-react";
 
 // Define as props esperadas pelo componente: o modo de visualização atual
 // e a função que permite atualizá-lo
@@ -16,19 +16,25 @@ export default function ClassViewMode({ visualization, setVisualization }: Class
     setVisualization(visualization === 'grid' ? 'list' : 'grid');
   };
 
-  // Define a classe CSS com base no modo de visualização atual
-  // Aplica um fundo azul claro quando o modo é 'grid', e cinza caso contrário
-  const gridButtonClass = `cursor-pointer p-1 rounded-full w-7 h-7 
-    ${visualization === 'grid' ? 'bg-blue-200' : 'bg-gray-300 hover:bg-gray-400'} 
-    text-black`;
+  // Define a classe CSS para o botão com fundo cinza e efeito hover
+  const buttonClass = `cursor-pointer p-1 rounded-full w-7 h-7 
+    bg-gray-300 hover:bg-gray-400 text-black`;
 
-  // Renderiza o ícone LayoutGrid com estilos e comportamento de clique
+  // Renderiza o ícone apropriado com base no modo de visualização atual
+  // Se estiver em modo grid, mostra o ícone de lista, e vice-versa
   return (
     <div>
-      <LayoutGrid
-        onClick={handleClick} // Alterna o modo ao clicar
-        className={gridButtonClass} // Aplica estilos condicionais
-      />
+      {visualization === 'grid' ? (
+        <List
+          onClick={handleClick}
+          className={buttonClass}
+        />
+      ) : (
+        <LayoutGrid
+          onClick={handleClick}
+          className={buttonClass}
+        />
+      )}
     </div>
   );
 }

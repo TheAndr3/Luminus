@@ -9,7 +9,7 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY.replace(/\\n/g, '\n');
 async function hashPassword(password) {
     if (!password) {
         throw new Error('Senha inválida para hash.');
-
+    }
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log(hashedPassword);
@@ -18,6 +18,7 @@ async function hashPassword(password) {
         console.error('Erro ao criar hash:', err);
     }
 }
+
 
 async function decryptPassword(password) {  
     try {
