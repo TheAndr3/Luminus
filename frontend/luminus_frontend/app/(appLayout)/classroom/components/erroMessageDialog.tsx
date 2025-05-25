@@ -10,16 +10,18 @@ import {
 } from "@/components/ui/alert-dialog"
 
 // Definição da interface das props do componente
-interface InputMissingDialogProps {
+interface ErroMessageDialogProps {
   open: boolean          // Controla se o diálogo está aberto ou fechado
   onConfirm: () => void  // Função chamada ao confirmar a exclusão
+  description: string
 }
 
 // Componente de diálogo de confirmação de exclusão
-export function InputMissingDialog({
+export function ErroMessageDialog({
   open,
   onConfirm,
-}: InputMissingDialogProps) {
+  description
+}: ErroMessageDialogProps) {
   return (
     // Componente principal do diálogo
     <AlertDialog 
@@ -34,7 +36,7 @@ export function InputMissingDialog({
         <AlertDialogHeader>
           {/* Título com contagem dinâmica de turmas */}
           <AlertDialogTitle className="text-center text-lg mt-6">
-            Por favor, Preencha todos os campos adequadamente !
+            {description}
           </AlertDialogTitle>
         </AlertDialogHeader>
 

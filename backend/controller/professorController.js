@@ -81,12 +81,12 @@ exports.Create = async (req, res) => {
         const hashedPassword = await hashPassword(decryptedPassword);
 
         // Verificar se o email já está cadastrado
-        const verification = await db.pgSelect('Professor', { email_professor: email_professor });
+        const verification = await db.pgSelect('Professor', { professor_email: email_professor });
 
         if (verification.length === 0) {
             // Cadastrar o professor no Banco de dados
             await db.pgInsert('Professor', {
-                email_professor: email_professor,
+                professor_email: email_professor,
                 password: hashedPassword,
                 name: name
             });

@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import ActionPanel from './actionPainel';
 import { Archive, Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
+import { useRouter } from 'next/navigation';
 
 type GridclassroomsProps = {
   classrooms: Classroom[];
@@ -52,6 +53,8 @@ export default function Gridclassrooms({
 
   const [lockHover, setLockHover] = useState(false)
 
+  const router = useRouter()
+
     // Efeito que verifica sempre que a lista de classrooms muda
     // para atualizar o estado hasSelected
     useEffect(() => {
@@ -59,8 +62,15 @@ export default function Gridclassrooms({
       setHasSelected(classrooms.some(classroom => classroom.selected));
     }, [classrooms]); // Executa sempre que o array de classrooms mudar
 
+
+  const handleClickPageStudent = (id: number) => {
+
+    router.push(`/classroom/${id+1}`)
+    //pesquisar sobre cache que mano maike falou
+  }
+
   return (
-    <div className="w-full ">
+    <div className="w-full -mt-5">
       {/* Título e barra de ferramentas */}
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
@@ -70,19 +80,16 @@ export default function Gridclassrooms({
             onChange={toggleSelectAll}
             className="w-6 h-6 accent-blue-600"
           />
-          <span className="px-[2vh] text-lg">Selecionar todos</span>
+          <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
         </div>
-        <div className="flex gap-2 absolute right-[5vw] top-[22vh]">
-
-            {/*Renderização tipo de visualização das classrooms (lista ou grade) */}
-            <ClassViewMode
-              visualization={visualization}
-              setVisualization={setVisualization}
-            />
-
+        <div className="flex gap-2 items-center">
+          {/*Renderização tipo de visualização das classrooms (lista ou grade) */}
+          <ClassViewMode
+            visualization={visualization}
+            setVisualization={setVisualization}
+          />
           <DialogPage/>
         </div>
-        
       </div>
 
       {/* GRID */}
@@ -93,7 +100,7 @@ export default function Gridclassrooms({
             onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
             onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
             className="bg-[#0A2B3D] text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46"
-
+            onClick={() => handleClickPageStudent(classroom.id)}
           >
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col">
@@ -106,7 +113,7 @@ export default function Gridclassrooms({
  
               </div>
               
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2" onClick={(e)=>e.stopPropagation()}>
                     <input
                     type="checkbox"
                     checked={classroom.selected}
@@ -115,9 +122,9 @@ export default function Gridclassrooms({
                   />
 
                   {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-                <td className="p-1 w-8">
+                <div className="p-1 w-8 relative" onClick={(e)=> e.stopPropagation()}>
                   {hovered === classroom.id && (
-                    <>
+                    <div className="absolute right-0 top-0 flex flex-col gap-2 bg-[#0A2B3D]">
                       {/* Botão de edição com ícone de lápis */}
                       <button
                         className="hover:text-yellow-400"
@@ -159,8 +166,6 @@ export default function Gridclassrooms({
                       
                           <Download size={18}></Download>
                         </button>
-                                          
-                      
 
                       {/* Modal de edição da turma */}
                       <EditClassModal
@@ -173,40 +178,39 @@ export default function Gridclassrooms({
                           institution: classroom.dossie,
                         }}
                       />
-                    </>
+                    </div>
                   )}
-                </td>
+                </div>
                   
-              </div>
-                
+              </div> 
 
             </div>
 
-
-
-            
-
-
-            <button className="mb-4 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400">
+            <button className="mb-2 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400" 
+              onClick={(e)=>e.stopPropagation()
+              }
+            >
               {classroom.dossie}
             </button>
           </div>
         ))} 
       </div>
 
+      <div className="-mt-3">
+        <PageController
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
+      </div>
 
-       <div className='absolute right-[10vh] top-[83vh]'>
-         {/* Renderização do paginationController*/}
-          <PageController
-            currentPage={currentPage}
-            totalPages={totalPages}
-            setCurrentPage={setCurrentPage}
-          />
-       </div>
-
-      <div className=''>
+      <div className="relative">
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
-        {hasSelected && <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>}
+        {hasSelected && (
+          <div className="absolute bottom-1 left">
+            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>
+          </div>
+        )}
       </div>
 
     </div>
