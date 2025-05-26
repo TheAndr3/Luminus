@@ -23,7 +23,7 @@ export default function VizualizationClass() {
     selected: false,
   }));
   
-  const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
+  const [visualization, setVisualization] = useState<'grid' | 'list'>('grid'); // Modo de visualização
   const [classi, setClassi] = useState(mockClass); // Lista de turmas
   const [currentPage, setCurrentPage] = useState(1); // Paginação
   const turmasPorPagina = visualization === 'grid' ? 6 : 6; // Itens por página
@@ -201,7 +201,7 @@ export default function VizualizationClass() {
         )}
 
         {visualization === 'grid' && (
-          <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
+          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
             <GridClass
               classrooms={filteredClasses}
               toggleSelectAll={toggleSelectAll}
