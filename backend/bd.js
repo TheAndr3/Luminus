@@ -171,8 +171,7 @@ async function pgAppraisalUpdate(data) {
 
         for (let i = 0; i < evaluations.length; i++) {
             const ev = evaluations[i];
-            
-            pgInsert('Evaluation', ev);
+            await pgInsert('Evaluation', ev);
         }
 
         const payload = {
@@ -185,4 +184,15 @@ async function pgAppraisalUpdate(data) {
     }
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate};
+async function pgAppraisalGetPoints(classId) {
+    try {
+        const response = await pgSelect('Appraisal', {classroom_id: classId});
+
+        const classPoints = response.map(i => { return {student_id:i.student_id, average:i.points}});
+        return classPoints;
+    } catch (error) {
+        throw error
+    }
+}
+
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints};
