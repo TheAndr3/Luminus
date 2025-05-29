@@ -27,7 +27,7 @@ exports.Login = async (req, res) => {
         const rows = await db.pgSelect('Professor', { email_professor: email });
 
         if (rows.length === 0) {
-            return res.status(404).send('Usuário não encontrado');
+            return res.status(404).json({msg:'Usuário não encontrado'});
         }
 
         const professor = rows[0];
@@ -36,13 +36,13 @@ exports.Login = async (req, res) => {
         const passwordMatch = await bcrypt.compare(decryptedPassword, professor.password);
 
         if (!passwordMatch) {
-            return res.status(401).send('Senha incorreta');
+            return res.status(401).json({msg:'Senha incorreta'});
         }
 
         // Retornar o status 200 e o professor logado
         res.status(200).json({
-            message: 'Login realizado com sucesso',
-            professor: {
+            msg: 'Login realizado com sucesso',
+            data: {
                 id: professor.id,
                 nome: professor.nome,
                 email: professor.email_professor
@@ -51,7 +51,7 @@ exports.Login = async (req, res) => {
         //Caso dê erro, retornar o status 500 e a mensagem de erro
     } catch (err) {
         console.error(err);
-       return res.status(500).send('Erro ao realizar login:', err);
+       return res.status(500).msg({msg: 'Erro ao realizar login'});
 
     }
 };
@@ -59,9 +59,8 @@ exports.Login = async (req, res) => {
 exports.Create = async (req, res) => {
     const { email_professor, password, name } = req.body;
 
-
     if (!email_professor || !password || !name) {
-        return res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
+        return res.status(400).json({msg: "Os campos precisam estar preenchidos corretamente"});
     }
 
     //desencriptar senha 
@@ -70,7 +69,7 @@ exports.Create = async (req, res) => {
 
     // Verificar se todos os campos foram preenchidos
     if (!email_professor || !password || !name) {
-        return res.status(400).json({ message: "Os campos precisam estar preenchidos corretamente" });
+        return res.status(400).json({ msg: "Os campos precisam estar preenchidos corretamente" });
     }
 
     try {
@@ -90,21 +89,24 @@ exports.Create = async (req, res) => {
                 password: hashedPassword,
                 name: name
             });
-            return res.status(201).json({ message: 'Usuário criado com sucesso!' });
+            return res.status(201).json({ msg: 'Usuário criado com sucesso!' });
         } else {
-            return res.status(409).json({ message: 'Esse e-mail já possui um cadastro' });
+            return res.status(409).json({ msg: 'Esse e-mail já possui um cadastro' });
         }
     } catch (err) {
         console.error('Erro ao cadastrar professor:', err);
-        return res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
+        return res.status(500).json({ msg: 'Erro ao cadastrar usuário', error: err });
     }
 };
 
+
+//não tinha nada implementado até a data da refatoração
 exports.GetProfile = async (req, res) => {
     const id = req.params.id;
     res.status(200).send(`Perfil do professor ${id}`);
 }
 
+//não tinha nada implementado até a data da refatoração
 exports.Delete = async (req, res) => {
     const id = req.params.id;
     res.status(204).send();
@@ -129,16 +131,17 @@ exports.RecoverPassword = async (req, res) => {
             //atualiza que o codigo ja foi utilizado
             await db.pgUpdate('verifyCode', {status:bd_code.status}, {professor_id:professor[0].id, code:code, data_sol:data.toISOString()});
 
-            res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
+            return res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
-            res.status(400).json({msg:'codigo ja utilizado'});
+            return res.status(400).json({msg:'codigo ja utilizado'});
         }
     } catch (err) {
         console.log('erro: ', err);
-        res.status(400).json({msg:'nao foi possivel atender sua solicitacao: ', err});
+        return res.status(400).json({msg:'nao foi possivel atender sua solicitacao'});
     }
 }
 
+//não tinha nada implementado até a data da refatoração
 exports.Home = async (req, res) => {
     const id = req.params.id;
     res.status(200).send(`Página inicial do professor ${id}`);
@@ -165,18 +168,18 @@ exports.SendEmail = async (req, res) => {
 
             try {
                 const resp = await db.pgInsert('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString, status:0});
-                res.status(200).json({msg:'email enviado'});
+                return res.status(200).json({msg:'email enviado'});
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
-                res.status(400).json({msg:'erro no banco de dados, nao foi possivel atender a sua solicitacao'});
+                return res.status(400).json({msg:'erro no banco de dados, nao foi possivel atender a sua solicitacao'});
             }
             
         } else {
-            res.status(400).json({msg:'professor nao cadastrado no banco de dados'});
+            return res.status(400).json({msg:'professor nao cadastrado no banco de dados'});
         }
     } catch (err) {
         console.log('erro: ', err);
-        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
     }
 }
 
@@ -210,7 +213,7 @@ exports.NewPassword = async (req, res) => {
 
             //caso o token ja tenha sido utilizado
             if(Object.values(oldTokens).length > 0) {
-                res.status(403).json({msg:'token invalido'});
+                return res.status(403).json({msg:'token invalido'});
             } else {
                 //token valido e pertence aquele professor
                 if (result.professor_id == professor[0].id && result.email == email) {
@@ -223,20 +226,20 @@ exports.NewPassword = async (req, res) => {
                     //insere na tabela o token ja utilizado
                     await db.pgInsert('tokencode', dataToDb);
                     const resp = await db.pgUpdate('professor', {password:hashedPassword}, {id:professor[0].id});
-                    res.status(201).json({msg:'password trocado com sucesso'})
+                    return res.status(201).json({msg:'password trocado com sucesso', data:resp})
                 } else {
-                    res.status(403).json({msg:'token invalido'});
+                    return res.status(403).json({msg:'token invalido'});
                 }
             }
 
             
         } catch (err) {
-            res.status(403).json({msg:'token invalido'});
+            return res.status(403).json({msg:'token invalido'});
         }
 
     } catch (err) {
         console.log('erro: ', err);
-        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
     }
 }
 
