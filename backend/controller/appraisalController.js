@@ -91,36 +91,23 @@ exports.Create = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-    try {
-      if (req.body.id) {
-        const existingStudent = await db.pgSelect('student', { id: req.body.id });
-        if (existingStudent.length > 0) {
-          return res.status(400).json({ msg: 'Número de matrícula já existe' });
+  const id = req.params.id  
+  const data = req.body;
+  try {
+      try {
+        const hasAppraisal = await db.pgSelect('appraisal', {id:id});
+        if (Object.values(hasAppraisal).length > 0) {
+          const resp = await db.pgAppraisalUpdate(data);
+
+          return res.status(201).json({msg:'atualizado com sucesso', data:resp});
+        } else {
+          throw new Error('avaliação não existe');
         }
-
-        const classroomStudentPayload = {
-          student_id: req.body.id 
-        };
-        
-        await db.pgUpdate('ClassroomStudent', classroomStudentPayload, { student_id: req.params.id });
-
-        const appraisalPayload = {
-          student_id: req.body.id 
-        };
-
-        await db.pgUpdate('Appraisal', appraisalPayload, { student_id: req.params.id });
+      } catch (error) {
+        throw new Error("avaliação não existe");
       }
-
-      const studentPayload = {
-        id: req.body.id,
-        name: req.body.name
-      };
-
-      await db.pgUpdate('student', studentPayload, { id: req.params.id });
-  
-      res.status(200).json({ msg: 'estudante atualizado com sucesso' });
     } catch (error) {
-      res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
+      return res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
     }
   };
   
