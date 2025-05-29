@@ -54,26 +54,38 @@ exports.GetAppraisal = async (req, res) => {
 
 exports.Create = async (req, res) => {
     const class_id = req.params.classid;
+    const student_id = req.params.studentid;
     
     try {
         var payload = {
-            id: req.body.id,
-            name: req.body.name
+            classroom_id: class_id,
+            student_id: student_id
         };
 
-        const studentresp = await db.pgInsert('student', payload);
+        try {
+          var data = await db.pgSelect('appraisal', payload);
+          if(Object.values(data).length > 0) {
+            throw new Error('avaliação ja existe');
+          }
+        } catch (error) {
+          throw new Error("avaliação ja cadastrada");
+        }
+        
 
         payload = {
             professor_id:req.body.professor_id,
-            student_id: req.body.id,
-            classroom_id:req.params.classid
+            student_id: student_id,
+            classroom_id:class_id,
+            points:0.0,
+            filling_date: new Date()
         };
 
-        const studentclassresp = await db.pgInsert('ClassroomStudent', payload);
+        const respAppraisal = await db.pgInsert('Appraisal', payload);
 
-        res.status(201).json({msg:'estudante inserido com sucesso'});
+        return res.status(201).json({msg:'avaliação criada com sucesso', data:respAppraisal});
     } catch (error) {
-        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
+        console.log(error)
+        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
     }
 
 }
@@ -89,7 +101,7 @@ exports.Update = async (req, res) => {
         const classroomStudentPayload = {
           student_id: req.body.id 
         };
-
+        
         await db.pgUpdate('ClassroomStudent', classroomStudentPayload, { student_id: req.params.id });
 
         const appraisalPayload = {

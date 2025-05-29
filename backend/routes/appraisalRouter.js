@@ -12,12 +12,12 @@ routerAppraisal.get('/appraisal/:classid/:studentid', appraisalController.Get);
 routerAppraisal.get('/appraisal/:id', appraisalController.GetAppraisal);
 
 //Criar novo avaliação
-routerAppraisal.post('/appraisal/:classid/create', appraisalController.Create);
+routerAppraisal.post('/appraisal/:classid/create/:studentid', appraisalController.Create);
 
 //Editar avaliação
-routerAppraisal.put('/appraisal/:classid/update/:studentid', appraisalController.Update);
+routerAppraisal.put('/appraisal/:id/update', appraisalController.Update);
 
 //Deletar avaliação
-routerAppraisal.delete('/appraisal/:classid/delete/:studentid', appraisalController.Delete);
+routerAppraisal.delete('/appraisal/:id/delete', appraisalController.Delete);
 
 module.exports = routerAppraisal;
