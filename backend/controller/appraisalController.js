@@ -113,37 +113,20 @@ exports.Update = async (req, res) => {
   
 
   exports.Delete = async (req, res) => {
-    try {
-      const classroomStudentPayload = {
-        classroom_id: req.params.classid,
-        student_id: req.params.id,
-        professor_id: req.body.professor_id
-      };
-
-      await db.pgDelete('ClassroomStudent', classroomStudentPayload);
-      
-      const appraisalPayload = {
-        student_id: req.params.id,
-        professor_id: req.body.professor_id
-      };
-
-      await db.pgDelete('Appraisal', appraisalPayload);
-
-      const studentPayload = {
-        id: req.params.id
-      };
-      
-      await db.pgDelete('student', studentPayload);
-  
-      res.status(200).json({ msg: 'estudante removido com sucesso' });
+    const id = req.params.id  
+  try {
+      try {
+        const hasAppraisal = await db.pgSelect('appraisal', {id:id});
+        if (Object.values(hasAppraisal).length > 0) {
+          const resp = await db.pgDelete('appraisal', {id:id});
+          return res.status(204).json({msg:'atualizado com sucesso', data:resp});
+        } else {
+          throw new Error('avaliação não existe');
+        }
+      } catch (error) {
+        throw new Error("avaliação não existe");
+      }
     } catch (error) {
-      res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+      return res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
     }
   };
-  
-
-
-exports.ImportCsv = async (req, res) => {
-    const class_id = req.params.class_id;
-    res.status(201).send("Rota de criar turma");
-}
