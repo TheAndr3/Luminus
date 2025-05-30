@@ -3,9 +3,7 @@ const routerClassroom = express.Router();
 const classroomController = require('../controller/classroomController.js');
 
 //Listar class
-
 routerClassroom.get('/classroom/list/:professorid', classroomController.List);
-
 
 //Obter class específica
 routerClassroom.get('/classroom/:id', classroomController.Get);
