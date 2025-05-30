@@ -17,7 +17,7 @@ interface StudentGetResponse {
     classroom_id: number;
 }
 
-interface StudentListResponse {
+export interface StudentListResponse {
     id: number;
     name: string;
     classroom_id: number;
