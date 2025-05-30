@@ -23,7 +23,7 @@ export interface StudentListResponse {
     classroom_id: number;
 }
 
-export const CreateStudent = async (payLoad: createPayLoad): Promise<CreateResponse> => {
+export const CreateStudent = async (currentTurmaId: number, p0: { matricula: number; nome: string; }, payLoad: createPayLoad): Promise<CreateResponse> => {
     try {
         const response = await api.post(`/student/${payLoad.classroomId}/create`, payLoad);
         return response.data;

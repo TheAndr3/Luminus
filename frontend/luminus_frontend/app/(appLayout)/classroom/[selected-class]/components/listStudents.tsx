@@ -9,6 +9,7 @@ import ClassViewMode from "@/app/(appLayout)/classroom/components/classViewMode"
 
 // Ícone padrão para as studentss
 import { FaUsers } from 'react-icons/fa';
+import { Check, X, User as UserIcon } from 'lucide-react'; // Importa ícones de check e X, e um ícone de usuário para a nova linha
 
 // Componente de imagem otimizada do Next.js
 import Image from "next/image";
@@ -26,13 +27,23 @@ interface ListStudentsProps {
 
   toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
   toggleOne: (id: number) => void;             // Alterna a seleção de um aluno específico
-  onDeleteStudents: () => void;                // Função para deletar alunos  onDeleteStudents: () => void;                   // Função para deletar alunos
-  
+  onDeleteStudents: () => void;                // Função para deletar alunos
+
   isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
   currentPage: number;                         // Página atual
   totalPages: number;                          // Total de páginas
   setCurrentPage: (page: number) => void;      // Função para trocar de página
 
+  // Novas props para a linha de adição inline
+  showInlineAddStudent: boolean;
+  inlineNewStudentMatricula: string;
+  setInlineNewStudentMatricula: (value: string) => void;
+  inlineNewStudentName: string;
+  setInlineNewStudentName: (value: string) => void;
+  handleInlineAddStudent: () => Promise<void>; // Função para adicionar o aluno
+  handleCancelInlineAdd: () => void;           // Função para cancelar a adição
+  inlineAddStudentError: string | null;        // Erro da adição inline
+  isLoading: boolean;                          // Estado de loading global
 };
 
 // Componente principal que renderiza a lista de studentss
@@ -47,6 +58,17 @@ export default function ListStudents({
   currentPage,
   totalPages,
   setCurrentPage,
+
+  // Novas props para a linha de adição inline
+  showInlineAddStudent,
+  inlineNewStudentMatricula,
+  setInlineNewStudentMatricula,
+  inlineNewStudentName,
+  setInlineNewStudentName,
+  handleInlineAddStudent,
+  handleCancelInlineAdd,
+  inlineAddStudentError,
+  isLoading,
 }: ListStudentsProps) {
 
   // Estado local para verificar se algum item está selecionado
@@ -117,6 +139,63 @@ export default function ListStudents({
         </thead>
 
         <tbody>
+          {/* Linha para adicionar novo aluno (condicional) */}
+          {showInlineAddStudent && (
+            <tr className="bg-slate-800 text-white border-b border-slate-700">
+              <td className="px-4 py-3 w-12"></td> {/* Checkbox vazio para alinhamento */}
+              <td className="w-10 px-5 py-3 text-left">
+                <UserIcon className="w-6 h-6 text-gray-400" /> {/* Ícone de usuário */}
+              </td>
+              <td className="px-4 py-3">
+                <input
+                  type="number" // Alterado para number para matrículas
+                  value={inlineNewStudentMatricula}
+                  onChange={(e) => setInlineNewStudentMatricula(e.target.value)}
+                  placeholder="Matrícula"
+                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
+                  disabled={isLoading}
+                />
+              </td>
+              <td className="px-4 py-3">
+                <input
+                  type="text"
+                  value={inlineNewStudentName}
+                  onChange={(e) => setInlineNewStudentName(e.target.value)}
+                  placeholder="Nome do Aluno"
+                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
+                  disabled={isLoading}
+                />
+              </td>
+              <td className="px-4 py-3 flex gap-2 items-center">
+                <button
+                  className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full disabled:opacity-50"
+                  onClick={handleInlineAddStudent}
+                  disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
+                  title="Adicionar Aluno"
+                >
+                  <Check size={20} />
+                </button>
+                <button
+                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full disabled:opacity-50"
+                  onClick={handleCancelInlineAdd}
+                  disabled={isLoading}
+                  title="Cancelar"
+                >
+                  <X size={20} />
+                </button>
+              </td>
+            </tr>
+          )}
+
+          {/* Exibe erro de adição inline, se houver */}
+          {showInlineAddStudent && inlineAddStudentError && (
+            <tr className="bg-red-900/20">
+              <td colSpan={5} className="px-4 py-2 text-center text-red-400 text-sm">
+                {inlineAddStudentError}
+              </td>
+            </tr>
+          )}
+
           {/* Renderiza uma linha para cada students */}
           {students.map((students) => (
             <tr
@@ -193,7 +272,7 @@ export default function ListStudents({
           ))}
         </tbody>
       </table>
-      
+
       <div className="flex justify-end mt-6">
       {/* Paginação */}
       <PageController

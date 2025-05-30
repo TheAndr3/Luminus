@@ -12,11 +12,11 @@ import { Header } from "./components/Header";
 import { ActionBar } from "./components/ActionBar";
 import { Folder, User, ClipboardEdit, Plus, FileText } from "lucide-react"; // Adicionado FileText
 import styles from './selected-classroom.module.css';
-import { toast } from 'react-hot-toast'; 
+import { toast } from 'react-hot-toast';
 import { api } from "@/services/api"; // Importando a instância do Axios configurada
 // Importando o hook useState e useEffect do React
 import { useState, useEffect } from 'react';
-import { CreateStudent } from "@/services/studentService";
+//import { CreateStudent } from "@/services/studentService";
 import { usePathname } from 'next/navigation';
 
 // Importações do Dialog do shadcn/ui
@@ -38,6 +38,16 @@ type ParsedStudent = {
   nome: string;
 };
 
+// Nova interface para a resposta esperada da criação de aluno
+// Esta interface é definida aqui para ser globalmente acessível dentro deste arquivo.
+interface ExpectedCreateResponse {
+  success: boolean;
+  message?: string; // Mensagem opcional, geralmente presente em caso de erro
+  // Adicione outras propriedades aqui se a API retornar dados do aluno criado no sucesso,
+  // por exemplo: student?: Students;
+}
+
+
 export default function VisualizacaoAlunos() {
   const pathname = usePathname();
   const getTurmaIdFromPath = () => {
@@ -56,8 +66,6 @@ export default function VisualizacaoAlunos() {
   const alunosPorPagina = 6;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
-  // const [archiveConfirmation, setarchiveConfirmation] = useState(false); // Não usado para alunos
-  // const [idsToArchive, setIdsToArchive] = useState<number[]>([]); // Não usado para alunos
   const [searchTerm, setSearchTerm] = useState("");
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
   const [showCsvConfirmation, setShowCsvConfirmation] = useState(false); // Controlará o Dialog
@@ -67,6 +75,19 @@ export default function VisualizacaoAlunos() {
   const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
+  // Estados para o modal de adicionar aluno (mantido para referência, mas não usado para a nova funcionalidade)
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [newStudentMatricula, setNewStudentMatricula] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [addStudentError, setAddStudentError] = useState<string | null>(null);
+
+  // Novos estados para a linha de adição direta
+  const [showInlineAddStudent, setShowInlineAddStudent] = useState(false);
+  const [inlineNewStudentMatricula, setInlineNewStudentMatricula] = useState('');
+  const [inlineNewStudentName, setInlineNewStudentName] = useState('');
+  const [inlineAddStudentError, setInlineAddStudentError] = useState<string | null>(null);
+
+
    useEffect(() => {
     const turmaId = getTurmaIdFromPath();
     setCurrentTurmaId(turmaId);
@@ -74,12 +95,10 @@ export default function VisualizacaoAlunos() {
       // TODO: Chamar API para carregar detalhes da turma para `classTitle`
       // Ex: fetchClassDetails(turmaId).then(data => setClassTitle(data.name));
       console.log("ID da Turma para carregar alunos:", turmaId);
-      // fetchStudents(turmaId); // Mantenha comentado para a simulação frontend-only
-                               // Ou, se quiser carregar mocks iniciais, pode fazer aqui.
-                               // Por ora, a lista 'classi' começará vazia ou com os mocks que você já tinha.
+      fetchStudents(turmaId); // Chame a função para buscar alunos
     }
-  }, [pathname]); 
-  
+  }, [pathname]);
+
   const totalPages = Math.ceil(classi.length / alunosPorPagina);
   const startIndex = (currentPage - 1) * alunosPorPagina;
   const alunosVisiveis = classi.slice(startIndex, startIndex + alunosPorPagina);
@@ -113,7 +132,7 @@ export default function VisualizacaoAlunos() {
     setIdsToDelete(selecionadas);
     setConfirmOpen(true);
   };
-  
+
   const confirmDeletion = async () => {
     try {
       console.log("Excluir alunos com IDs:", idsToDelete);
@@ -124,31 +143,32 @@ export default function VisualizacaoAlunos() {
       } else if (classi.length - idsToDelete.length === 0) {
         setCurrentPage(1);
       }
+      toast.success("Aluno(s) excluído(s) com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir alunos:", error);
-      alert("Erro ao excluir.");
+      toast.error("Erro ao excluir aluno(s).");
     } finally {
       setConfirmOpen(false);
     }
   };
 
    const fetchStudents = async (turmaId: number) => {
-    if (!turmaId) return; 
+    if (!turmaId) return;
 
-    setIsLoading(true); 
+    setIsLoading(true);
     try {
       const response = await api.get(`/student/${turmaId}/list`);
-      
+
       const studentsFromApi = response.data.map((student: any) => ({
-        matricula: student.matricula || student.student_id, 
-        nome: student.nome || student.name,                
-        selected: false, 
+        matricula: student.matricula || student.student_id,
+        nome: student.nome || student.name,
+        selected: false,
       }));
 
       const validStudents = studentsFromApi.filter(
         (s: Students) => typeof s.matricula === 'number' && typeof s.nome === 'string'
       );
-      
+
       if(validStudents.length !== studentsFromApi.length) {
         console.warn("Alguns dados de alunos recebidos da API não puderam ser mapeados corretamente.");
       }
@@ -157,7 +177,7 @@ export default function VisualizacaoAlunos() {
       console.error("Erro ao buscar alunos:", error);
       const errorMsg = error.response?.data?.msg || `Falha ao carregar alunos da turma ${turmaId}.`;
       toast.error(errorMsg);
-      setClassi([]); 
+      setClassi([]);
     } finally {
       setIsLoading(false);
     }
@@ -235,44 +255,35 @@ export default function VisualizacaoAlunos() {
 
     reader.readAsText(file);
   };
-  
+
   const resetCsvState = () => {
     setShowCsvConfirmation(false);
     setParsedStudentsFromCSV([]);
-    setCsvFileToUpload(null); // ADICIONAR ESTA LINHA
+    setCsvFileToUpload(null);
     if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Limpa o input do arquivo
     }
   };
 
   const handleConfirmCsvImport = async () => {
-    // Não precisamos verificar currentTurmaId para a simulação, mas é bom manter para o futuro
-    if (!currentTurmaId) { 
+    if (!currentTurmaId) {
       toast.error("ID da turma não encontrado (simulação frontend).");
-      // setIsLoading(false); // setIsLoading será tratado no finally
-      // return; // Não retorna para permitir a simulação mesmo sem ID de turma
     }
 
-    // Verifica se há alunos parseados do CSV
     if (parsedStudentsFromCSV.length === 0) {
       toast.error("Nenhum aluno para importar do CSV.");
       return;
     }
 
-    setIsLoading(true); // Ativa o estado de loading
+    setIsLoading(true);
 
-    // Simulação de "importação"
     try {
-      // Adiciona os alunos do CSV ao estado 'classi'
-      // Converta ParsedStudent para Students se necessário (principalmente a matrícula para número)
       const newStudentsToAdd: Students[] = parsedStudentsFromCSV.map(ps => ({
-        matricula: parseInt(ps.matricula, 10) || Date.now() + Math.random(), // Fallback para matrícula se falhar o parse
+        matricula: parseInt(ps.matricula, 10) || Date.now() + Math.random(),
         nome: ps.nome,
         selected: false,
       }));
 
-      // Filtra para evitar duplicatas baseadas na matrícula (simples)
-      // Em uma implementação real, o backend lidaria com duplicatas de forma mais robusta.
       setClassi(prevClassi => {
         const existingMatriculas = new Set(prevClassi.map(s => s.matricula));
         const uniqueNewStudents = newStudentsToAdd.filter(ns => !existingMatriculas.has(ns.matricula));
@@ -281,17 +292,106 @@ export default function VisualizacaoAlunos() {
 
       toast.success(`${newStudentsToAdd.length} aluno(s) foram adicionados à lista localmente (simulação).`);
 
-      // A chamada `await fetchStudents(currentTurmaId)` é removida/comentada
-      // porque não estamos interagindo com o backend nesta simulação.
-      // A atualização da lista é feita diretamente com setClassi.
-
     } catch (error: any) {
       console.error("Erro ao simular importação de CSV:", error);
       toast.error("Erro ao simular a adição de alunos.");
     } finally {
-      setIsLoading(false); // Desativa o estado de loading
-      resetCsvState(); // Limpa os estados relacionados ao CSV (incluindo parsedStudentsFromCSV e csvFileToUpload)
+      setIsLoading(false);
+      resetCsvState();
     }
+  };
+
+  // Função para adicionar um único aluno (anteriormente via modal, agora adaptada para a linha)
+  const handleInlineAddStudent = async () => {
+    setInlineAddStudentError(null);
+
+    if (!inlineNewStudentName.trim()) {
+      setInlineAddStudentError("O nome do aluno não pode ser vazio.");
+      return;
+    }
+    if (!inlineNewStudentMatricula.trim()) {
+      setInlineAddStudentError("A matrícula do aluno não pode ser vazia.");
+      return;
+    }
+
+    const matriculaNum = parseInt(inlineNewStudentMatricula, 10);
+    if (isNaN(matriculaNum)) {
+      setInlineAddStudentError("A matrícula deve ser um número válido.");
+      return;
+    }
+
+    if (classi.some(s => s.matricula === matriculaNum)) {
+      setInlineAddStudentError("Já existe um aluno com esta matrícula.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (!currentTurmaId) {
+        toast.error("ID da turma não encontrado. Não é possível adicionar o aluno.");
+        setIsLoading(false);
+        return;
+      }
+
+      // ***** INÍCIO DA MUDANÇA PARA SIMULAÇÃO DO BACKEND *****
+
+      // Simulação da chamada à API com um atraso para demonstrar o loading
+      await new Promise(resolve => setTimeout(resolve, 500)); // Espera 0.5 segundos
+
+      // Simula a resposta de sucesso da API
+      const simulatedResponse: ExpectedCreateResponse = {
+        success: true,
+        message: "Aluno adicionado com sucesso (simulação)!"
+      };
+
+      // VERIFIQUE SE ESTE BLOCO ESTÁ COMENTADO SE VOCÊ NÃO QUISER SIMULAR UM ERRO
+      // Se você quiser simular um erro, descomente e use este bloco:
+      // const simulatedResponse: ExpectedCreateResponse = {
+      //   success: false,
+      //   message: "Erro simulado: matrícula inválida!"
+      // };
+      // if (matriculaNum === 999) { // Exemplo de erro simulado
+      //   throw new Error("Simulação de erro na matrícula 999");
+      // }
+
+
+      if (simulatedResponse.success) {
+        const newStudent: Students = {
+          matricula: matriculaNum,
+          nome: inlineNewStudentName.trim(),
+          selected: false,
+        };
+        // Adiciona o aluno à lista localmente
+        setClassi(prevClassi => [...prevClassi, newStudent]);
+        toast.success(`Aluno "${inlineNewStudentName.trim()}" adicionado com sucesso (simulação)!`);
+        setInlineNewStudentMatricula('');
+        setInlineNewStudentName('');
+        setShowInlineAddStudent(false);
+      } else {
+        // Se a simulação for um erro
+        setInlineAddStudentError(simulatedResponse.message || "Erro desconhecido na simulação.");
+        toast.error(simulatedResponse.message || "Erro desconhecido na simulação.");
+      }
+
+      // ***** FIM DA MUDANÇA PARA SIMULAÇÃO DO BACKEND *****
+
+    } catch (error: any) {
+      console.error("Erro na simulação de adição de aluno:", error);
+      // Garante que qualquer erro jogado na simulação ainda seja capturado
+      setInlineAddStudentError(error.message || "Erro crítico na simulação.");
+      toast.error(error.message || "Erro crítico na simulação.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para cancelar a adição inline e limpar os campos
+  const handleCancelInlineAdd = () => {
+    setInlineNewStudentMatricula('');
+    setInlineNewStudentName('');
+    setInlineAddStudentError(null);
+    setShowInlineAddStudent(false);
   };
 
 
@@ -306,7 +406,7 @@ export default function VisualizacaoAlunos() {
           onCsvFileSelected={handleProcessCsvFile}
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
-          onAddStudentClick={() => { /* TODO: lógica para adicionar aluno individualmente (modal?) */ }}
+          onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
         />
 
         {/* ---- MODAL DE CONFIRMAÇÃO CSV ---- */}
@@ -314,19 +414,18 @@ export default function VisualizacaoAlunos() {
             if (!isOpen) {
                 resetCsvState();
             }
-            // Não precisamos de setShowCsvConfirmation(isOpen) aqui, pois resetCsvState já faz.
         }}>
-          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* */}
-          <DialogContent className="max-w-2xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6"> {/* */}
-            <DialogHeader className="mb-4"> {/* */}
-              <div className="flex items-center gap-3 justify-center"> {/* Similar ao createClassModal */}
-                  <FileText className="w-8 h-8 text-white" /> {/* Ícone similar */}
+          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
+          <DialogContent className="max-w-2xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
+            <DialogHeader className="mb-4">
+              <div className="flex items-center gap-3 justify-center">
+                  <FileText className="w-8 h-8 text-white" />
                   <DialogTitle className="text-2xl font-bold text-center">
                     Confirmar Importação de Alunos
                   </DialogTitle>
               </div>
             </DialogHeader>
-            
+
             {csvError && (
               <div className="my-4 p-3 border border-red-700 bg-red-100 text-red-700 rounded-md text-sm">
                 <p className="font-semibold">Erro ao processar CSV:</p>
@@ -363,18 +462,18 @@ export default function VisualizacaoAlunos() {
             {parsedStudentsFromCSV.length === 0 && !csvError && (
                 <p className="text-center text-gray-400 my-4">Nenhum aluno para importar do arquivo selecionado.</p>
             )}
-            
-            <DialogFooter className="mt-6 flex justify-end gap-3"> {/* */}
-              <Button 
-                variant="outline" 
-                onClick={resetCsvState} 
+
+            <DialogFooter className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={resetCsvState}
                 className="bg-gray-500 hover:bg-gray-600 text-white border-gray-600 rounded-full px-5 py-2 h-auto"
                 disabled={isLoading}
               >
                 Cancelar
               </Button>
-              <Button 
-                onClick={handleConfirmCsvImport} 
+              <Button
+                onClick={handleConfirmCsvImport}
                 disabled={isLoading || !!csvError || parsedStudentsFromCSV.length === 0}
                 className="bg-green-600 hover:bg-green-700 text-white rounded-full px-5 py-2 h-auto"
               >
@@ -383,8 +482,9 @@ export default function VisualizacaoAlunos() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        {/* ---- FIM MODAL ---- */}
+        {/* ---- FIM MODAL CSV ---- */}
 
+        {/* O MODAL DE ADICIONAR ALUNO INDIVIDUALMENTE FOI REMOVIDO E SUBSTITUÍDO PELA LINHA INLINE */}
 
         <div className="px-10 flex items-center justify-center mt-10 ml-auto">
           <ListStudents
@@ -396,6 +496,16 @@ export default function VisualizacaoAlunos() {
             currentPage={currentPage}
             totalPages={totalPages}
             setCurrentPage={setCurrentPage}
+            // Novas props para a linha de adição inline
+            showInlineAddStudent={showInlineAddStudent}
+            inlineNewStudentMatricula={inlineNewStudentMatricula}
+            setInlineNewStudentMatricula={setInlineNewStudentMatricula}
+            inlineNewStudentName={inlineNewStudentName}
+            setInlineNewStudentName={setInlineNewStudentName}
+            handleInlineAddStudent={handleInlineAddStudent}
+            handleCancelInlineAdd={handleCancelInlineAdd}
+            inlineAddStudentError={inlineAddStudentError}
+            isLoading={isLoading} // Passa o estado de loading para desabilitar botões
           />
         </div>
       </div>
