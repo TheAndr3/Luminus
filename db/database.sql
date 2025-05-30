@@ -54,39 +54,6 @@ create table Student(
 	name VARCHAR(255) NOT NULL
 );
 
-create table Appraisal(
-	id SERIAL,
-	student_id INT,
-	professor_id INT,
-	classroom_id INT,
-	points REAL,
-	filling_date date NOT NULL,
-
-	CONSTRAINT fk_Appraisal_Student FOREIGN KEY(student_id) REFERENCES Student(id), ON DELETE CASCADE ON UPDATE CASCADE
-	CONSTRAINT fk_Appraisal_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id), ON DELETE CASCADE ON UPDATE CASCADE
-	CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id) REFERENCES Classroom(id), ON DELETE CASCADE ON UPDATE CASCADE
-	PRIMARY KEY(id, student_id, professor_id, classroom_id)
-);
-
-create table Evaluation(
-	id SERIAL,
-	student_id INT,
-	professor_id INT,
-	classroom_id INT,
-	dossier_id INT,
-	section_id INT,
-	question_id INT,
-	appraisal_id INT,
-
-	question_option INT,
-
-	CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, professor_id, classroom_id) REFERENCES Appraisal(id, student_id, professor_id, classroom_id),
-	CONSTRAINT fk_Evauation_Question FOREIGN KEY(question_id, section_id, dossier_id) REFERENCES Question(id, section_id, dossier_id),
-
-	PRIMARY KEY(id, appraisal_id, question_id, section_id, dossier_id)
-
-);
-
 create table Classroom(
 	id SERIAL,
 	professor_id INT,
@@ -111,6 +78,39 @@ create table ClassroomStudent(
 	CONSTRAINT fk_ClassroomStudent_Student FOREIGN KEY(student_id) REFERENCES Student(id) ON DELETE CASCADE ON UPDATE CASCADE,
 
 	PRIMARY KEY(classroom_id, student_id, professor_id)
+
+);
+
+
+create table Appraisal(
+	id SERIAL,
+	student_id INT,
+	professor_id INT,
+	classroom_id INT,
+	points REAL,
+	filling_date date NOT NULL,
+
+	CONSTRAINT fk_Appraisal_Student FOREIGN KEY(student_id) REFERENCES Student(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id, professor_id) REFERENCES Classroom(id, professor_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(id, student_id, professor_id, classroom_id)
+);
+
+create table Evaluation(
+	id SERIAL,
+	student_id INT,
+	professor_id INT,
+	classroom_id INT,
+	dossier_id INT,
+	section_id INT,
+	question_id INT,
+	appraisal_id INT,
+
+	question_option INT,
+
+	CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, professor_id, classroom_id) REFERENCES Appraisal(id, student_id, professor_id, classroom_id),
+	CONSTRAINT fk_Evauation_Question FOREIGN KEY(question_id, section_id, dossier_id) REFERENCES Question(id, section_id, dossier_id),
+
+	PRIMARY KEY(id, appraisal_id, question_id, section_id, dossier_id)
 
 );
 
