@@ -51,12 +51,21 @@ exports.Create = async (req, res) => {
 
 exports.List = async(req, res) => {
   const professor_id = req.params.professorid;
+  const start = 0;
+  const size = 6;
 
+  try{
+    start = req.query.start;
+    size = req.query.size;
+  } catch (erro) {
+    console.log(erro);
+  }
+  
   try {
     const payload = {professor_id:professor_id};
-    const result = db.pgSelect('dossier', payload);
+    const result = await db.pgSelect('dossier', payload);
 
-    return res.status(200).json({msg:'sucesso', data:result});
+    return res.status(200).json({msg:'sucesso', data:result.slice(start, start+size-1), ammount:result.length});
   } catch (error) {
     console.log(error);
     return res.status(400).json({msg:'falha ao atender sua solicitacao'});
@@ -84,7 +93,7 @@ exports.Update = async (req, res) => {
     if (haveAssociationInAnyClass.length > 0) {
       return res.status(400).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'})
     } else {
-      const response = db.pgDossieUpdate(body)
+      const response = await db.pgDossieUpdate(body)
       return res.status(202).json({msg:'sucess', data:response});
     }
   } catch (error) {

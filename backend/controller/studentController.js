@@ -4,13 +4,22 @@ const db = require('../bd');
 
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
+    const size = 6;
+    const start = 0
+
+    try{
+      size = req.query.size;
+      start = req.query.start;
+    } catch (erro) {
+      console.log(erro);
+    }
     
     try {
         const payload = {classroom_id:class_id}
         const dataStudent = await db.pgSelect('ClassroomStudent', payload);
 
         if (Object.values(dataStudent).length > 0) {
-            return res.status(200).json({msg:"sucess", data:dataStudent});
+            return res.status(200).json({msg:"sucess", data:dataStudent.slice(start, start+size-1), ammount:dataStudent.length});
         } else {
             return res.status(400).json({msg:'nao ha estudantes nessa turma'});
         }

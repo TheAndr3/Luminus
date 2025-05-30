@@ -51,7 +51,7 @@ exports.Login = async (req, res) => {
       return res.status(401).json({msg:"senha incorreta"});
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       msg: 'Login realizado com sucesso',
       data: {
         id: institution.id,
@@ -62,7 +62,7 @@ exports.Login = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).send('Erro ao realizar login');
+    return res.status(500).send('Erro ao realizar login');
   }
 };
 

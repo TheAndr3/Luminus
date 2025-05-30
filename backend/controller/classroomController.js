@@ -3,10 +3,19 @@ const db = require('../bd');
 exports.List = async (req, res) => {
 
   const profesor_id = req.params.profesorid;
+  var start = 0;
+  var size = 0;
+
+  try {
+    start = req.query.start;
+    size = req.query.size;
+  } catch (error) {
+    console.log(error);
+  }
 
   try{
     const classData = await db.pgSelect('classroom', {professor_id:profesor_id});
-    return res.status(200).json({msg:'sucesso', data:classData});
+    return res.status(200).json({msg:'sucesso', data:classData.slice(start, start+size-1), ammount:classData.length});
   }
     catch (err) {
       console.log(err)
@@ -47,10 +56,10 @@ exports.Create = async (req, res) => {
       return res.status(201).json({msg:'classe criada com sucesso', data:resp});
 
     } else {
-      res.status(400).json({msg:'id de professor invalido'});
+      return res.status(400).json({msg:'id de professor invalido'});
     }
   } catch (error) {
-    res.status(400).json({msg:'nao foi possivel atender a solicitacao'})
+    return res.status(400).json({msg:'nao foi possivel atender a solicitacao'})
   }
 }
 
