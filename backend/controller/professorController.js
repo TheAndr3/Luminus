@@ -74,25 +74,17 @@ exports.Create = async (req, res) => {
         // Verificar se o email já está cadastrado
         const verification = await db.pgSelect('Professor', { professor_email: email_professor });
 
-         // Gerar código de verificação
-        const codigo = gerarCodigo();
-        const expires_at = new Date(Date.now() + 10 * 60 * 1000); // expira em 10 minutos
-
-        await db.pgUpsert('VerifyCode', {
-            email: email_professor,
-            codigo,
-            expires_at
-        }, ['email']);
-
-        // Enviar e-mail
-        sendEmail(email_professor, codigo);
-
+        //Cadastrar professor no banco de dados
         if (verification.length === 0) {
-            // Cadastrar o professor no Banco de dados
-            return res.status(201).json({ message: 'Dados enviados com sucesso!' });
+            await db.pgInsert('Professor', {
+                professor_email: email, 
+                password: hashedPassword, 
+                name: name
+            });
+            return res.status(201).json({message:'Usuário criado com sucesso!'});
         } else {
-            return res.status(409).json({ message: 'Esse e-mail já possui um cadastro' });
-        }
+            return res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+        } 
     } catch (err) {
         console.error('Erro ao cadastrar professor:', err);
         return res.status(500).json({ message: 'Erro ao cadastrar usuário', error: err });
