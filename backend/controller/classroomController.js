@@ -31,7 +31,7 @@ exports.Get = async (req, res) => {
 exports.Create = async (req, res) => {
 
   try {
-    const professor = db.pgSelect('professor', {id: req.body.professor_id})
+    const professor = await db.pgSelect('professor', {id: req.body.professor_id})
 
     if (Object.values(professor).length > 0) {
       const payload = {

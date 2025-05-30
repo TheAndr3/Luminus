@@ -59,15 +59,6 @@ exports.Login = async (req, res) => {
 exports.Create = async (req, res) => {
     const { email_professor, password, name } = req.body;
 
-
-    if (!email_professor || !password || !name) {
-        return res.status(400).json({message: "Os campos precisam estar preenchidos corretamente"});
-    }
-
-    //desencriptar senha 
-    const decryptedPassword = await decryptPassword(password);
-
-
     // Verificar se todos os campos foram preenchidos
     if (!email_professor || !password || !name) {
         return res.status(400).json({ message: "Os campos precisam estar preenchidos corretamente" });
@@ -83,14 +74,22 @@ exports.Create = async (req, res) => {
         // Verificar se o email já está cadastrado
         const verification = await db.pgSelect('Professor', { professor_email: email_professor });
 
+         // Gerar código de verificação
+        const codigo = gerarCodigo();
+        const expires_at = new Date(Date.now() + 10 * 60 * 1000); // expira em 10 minutos
+
+        await db.pgUpsert('VerifyCode', {
+            email: email_professor,
+            codigo,
+            expires_at
+        }, ['email']);
+
+        // Enviar e-mail
+        sendEmail(email_professor, codigo);
+
         if (verification.length === 0) {
             // Cadastrar o professor no Banco de dados
-            await db.pgInsert('Professor', {
-                professor_email: email_professor,
-                password: hashedPassword,
-                name: name
-            });
-            return res.status(201).json({ message: 'Usuário criado com sucesso!' });
+            return res.status(201).json({ message: 'Dados enviados com sucesso!' });
         } else {
             return res.status(409).json({ message: 'Esse e-mail já possui um cadastro' });
         }
@@ -247,4 +246,9 @@ function genRandomCode(max, min) {
 
     return Math.floor(Math.random() * (max - min + 1)) + min;
 
+}
+
+async function sendCodeEmail(email, code) {
+    const transporter = nodemailer.Create
+    
 }
