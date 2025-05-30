@@ -8,6 +8,7 @@ import Image from "next/image";
 import class_icon from "@/components/icon/icon_classroom.svg";
 import PageController from "./paginationController";
 import ActionPanel from "./actionPanel";
+import EditDossieModal from "./editDossieModal";
 
 interface ListDossieProps {
   dossies: Dossie[];
@@ -39,6 +40,15 @@ export default function ListDossie({
   const [hasSelected, setHasSelected] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
   const router = useRouter();
+
+  // Estado que controla se o hover está bloqueado (ex: quando um modal está aberto)
+  const [lockHover, setLockHover] = useState(false);
+
+    // Estado para controlar a abertura do modal de edição
+  const [openEditingModal, setOpenEditingModal] = useState(false);
+
+    // Estado que guarda o dossie atualmente sendo editada (ou null se nenhuma)
+    const [editingDossie, setEditingDossie] = useState<Dossie | null>(null);
 
   useEffect(() => {
     setHasSelected(dossies.some((dossie) => dossie.selected));
@@ -133,6 +143,9 @@ export default function ListDossie({
                         e.stopPropagation();
                         // TODO: Implementar edição
                         console.log("Editar dossiê:", dossie.id);
+                        setOpenEditingModal(true);  // Abre o modal de edição
+                        setEditingDossie(dossie);  // Define qual turma está sendo editada
+                        setLockHover(true)
                       }}
                     >
                       <Pencil />
@@ -170,6 +183,20 @@ export default function ListDossie({
                     >
                       <Download />
                     </button>
+
+
+                    <EditDossieModal
+                      open={openEditingModal}
+                      onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
+                      dossie={{
+                        id: dossie.id,
+                        name: dossie.name,
+                        description: dossie.description,
+                        evaluation_method: dossie.evaluation_method,
+                        professor_id: dossie.professor_id
+                      }}
+                    
+                    />
                   </div>
                 )}
               </td>
