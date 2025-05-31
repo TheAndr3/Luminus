@@ -12,24 +12,24 @@ import { SectionData, ItemData, EvaluationConcept } from '../../../../types/doss
 
 import styles from './DossierCRUDPage.module.css';
 
-// Mocks atualizados
+// Mocks (mantenha seus mocks como estão ou ajuste conforme necessário)
 const initialDossierTitleData = "Dossiê Exemplo Avançado";
 const initialDossierDescriptionData = "Descrição detalhada do dossiê, com múltiplos tópicos e itens editáveis.";
-const initialEvaluationConcept: EvaluationConcept = 'numerical'; // Novo mock
+const initialEvaluationConcept: EvaluationConcept = 'numerical';
 const initialSectionsDataList: SectionData[] = [
   {
     id: 'section-alpha',
     title: 'Primeira Seção Editável',
-    weight: '50%', // NOVO
+    weight: '50%',
     items: [
-      { id: 'item-alpha-1', description: 'Critério de Avaliação A', value: 'N/A' }, // Valor pode ser N/A por enquanto
+      { id: 'item-alpha-1', description: 'Critério de Avaliação A', value: 'N/A' },
       { id: 'item-alpha-2', description: 'Observação sobre o item A', value: 'N/A' },
     ],
   },
   {
     id: 'section-beta',
     title: 'Segunda Seção Dinâmica',
-    weight: '30%', // NOVO
+    weight: '30%',
     items: [
       { id: 'item-beta-1', description: 'Desempenho em Projeto X', value: 'N/A' },
       { id: 'item-beta-2', description: 'Participação em Reuniões', value: 'N/A' },
@@ -39,7 +39,7 @@ const initialSectionsDataList: SectionData[] = [
     {
     id: 'section-gamma',
     title: 'Terceira Seção Longa para Scroll',
-    weight: '20%', // NOVO
+    weight: '20%',
     items: [
       { id: 'item-gamma-1', description: 'Item Gamma 1', value: 'N/A' },
       { id: 'item-gamma-2', description: 'Item Gamma 2', value: 'N/A' },
@@ -55,7 +55,7 @@ const initialSectionsDataList: SectionData[] = [
 const DossierAppPage: React.FC = () => {
   const [dossierTitle, setDossierTitle] = useState(initialDossierTitleData);
   const [dossierDescription, setDossierDescription] = useState(initialDossierDescriptionData);
-  const [evaluationConcept, setEvaluationConcept] = useState<EvaluationConcept>(initialEvaluationConcept); // NOVO
+  const [evaluationConcept, setEvaluationConcept] = useState<EvaluationConcept>(initialEvaluationConcept);
   const [sectionsData, setSectionsData] = useState<SectionData[]>(initialSectionsDataList);
   const [isEditingMode, setIsEditingMode] = useState(true);
   
@@ -64,7 +64,7 @@ const DossierAppPage: React.FC = () => {
 
   const [sidebarTargetTop, setSidebarTargetTop] = useState<number | null>(null);
   const scrollableAreaRef = useRef<HTMLDivElement>(null);
-  const sidebarHeightEstimate = 240; // Altura estimada da ActionSidebar para cálculo de centralização
+  const sidebarHeightEstimate = 240; // Altura estimada da ActionSidebar
 
   const getActiveSectionIdForActions = (): string | null => {
     if (selectedItemIdGlobal) {
@@ -81,35 +81,46 @@ const DossierAppPage: React.FC = () => {
     const newSectionData: SectionData = {
       id: newSectionId,
       title: `Nova Seção`,
-      weight: '0%', // Peso inicial
+      weight: '0%',
       items: [{ id: newItemId, description: 'Novo item inicial', value: 'N/A' }],
     };
 
-    if (!activeSectionId && sectionsData.length === 0) { // Se não há seção ativa e a lista está vazia
+    if (!activeSectionId && sectionsData.length === 0) {
         setSectionsData([newSectionData]);
-    } else { // Adiciona após a seção ativa ou no final se nenhuma estiver ativa mas a lista não for vazia
+    } else {
         setSectionsData(prev => {
           const index = activeSectionId ? prev.findIndex(sec => sec.id === activeSectionId) : -1;
           if (index !== -1) {
             return [...prev.slice(0, index + 1), newSectionData, ...prev.slice(index + 1)];
           }
-          return [...prev, newSectionData]; // Adiciona ao final se activeSectionId for null mas lista não vazia
+          return [...prev, newSectionData];
         });
     }
     setSelectedSectionIdForStyling(newSectionId);
-    setSelectedItemIdGlobal(newItemId);
+    setSelectedItemIdGlobal(newItemId); // Seleciona o novo item para a sidebar seguir
   }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling]);
 
   const handleAddItemForSidebar = useCallback(() => {
-    const activeSectionId = getActiveSectionIdForActions();
+    let activeSectionId = getActiveSectionIdForActions();
+    
     if (!activeSectionId) {
-        // Se não há seção ativa, cria uma nova seção primeiro
-        handleAddNewSectionForSidebar();
-        // A nova seção e item já serão selecionados por handleAddNewSectionForSidebar
-        // A lógica abaixo para adicionar item a uma seção existente não será executada neste fluxo.
-        return; 
+        // Se não há seção ativa, cria uma nova seção primeiro e usa seu ID
+        const newSectionId = `section-${Date.now()}`;
+        const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
+        const newSectionData: SectionData = {
+          id: newSectionId,
+          title: `Nova Seção (Automática)`,
+          weight: '0%',
+          items: [{ id: newItemId, description: 'Novo Item Adicionado', value: 'N/A' }],
+        };
+        setSectionsData(prev => [...prev, newSectionData]);
+        activeSectionId = newSectionId; // Define a nova seção como ativa
+        setSelectedSectionIdForStyling(newSectionId);
+        setSelectedItemIdGlobal(newItemId); // Seleciona o novo item
+        return; // Retorna pois o item já foi adicionado com a nova seção
     }
 
+    // Se já existe uma seção ativa, adiciona o item a ela
     const newItemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
     setSectionsData(prev =>
       prev.map(sec =>
@@ -118,9 +129,9 @@ const DossierAppPage: React.FC = () => {
           : sec
       )
     );
-    setSelectedSectionIdForStyling(activeSectionId); // Mantém a seção ativa
-    setSelectedItemIdGlobal(newItemId); // Seleciona o novo item
-  }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling, handleAddNewSectionForSidebar]);
+    setSelectedSectionIdForStyling(activeSectionId);
+    setSelectedItemIdGlobal(newItemId); 
+  }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling]);
 
   const handleSectionSettingsForSidebar = useCallback(() => {
     const activeSectionId = getActiveSectionIdForActions();
@@ -128,23 +139,35 @@ const DossierAppPage: React.FC = () => {
     console.log('Configurações para a seção (via sidebar global):', activeSectionId);
     setSelectedSectionIdForStyling(activeSectionId);
     setSelectedItemIdGlobal(null);
-  }, [selectedItemIdGlobal, selectedSectionIdForStyling]); // Removido sectionsData se não for usado diretamente
+  }, [selectedItemIdGlobal, selectedSectionIdForStyling]);
 
   const handleDeleteItemForSidebar = useCallback(() => {
     if (!selectedItemIdGlobal) return;
     const sectionOfItem = sectionsData.find(s => s.items.some(i => i.id === selectedItemIdGlobal));
     if (sectionOfItem) {
-      setSectionsData(prev =>
-        prev.map(sec =>
+      setSectionsData(prev => {
+        const newSections = prev.map(sec =>
           sec.id === sectionOfItem.id
             ? { ...sec, items: sec.items.filter(item => item.id !== selectedItemIdGlobal) }
             : sec
-        ).filter(sec => sec.items.length > 0 || sec.id !== sectionOfItem.id) // Opcional: remover seção se ficar vazia
-      );
+        );
+        // Opcional: remover seção se ficar vazia após deletar o item
+        // return newSections.filter(sec => sec.items.length > 0 || sectionsData.length === 1); // Não remove a última seção se ela ficar vazia
+        return newSections;
+      });
+
+      const currentSelectedSection = sectionOfItem.id;
       setSelectedItemIdGlobal(null); 
-      // Mantém a seção selecionada para styling ou define como null se a seção foi removida
-      const sectionStillExists = sectionsData.some(s => s.id === sectionOfItem.id && s.items.some(i => i.id !== selectedItemIdGlobal));
-      setSelectedSectionIdForStyling(sectionStillExists ? sectionOfItem.id : null);
+      
+      // Verifica se a seção ainda existe e tem itens, ou se é a única seção
+      const sectionAfterDelete = sectionsData.find(s => s.id === currentSelectedSection);
+      if (sectionAfterDelete && sectionAfterDelete.items.length > 1) { // Maior que 1 porque o estado ainda não atualizou aqui
+         setSelectedSectionIdForStyling(currentSelectedSection);
+      } else if (!sectionsData.some(s => s.id === currentSelectedSection && s.items.some(i => i.id !== selectedItemIdGlobal))) {
+         setSelectedSectionIdForStyling(null); // Seção foi removida ou ficou vazia e não é a última
+      } else {
+         setSelectedSectionIdForStyling(currentSelectedSection); // Mantém selecionada se ficou vazia mas é a única
+      }
     }
   }, [sectionsData, selectedItemIdGlobal]);
 
@@ -155,13 +178,11 @@ const DossierAppPage: React.FC = () => {
     if (selectedSectionIdForStyling === activeSectionId) {
       setSelectedSectionIdForStyling(null);
     }
-    // Desselecionar item se pertencer à seção excluída
     const sectionBeingDeleted = sectionsData.find(s => s.id === activeSectionId);
     if (sectionBeingDeleted && selectedItemIdGlobal && sectionBeingDeleted.items.some(it => it.id === selectedItemIdGlobal)) {
       setSelectedItemIdGlobal(null);
     }
   }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling]);
-
 
   // Efeito para posicionar a ActionSidebar
   useEffect(() => {
@@ -175,39 +196,30 @@ const DossierAppPage: React.FC = () => {
     if (itemElement && scrollableAreaElement) {
       const itemRect = itemElement.getBoundingClientRect();
       const scrollableAreaRect = scrollableAreaElement.getBoundingClientRect();
-      
-      // Calcula o topo do item relativo à área de scroll visível
       const itemTopRelativeToScrollableVisible = itemRect.top - scrollableAreaRect.top;
-      
-      // Calcula o topo do item relativo ao conteúdo total da área de scroll (incluindo parte não visível)
       const itemTopRelativeToScrollableContent = itemTopRelativeToScrollableVisible + scrollableAreaElement.scrollTop;
-
       let targetTop = itemTopRelativeToScrollableContent + (itemRect.height / 2) - (sidebarHeightEstimate / 2);
-      
-      // Garante que a sidebar não saia dos limites da área de scroll
-      targetTop = Math.max(5, targetTop); // Mínimo 5px do topo
-      targetTop = Math.min(targetTop, scrollableAreaElement.scrollHeight - sidebarHeightEstimate - 5); // Máximo 5px do fundo
-      
+      targetTop = Math.max(5, targetTop);
+      targetTop = Math.min(targetTop, scrollableAreaElement.scrollHeight - sidebarHeightEstimate - 5);
       setSidebarTargetTop(targetTop);
     } else {
-      setSidebarTargetTop(null); // Item não encontrado, esconde sidebar
+      setSidebarTargetTop(null); 
     }
-  }, [selectedItemIdGlobal, isEditingMode, sectionsData, sidebarHeightEstimate]); // sectionsData para recalcular se a altura dos itens mudar
+  }, [selectedItemIdGlobal, isEditingMode, sidebarHeightEstimate, scrollableAreaRef]); // scrollableAreaRef é estável, não precisa de sectionsData
 
   // Efeito para atualizar a posição da sidebar durante o scroll
   useEffect(() => {
     const scrollArea = scrollableAreaRef.current;
-    if (!scrollArea || !selectedItemIdGlobal || !isEditingMode) return;
-
+    if (!scrollArea || !selectedItemIdGlobal || !isEditingMode) {
+        return;
+    }
     const handleScroll = () => {
-      // Reutiliza a lógica do useEffect acima para recalcular a posição
       const itemElement = document.getElementById(`dossier-item-${selectedItemIdGlobal}`);
       if (itemElement && scrollableAreaRef.current) {
         const itemRect = itemElement.getBoundingClientRect();
         const scrollableAreaRect = scrollableAreaRef.current.getBoundingClientRect();
         const itemTopRelativeToScrollableVisible = itemRect.top - scrollableAreaRect.top;
         const itemTopRelativeToScrollableContent = itemTopRelativeToScrollableVisible + scrollableAreaRef.current.scrollTop;
-        
         let targetTop = itemTopRelativeToScrollableContent + (itemRect.height / 2) - (sidebarHeightEstimate / 2);
         targetTop = Math.max(5, targetTop);
         targetTop = Math.min(targetTop, scrollableAreaRef.current.scrollHeight - sidebarHeightEstimate - 5);
@@ -216,20 +228,19 @@ const DossierAppPage: React.FC = () => {
         setSidebarTargetTop(null);
       }
     };
-
     scrollArea.addEventListener('scroll', handleScroll);
     return () => {
       scrollArea.removeEventListener('scroll', handleScroll);
     };
-  }, [selectedItemIdGlobal, isEditingMode, sidebarHeightEstimate]); // Não precisa de sectionsData aqui, pois o scroll não muda a estrutura dos dados
+  }, [selectedItemIdGlobal, isEditingMode, sidebarHeightEstimate, scrollableAreaRef]);
 
   const handleBackClick = useCallback(() => { console.log('Navigate back'); }, []);
   const handleToggleEditMode = useCallback(() => {
     setIsEditingMode(prev => {
-      if (prev) { // Saindo do modo de edição
+      if (prev) { 
         setSelectedItemIdGlobal(null);
         setSelectedSectionIdForStyling(null);
-        setSidebarTargetTop(null); // Esconde a sidebar
+        setSidebarTargetTop(null);
       }
       return !prev;
     });
@@ -237,51 +248,44 @@ const DossierAppPage: React.FC = () => {
 
   const handleDossierTitleChange = useCallback((newTitle: string) => { setDossierTitle(newTitle); }, []);
   const handleDossierDescriptionChange = useCallback((newDescription: string) => { setDossierDescription(newDescription); }, []);
-  const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => { setEvaluationConcept(concept); }, []); // NOVO
+  const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => { setEvaluationConcept(concept); }, []);
 
   const handleSectionAreaClick = useCallback((sectionId: string) => {
-    if (!isEditingMode) return; // Clique na área da seção só funciona em modo de edição
-
+    if (!isEditingMode) return;
     if (selectedSectionIdForStyling === sectionId && !selectedItemIdGlobal) {
-      // Se a seção já está selecionada e nenhum item nela está, deseleciona a seção
       setSelectedSectionIdForStyling(null);
-      setSidebarTargetTop(null); // Esconde sidebar se estava visível por seleção de seção
     } else {
-      // Seleciona a seção e deseleciona qualquer item
       setSelectedSectionIdForStyling(sectionId);
-      setSelectedItemIdGlobal(null);
-      // Posicionar sidebar ao lado da seção (opcional, ou só quando item é selecionado)
-      // Por ora, a sidebar só aparece com item selecionado.
-      // Se quiser que apareça ao lado da seção:
-      // const sectionElement = document.getElementById(`section-container-${sectionId}`); // Precisaria de ID na Section
-      // if (sectionElement && scrollableAreaRef.current) { ... lógica de posicionamento ... }
-      setSidebarTargetTop(null); // Garante que a sidebar não fique visível só com a seção selecionada
+      setSelectedItemIdGlobal(null); // Ao clicar na seção, deseleciona qualquer item
     }
+     setSidebarTargetTop(null); // Esconde a sidebar ao clicar na área da seção
   }, [isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
 
   const handleSectionTitleChange = useCallback((sectionId: string, newTitle: string) => {
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, title: newTitle } : sec)));
   }, []);
 
-  const handleSectionWeightChange = useCallback((sectionId: string, newWeight: string) => { // NOVO
+  const handleSectionWeightChange = useCallback((sectionId: string, newWeight: string) => {
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, weight: newWeight } : sec)));
   }, []);
 
   const handleItemSelect = useCallback((itemId: string | null) => {
-    if (!isEditingMode && itemId !== null) return; // Não permite selecionar item se não estiver editando
-
-    setSelectedItemIdGlobal(itemId);
-    if (itemId) {
-      const sectionOfItem = sectionsData.find(sec => sec.items.some(item => item.id === itemId));
-      if (sectionOfItem) {
-        setSelectedSectionIdForStyling(sectionOfItem.id); // Garante que a seção pai do item esteja estilizada
-      }
+    if (!isEditingMode && itemId !== null) return;
+    
+    // Se o mesmo item for clicado novamente, permite deselecionar.
+    if (selectedItemIdGlobal === itemId) {
+        setSelectedItemIdGlobal(null);
+        // Mantém selectedSectionIdForStyling como está, pois o usuário pode querer a seção ainda "ativa"
     } else {
-      // Se está deselecionando um item, mas uma seção ainda estava "ativa" para styling,
-      // mantém a seção ativa (selectedSectionIdForStyling não muda aqui).
-      // A sidebar será escondida pelo useEffect que depende de selectedItemIdGlobal.
+        setSelectedItemIdGlobal(itemId);
+        if (itemId) {
+          const sectionOfItem = sectionsData.find(sec => sec.items.some(item => item.id === itemId));
+          if (sectionOfItem) {
+            setSelectedSectionIdForStyling(sectionOfItem.id);
+          }
+        }
     }
-  }, [isEditingMode, sectionsData]);
+  }, [isEditingMode, sectionsData, selectedItemIdGlobal]);
 
   const handleItemChange = useCallback(
     (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => {
@@ -298,7 +302,7 @@ const DossierAppPage: React.FC = () => {
     console.log("Salvar Dados:", { 
       title: dossierTitle, 
       description: dossierDescription, 
-      evaluationConcept: evaluationConcept, // NOVO
+      evaluationConcept: evaluationConcept,
       sections: sectionsData 
     });
     alert("Dados salvos no console!");
@@ -328,19 +332,19 @@ const DossierAppPage: React.FC = () => {
               title={dossierTitle}
               description={dossierDescription}
               isEditing={isEditingMode}
-              evaluationConcept={evaluationConcept} // NOVO
+              evaluationConcept={evaluationConcept}
               onTitleChange={handleDossierTitleChange}
               onDescriptionChange={handleDossierDescriptionChange}
-              onEvaluationConceptChange={handleEvaluationConceptChange} // NOVO
+              onEvaluationConceptChange={handleEvaluationConceptChange}
               className={styles.dossierHeaderContainer}
               titleTextClassName={styles.dossierHeader_titleText}
               titleInputClassName={styles.dossierHeader_titleInput}
-              evaluationConceptContainerClassName={styles.dossierHeader_evaluationConceptContainer} // NOVO
-              evaluationConceptLabelTextClassName={styles.dossierHeader_evaluationConceptLabelText} // NOVO
-              evaluationConceptRadioGroupClassName={styles.dossierHeader_evaluationRadioGroup} // NOVO
-              evaluationConceptRadioLabelClassName={styles.dossierHeader_evaluationRadioLabel} // NOVO
-              evaluationConceptRadioInputClassName={styles.dossierHeader_evaluationRadioInput} // NOVO
-              evaluationConceptDisplayClassName={styles.dossierHeader_evaluationConceptDisplay} // NOVO
+              evaluationConceptContainerClassName={styles.dossierHeader_evaluationConceptContainer}
+              evaluationConceptLabelTextClassName={styles.dossierHeader_evaluationConceptLabelText}
+              evaluationConceptRadioGroupClassName={styles.dossierHeader_evaluationRadioGroup}
+              evaluationConceptRadioLabelClassName={styles.dossierHeader_evaluationRadioLabel}
+              evaluationConceptRadioInputClassName={styles.dossierHeader_evaluationRadioInput}
+              evaluationConceptDisplayClassName={styles.dossierHeader_evaluationConceptDisplay}
               titleDescriptionDividerClassName={styles.dossierHeader_divider}
               descriptionLabelClassName={styles.dossierHeader_descriptionLabel}
               descriptionTextClassName={styles.dossierHeader_descriptionTextDisplay}
@@ -354,7 +358,7 @@ const DossierAppPage: React.FC = () => {
               selectedItemId={selectedItemIdGlobal}
               onSectionAreaClick={handleSectionAreaClick}
               onSectionTitleChange={handleSectionTitleChange}
-              onSectionWeightChange={handleSectionWeightChange} // NOVO
+              onSectionWeightChange={handleSectionWeightChange}
               onItemChange={handleItemChange}
               onItemSelect={handleItemSelect}
               
@@ -363,16 +367,16 @@ const DossierAppPage: React.FC = () => {
               sectionComponentContentWrapperClassName={styles.section_contentWrapper}
               sectionComponentSelectedStylingClassName={styles.section_selectedStyling}
               
-              sectionComponentTitleAndWeightContainerClassName={styles.section_titleAndWeightContainer} // NOVO
+              sectionComponentTitleAndWeightContainerClassName={styles.section_titleAndWeightContainer}
               sectionComponentTitleContainerClassName={styles.section_titleContainer}
-              sectionComponentTitleEditableFieldClassName={styles.editableField_inputBase} // Usando classe genérica para o EditableField do título
+              sectionComponentTitleEditableFieldClassName={styles.editableField_inputBase}
               sectionComponentTitleTextClassName={styles.section_titleText}
               sectionComponentTitleInputClassName={styles.section_titleInput}
               
-              sectionComponentWeightFieldContainerClassName={styles.section_weightFieldContainer} // NOVO
-              sectionComponentWeightEditableFieldClassName={styles.editableField_inputBase}      // NOVO
-              sectionComponentWeightTextClassName={styles.section_weightText}                   // NOVO
-              sectionComponentWeightInputClassName={styles.section_weightInput}                  // NOVO
+              sectionComponentWeightFieldContainerClassName={styles.section_weightFieldContainer}
+              sectionComponentWeightEditableFieldClassName={styles.editableField_inputBase}
+              sectionComponentWeightTextClassName={styles.section_weightText}
+              sectionComponentWeightInputClassName={styles.section_weightInput}
               
               sectionComponentItemsListClassName={styles.section_itemsList}
               
@@ -383,7 +387,7 @@ const DossierAppPage: React.FC = () => {
               sectionItemDescriptionInputClassName={styles.editableField_inputItem}
             />
 
-            {isEditingMode && ( // ActionSidebar só é montada se estiver em modo de edição
+            {isEditingMode && (
               <ActionSidebar
                 targetTopPosition={sidebarTargetTop}
                 onAddItemToSection={handleAddItemForSidebar}
@@ -391,7 +395,7 @@ const DossierAppPage: React.FC = () => {
                 onSectionSettings={handleSectionSettingsForSidebar}
                 onDeleteItemFromSection={handleDeleteItemForSidebar}
                 onDeleteSection={handleDeleteSectionForSidebar}
-                canDeleteItem={!!selectedItemIdGlobal} // Habilita delete de item se um item estiver selecionado
+                canDeleteItem={!!selectedItemIdGlobal}
                 containerClassNameFromPage={styles.actionSidebarVisualBase}
                 buttonClassNameFromPage={styles.actionSidebarButtonVisualBase}
                 disabledButtonClassNameFromPage={styles.actionSidebarButtonDisabledVisualBase}

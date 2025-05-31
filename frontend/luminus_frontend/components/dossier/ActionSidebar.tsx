@@ -1,6 +1,6 @@
 // components/ActionSidebar.tsx
 import React from 'react';
-import { useSpring, animated } from 'react-spring';
+import { useSpring, animated, config as springConfig } from 'react-spring'; // Importar config
 
 // --- Ícones SVG Placeholder ---
 const AddItemIcon = ({ className }: { className?: string }) => (
@@ -29,6 +29,7 @@ const DeleteSectionIcon = ({ className }: { className?: string }) => (
     <path d="M6 19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" />
   </svg>
 );
+// --- Fim dos Ícones SVG Placeholder ---
 
 interface ActionSidebarProps {
   targetTopPosition: number | null;
@@ -58,15 +59,20 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
   iconClassNameFromPage = '',
 }) => {
   const springProps = useSpring({
-    top: targetTopPosition !== null ? targetTopPosition : -300, // Mover para fora da tela se null
+    top: targetTopPosition !== null ? targetTopPosition : -50, // Posição inicial "fora da tela" ou no topo
     opacity: targetTopPosition !== null ? 1 : 0,
-    config: { tension: 210, friction: 20 },
+    // Configuração da mola para uma resposta mais rápida e direta:
+    config: { ...springConfig.stiff, clamp: true }, // Presets do react-spring para rigidez
+    // Outras opções de config:
+    // config: { tension: 350, friction: 30, clamp: true },
+    // config: { duration: 150 }, // Duração fixa (mais rápido)
   });
 
-  // Opcional: não renderizar se completamente invisível e fora da tela.
-  // if (targetTopPosition === null && springProps.opacity.get() < 0.01) {
-  //     return null;
-  // }
+  // Otimização para não renderizar o DOM quando completamente invisível e fora da tela.
+  // Permite que a animação de 'top' para sair da tela termine antes de desmontar.
+  if (targetTopPosition === null && springProps.opacity.get() < 0.01 && springProps.top.get() < -40) {
+      return null;
+  }
 
   const getButtonClasses = () => {
     return `${buttonClassNameFromPage}`.trim();
