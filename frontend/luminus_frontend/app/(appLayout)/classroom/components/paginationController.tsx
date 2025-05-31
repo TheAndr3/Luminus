@@ -1,4 +1,5 @@
 import { useState } from "react"; // Importa o hook useState do React para gerenciar o estado local
+import { ColoredButton } from "@/components/colored-button/colored-button";
 
 // Define as props esperadas pelo componente PageController
 interface PageControllerProps {
