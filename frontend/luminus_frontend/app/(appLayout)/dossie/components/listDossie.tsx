@@ -4,11 +4,13 @@ import { Dossie } from "./types";
 import { Download, Plus, Pencil, Trash, Folder, Archive } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import class_icon from "@/components/icon/icon_classroom.svg";
 import PageController from "./paginationController";
 import ActionPanel from "./actionPanel";
 import TypeOfCreationModal from "./typeOfCreationModal";
+import { ExportConfirmDialog } from "./exportConfirmDialog";
+import ExportDownloadDialog from "./exportDownloadDialog";
+
+
 
 
 interface ListDossieProps {
@@ -23,6 +25,8 @@ interface ListDossieProps {
   onCreateDossie: () => void;
   onDeleteClass: () => void;
   toArchiveClass: () => void;
+
+  toExportDossie: () => void;
 }
 
 export default function ListDossie({
@@ -37,6 +41,7 @@ export default function ListDossie({
   onCreateDossie,
   onDeleteClass,
   toArchiveClass,
+  toExportDossie
 }: ListDossieProps) {
   const [hasSelected, setHasSelected] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
@@ -52,8 +57,8 @@ export default function ListDossie({
     // Estado para controlar a abertura do modal de edição
   const [openEditingModal, setOpenEditingModal] = useState(false);
 
-    // Estado que guarda o dossie atualmente sendo editada (ou null se nenhuma)
-    const [editingDossie, setEditingDossie] = useState<Dossie | null>(null);
+  // Estado que guarda o dossie atualmente sendo editada (ou null se nenhuma)
+  const [editingDossie, setEditingDossie] = useState<Dossie | null>(null);
 
   useEffect(() => {
     setHasSelected(dossies.some((dossie) => dossie.selected));
@@ -71,6 +76,8 @@ export default function ListDossie({
     router.push(`/dossie/${id}`);
   };
 
+
+  
   return (
     <div className="w-full -mt-5">
       {/* Tabela que exibe os dossiês */}
@@ -185,16 +192,16 @@ export default function ListDossie({
                     <button
                       className="hover:text-yellow-400"
                       onClick={(e) => {
+                        
+                        dossie.selected = true;
                         e.stopPropagation();
-                        // TODO: Implementar download
-                        console.log("Download dossiê:", dossie.id);
+                        toExportDossie();
+                        dossie.selected = false;
                       }}
                     >
                       <Download />
                     </button>
-
-
-                    
+  
                   </div>
                 )}
               </td>
@@ -218,6 +225,7 @@ export default function ListDossie({
           <ActionPanel
             onDeleted={onDeleteClass}
             toArchive={toArchiveClass}
+            toExport={toExportDossie}
           />
         )}
       </div>
@@ -226,6 +234,8 @@ export default function ListDossie({
         open={openTypeOfCreation}
         onClose={() => setOpenTypeOfCreation(false)}
       />
+      
+      
     </div>
   );
 } 

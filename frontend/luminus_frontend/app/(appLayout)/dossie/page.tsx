@@ -8,6 +8,8 @@ import { Dossie } from "./components/types";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import { ArchiveConfirmation } from "./components/archiveConfirmation";
 import { ErroMessageDialog } from "./components/erroMessageDialog";
+import { ExportConfirmDialog } from './components/exportConfirmDialog';
+import ExportDownloadDialog from './components/exportDownloadDialog';
 
 export default function GerenciarDossies() {
   // ============ ESTADOS ============
@@ -32,6 +34,12 @@ export default function GerenciarDossies() {
   const [dossieDescription, setDossieDescription] = useState("");
   const [missingDialog, setMissingDialog] = useState(false);
   const [messageErro, setMessageErro] = useState("");
+
+  const [idsToExport, setIdsToExport] = useState<number[]>([]);
+
+  const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
+  const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
+  const [exportIdDossie, setExportIdDossie] = useState(Number)
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(dossies.length / dossiesPorPagina);
@@ -117,6 +125,21 @@ export default function GerenciarDossies() {
     setArchiveConfirmation(true);
   };
 
+
+  const exportHandle = async () => {
+    const selecionados = dossies
+      .filter(dossie => dossie.selected)
+      .map(dossie => dossie.id);
+
+    if (selecionados.length === 0) return;
+
+    setIdsToExport(selecionados); 
+
+    setOpenExportConfirmDialog(true)
+
+};
+
+
   return (
     <div>
       {/* Cabeçalho */}
@@ -150,6 +173,7 @@ export default function GerenciarDossies() {
             onCreateDossie={handleCreateDossie}
             onDeleteClass={handleDeleteClass}
             toArchiveClass={archiveHandle}
+            toExportDossie={exportHandle}
           />
         </div>
       </div>
@@ -177,6 +201,22 @@ export default function GerenciarDossies() {
         onConfirm={() => setMissingDialog(false)}
         description={messageErro}
       />
+
+      <ExportConfirmDialog 
+        open={openExportConfirmDialog}
+        onCancel={() => setOpenExportConfirmDialog(false)}
+        onConfirm={() => setOpenDownloadDialog(true)}
+        description={"Tem certeza que quer exportar todos os dossiê (s) selecionado (s)"}
+      />
+
+      <ExportDownloadDialog
+        open={openDownloadDialog}
+        IdDossieToExport={idsToExport}
+        onClose={()=>setOpenDownloadDialog(false)}
+        description={"Dossiê exportado"}
+      />
+
+
     </div>
   );
 }
