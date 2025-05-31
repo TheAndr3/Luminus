@@ -76,7 +76,7 @@ exports.Create = async (req, res) => {
         //Cadastrar professor no banco de dados
         if (verification.length === 0) {
             await db.pgInsert('Professor', {
-                professor_email: email, 
+                professor_email: email_professor, 
                 password: hashedPassword, 
                 name: name
             });
