@@ -25,7 +25,6 @@
   align-items: center; /* Centraliza o conteúdo horizontalmente */
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra sutil à direita para dar profundidade */
   z-index: 1; /* Garante que fique acima do painel direito se houver sobreposição */
-  overflow-y: auto; /* Permite rolagem vertical APENAS neste painel se o conteúdo exceder a altura */
 }
 
 /* Coluna Direita (Painel do Carrossel) */
