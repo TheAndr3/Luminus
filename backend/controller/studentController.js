@@ -4,19 +4,28 @@ const db = require('../bd');
 
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
+    const size = 6;
+    const start = 0
+
+    try{
+      size = req.query.size;
+      start = req.query.start;
+    } catch (erro) {
+      console.log(erro);
+    }
     
     try {
         const payload = {classroom_id:class_id}
         const dataStudent = await db.pgSelect('ClassroomStudent', payload);
 
         if (Object.values(dataStudent).length > 0) {
-            res.status(200).json(dataStudent);
+            return res.status(200).json({msg:"sucess", data:dataStudent.slice(start, start+size-1), ammount:dataStudent.length});
         } else {
-            res.status(400).json({msg:'nao ha estudantes nessa turma'});
+            return res.status(400).json({msg:'nao ha estudantes nessa turma'});
         }
     } catch (error) {
         console.log(error);
-        res.status(400).json({msg:'falha ao atender a solicitacao'});
+        return res.status(400).json({msg:'falha ao atender a solicitacao'});
     }
 
 }
@@ -30,12 +39,12 @@ exports.Get = async (req, res) => {
         const dataStudent = await db.pgSelect('ClassroomStudent', payload);
 
         if(Object.values(dataStudent).length > 0) {
-            res.status(200).json(dataStudent);
+            return res.status(200).json({mag:'sucess', data:dataStudent});
         } else {
-            res.status(400).json({msg:'estudante nao existe na turma'})
+            return res.status(400).json({msg:'estudante nao existe na turma'})
         }
     } catch (error) {
-        res.status(400).json({msg:'nao foi possivel atender a solicitacao'});
+        return res.status(400).json({msg:'nao foi possivel atender a solicitacao'});
     }
 
     
@@ -60,9 +69,9 @@ exports.Create = async (req, res) => {
 
         const studentclassresp = await db.pgInsert('ClassroomStudent', payload);
 
-        res.status(201).json({msg:'estudante inserido com sucesso'});
+        return res.status(201).json({msg:'estudante inserido com sucesso', data:studentclassresp});
     } catch (error) {
-        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
+        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
     }
 
 }
@@ -93,11 +102,11 @@ exports.Update = async (req, res) => {
         name: req.body.name
       };
 
-      await db.pgUpdate('student', studentPayload, { id: req.params.id });
+      const student = await db.pgUpdate('student', studentPayload, { id: req.params.id });
   
-      res.status(200).json({ msg: 'estudante atualizado com sucesso' });
+      return res.status(200).json({ msg: 'estudante atualizado com sucesso', data:student});
     } catch (error) {
-      res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
+      return res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
     }
   };
   
@@ -125,14 +134,13 @@ exports.Update = async (req, res) => {
       
       await db.pgDelete('student', studentPayload);
   
-      res.status(200).json({ msg: 'estudante removido com sucesso' });
+      return res.status(200).json({ msg: 'estudante removido com sucesso' });
     } catch (error) {
-      res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+      return res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
     }
   };
   
-
-
+//não tinha nada implementado até a data da refatoração
 exports.ImportCsv = async (req, res) => {
     const class_id = req.params.class_id;
     res.status(201).send("Rota de criar turma");
