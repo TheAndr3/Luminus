@@ -8,7 +8,8 @@ import Image from "next/image";
 import class_icon from "@/components/icon/icon_classroom.svg";
 import PageController from "./paginationController";
 import ActionPanel from "./actionPanel";
-import EditDossieModal from "./editDossieModal";
+import TypeOfCreationModal from "./typeOfCreationModal";
+
 
 interface ListDossieProps {
   dossies: Dossie[];
@@ -40,6 +41,10 @@ export default function ListDossie({
   const [hasSelected, setHasSelected] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
   const router = useRouter();
+
+  const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
+
+
 
   // Estado que controla se o hover está bloqueado (ex: quando um modal está aberto)
   const [lockHover, setLockHover] = useState(false);
@@ -98,7 +103,11 @@ export default function ListDossie({
                   <Download size={16} className="mr-1" /> Importar Dossiê
                 </button>
                 <button
-                  onClick={onCreateDossie}
+                  onClick={() => {
+                    onCreateDossie
+                    setOpenTypeOfCreation(true)
+                    
+                  }}
                   className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal"
                 >
                   <Plus size={16} className="mr-1" /> Adicionar Dossiê +
@@ -185,18 +194,7 @@ export default function ListDossie({
                     </button>
 
 
-                    <EditDossieModal
-                      open={openEditingModal}
-                      onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
-                      dossie={{
-                        id: dossie.id,
-                        name: dossie.name,
-                        description: dossie.description,
-                        evaluation_method: dossie.evaluation_method,
-                        professor_id: dossie.professor_id
-                      }}
                     
-                    />
                   </div>
                 )}
               </td>
@@ -223,6 +221,11 @@ export default function ListDossie({
           />
         )}
       </div>
+
+      <TypeOfCreationModal
+        open={openTypeOfCreation}
+        onClose={() => setOpenTypeOfCreation(false)}
+      />
     </div>
   );
 } 
