@@ -154,7 +154,7 @@ exports.SendEmail = async (req, res) => {
             emailSender.sendEmail(professor[0].professor_email, code);
 
             try {
-                const resp = await db.pgInsert('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString, status:0});
+                const resp = await db.pgInsert('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString(), status:0});
                 res.status(200).json({msg:'email enviado'});
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
