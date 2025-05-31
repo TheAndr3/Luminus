@@ -18,6 +18,10 @@ interface SectionProps {
   onItemChange: (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => void;
   onSectionAreaClick?: (sectionId: string) => void;
 
+  // Novos handlers de foco/blur passados para SectionItem e EditableFields internos
+  onFieldFocus?: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
+  onFieldBlur?: () => void;
+
   className?: string;
   contentWrapperClassName?: string;
   isSectionSelectedForStyling: boolean;
@@ -57,6 +61,8 @@ const Section: React.FC<SectionProps> = ({
   onWeightChange, // NOVO
   onItemChange,
   onSectionAreaClick,
+  onFieldFocus, // Recebe handler
+  onFieldBlur,  // Recebe handler
   className = '',
   contentWrapperClassName = '',
   isSectionSelectedForStyling,
@@ -83,26 +89,40 @@ const Section: React.FC<SectionProps> = ({
 
   const handleLocalItemSelect = (itemId: string) => {
     if (isEditing) { // A seleção de item só faz sentido no modo de edição
-      if (selectedItemId === itemId) {
-        onItemSelect(null); // Desselecionar se já selecionado
-      } else {
-        onItemSelect(itemId);
-      }
+      onItemSelect(itemId); // Chama o handler pai para selecionar/desselecionar
     }
   };
 
   const handleSectionClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const targetElement = event.target as HTMLElement;
 
-    // Verifica se o clique foi dentro de um input, textarea, ou em um SectionItem diretamente
-    const isInput = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA';
+    // Verifica se o clique foi *diretamente* na div externa da seção (não em um item, input ou texto editável)
+    const isInputOrTextarea = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA';
     const clickedOnItemContainer = targetElement.closest(`[id^="dossier-item-"]`); // Verifica se clicou em um item
 
-    if (!isInput && !clickedOnItemContainer && onSectionAreaClick && isEditing) {
+     // Verifica se clicou diretamente no texto em modo visualização ou nas divs que contém os campos editáveis/texto
+     // Precisa ser mais específico para garantir que não intercepte cliques dentro dos EditableFields/SectionItems
+     const clickedOnContentWrapper = targetElement.classList.contains(contentWrapperClassName);
+     const clickedOnTitleOrWeightContainer = targetElement.classList.contains(titleAndWeightContainerClassName);
+     const clickedOnItemsList = targetElement.classList.contains(itemsListClassName);
+     const clickedOnSectionOuter = targetElement.classList.contains(className.split(' ')[0]); // Pega a primeira classe principal
+
+     const isClickOnSectionArea = (targetElement === sectionRef.current || clickedOnContentWrapper || clickedOnTitleOrWeightContainer || clickedOnItemsList) &&
+                                  !isInputOrTextarea &&
+                                  !clickedOnItemContainer &&
+                                  !targetElement.closest('.editableField_textDisplay'); // Evita cliques nos spans de texto também
+
+    if (isClickOnSectionArea && onSectionAreaClick && isEditing) {
         onSectionAreaClick(sectionId);
     }
   };
 
+  // Handler para foco em um EditableField dentro da seção (título/peso)
+  const handleSectionFieldFocus = (element: HTMLElement) => {
+    if (onFieldFocus) {
+        onFieldFocus(element, { type: 'section', id: sectionId });
+    }
+  };
 
   const combinedSectionClasses = [
     className,
@@ -110,7 +130,8 @@ const Section: React.FC<SectionProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div ref={sectionRef} className={combinedSectionClasses} onClick={handleSectionClick} style={{ position: 'relative' }}>
+    // Adiciona ID na div externa da seção para permitir o posicionamento da sidebar ao clicar na área
+    <div ref={sectionRef} id={`dossier-section-${sectionId}`} className={combinedSectionClasses} onClick={handleSectionClick} style={{ position: 'relative' }}>
       <div className={contentWrapperClassName}>
         <div className={`${titleAndWeightContainerClassName}`}>
           <div className={titleContainerClassName} style={{ flexGrow: 1 }}>
@@ -123,6 +144,8 @@ const Section: React.FC<SectionProps> = ({
               className={titleEditableFieldClassName}
               textDisplayClassName={titleTextClassName}
               inputClassName={titleInputClassName}
+              onFocus={handleSectionFieldFocus} // Passa handler de foco para o EditableField do título
+              onBlur={onFieldBlur} // Repassa handler de blur
             />
           </div>
           {isEditing ? (
@@ -135,9 +158,12 @@ const Section: React.FC<SectionProps> = ({
                 ariaLabel={`Peso da seção ${sectionId}`}
                 className={weightEditableFieldClassName}
                 inputClassName={weightInputClassName}
+                onFocus={handleSectionFieldFocus} // Passa handler de foco para o EditableField do peso
+                onBlur={onFieldBlur} // Repassa handler de blur
               />
             </div>
           ) : (
+            // Renderiza o peso apenas se não estiver vazio no modo visualização
             weight && <div className={weightTextClassName}>{weight}</div>
           )}
         </div>
@@ -146,7 +172,6 @@ const Section: React.FC<SectionProps> = ({
           {items.map((item) => {
             const isItemSelected = item.id === selectedItemId;
             return (
-              // O div wrapper foi removido, key agora está no SectionItem
               <SectionItem
                 key={item.id}
                 id={item.id}
@@ -154,9 +179,11 @@ const Section: React.FC<SectionProps> = ({
                 value={item.value}
                 isEditing={isEditing}
                 isSelected={isItemSelected}
-                onSelect={() => handleLocalItemSelect(item.id)}
+                onSelect={() => handleLocalItemSelect(item.id)} // Handler para clique na área do item
                 onDescriptionChange={(newDesc) => onItemChange(sectionId, item.id, 'description', newDesc)}
                 onValueChange={(newVal) => onItemChange(sectionId, item.id, 'value', newVal)}
+                onFieldFocus={onFieldFocus} // Repassa handler de foco para SectionItem
+                onFieldBlur={onFieldBlur}   // Repassa handler de blur para SectionItem
                 showValueField={false} // Explicitamente não mostrar o campo de valor por agora
                 className={sectionItemClassName}
                 selectedClassName={sectionItemSelectedClassName}

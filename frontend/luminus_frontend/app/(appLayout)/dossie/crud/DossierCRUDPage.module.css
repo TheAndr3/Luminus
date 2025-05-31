@@ -436,10 +436,6 @@ body {
   background-color: #EBECF0;
   border-color: #C1C7D0;
 }
-.actionSidebarButtonVisualBase > svg {
-  width: 22px;
-  height: 22px;
-}
 .actionSidebarButtonDisabledVisualBase {
   opacity: 0.5;
   cursor: not-allowed;

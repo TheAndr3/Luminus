@@ -1,6 +1,8 @@
 // components/DossierHeader.tsx
 import React from 'react';
 import { EvaluationConcept } from '../../types/dossier'; // Ajuste o caminho se necessário
+// DossierHeader não precisa passar handlers de foco/blur para a sidebar,
+// pois os campos do header não controlam a posição da ActionSidebar.
 
 interface DossierHeaderProps {
   title: string;
@@ -50,6 +52,10 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
   evaluationConceptRadioInputClassName = '',
   evaluationConceptDisplayClassName = '',
 }) => {
+  // Estes campos EditableField NÃO precisam repassar foco para a ActionSidebar global
+  // pois os campos do header não controlam a posição da ActionSidebar.
+  // EditableField ainda recebe onFocus/onBlur, mas DossierHeader não os repassa para cima.
+
   return (
     <div className={className}>
       {/* Campo do Título */}
@@ -61,6 +67,7 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
           className={titleInputClassName}
           aria-label="Título do Dossiê"
           placeholder="Digite o título do dossiê"
+          // onFocus e onBlur do EditableField não são usados/passados para a sidebar aqui
         />
       ) : (
         <h1 className={titleTextClassName}>{title}</h1>
@@ -134,6 +141,7 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
           aria-label="Descrição do Dossiê"
           placeholder="Digite a descrição do dossiê"
           rows={3}
+           // onFocus e onBlur do EditableField não são usados/passados para a sidebar aqui
         />
       ) : (
         <p id="dossier-description-field" className={descriptionTextClassName}>

@@ -13,7 +13,11 @@ interface SectionListProps {
   onSectionTitleChange: (sectionId: string, newTitle: string) => void;
   onSectionWeightChange: (sectionId: string, newWeight: string) => void;
   onItemChange: (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => void;
-  onItemSelect: (itemId: string | null) => void;
+  onItemSelect: (itemId: string | null) => void; // Handler para clique na div do item
+
+  // Novos handlers de foco/blur passados do pai (page.tsx)
+  onFieldFocus: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
+  onFieldBlur: () => void;
 
   className?: string;
   sectionComponentClassName?: string;
@@ -51,6 +55,8 @@ const SectionList: React.FC<SectionListProps> = ({
   onSectionWeightChange,
   onItemChange,
   onItemSelect,
+  onFieldFocus, // Recebe handlers
+  onFieldBlur,  // Recebe handlers
   className = '',
   sectionComponentClassName,
   sectionComponentContentWrapperClassName,
@@ -83,12 +89,15 @@ const SectionList: React.FC<SectionListProps> = ({
           items={section.items}
           isEditing={isEditing}
           selectedItemId={selectedItemId}
-          onItemSelect={onItemSelect}
+          onItemSelect={onItemSelect} // Passa handler de clique do item para Section
           onTitleChange={(newTitle: string) => onSectionTitleChange(section.id, newTitle)}
           onWeightChange={(newWeight: string) => onSectionWeightChange(section.id, newWeight)}
           onItemChange={onItemChange}
           onSectionAreaClick={() => onSectionAreaClick(section.id)}
           isSectionSelectedForStyling={section.id === selectedSectionIdForStyling}
+
+          onFieldFocus={onFieldFocus} // Repassa handlers de foco/blur para Section
+          onFieldBlur={onFieldBlur}   // Repassa handlers de foco/blur para Section
           
           className={sectionComponentClassName}
           contentWrapperClassName={sectionComponentContentWrapperClassName}
@@ -107,7 +116,6 @@ const SectionList: React.FC<SectionListProps> = ({
           
           itemsListClassName={sectionComponentItemsListClassName}
 
-          // CORREÇÃO AQUI: Passando as props para Section com os nomes que SectionProps espera
           sectionItemClassName={sectionItemClassName}
           sectionItemSelectedClassName={sectionItemSelectedClassName}
           sectionItemDescriptionFieldContainerClassName={sectionItemDescriptionFieldContainerClassName}

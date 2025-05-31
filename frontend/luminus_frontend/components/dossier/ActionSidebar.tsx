@@ -32,7 +32,7 @@ const DeleteSectionIcon = ({ className }: { className?: string }) => (
 // --- Fim dos Ícones SVG Placeholder ---
 
 interface ActionSidebarProps {
-  targetTopPosition: number | null;
+  targetTopPosition: number | null; // Pode ser null para ocultar
   onAddItemToSection: () => void;
   onAddNewSection: () => void;
   onSectionSettings: () => void;
@@ -58,21 +58,22 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
   disabledButtonClassNameFromPage = '',
   iconClassNameFromPage = '',
 }) => {
+  // Use useSpring para animar a propriedade 'top'.
+  // targetTopPosition = null significa que a sidebar deve estar "escondida" (opacidade 0, top fora da tela).
   const springProps = useSpring({
-    top: targetTopPosition !== null ? targetTopPosition : -50, // Posição inicial "fora da tela" ou no topo
+    top: targetTopPosition !== null ? targetTopPosition : -100, // Posição inicial "fora da tela" (ajustado para garantir que não apareça no topo)
     opacity: targetTopPosition !== null ? 1 : 0,
-    // Configuração da mola para uma resposta mais rápida e direta:
-    config: { ...springConfig.stiff, clamp: true }, // Presets do react-spring para rigidez
-    // Outras opções de config:
-    // config: { tension: 350, friction: 30, clamp: true },
-    // config: { duration: 150 }, // Duração fixa (mais rápido)
+    // Configuração da mola para uma resposta um pouco suave, mas rápida
+    config: springConfig.stiff, // Ex: tension: 210, friction: 20
+    immediate: targetTopPosition === null, // Se está escondendo, use transição imediata para evitar "voltar" antes de sumir
   });
 
-  // Otimização para não renderizar o DOM quando completamente invisível e fora da tela.
-  // Permite que a animação de 'top' para sair da tela termine antes de desmontar.
-  if (targetTopPosition === null && springProps.opacity.get() < 0.01 && springProps.top.get() < -40) {
+   // Otimização para não renderizar o DOM quando completamente invisível.
+   // Espera a opacidade chegar a 0 e a posição sair da tela antes de renderizar null.
+  if (targetTopPosition === null && springProps.opacity.get() < 0.01 && springProps.top.get() < -50) {
       return null;
   }
+
 
   const getButtonClasses = () => {
     return `${buttonClassNameFromPage}`.trim();
@@ -85,6 +86,10 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
     }
     return classes.trim();
   };
+
+  // A ActionSidebar é renderizada condicionalmente em page.tsx, então não precisa de lógica aqui para mostrar/esconder baseada em targetTopPosition === null
+  // O `springProps.opacity` e `top` cuidam da animação de entrada/saída.
+  // A renderização condicional em page.tsx gerencia o montagem/desmontagem.
 
   return (
     <animated.aside
