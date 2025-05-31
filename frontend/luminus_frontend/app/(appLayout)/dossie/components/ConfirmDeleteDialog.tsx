@@ -39,7 +39,8 @@ export function ConfirmDeleteDialog({
         <AlertDialogHeader>
           {/* Título com contagem dinâmica de turmas */}
           <AlertDialogTitle className="text-center text-lg mt-6">
-            Tem certeza que deseja excluir {total} dossiê(s)?
+            Ao excluir o dossiê, você perderá todos os dados vinculados a ele. 
+            Deseja prosseguir com a exclusão?
           </AlertDialogTitle>
         </AlertDialogHeader>
 
