@@ -40,6 +40,8 @@ export default function GerenciarDossies() {
   const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
   const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
 
+  let typeOfData = "Dossie";
+
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(dossies.length / dossiesPorPagina);
@@ -211,9 +213,10 @@ export default function GerenciarDossies() {
 
       <ExportDownloadDialog
         open={openDownloadDialog}
-        IdDossieToExport={idsToExport}
+        IdToExport={idsToExport}
         onClose={()=>setOpenDownloadDialog(false)}
         description={"Dossiê exportado"}
+        typeOfData={typeOfData}
       />
 
 

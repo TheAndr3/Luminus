@@ -45,6 +45,8 @@ export default function VizualizationClass() {
   const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
   
   const [idsToExport, setIdsToExport] = useState<number[]>([]);
+
+  let typeOfData = "Classroom";
   
 
   // ============ CÁLCULOS DERIVADOS ============
@@ -272,9 +274,10 @@ export default function VizualizationClass() {
       
             <ExportDownloadDialog
               open={openDownloadDialog}
-              IdDossieToExport={idsToExport}
+              IdToExport={idsToExport}
               onClose={()=>setOpenDownloadDialog(false)}
               description={"Turma exportada"}
+              typeOfData={typeOfData}
             />
 
 

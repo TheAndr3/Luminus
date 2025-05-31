@@ -21,32 +21,36 @@ import { Folder } from "lucide-react";
 // Tipagem das props recebidas no componente.
 interface ExportDownloadDialogProps {
     open: boolean;        // Controla se o Dialog está aberto ou fechado.
-    IdDossieToExport: number[]
+    IdToExport: number[]
     onClose: () => void;  // Função chamada quando o modal deve ser fechado.
-    description: string
+    description: string,
+    typeOfData: string
 
 }
 
 // Componente principal que representa o modal de criação de dossiês.
-export default function ExportDownloadDialog({ open, IdDossieToExport,onClose,description }: ExportDownloadDialogProps) {
+export default function ExportDownloadDialog({ open, IdToExport,onClose,description,typeOfData }: ExportDownloadDialogProps) {
     const [descriptionButton, setDescriptionButton] = useState<number[]>([]);
 
     // Função chamada quando o usuário clica no link pra baixar
     const handleClickDownloadDossie = () => {
         // TODO: Implementar a lógica para buscar os ids no banco e possibilitar o downloads
+        //dependendo do typeofData, a gente faz uma chamada pra funções do axios diferente (tipo: typeofdata - dossie cai no if export dossie no back)
         alert("Acontece algo: baixando dossies...")
         
     }
 
     // Função chamada quando o usuário clica em concluir
     const handleClickConfirm = () => {
+        alert(typeOfData)
         onClose()
+    
     }
 
     
     useEffect(() => {
     if (open) {
-        setDescriptionButton(IdDossieToExport);
+        setDescriptionButton(IdToExport);
     }
     }, [open]);
 
