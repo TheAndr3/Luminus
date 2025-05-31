@@ -96,21 +96,24 @@ const Section: React.FC<SectionProps> = ({
   const handleSectionClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const targetElement = event.target as HTMLElement;
 
-    // Verifica se o clique foi *diretamente* na div externa da seção (não em um item, input ou texto editável)
+    // Verifica se o clique foi *diretamente* na div externa da seção ou em um de seus containers internos
+    // (mas não em um item ou EditableField dentro dele)
     const isInputOrTextarea = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA';
     const clickedOnItemContainer = targetElement.closest(`[id^="dossier-item-"]`); // Verifica se clicou em um item
+    const clickedOnEditableDisplay = targetElement.classList.contains('editableField_textDisplay'); // Verifica clique no texto em modo visualização
 
-     // Verifica se clicou diretamente no texto em modo visualização ou nas divs que contém os campos editáveis/texto
-     // Precisa ser mais específico para garantir que não intercepte cliques dentro dos EditableFields/SectionItems
-     const clickedOnContentWrapper = targetElement.classList.contains(contentWrapperClassName);
-     const clickedOnTitleOrWeightContainer = targetElement.classList.contains(titleAndWeightContainerClassName);
-     const clickedOnItemsList = targetElement.classList.contains(itemsListClassName);
-     const clickedOnSectionOuter = targetElement.classList.contains(className.split(' ')[0]); // Pega a primeira classe principal
-
-     const isClickOnSectionArea = (targetElement === sectionRef.current || clickedOnContentWrapper || clickedOnTitleOrWeightContainer || clickedOnItemsList) &&
+    // Verifica se o clique foi na div da seção, no content wrapper, no container de título/peso,
+    // na lista de items, E não foi dentro de um item ou EditableField.
+    const isClickOnSectionArea = (targetElement === sectionRef.current ||
+                                  targetElement.classList.contains(contentWrapperClassName) ||
+                                  targetElement.classList.contains(titleAndWeightContainerClassName) ||
+                                  targetElement.classList.contains(itemsListClassName)) &&
                                   !isInputOrTextarea &&
                                   !clickedOnItemContainer &&
-                                  !targetElement.closest('.editableField_textDisplay'); // Evita cliques nos spans de texto também
+                                  !clickedOnEditableDisplay &&
+                                  !targetElement.closest(`.${titleEditableFieldClassName.split(' ')[0]}`) && // Evita cliques em EditableFields de título/peso
+                                   !targetElement.closest(`.${weightEditableFieldClassName.split(' ')[0]}`);
+
 
     if (isClickOnSectionArea && onSectionAreaClick && isEditing) {
         onSectionAreaClick(sectionId);

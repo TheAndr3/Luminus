@@ -141,6 +141,7 @@ body {
   flex-shrink: 0; /* Impede que o header encolha */
 }
 /* ... (restante dos estilos do DossierHeader, Section, SectionItem, EditableField) ... */
+
 .dossierHeader_titleText {
   font-size: 1.6rem;
   font-weight: bold;
@@ -161,10 +162,42 @@ body {
 .dossierHeader_titleInput::placeholder {
   color: #9CA3AF;
 }
-.dossierHeader_evaluationConceptContainer {
+
+/* Novo layout para a linha do Conceito de Avaliação + Settings */
+.dossierHeader_evaluationAndSettings {
+  display: flex;
+  justify-content: space-between; /* Espaça o conteúdo e o botão */
+  align-items: center; /* Alinha verticalmente */
+  gap: 15px; /* Espaço entre o conteúdo de avaliação e o botão */
   margin-top: 10px;
   margin-bottom: 15px;
 }
+/* Ajusta o container de avaliação para ocupar o espaço disponível dentro do flex */
+.dossierHeader_evaluationConceptContainer {
+  margin-top: 0; /* Remove margin-top duplicado devido ao novo container pai */
+  margin-bottom: 0; /* Remove margin-bottom duplicado devido ao novo container pai */
+  flex-grow: 1; /* Permite que o conteúdo de avaliação ocupe o espaço */
+}
+
+.dossierHeader_settingsButton { /* Estilo para o botão de configurações do header */
+  composes: pageHeader_backButton; /* Reusa estilos do botão de voltar */
+  background-color: rgba(255, 255, 255, 0.2); /* Adaptação da cor para fundo roxo */
+  border-color: transparent;
+  flex-shrink: 0; /* Impede que o botão encolha */
+  width: 28px; /* Tamanho menor */
+  height: 28px; /* Tamanho menor */
+   /* Ajustar padding/margin conforme necessário para alinhamento visual */
+}
+.dossierHeader_settingsButton:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+/* Ajustar tamanho do ícone dentro do botão menor */
+.dossierHeader_settingsButton > svg {
+  width: 16px;
+  height: 16px;
+}
+
+
 .dossierHeader_evaluationConceptLabelText {
   font-size: 0.9rem;
   font-weight: 500;

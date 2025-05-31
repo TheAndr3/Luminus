@@ -121,7 +121,7 @@ const SectionItem: React.FC<SectionItemProps> = ({
           <EditableField
             value={stringValue}
             isEditing={isEditing}
-            onChange={onValueChange} // CORRIGIDO: Usa a prop onValueChange
+            onChange={onValueChange} // Usa a prop onValueChange
             placeholder={valuePlaceholder}
             ariaLabel={`Valor para o item ${id}`}
             textDisplayClassName={valueTextDisplayClassName}
