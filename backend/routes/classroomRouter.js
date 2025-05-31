@@ -9,7 +9,6 @@ const upload = multer({ storage: storage });
 //Listar class
 routerClassroom.get('/classroom/list/:professorid', classroomController.List);
 
-
 //Obter class específica
 routerClassroom.get('/classroom/:id', classroomController.Get);
 

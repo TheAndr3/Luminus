@@ -4,14 +4,24 @@ const db = require('../bd');
 
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
+    var start =0;
+    var size = 0;
+
+    try {
+      start = req.query.start;
+      size = req.query.size;
+    } catch (error) {
+      console.log(error)
+    }
     
     try {
         const dataStudent = await db.pgAppraisalGetPoints(class_id)
 
         if (Object.values(dataStudent).length > 0) {
-            return res.status(200).json(dataStudent);
+
+            return res.status(200).json({msg:"sucess", data:dataStudent.slice(start, start+size-1), ammount:dataStudent.length});
         } else {
-            res.status(400).json({msg:'nao ha estudantes nessa turma'});
+            return res.status(400).json({msg:'nao ha estudantes nessa turma'});
         }
     } catch (error) {
         console.log(error);
@@ -44,7 +54,7 @@ exports.GetAppraisal = async (req, res) => {
   const id = req.params.id;
   
   try {
-    const studentAppraisal = db.pgAppraisalSelect(id);
+    const studentAppraisal = await db.pgAppraisalSelect(id);
 
     return res.status(200).json({msg:"sucesso", data:studentAppraisal});
   } catch (error) {

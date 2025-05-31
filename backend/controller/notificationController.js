@@ -1,5 +1,6 @@
 // NotificacaoController.js
 
+//daqui para baixo não foi feito até o dia de feratoração
 exports.List = async (req, res) =>{
     res.status(200).send('Rota para listar notificações');
 }
