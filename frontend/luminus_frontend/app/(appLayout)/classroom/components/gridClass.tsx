@@ -24,6 +24,7 @@ type GridclassroomsProps = {
 
   onDeleteClass: () => void;
   toArchiveClass: () => void;
+  toExportClass: () => void;
 };
 
 export default function Gridclassrooms({
@@ -37,7 +38,8 @@ export default function Gridclassrooms({
   visualization,
   setVisualization,
   onDeleteClass,
-  toArchiveClass
+  toArchiveClass,
+  toExportClass
 
 }: GridclassroomsProps) {
 
@@ -162,6 +164,11 @@ export default function Gridclassrooms({
                       
                         <button
                           className="hover:text-yellow-400"
+                          onClick={() => {
+                            classroom.selected = true;
+                            toExportClass();
+                            classroom.selected = false;
+                          }}
                         >
                       
                           <Download size={18}></Download>
@@ -208,7 +215,7 @@ export default function Gridclassrooms({
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
         {hasSelected && (
           <div className="absolute bottom-1 left">
-            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>
+            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} toExport={toExportClass}/>
           </div>
         )}
       </div>

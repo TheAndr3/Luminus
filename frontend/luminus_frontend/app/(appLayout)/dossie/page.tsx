@@ -39,7 +39,7 @@ export default function GerenciarDossies() {
 
   const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
   const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
-  const [exportIdDossie, setExportIdDossie] = useState(Number)
+
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(dossies.length / dossiesPorPagina);
@@ -206,7 +206,7 @@ export default function GerenciarDossies() {
         open={openExportConfirmDialog}
         onCancel={() => setOpenExportConfirmDialog(false)}
         onConfirm={() => setOpenDownloadDialog(true)}
-        description={"Tem certeza que quer exportar todos os dossiê (s) selecionado (s)"}
+        description={"Tem certeza que quer exportar o(s) dossiê (s) selecionado (s)"}
       />
 
       <ExportDownloadDialog

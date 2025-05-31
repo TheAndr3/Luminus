@@ -11,6 +11,8 @@ import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
+import { ExportConfirmDialog } from "../dossie/components/exportConfirmDialog";
+import ExportDownloadDialog from "../dossie/components/exportDownloadDialog";
 
 export default function VizualizationClass() {
   // ============ ESTADOS ============
@@ -38,6 +40,11 @@ export default function VizualizationClass() {
 
   const [missingDialog, setMissingDialog] = useState(false); //para abrir dialog de erro
   const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
+
+  const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
+  const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
+  
+  const [idsToExport, setIdsToExport] = useState<number[]>([]);
   
 
   // ============ CÁLCULOS DERIVADOS ============
@@ -162,6 +169,17 @@ export default function VizualizationClass() {
   //   }
   // };
 
+
+  const exportHandle = async () => {
+    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
+
+    if (selecionadas.length === 0) return;
+
+    setIdsToExport(selecionadas); 
+
+    setOpenExportConfirmDialog(true)
+
+  };
   return (
     <div>
       {/* Cabeçalho */}
@@ -196,6 +214,7 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
+              toExportClass={exportHandle}
             />
           </div>
         )}
@@ -214,6 +233,7 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
+              toExportClass={exportHandle}
             />
           </div>
         )}
@@ -242,6 +262,20 @@ export default function VizualizationClass() {
         onConfirm={() => setMissingDialog(false)}
         description={messageErro}
       />
+
+      <ExportConfirmDialog 
+              open={openExportConfirmDialog}
+              onCancel={() => setOpenExportConfirmDialog(false)}
+              onConfirm={() => setOpenDownloadDialog(true)}
+              description={"Tem certeza que quer exportar a (s) turma (s) selecionada (s)"}
+            />
+      
+            <ExportDownloadDialog
+              open={openDownloadDialog}
+              IdDossieToExport={idsToExport}
+              onClose={()=>setOpenDownloadDialog(false)}
+              description={"Turma exportada"}
+            />
 
 
 
