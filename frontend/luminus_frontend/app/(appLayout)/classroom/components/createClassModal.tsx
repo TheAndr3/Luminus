@@ -3,13 +3,15 @@ import { ImportCSVButton } from "@/components/button-csv/import-csv-button"; // 
 import { BaseInput } from "@/components/inputs/BaseInput"; // Importa o componente de input customizado
 import { Button } from "@/components/ui/button"; // Importa o botão customizado
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog"; // Importa componentes do Dialog
-import { use, useState } from "react"; // Importa hooks do React
+import { use, useState, useRef } from "react"; // Importa hooks do React
+import { toast } from 'react-hot-toast';
 
 import { Pencil } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { CreateClassroom} from "@/services/classroomServices";
 import { ErroMessageDialog } from "./erroMessageDialog";
+import { CreateClassroomWithCSV } from "@/services/classroomServices";
 
 
 
@@ -33,6 +35,10 @@ export default function DialogPage() {
 
     const [messageButton, setMessageButton] = useState("Concluir");
 
+    const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null);
+    const [csvFileName, setCsvFileName] = useState<string>("Nenhum arquivo selecionado");
+    const fileInputRefModal = useRef<HTMLInputElement | null>(null); // Corrigido para useRef
+
 
     // Função que reseta os campos dos inputs quando o dialog é fechado
     const handleDialogClose = () => {
@@ -40,23 +46,76 @@ export default function DialogPage() {
         setInputPer(''); // Reseta o valor do input Período
         setinputInst(''); // Reseta o valor do input Instituição
         setTitulo(title); // Reseta o título para o valor padrão
+        resetModalCsvState();
+        setEditing(false); // Adicionado para resetar o modo de edição do título
+        setMessageButton("Concluir");
     }
 
+     const handleFileSelectedInModal = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            if (file.type === "text/csv") {
+                setCsvFileToUpload(file);
+                setCsvFileName(file.name);
+                toast.success(`Arquivo "${file.name}" selecionado.`);
+            } else {
+                toast.error("Por favor, selecione um arquivo .csv");
+                setCsvFileToUpload(null);
+                setCsvFileName("Nenhum arquivo selecionado");
+                if (fileInputRefModal.current) {
+                    fileInputRefModal.current.value = "";
+                }
+            }
+        }
+    };
 
-    
+     // Função para limpar os estados do CSV no modal
+    const resetModalCsvState = () => {
+        setCsvFileToUpload(null);
+        setCsvFileName("Nenhum arquivo selecionado");
+        if (fileInputRefModal.current) {
+            fileInputRefModal.current.value = "";
+        }
+    };
 
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
-        setTimeout(() => {setSave(false); setMessageButton("Carregando...")}); // Desmarca o salvamento após 3 segundos
+        setMessageButton("Carregando..."); // Atualiza o texto do botão
 
-        // Verifica se os campos Disciplina e Período estão preenchidos
-        if (inputDisc && inputPer && titulo != title) {
-            
-            //tenta enviar os dados colhidos para o back
-            try{
+        try {
+            // Obtém o ID do professor do localStorage
+            const professorId = localStorage.getItem('professorId');
+            if (!professorId) {
+                throw new Error('ID do professor não encontrado');
+            }
+
+            // Verifica se há um arquivo CSV para upload
+            if (csvFileToUpload) {
+                // Cria a turma com o arquivo CSV
+                const formData = new FormData();
+                formData.append('file', csvFileToUpload);
+                formData.append('professor_Id', professorId);
+                formData.append('name', titulo);
+                formData.append('description', inputDisc);
+                formData.append('season', inputPer);
+                formData.append('institution', inputInst || '');
+
+                const response = await CreateClassroomWithCSV(formData);
+                if (response.msg) {
+                    setOpen(false);
+                    handleDialogClose();
+                    window.location.reload();
+                }
+            } else {
+                // Verifica se os campos obrigatórios estão preenchidos para criação sem CSV
+                if (!inputDisc || !inputPer || titulo === title) {
+                    throw new Error("Por favor, preencha todos os campos obrigatórios!");
+                }
+
+                // Cria a turma sem o arquivo CSV
                 const newClassData = {
-                    professor_Id: 1, // TODO: pegar do usuário
+                    professor_Id: Number(professorId),
                     name: titulo,
                     description: inputDisc,
                     season: inputPer,
@@ -64,22 +123,16 @@ export default function DialogPage() {
                 }
 
                 const response = await CreateClassroom(newClassData);
-                if(response.msg) {
+                if (response.msg) {
                     setOpen(false);
-                    alert("Dados salvos com sucesso!");
                     handleDialogClose();
+                    window.location.reload();
                 }
             }
-            catch(err){
-                setMessageErro("Impossivel salvar os dados. Por favor, tente novamente!")
-                setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
-                setMessageButton("Concluir")
-
-            }   
-            
-        } else {
-            setMessageErro("Por favor, Preencha todos os campos adequadamente !")
-            setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
+        } catch (err: any) {
+            setMessageErro(err.message || "Impossível salvar os dados. Por favor, tente novamente!");
+            setMissingDialog(true);
+            setMessageButton("Concluir");
         }
     }
     
@@ -168,8 +221,38 @@ export default function DialogPage() {
 
                         {/* Botão para importar CSV */}
                         <div className="flex items-center justify-end gap-2">
-                            <label className="text-2xl">Nenhum arquivo: </label> 
-                            <ImportCSVButton/>
+                            <label
+                                className="text-2xl truncate max-w-[200px] md:max-w-[300px]"
+                                title={csvFileName}
+                            >
+                                {csvFileName}
+                            </label>
+                            <input
+                                type="file"
+                                accept=".csv"
+                                onChange={handleFileSelectedInModal}
+                                style={{ display: 'none' }}
+                                ref={fileInputRefModal}
+                                id="csvFileInputModal"
+                            />
+                            <Button
+                                type="button"
+                                onClick={() => fileInputRefModal.current?.click()}
+                                className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-3 py-1 h-auto text-sm"
+                            >
+                                Selecionar CSV
+                            </Button>
+                            {csvFileToUpload && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={resetModalCsvState}
+                                    className="text-red-500 hover:text-red-700 px-1"
+                                >
+                                    Limpar
+                                </Button>
+                            )}
                         </div>
                     </div>
 

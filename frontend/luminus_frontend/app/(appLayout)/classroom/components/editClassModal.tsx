@@ -77,40 +77,40 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     /* --------------------------API---------------------------------------------------------- */
     // Função chamada quando o usuário clica no botão "Concluir"
     const handleClick = async () => {
-        setSave(true); // Marca que está salvando para, por exemplo, desabilitar botões
-        setTimeout(() => {setSave(false); setMessageButton("Carregando...")}); // Remove o estado de salvando após 3 segundos (simulação)
+        setSave(true); // Marca que está salvando
+        setMessageButton("Carregando..."); // Atualiza o texto do botão
         
         // Verifica se os campos obrigatórios foram preenchidos
-        if (nameClassroomModal && institutionClassroomModal) {
-
+        if (nameClassroomModal && descriptionClassroomModal) {
             try {
                 // Monta o objeto com dados para enviar ao backend
-                const newClassData = {
+                const updateData = {
                     name: nameClassroomModal,
                     description: descriptionClassroomModal,
                     season: seasonClassroomModal,
                     institution: institutionClassroomModal || undefined
                 }
 
-                // Chama a API para salvar os dados da turma
-                const response = await UpdateClassroom(classroom.id, newClassData);
+                // Chama a API para atualizar os dados da turma
+                const response = await UpdateClassroom(classroom.id, updateData);
 
-                // Se a resposta for sucesso, fecha o modal e avisa o usuário
+                // Se a resposta for sucesso, fecha o modal e atualiza a página
                 if(response.msg) {
                     onCancel();
-                    alert("Dados salvos com sucesso!");
                     handleDialogClose();
+                    // Recarrega a página para atualizar a lista de turmas
+                    window.location.reload();
                 }
-            } catch(err) {
-                setMessageErro("Impossivel salvar os dados editados. Por favor, tente novamente!")
-                setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
-                setMessageButton("Concluir")
+            } catch(err: any) {
+                setMessageErro(err.message || "Impossível salvar os dados editados. Por favor, tente novamente!");
+                setMissingDialog(true); // Alerta caso os campos obrigatórios não estejam preenchidos
+                setMessageButton("Concluir");
             }
         } else {
-            setMessageErro("Por favor, Preencha todos os campos adequadamente !")
-            setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
+            setMessageErro("Por favor, preencha todos os campos obrigatórios!");
+            setMissingDialog(true); // Alerta caso os campos obrigatórios não estejam preenchidos
+            setMessageButton("Concluir");
         }
-        
     }
     /* --------------------------API---------------------------------------------------------- */
 

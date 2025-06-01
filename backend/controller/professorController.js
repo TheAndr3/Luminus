@@ -58,15 +58,6 @@ exports.Login = async (req, res) => {
 
 exports.Create = async (req, res) => {
     const { email_professor, password, name } = req.body;
-
-    if (!email_professor || !password || !name) {
-        return res.status(400).json({msg: "Os campos precisam estar preenchidos corretamente"});
-    }
-
-    //desencriptar senha 
-    const decryptedPassword = await decryptPassword(password);
-
-
     // Verificar se todos os campos foram preenchidos
     if (!email_professor || !password || !name) {
         return res.status(400).json({ msg: "Os campos precisam estar preenchidos corretamente" });
@@ -82,11 +73,11 @@ exports.Create = async (req, res) => {
         // Verificar se o email já está cadastrado
         const verification = await db.pgSelect('Professor', { professor_email: email_professor });
 
+        //Cadastrar professor no banco de dados
         if (verification.length === 0) {
-            // Cadastrar o professor no Banco de dados
             await db.pgInsert('Professor', {
-                professor_email: email_professor,
-                password: hashedPassword,
+                professor_email: email_professor, 
+                password: hashedPassword, 
                 name: name
             });
             return res.status(201).json({ msg: 'Usuário criado com sucesso!' });
@@ -167,6 +158,7 @@ exports.SendEmail = async (req, res) => {
             emailSender.sendEmail(professor[0].professor_email, code);
 
             try {
+
                 const resp = await db.pgInsert('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString, status:0});
                 return res.status(200).json({msg:'email enviado'});
             } catch(err) {
@@ -250,4 +242,9 @@ function genRandomCode(max, min) {
 
     return Math.floor(Math.random() * (max - min + 1)) + min;
 
+}
+
+async function sendCodeEmail(email, code) {
+    const transporter = nodemailer.Create
+    
 }
