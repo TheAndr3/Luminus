@@ -11,7 +11,7 @@ interface SectionListProps {
 
   onSectionAreaClick: (sectionId: string) => void;
   onSectionTitleChange: (sectionId: string, newTitle: string) => void;
-  onSectionDescriptionChange: (sectionId: string, newDescription: string) => void; // NOVO: Handler para descrição da seção
+  onSectionDescriptionChange: (sectionId: string, newDescription: string) => void; 
   onSectionWeightChange: (sectionId: string, newWeight: string) => void;
   onItemChange: (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => void;
   onItemSelect: (itemId: string | null) => void; 
@@ -31,7 +31,7 @@ interface SectionListProps {
   sectionComponentTitleTextClassName?: string;
   sectionComponentTitleInputClassName?: string;
 
-  // Novas classes para a descrição da seção (passadas para Section)
+  // Classes para a descrição da seção (passadas para Section)
   sectionComponentDescriptionContainerClassName?: string;
   sectionComponentDescriptionEditableFieldClassName?: string;
   sectionComponentDescriptionTextClassName?: string;
@@ -44,7 +44,8 @@ interface SectionListProps {
   
   sectionComponentItemsListClassName?: string;
 
-  // Props para SectionItem (prefixadas com sectionItem)
+  // Props para SectionItem (prefixadas com sectionItem em SectionListProps)
+  // CORRIGIDO: Estes nomes estão corretos aqui em SectionListProps
   sectionItemClassName?: string;
   sectionItemSelectedClassName?: string;
   sectionItemDescriptionFieldContainerClassName?: string;
@@ -59,7 +60,7 @@ const SectionList: React.FC<SectionListProps> = ({
   selectedItemId,
   onSectionAreaClick,
   onSectionTitleChange,
-  onSectionDescriptionChange, // NOVO: Recebe handler
+  onSectionDescriptionChange, 
   onSectionWeightChange,
   onItemChange,
   onItemSelect,
@@ -74,7 +75,7 @@ const SectionList: React.FC<SectionListProps> = ({
   sectionComponentTitleEditableFieldClassName,
   sectionComponentTitleTextClassName,
   sectionComponentTitleInputClassName,
-  // Novas classes de descrição da seção com defaults
+  // Classes de descrição da seção com defaults
   sectionComponentDescriptionContainerClassName = '',
   sectionComponentDescriptionEditableFieldClassName = '',
   sectionComponentDescriptionTextClassName = '',
@@ -84,6 +85,7 @@ const SectionList: React.FC<SectionListProps> = ({
   sectionComponentWeightTextClassName,
   sectionComponentWeightInputClassName,
   sectionComponentItemsListClassName,
+  // Recebendo as classes para SectionItem
   sectionItemClassName,
   sectionItemSelectedClassName,
   sectionItemDescriptionFieldContainerClassName,
@@ -97,14 +99,14 @@ const SectionList: React.FC<SectionListProps> = ({
           key={section.id}
           id={section.id}
           title={section.title}
-          description={section.description} // NOVO: Passa a descrição
+          description={section.description} 
           weight={section.weight}
           items={section.items}
           isEditing={isEditing}
           selectedItemId={selectedItemId}
           onItemSelect={onItemSelect} 
           onTitleChange={(newTitle: string) => onSectionTitleChange(section.id, newTitle)}
-          onDescriptionChange={(newDescription: string) => onSectionDescriptionChange(section.id, newDescription)} // NOVO: Passa handler (envelopado)
+          onDescriptionChange={(newDescription: string) => onSectionDescriptionChange(section.id, newDescription)} 
           onWeightChange={(newWeight: string) => onSectionWeightChange(section.id, newWeight)}
           onItemChange={onItemChange}
           onSectionAreaClick={() => onSectionAreaClick(section.id)}
@@ -123,7 +125,7 @@ const SectionList: React.FC<SectionListProps> = ({
           titleTextClassName={sectionComponentTitleTextClassName}
           titleInputClassName={sectionComponentTitleInputClassName}
 
-          // NOVO: Passa as classes da descrição
+          // Passa as classes da descrição da seção para Section
           descriptionContainerClassName={sectionComponentDescriptionContainerClassName}
           descriptionEditableFieldClassName={sectionComponentDescriptionEditableFieldClassName}
           descriptionTextClassName={sectionComponentDescriptionTextClassName}
@@ -136,11 +138,14 @@ const SectionList: React.FC<SectionListProps> = ({
           
           itemsListClassName={sectionComponentItemsListClassName}
 
+          // CORRIGIDO: Passa as classes para SectionItem com os nomes corretos esperados por SectionProps
+          // Section espera descriptionFieldContainerClassName, etc., não sectionItem...
           sectionItemClassName={sectionItemClassName}
           sectionItemSelectedClassName={sectionItemSelectedClassName}
-          sectionItemDescriptionFieldContainerClassName={sectionItemDescriptionFieldContainerClassName}
-          sectionItemDescriptionTextDisplayClassName={sectionItemDescriptionTextDisplayClassName}
-          sectionItemDescriptionInputClassName={sectionItemDescriptionInputClassName}
+          descriptionFieldContainerClassName={sectionItemDescriptionFieldContainerClassName}
+          descriptionTextDisplayClassName={sectionItemDescriptionTextDisplayClassName}
+          descriptionInputClassName={sectionItemDescriptionInputClassName}
+          // Note: value field classes are not passed as showValueField is false in SectionItem
         />
       ))}
     </div>

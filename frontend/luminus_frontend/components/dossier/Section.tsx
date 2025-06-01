@@ -1,5 +1,5 @@
 // components/Section.tsx
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react'; // Importar useCallback
 import EditableField from './EditableField';
 import SectionItem from './SectionItem';
 import { ItemData } from '../../types/dossier'; // Ajuste o caminho se necessário
@@ -7,16 +7,16 @@ import { ItemData } from '../../types/dossier'; // Ajuste o caminho se necessár
 interface SectionProps {
   id: string;
   title: string;
-  description: string; // NOVO: Descrição da seção
-  weight: string; 
+  description: string; 
+  weight: string; // Mantido como string para flexibilidade, mas esperamos um número ou string vazia
   items: ItemData[];
   isEditing: boolean;
   selectedItemId: string | null;
 
   onItemSelect: (itemId: string | null) => void;
   onTitleChange: (newTitle: string) => void;
-  onDescriptionChange: (newDescription: string) => void; // NOVO: Handler para mudança na descrição
-  onWeightChange: (newWeight: string) => void; 
+  onDescriptionChange: (newDescription: string) => void; 
+  onWeightChange: (newWeight: string) => void; // Espera string contendo apenas números ou vazia
   onItemChange: (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => void;
   onSectionAreaClick?: (sectionId: string) => void;
 
@@ -36,12 +36,12 @@ interface SectionProps {
   titleInputClassName?: string;
   titlePlaceholder?: string;
 
-  // Novas classes para a descrição da seção
-  descriptionContainerClassName?: string; // NOVO: Container para o EditableField da descrição
-  descriptionEditableFieldClassName?: string; // NOVO: Classe base para o EditableField da descrição
-  descriptionTextClassName?: string; // NOVO: Classe para o texto da descrição (modo visualização)
-  descriptionTextareaClassName?: string; // NOVO: Classe para o textarea da descrição (modo edição)
-  descriptionPlaceholder?: string; // NOVO: Placeholder para a descrição
+  // Classes para a descrição da seção
+  descriptionContainerClassName?: string; 
+  descriptionEditableFieldClassName?: string; 
+  descriptionTextClassName?: string; 
+  descriptionTextareaClassName?: string; 
+  descriptionPlaceholder?: string; 
 
   weightFieldContainerClassName?: string; 
   weightEditableFieldClassName?: string;  
@@ -52,24 +52,25 @@ interface SectionProps {
   itemsListClassName?: string;
   sectionItemClassName?: string;
   sectionItemSelectedClassName?: string;
-  // As classes para os campos internos do SectionItem usam nomes específicos da SectionItemProps
-  sectionItemDescriptionFieldContainerClassName?: string;
-  sectionItemDescriptionTextDisplayClassName?: string;
-  sectionItemDescriptionInputClassName?: string;
-  // Props de valor do SectionItem podem ser omitidas aqui se showValueField for sempre false
+  // Classes passadas para SectionItem (usando nomes que SectionItemProps espera)
+  // CORRIGIDO: Estes nomes estão corretos aqui, pois Section recebe e repassa para SectionItem
+  descriptionFieldContainerClassName?: string; 
+  descriptionTextDisplayClassName?: string; 
+  descriptionInputClassName?: string; 
+  // Note: value field props are intentionally omitted as showValueField is false in SectionItem
 }
 
 const Section: React.FC<SectionProps> = ({
   id: sectionId,
   title,
-  description, // NOVO: Recebe a descrição
+  description, 
   weight, 
   items,
   isEditing,
   selectedItemId,
   onItemSelect,
   onTitleChange,
-  onDescriptionChange, // NOVO: Recebe o handler de mudança na descrição
+  onDescriptionChange, 
   onWeightChange, 
   onItemChange,
   onSectionAreaClick,
@@ -85,7 +86,7 @@ const Section: React.FC<SectionProps> = ({
   titleTextClassName = '',
   titleInputClassName = '',
   titlePlaceholder = 'Título da Seção',
-  // Novas classes de descrição da seção com defaults
+  // Classes de descrição da seção com defaults
   descriptionContainerClassName = '',
   descriptionEditableFieldClassName = '',
   descriptionTextClassName = '',
@@ -99,61 +100,69 @@ const Section: React.FC<SectionProps> = ({
   itemsListClassName = '',
   sectionItemClassName = '',
   sectionItemSelectedClassName = '',
-  sectionItemDescriptionFieldContainerClassName,
-  sectionItemDescriptionTextDisplayClassName,
-  sectionItemDescriptionInputClassName,
+  // Recebendo as classes para SectionItem com os nomes corretos que SectionProps espera
+  descriptionFieldContainerClassName,
+  descriptionTextDisplayClassName,
+  descriptionInputClassName,
 }) => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  const handleLocalItemSelect = (itemId: string) => {
+  const handleLocalItemSelect = useCallback((itemId: string) => {
     if (isEditing) { 
       onItemSelect(itemId); 
     }
-  };
+  }, [isEditing, onItemSelect]); 
 
    // Atualiza o handler para incluir o clique na descrição da seção como "área da seção"
-  const handleSectionClick = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleSectionClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => { 
     const targetElement = event.target as HTMLElement;
 
-    // Verifica se o clique foi *diretamente* na div externa da seção ou em um de seus containers internos
-    // (mas não em um item ou EditableField dentro dele)
     const isInputOrTextarea = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA';
-    const clickedOnItemContainer = targetElement.closest(`[id^="dossier-item-"]`); // Verifica se clicou em um item
-    const clickedOnEditableDisplay = targetElement.classList.contains('editableField_textDisplay'); // Verifica clique no texto em modo visualização
+    const clickedOnItemContainer = targetElement.closest(`[id^="dossier-item-"]`); 
+    const clickedOnEditableDisplay = targetElement.classList.contains('editableField_textDisplay'); 
 
-    // Verifica se o clique foi na div da seção, no content wrapper, no container de título/peso,
-    // no container da descrição, na lista de items, E não foi dentro de um item ou EditableField.
     const isClickOnSectionArea = (targetElement === sectionRef.current ||
                                   targetElement.classList.contains(contentWrapperClassName) ||
                                   targetElement.classList.contains(titleAndWeightContainerClassName) ||
-                                  targetElement.classList.contains(descriptionContainerClassName) || // NOVO: inclui o container da descrição
+                                  targetElement.classList.contains(descriptionContainerClassName) || 
                                   targetElement.classList.contains(itemsListClassName)) &&
                                   !isInputOrTextarea &&
                                   !clickedOnItemContainer &&
                                   !clickedOnEditableDisplay &&
-                                  !targetElement.closest(`.${titleEditableFieldClassName.split(' ')[0]}`) && // Evita cliques em EditableFields de título/peso
-                                   !targetElement.closest(`.${weightEditableFieldClassName.split(' ')[0]}`) && // Evita cliques em EditableFields de título/peso
-                                   !targetElement.closest(`.${descriptionEditableFieldClassName.split(' ')[0]}`); // NOVO: evita cliques em EditableField de descrição
+                                  !targetElement.closest(`.${(titleEditableFieldClassName || '').split(' ')[0]}`) && 
+                                  !targetElement.closest(`.${(weightEditableFieldClassName || '').split(' ')[0]}`) &&
+                                  !targetElement.closest(`.${(descriptionEditableFieldClassName || '').split(' ')[0]}`); 
 
 
     if (isClickOnSectionArea && onSectionAreaClick && isEditing) {
         onSectionAreaClick(sectionId);
     }
-  };
+  }, [isEditing, onSectionAreaClick, sectionId, contentWrapperClassName, titleAndWeightContainerClassName, descriptionContainerClassName, itemsListClassName, titleEditableFieldClassName, weightEditableFieldClassName, descriptionEditableFieldClassName]); 
 
 
   // Handler para foco em um EditableField dentro da seção (título/peso/descrição)
-  // Reusa o mesmo handler e contexto 'section'
-  const handleSectionFieldFocus = (element: HTMLElement) => {
+  const handleSectionFieldFocus = useCallback((element: HTMLElement) => {
     if (onFieldFocus) {
         onFieldFocus(element, { type: 'section', id: sectionId });
     }
-  };
+  }, [onFieldFocus, sectionId]);
+
+  // Handler local para filtrar a entrada do campo de peso
+  const handleWeightInputChange = useCallback((newValue: string) => {
+    const numericValue = newValue.replace(/\D/g, '');
+    onWeightChange(numericValue);
+  }, [onWeightChange]); 
 
   const combinedSectionClasses = [
     className,
     isSectionSelectedForStyling ? selectedSectionStylingClassName : ''
   ].filter(Boolean).join(' ');
+
+  // Define o valor a ser exibido no modo de visualização para o peso
+  // Exibe '0%' se o peso for vazio ou "0". Garante que "0" também mostre "%".
+  const displayWeight = weight !== '' ? `${weight}%` : ''; // Mostra vazio se weight for vazio (incluindo '0')
+   // Se quiser que '0' mostre '0%', use: const displayWeight = weight === '' ? '' : `${weight}%`;
+
 
   return (
     <div ref={sectionRef} id={`dossier-section-${sectionId}`} className={combinedSectionClasses} onClick={handleSectionClick} style={{ position: 'relative' }}>
@@ -178,36 +187,38 @@ const Section: React.FC<SectionProps> = ({
           {isEditing ? (
             <div className={weightFieldContainerClassName}>
               <EditableField
-                value={weight}
+                value={weight} // Passa o valor numérico ou string vazia (sem '%')
                 isEditing={true} 
-                onChange={onWeightChange}
+                onChange={handleWeightInputChange} // Usa o handler local que filtra
                 placeholder={weightPlaceholder}
                 ariaLabel={`Peso da seção ${sectionId}`}
                 className={weightEditableFieldClassName}
                 inputClassName={weightInputClassName}
+                // REMOVIDO: type="number" - EditableField não suporta essa prop diretamente
                 onFocus={handleSectionFieldFocus} 
                 onBlur={onFieldBlur} 
               />
             </div>
           ) : (
-            weight && <div className={weightTextClassName}>{weight}</div>
+            // Renderiza o peso com '%' no modo visualização apenas se houver um valor
+            displayWeight && <div className={weightTextClassName}>{displayWeight}</div> 
           )}
         </div>
 
         {/* Descrição da Seção - Segunda linha */}
-         <div className={descriptionContainerClassName}> {/* NOVO: Container para a descrição */}
+         <div className={descriptionContainerClassName}> 
              <EditableField
                 value={description}
                 isEditing={isEditing}
-                onChange={onDescriptionChange} // NOVO: Handler para a descrição
+                onChange={onDescriptionChange} 
                 placeholder={descriptionPlaceholder}
                 ariaLabel={`Descrição da seção ${sectionId}`}
-                multiline={true} // NOVO: Campo de múltiplas linhas
-                className={descriptionEditableFieldClassName} // NOVO: Classe base para o EditableField da descrição
-                textDisplayClassName={descriptionTextClassName} // NOVO: Classe para o texto visualização
-                textareaClassName={descriptionTextareaClassName} // NOVO: Classe para o textarea edição
-                onFocus={handleSectionFieldFocus} // Passa handler de foco (identificado como section)
-                onBlur={onFieldBlur} // Repassa handler de blur
+                multiline={true} 
+                className={descriptionEditableFieldClassName} 
+                textDisplayClassName={descriptionTextClassName} 
+                textareaClassName={descriptionTextareaClassName} 
+                onFocus={handleSectionFieldFocus} 
+                onBlur={onFieldBlur} 
              />
          </div>
 
@@ -221,21 +232,27 @@ const Section: React.FC<SectionProps> = ({
                 key={item.id}
                 id={item.id}
                 description={item.description}
-                value={item.value}
+                value={item.value} // Mantém para dados, não visível por padrão
                 isEditing={isEditing}
                 isSelected={isItemSelected}
                 onSelect={() => handleLocalItemSelect(item.id)} 
                 onDescriptionChange={(newDesc) => onItemChange(sectionId, item.id, 'description', newDesc)}
-                onValueChange={(newVal) => onItemChange(sectionId, item.id, 'value', newVal)}
+                // CORRIGIDO: onValueChange é uma prop OBRIGATÓRIA na SectionItemProps, deve ser passada.
+                // Passa o handler mesmo que o campo de valor não esteja visível (showValueField={false}).
+                onValueChange={(newVal) => onItemChange(sectionId, item.id, 'value', newVal)} 
                 onFieldFocus={onFieldFocus} 
                 onFieldBlur={onFieldBlur}   
-                showValueField={false} 
+                showValueField={false} // Explicitamente não mostrar o campo de valor por agora
                 className={sectionItemClassName}
                 selectedClassName={sectionItemSelectedClassName}
-                descriptionFieldContainerClassName={sectionItemDescriptionFieldContainerClassName}
-                // CORRIGIDO: Usar os nomes corretos das props da SectionItemProps
-                descriptionTextDisplayClassName={sectionItemDescriptionTextDisplayClassName}
-                descriptionInputClassName={sectionItemDescriptionInputClassName}
+                // Passando as classes para SectionItem usando os nomes corretos da SectionItemProps
+                descriptionFieldContainerClassName={descriptionFieldContainerClassName}
+                descriptionTextDisplayClassName={descriptionTextDisplayClassName}
+                descriptionInputClassName={descriptionInputClassName}
+                // Classes de valor (não usadas pois showValueField é false em SectionItem)
+                // valueFieldContainerClassName={sectionItemValueFieldContainerClassName} // Exemplo se existissem
+                // valueTextDisplayClassName={sectionItemValueTextDisplayClassName} // Exemplo
+                // valueInputClassName={sectionItemValueInputClassName} // Exemplo
               />
             );
           })}

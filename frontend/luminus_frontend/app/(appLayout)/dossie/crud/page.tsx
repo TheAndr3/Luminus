@@ -12,7 +12,7 @@ import { SectionData, ItemData, EvaluationConcept } from '../../../../types/doss
 
 import styles from './DossierCRUDPage.module.css';
 
-// Mocks (atualizados para incluir a descrição da seção)
+// Mocks (atualizados para incluir a descrição da seção e peso como string numérica)
 const initialDossierTitleData = "Dossiê Exemplo Avançado";
 const initialDossierDescriptionData = "Descrição detalhada do dossiê, com múltiplos tópicos e itens editáveis.";
 const initialEvaluationConcept: EvaluationConcept = 'numerical';
@@ -20,8 +20,8 @@ const initialSectionsDataList: SectionData[] = [
   {
     id: 'section-alpha',
     title: 'Primeira Seção Editável',
-    description: 'Esta é a descrição da primeira seção. Ela pode ser editada no modo de edição.', // NOVO: descrição
-    weight: '50%',
+    description: 'Esta é a descrição da primeira seção. Ela pode ser editada no modo de edição.', 
+    weight: '50', // Peso apenas com número (string)
     items: [
       { id: 'item-alpha-1', description: 'Critério de Avaliação A', value: 'N/A' },
       { id: 'item-alpha-2', description: 'Observação sobre o item A', value: 'N/A' },
@@ -30,8 +30,8 @@ const initialSectionsDataList: SectionData[] = [
   {
     id: 'section-beta',
     title: 'Segunda Seção Dinâmica',
-    description: 'Descrição para a seção beta, explicando seu propósito ou conteúdo.', // NOVO: descrição
-    weight: '30%',
+    description: 'Descrição para a seção beta, explicando seu propósito ou conteúdo.', 
+    weight: '30', // Peso apenas com número (string)
     items: [
       { id: 'item-beta-1', description: 'Desempenho em Projeto X', value: 'N/A' },
       { id: 'item-beta-2', description: 'Participação em Reuniões', value: 'N/A' },
@@ -41,8 +41,8 @@ const initialSectionsDataList: SectionData[] = [
     {
     id: 'section-gamma',
     title: 'Terceira Seção Longa para Scroll',
-    description: 'Uma descrição mais longa para esta seção, testando o layout com múltiplas linhas.', // NOVO: descrição
-    weight: '20%',
+    description: 'Uma descrição mais longa para esta seção, testando o layout com múltiplas linhas.', 
+    weight: '20', // Peso apenas com número (string)
     items: [
       { id: 'item-gamma-1', description: 'Item Gamma 1', value: 'N/A' },
       { id: 'item-gamma-2', description: 'Item Gamma 2', value: 'N/A' },
@@ -134,8 +134,8 @@ const DossierAppPage: React.FC = () => {
     const newSectionData: SectionData = {
       id: newSectionId,
       title: `Nova Seção`,
-      description: `Descrição da nova seção...`, // NOVO: descrição inicial para nova seção
-      weight: '0%',
+      description: `Descrição da nova seção...`, 
+      weight: '0', // peso inicial como string numérica
       items: [{ id: newItemId, description: 'Novo item inicial', value: 'N/A' }],
     };
 
@@ -168,8 +168,8 @@ const DossierAppPage: React.FC = () => {
         const newSectionData: SectionData = {
           id: newSectionId,
           title: `Nova Seção (Automática)`,
-          description: `Descrição da seção automática...`, // NOVO: descrição inicial para nova seção
-          weight: '0%',
+          description: `Descrição da seção automática...`, 
+          weight: '0', // peso inicial como string numérica
           items: [{ id: newItemId, description: 'Novo Item Adicionado', value: 'N/A' }],
         };
         setSectionsData(prev => [...prev, newSectionData]);
@@ -248,7 +248,6 @@ const DossierAppPage: React.FC = () => {
 
 
   // Efeito para posicionar a ActionSidebar
-  // A sidebar agora segue APENAS elementos focados que são children de SectionItems
   useEffect(() => {
     if (!isEditingMode || !focusedElementRef.current || !scrollableAreaRef.current) {
       setSidebarTargetTop(null);
@@ -369,7 +368,7 @@ const DossierAppPage: React.FC = () => {
     }
   }, [isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal, sectionsData, clearBlurTimeout]);
 
-  // NOVO: Handler para mudança na descrição da seção
+  // Handler para mudança na descrição da seção
   const handleSectionDescriptionChange = useCallback((sectionId: string, newDescription: string) => {
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, description: newDescription } : sec)));
   }, []);
@@ -379,7 +378,9 @@ const DossierAppPage: React.FC = () => {
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, title: newTitle } : sec)));
   }, []);
 
+  // Handler para mudança no peso da seção - agora espera uma string numérica (ou vazia)
   const handleSectionWeightChange = useCallback((sectionId: string, newWeight: string) => {
+     // O filtro de caracteres não numéricos já ocorre em Section.tsx antes de chamar este handler
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, weight: newWeight } : sec)));
   }, []);
 
@@ -425,7 +426,7 @@ const DossierAppPage: React.FC = () => {
       title: dossierTitle, 
       description: dossierDescription, 
       evaluationConcept: evaluationConcept,
-      sections: sectionsData 
+      sections: sectionsData // sectionsData agora armazena peso como string numérica
     });
     alert("Dados salvos no console!");
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData]);
@@ -489,8 +490,8 @@ const DossierAppPage: React.FC = () => {
               selectedItemId={selectedItemIdGlobal}
               onSectionAreaClick={handleSectionAreaClick}
               onSectionTitleChange={handleSectionTitleChange}
-              onSectionDescriptionChange={handleSectionDescriptionChange} // NOVO: Passa o handler da descrição da seção
-              onSectionWeightChange={handleSectionWeightChange}
+              onSectionDescriptionChange={handleSectionDescriptionChange} 
+              onSectionWeightChange={handleSectionWeightChange} // Passa o handler de peso
               onItemChange={handleItemChange}
               onItemSelect={handleItemSelect} 
               onFieldFocus={handleFieldFocus} 
@@ -507,9 +508,8 @@ const DossierAppPage: React.FC = () => {
               sectionComponentTitleTextClassName={styles.section_titleText}
               sectionComponentTitleInputClassName={styles.section_titleInput}
 
-              // NOVO: Mapeia e passa as classes para a descrição da seção
               sectionComponentDescriptionContainerClassName={styles.section_descriptionContainer}
-              sectionComponentDescriptionEditableFieldClassName={styles.editableField_inputBase} // Reusa base
+              sectionComponentDescriptionEditableFieldClassName={styles.editableField_inputBase} 
               sectionComponentDescriptionTextClassName={styles.section_descriptionText}
               sectionComponentDescriptionTextareaClassName={styles.section_descriptionTextarea}
               
@@ -522,9 +522,11 @@ const DossierAppPage: React.FC = () => {
               
               sectionItemClassName={`${styles.sectionItem_container} ${isEditingMode ? styles.sectionItem_containerEditable : ''}`}
               sectionItemSelectedClassName={styles.sectionItem_selected}
-              sectionItemDescriptionFieldContainerClassName={styles.sectionItem_descriptionFieldWrapper}
-              sectionItemDescriptionTextDisplayClassName={styles.editableField_textDisplayItem}
-              sectionItemDescriptionInputClassName={styles.editableField_inputItem}
+              // CORRIGIDO: Passando as classes para SectionList com os nomes corretos esperados por SectionListProps
+              sectionItemDescriptionFieldContainerClassName={styles.sectionItem_descriptionFieldWrapper} 
+              sectionItemDescriptionTextDisplayClassName={styles.editableField_textDisplayItem} 
+              sectionItemDescriptionInputClassName={styles.editableField_inputItem} 
+              // Note: value field classes are not passed as showValueField is false
             />
 
             {showActionSidebar && (
