@@ -17,41 +17,43 @@ exports.GetPublicKey = async (req, res) => {
 }
 
 exports.Login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email_professor, password } = req.body;
 
     try {
         // Desencriptar a senha recebida
         const decryptedPassword = await decryptPassword(password);
-
+        console.log(decryptedPassword);
         // Buscar o professor pelo email usando pgSelect
-        const rows = await db.pgSelect('Professor', { email_professor: email });
+        const rows = await db.pgSelect('Professor', { professor_email: email_professor });
+        console.log(rows);
 
-        if (rows.length === 0) {
+        if (rows.length == 0) {
             return res.status(404).json({msg:'Usuário não encontrado'});
         }
 
         const professor = rows[0];
 
         // Comparar a senha desencriptada com o hash salvo
-        const passwordMatch = bcrypt.compare(decryptedPassword, professor.password);
+        const passwordMatch = await bcrypt.compare(decryptedPassword, professor.password); // <--- AQUI!
+
 
         if (!passwordMatch) {
             return res.status(401).json({msg:'Senha incorreta'});
         }
 
         // Retornar o status 200 e o professor logado
-        res.status(200).json({
+        return res.status(200).json({
             msg: 'Login realizado com sucesso',
             data: {
                 id: professor.id,
                 nome: professor.nome,
-                email: professor.email_professor
+                email: professor.professor_email
             }
         });
         //Caso dê erro, retornar o status 500 e a mensagem de erro
     } catch (err) {
         console.error(err);
-       return res.status(500).msg({msg: 'Erro ao realizar login'});
+       return res.status(500).json({msg: 'Erro ao realizar login'});
 
     }
 };
