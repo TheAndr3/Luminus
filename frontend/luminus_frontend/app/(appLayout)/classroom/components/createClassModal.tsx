@@ -48,38 +48,45 @@ export default function DialogPage() {
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
-        setTimeout(() => {setSave(false); setMessageButton("Carregando...")}); // Desmarca o salvamento após 3 segundos
+        setMessageButton("Carregando..."); // Atualiza o texto do botão
 
         // Verifica se os campos Disciplina e Período estão preenchidos
         if (inputDisc && inputPer && titulo != title) {
-            
-            //tenta enviar os dados colhidos para o back
-            try{
+            try {
+                // Obtém o ID do professor do localStorage
+                const professorId = localStorage.getItem('professorId');
+                if (!professorId) {
+                    throw new Error('ID do professor não encontrado');
+                }
+
+                // Prepara os dados para criar a turma
                 const newClassData = {
-                    professor_Id: 1, // TODO: pegar do usuário
+                    professor_Id: Number(professorId),
                     name: titulo,
                     description: inputDisc,
                     season: inputPer,
                     institution: inputInst || ''
                 }
 
+                // Chama o serviço para criar a turma
                 const response = await CreateClassroom(newClassData);
+                
                 if(response.msg) {
                     setOpen(false);
-                    alert("Dados salvos com sucesso!");
                     handleDialogClose();
+                    // Recarrega a página para atualizar a lista de turmas
+                    window.location.reload();
                 }
             }
-            catch(err){
-                setMessageErro("Impossivel salvar os dados. Por favor, tente novamente!")
-                setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
-                setMessageButton("Concluir")
-
+            catch(err: any){
+                setMessageErro(err.message || "Impossível salvar os dados. Por favor, tente novamente!");
+                setMissingDialog(true);
+                setMessageButton("Concluir");
             }   
-            
         } else {
-            setMessageErro("Por favor, Preencha todos os campos adequadamente !")
-            setMissingDialog(true) // Alerta caso os campos obrigatórios não estejam preenchidos
+            setMessageErro("Por favor, preencha todos os campos obrigatórios!");
+            setMissingDialog(true);
+            setMessageButton("Concluir");
         }
     }
     

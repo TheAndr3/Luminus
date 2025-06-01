@@ -3,7 +3,7 @@
 // Componentes e tipos
 import ListClass from "./components/listClass";
 import { Classroom } from "@/app/(appLayout)/classroom/components/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GridClass from "./components/gridClass";
 import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
@@ -11,20 +11,21 @@ import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
+import { ListClassroom, DeleteClassroom } from "@/services/classroomServices";
 
 export default function VizualizationClass() {
   // ============ ESTADOS ============
   // Mock de dados - DEVERIA SER SUBSTITUÍDO POR CHAMADA API
-  const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    disciplina: 'Matematica',
-    codigo: `EXA502 - TP${i + 1}`,
-    dossie: `Dossiê Turma ${i + 1}`,
-    selected: false,
-  }));
+  // const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
+  //   id: i,
+  //   disciplina: 'Matematica',
+  //   codigo: `EXA502 - TP${i + 1}`,
+  //   dossie: `Dossiê Turma ${i + 1}`,
+  //   selected: false,
+  // }));
   
   const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
-  const [classi, setClassi] = useState(mockClass); // Lista de turmas
+  const [classi, setClassi] = useState<Classroom[]>([]); // Lista de turmas
   const [currentPage, setCurrentPage] = useState(1); // Paginação
   const turmasPorPagina = visualization === 'grid' ? 6 : 6; // Itens por página
   const [confirmOpen, setConfirmOpen] = useState(false); // Controle do modal de delete
@@ -35,10 +36,9 @@ export default function VizualizationClass() {
   const [classDescription, setClassDescription] = useState("") // Descrição para modal
   const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
   const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
-
   const [missingDialog, setMissingDialog] = useState(false); //para abrir dialog de erro
   const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
-  
+  const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(classi.length / turmasPorPagina);
@@ -50,6 +50,39 @@ export default function VizualizationClass() {
     turma.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
     turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // ============ CHAMADAS À API ============
+  useEffect(() => {
+    const fetchTurmas = async () => {
+      try {
+        setIsLoading(true);
+        // Pegar o ID do professor do localStorage (definido durante o login)
+        const professorId = localStorage.getItem('professorId');
+        if (!professorId) {
+          throw new Error('ID do professor não encontrado');
+        }
+        
+        const data = await ListClassroom(Number(professorId));
+        // Mapear a resposta da API para o formato local
+        const turmasFormatadas = data.map(turma => ({
+          id: turma.id,
+          disciplina: turma.name,
+          codigo: turma.season,
+          dossie: turma.description,
+          selected: false
+        }));
+        setClassi(turmasFormatadas);
+      } catch (error: any) {
+        console.error("Erro ao carregar turmas:", error);
+        setMessageErro(error.message || "Erro ao carregar turmas");
+        setMissingDialog(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTurmas();
+  }, []);
 
   // ============ FUNÇÕES ============
   // Alterna seleção de todas as turmas visíveis
@@ -73,17 +106,6 @@ export default function VizualizationClass() {
     );
   };
 
-  // ============ CHAMADAS À API (FALTANTES) ============
-  // 1. Aqui deveria ter uma chamada para carregar as turmas inicialmente
-  // useEffect(() => {
-  //   const fetchTurmas = async () => {
-  //     const response = await fetch('/api/turmas');
-  //     const data = await response.json();
-  //     setClassi(data);
-  //   };
-  //   fetchTurmas();
-  // }, []);
-
   // Prepara turmas para exclusão
   const handleDeleteClass = async () => {
     const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
@@ -92,25 +114,14 @@ export default function VizualizationClass() {
     setConfirmOpen(true);
   };
   
-  // 2. Aqui deveria ter a chamada real para a API de exclusão
+  // Confirma exclusão das turmas
   const confirmDeletion = async () => {
     try {
-      console.log("Excluir:", idsToDelete);
-      
-      /*
-      try {
-        const response = await axios.post('/api/turmas/delete', {
-          ids: idsToDelete,
-        });
-
-        //mensagem de delete complete
-        return response.data;
-      } catch (error: any) {
-        setMessageErro("Erro ao excluir os dados desejados!")
-        setMissingDialog(true) 
+      setIsLoading(true);
+      // Deletar cada turma selecionada
+      for (const id of idsToDelete) {
+        await DeleteClassroom(id);
       }
-      
-      */
 
       // Atualização otimista do estado
       setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
@@ -118,10 +129,12 @@ export default function VizualizationClass() {
       if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
         setCurrentPage(1);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao excluir turmas:", error);
-      alert("Erro ao excluir.");
+      setMessageErro(error.message || "Erro ao excluir turmas");
+      setMissingDialog(true);
     } finally {
+      setIsLoading(false);
       setConfirmOpen(false);
     }
   };
@@ -242,8 +255,6 @@ export default function VizualizationClass() {
         onConfirm={() => setMissingDialog(false)}
         description={messageErro}
       />
-
-
 
     </div>
   );
