@@ -1,5 +1,5 @@
 // components/EditableField.tsx
-import React from 'react';
+import React from 'react'; // Removido useEffect e useRef
 
 interface EditableFieldProps {
   value: string;
@@ -12,7 +12,7 @@ interface EditableFieldProps {
   inputClassName?: string;
   textareaClassName?: string;
   ariaLabel?: string;
-  // Novos handlers de foco/blur
+  // Novos handlers de foco/blur que PASSAM O ELEMENTO DOM
   onFocus?: (element: HTMLElement) => void;
   onBlur?: () => void;
 }
@@ -40,6 +40,7 @@ const EditableField: React.FC<EditableFieldProps> = ({
   // Handler local para foco que chama o handler externo, passando o elemento
   const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (onFocus) {
+          // O e.target aqui é o elemento DOM específico (input ou textarea) que recebeu foco.
           onFocus(e.target);
       }
   };

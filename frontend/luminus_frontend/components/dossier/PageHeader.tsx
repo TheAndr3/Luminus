@@ -36,6 +36,11 @@ interface PageHeaderProps {
   editModeText?: React.ReactNode;
   /** Texto ou elemento para o botão quando ESTÁ em modo de edição (default: "Visualizar") */
   viewModeText?: React.ReactNode;
+
+    // Adicionados handlers de foco/blur, embora botões geralmente não posicionem a sidebar,
+    // eles podem ser usados para limpar o estado de foco global se clicados.
+    onFieldFocus?: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
+    onFieldBlur?: () => void;
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
@@ -48,7 +53,28 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   toggleButtonClassName = '',
   editModeText = 'Editar',
   viewModeText = 'Visualizar',
+    onFieldFocus, // Recebe handler de foco do pai
+    onFieldBlur,  // Recebe handler de blur do pai
 }) => {
+
+    // Handlers locais para chamar os handlers passados pelo pai
+    // Estes botões não representam itens ou seções para a sidebar, mas podem limpar o estado de foco global
+    // se o foco sair de um campo de item para um desses botões.
+    const handleLocalFocus = (element: HTMLElement) => {
+        if (onFieldFocus) {
+             // Usamos um contexto genérico que a page.tsx reconhece para limpar a seleção de item,
+             // mas não para posicionar a sidebar.
+            onFieldFocus(element, { type: 'section', id: 'page-header-controls' }); // Usando type 'section' e id fixo
+        }
+    };
+
+    const handleLocalBlur = () => {
+        if (onFieldBlur) {
+            onFieldBlur();
+        }
+    };
+
+
   return (
     <header className={className}>
       <button
@@ -56,6 +82,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         onClick={onBackClick}
         aria-label="Voltar"
         className={backButtonClassName}
+        onFocus={(e) => handleLocalFocus(e.target)} // Usa handler local
+        onBlur={handleLocalBlur} // Usa handler local
       >
         <BackIcon className={backButtonIconClassName} />
       </button>
@@ -64,6 +92,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         type="button"
         onClick={onToggleEditMode}
         className={toggleButtonClassName}
+         onFocus={(e) => handleLocalFocus(e.target)} // Usa handler local
+        onBlur={handleLocalBlur} // Usa handler local
       >
         {isEditing ? viewModeText : editModeText}
       </button>

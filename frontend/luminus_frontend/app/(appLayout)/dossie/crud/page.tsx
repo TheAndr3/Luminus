@@ -9,9 +9,9 @@ import SectionList from '../../../../components/dossier/SectionList';
 import ActionSidebar from '../../../../components/dossier/ActionSidebar';
 
 // Importa as interfaces e a função adaptadora diretamente de types/dossier
-import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload} from '../../../../types/dossier';
+import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload } from '../../../../types/dossier';
 // Importa a função de API e o tipo de payload
-import { createDossier, CreateDossierPayload  } from '../../../../services/dossierServices'; // Ajuste o caminho se necessário
+import { createDossier, CreateDossierPayload } from '../../../../services/dossierServices'; // Ajuste o caminho se necessário
 
 import styles from './DossierCRUDPage.module.css';
 
@@ -38,10 +38,10 @@ const initialSectionsDataList: SectionData[] = [
     items: [
       { id: 'item-beta-1', description: 'Desempenho em Projeto X', value: 'N/A' },
       { id: 'item-beta-2', description: 'Participação em Reuniões', value: 'N/A' },
-      { id: 'item-beta-3', description: 'Feedback Recebido', value: 'N/A'},
+      { id: 'item-beta-3', description: 'Feedback Recebido', value: 'N/A' },
     ],
   },
-    {
+  {
     id: 'section-gamma',
     title: 'Terceira Seção Longa para Scroll',
     description: 'Uma descrição mais longa para esta seção, testando o layout com múltiplas linhas.',
@@ -53,6 +53,12 @@ const initialSectionsDataList: SectionData[] = [
       { id: 'item-gamma-4', description: 'Item Gamma 4', value: 'N/A' },
       { id: 'item-gamma-5', description: 'Item Gamma 5', value: 'N/A' },
       { id: 'item-gamma-6', description: 'Item Gamma 6', value: 'N/A' },
+      { id: 'item-gamma-7', description: 'Item Gamma 7', value: 'N/A' },
+      { id: 'item-gamma-8', description: 'Item Gamma 8', value: 'N/A' },
+      { id: 'item-gamma-9', description: 'Item Gamma 9', value: 'N/A' },
+      { id: 'item-gamma-10', description: 'Item Gamma 10', value: 'N/A' },
+      { id: 'item-gamma-11', description: 'Item Gamma 11', value: 'N/A' },
+      { id: 'item-gamma-12', description: 'Item Gamma 12', value: 'N/A' },
     ],
   },
 ];
@@ -65,6 +71,7 @@ const DossierAppPage: React.FC = () => {
   const [sectionsData, setSectionsData] = useState<SectionData[]>(initialSectionsDataList);
   const [isEditingMode, setIsEditingMode] = useState(true);
 
+  // Controlam a estilização de seleção (borda azul)
   const [selectedSectionIdForStyling, setSelectedSectionIdForStyling] = useState<string | null>(null);
   const [selectedItemIdGlobal, setSelectedItemIdGlobal] = useState<string | null>(null);
 
@@ -73,9 +80,12 @@ const DossierAppPage: React.FC = () => {
   // Ref para o timeout de blur
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Estado para a posição "top" da sidebar (relativa ao scrollableArea)
   const [sidebarTargetTop, setSidebarTargetTop] = useState<number | null>(null);
   const scrollableAreaRef = useRef<HTMLDivElement>(null);
-  const sidebarHeightEstimate = 240; // Altura estimada da ActionSidebar
+  // Altura estimada da ActionSidebar para o cálculo de centralização
+  const sidebarHeightEstimate = 240;
+
 
   // Professor ID: MOCK hardcoded por enquanto. Em um app real, viria do contexto/autenticação.
   const MOCK_PROFESSOR_ID = 1;
@@ -89,15 +99,16 @@ const DossierAppPage: React.FC = () => {
     }
   }, []);
 
-  // Define o estado de seleção e o elemento focado ao receber foco
+  // Manipula o foco em qualquer EditableField
+  // Esta é a função primária que aciona o posicionamento da sidebar
   const handleFieldFocus = useCallback((element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => {
     if (!isEditingMode) return;
 
     clearBlurTimeout(); // Limpa qualquer timeout de blur pendente
 
-    // Já sabemos que 'element' é um HTMLElement aqui pela assinatura da prop onFieldFocus
-    focusedElementRef.current = element;
+    focusedElementRef.current = element; // Guarda a referência do elemento focado
 
+    // Atualiza o estado de seleção visual
     if (context.type === 'item') {
       setSelectedItemIdGlobal(context.id);
       // Encontra a seção do item focado para definir a seleção da seção para styling
@@ -105,250 +116,146 @@ const DossierAppPage: React.FC = () => {
       if (sectionOfItem) {
         setSelectedSectionIdForStyling(sectionOfItem.id);
       } else {
+         // Se por algum motivo não encontrar a seção do item, deseleciona a seção
         setSelectedSectionIdForStyling(null);
       }
     } else if (context.type === 'section') {
       // Se o foco estiver em um campo da seção (título/peso/descrição), seleciona a seção
-       setSelectedSectionIdForStyling(context.id);
-       setSelectedItemIdGlobal(null); // Desseleciona o item se focou na seção
+      setSelectedSectionIdForStyling(context.id);
+      setSelectedItemIdGlobal(null); // Desseleciona o item se focou na seção da seção
+    } else {
+        // Se o contexto não é nem item nem seção (ex: PageHeader, DossierHeader), limpa tudo
+        setSelectedItemIdGlobal(null);
+        setSelectedSectionIdForStyling(null);
     }
+
+    // O useEffect que observa focusedElementRef.current cuidará de calcular e definir a posição da sidebar
+    // Ele só fará isso se o foco for em um item, conforme a lógica de showActionSidebar.
 
   }, [isEditingMode, sectionsData, clearBlurTimeout]);
 
-  // Define o timeout para limpar o estado de seleção e o elemento focado ao perder foco
+  // Manipula a perda de foco de qualquer EditableField
+  // Usa um timeout para permitir cliques na sidebar antes de esconder
   const handleFieldBlur = useCallback(() => {
-     blurTimeoutRef.current = setTimeout(() => {
-        focusedElementRef.current = null;
-        setSelectedItemIdGlobal(null);
-        setSelectedSectionIdForStyling(null);
-        setSidebarTargetTop(null);
-     }, 50);
+    // Define um pequeno timeout. Se outro elemento focado acionar handleFieldFocus antes do timeout,
+    // o timeout é limpo. Se o timeout completar, significa que o foco saiu de um EditableField
+    // para um elemento não rastreado (ou fora da página), então limpamos a seleção/foco.
+    blurTimeoutRef.current = setTimeout(() => {
+      focusedElementRef.current = null;
+      setSelectedItemIdGlobal(null);
+      setSelectedSectionIdForStyling(null);
+      setSidebarTargetTop(null); // Esconde a sidebar
+    }, 50); // Tempo suficiente para registrar um clique na sidebar
   }, []);
 
 
-  const getActiveSectionIdForActions = useCallback((): string | null => {
-    if (selectedItemIdGlobal) {
-      const section = sectionsData.find(s => s.items.some(i => i.id === selectedItemIdGlobal));
-      return section ? section.id : null;
-    }
-    return selectedSectionIdForStyling;
-  }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling]);
+  // Manipula o clique na div de um SectionItem (não nos campos editáveis internos)
+  // Serve para selecionar visualmente o item e sua seção pai.
+  // Esta função agora é chamada APENAS quando o clique não foi em um campo editável.
+  const handleItemSelect = useCallback((itemId: string) => {
+     if (!isEditingMode) return;
 
-  const handleAddNewSectionForSidebar = useCallback(() => {
-     clearBlurTimeout();
-    const activeSectionId = getActiveSectionIdForActions();
-    const newSectionId = `section-${Date.now()}`;
-    const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
-    const newSectionData: SectionData = {
-      id: newSectionId,
-      title: `Nova Seção`,
-      description: `Descrição da nova seção...`,
-      weight: '0', // peso inicial como string numérica
-      items: [{ id: newItemId, description: 'Novo item inicial', value: 'N/A' }],
-    };
+     clearBlurTimeout(); // Limpa qualquer timeout de blur pendente
 
-    let newSections = [...sectionsData];
-    let targetSectionIndex = -1;
+     // Se o item clicado já está selecionado, deseleciona tudo (equivalente a clicar fora).
+     // Se não, seleciona o item e a seção pai.
+     // Importante: Clicar na div do item (não no campo) NÃO reposiciona a sidebar,
+     // pois focusedElementRef.current permanece null. A sidebar só aparece com FOCO real em campo de item.
+     if (selectedItemIdGlobal === itemId) {
+         setSelectedItemIdGlobal(null);
+         setSelectedSectionIdForStyling(null);
+          focusedElementRef.current = null; // Clicar na div do item não mantém o foco em um campo específico
+          setSidebarTargetTop(null); // Esconde a sidebar se não há campo focado
+     } else {
+         setSelectedItemIdGlobal(itemId);
+          const sectionOfItem = sectionsData.find(sec => sec.items.some(item => item.id === itemId));
+          if (sectionOfItem) {
+              setSelectedSectionIdForStyling(sectionOfItem.id);
+          } else {
+              setSelectedSectionIdForStyling(null);
+          }
+          // Não tentamos focar em um campo aqui. focusedElementRef.current permanece null.
+     }
+  }, [isEditingMode, sectionsData, selectedItemIdGlobal, clearBlurTimeout]);
 
-    if (activeSectionId) {
-         targetSectionIndex = sectionsData.findIndex(sec => sec.id === activeSectionId);
-    }
+  // Manipula o clique na área da seção (sem ser nos campos editáveis ou itens)
+  // Serve para selecionar visualmente a seção e limpar seleção/foco de item.
+  const handleSectionAreaClick = useCallback((sectionId: string) => {
+     if (!isEditingMode) return;
 
-    if (targetSectionIndex !== -1) {
-        newSections = [...sectionsData.slice(0, targetSectionIndex + 1), newSectionData, ...sectionsData.slice(targetSectionIndex + 1)];
-    } else {
-         newSections = [...sectionsData, newSectionData];
-    }
+     clearBlurTimeout(); // Limpa qualquer timeout de blur pendente
 
-    setSectionsData(newSections);
+     // Se a seção clicada já está selecionada, deseleciona tudo.
+     // Se não, seleciona a seção.
+      if (selectedSectionIdForStyling === sectionId) {
+          setSelectedSectionIdForStyling(null);
+      } else {
+          setSelectedSectionIdForStyling(sectionId);
+      }
 
-    // Seleciona a nova seção e o novo item inicial
-    setSelectedSectionIdForStyling(newSectionId);
-    setSelectedItemIdGlobal(newItemId);
+     // Clicar na área da seção sempre deseleciona o item e limpa o foco
+     setSelectedItemIdGlobal(null);
+     focusedElementRef.current = null;
+     setSidebarTargetTop(null); // Esconde a sidebar
 
-    // Tenta focar no primeiro campo editável do novo item para posicionar a sidebar
-     requestAnimationFrame(() => {
-         const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
-         if (newItemElement) {
-             const editableField = newItemElement.querySelector('input, textarea');
-             if (editableField instanceof HTMLElement) {
-                editableField.focus(); // Isso aciona handleFieldFocus
-             }
-             // Se não focou em campo editável, focusedElementRef.current permanecerá null
-             // e a sidebar não aparecerá, o que é o comportamento desejado.
-         }
-     });
+  }, [isEditingMode, clearBlurTimeout, selectedSectionIdForStyling]);
 
 
-  }, [sectionsData, getActiveSectionIdForActions, clearBlurTimeout]);
-
-  const handleAddItemForSidebar = useCallback(() => {
-     clearBlurTimeout();
-    let activeSectionId = getActiveSectionIdForActions();
-
-    if (!activeSectionId) {
-        // Se nenhuma seção está selecionada ou focada, cria uma nova seção e adiciona o item nela
-        const newSectionId = `section-${Date.now()}`;
-        const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
-        const newSectionData: SectionData = {
-          id: newSectionId,
-          title: `Nova Seção (Automática)`,
-          description: `Descrição da seção automática...`,
-          weight: '0', // peso inicial como string numérica
-          items: [{ id: newItemId, description: 'Novo Item Adicionado', value: 'N/A' }],
-        };
-        setSectionsData(prev => [...prev, newSectionData]);
-        activeSectionId = newSectionId;
-        // Seleciona a nova seção e o novo item
-        setSelectedSectionIdForStyling(newSectionId);
-        setSelectedItemIdGlobal(newItemId);
-
-        // Tenta focar no novo item imediatamente após adicionar
-        requestAnimationFrame(() => {
-             const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
-             if (newItemElement) {
-                 const editableField = newItemElement.querySelector('input, textarea');
-                 if (editableField instanceof HTMLElement) {
-                    editableField.focus(); // Isso aciona handleFieldFocus
-                 }
-             }
-        });
-
-        return; // Termina aqui após adicionar nova seção e item
-    }
-
-    // Lógica para adicionar item na seção ativa (existente)
-    const newItemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-    setSectionsData(prev =>
-      prev.map(sec =>
-        sec.id === activeSectionId
-          ? { ...sec, items: [...sec.items, { id: newItemId, description: 'Novo Item Adicionado', value: 'N/A' }] }
-          : sec
-      )
-    );
-    // Seleciona o novo item na seção ativa
-    setSelectedSectionIdForStyling(activeSectionId);
-    setSelectedItemIdGlobal(newItemId);
-
-    // Tenta focar no novo item imediatamente após adicionar
-     requestAnimationFrame(() => {
-         const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
-         if (newItemElement) {
-             const editableField = newItemElement.querySelector('input, textarea');
-             if (editableField instanceof HTMLElement) {
-                editableField.focus(); // Isso aciona handleFieldFocus
-             }
-         }
-     });
-
-
-  }, [sectionsData, getActiveSectionIdForActions, clearBlurTimeout]);
-
-
-  const handleDossierSettingsClick = useCallback(() => {
-      clearBlurTimeout();
-      console.log('Configurações do Dossiê (clicado via botão no header)');
-  }, [clearBlurTimeout]);
-
-
-  const handleDeleteItemForSidebar = useCallback(() => {
-    if (!selectedItemIdGlobal) return;
-    clearBlurTimeout(); // Limpa timeout de blur
-
-    const sectionOfItem = sectionsData.find(s => s.items.some(i => i.id === selectedItemIdGlobal));
-    if (sectionOfItem) {
-      const currentSelectedItemId = selectedItemIdGlobal;
-      const currentSelectedSectionId = sectionOfItem.id;
-
-      setSectionsData(prev => {
-        const newSections = prev.map(sec =>
-          sec.id === sectionOfItem.id
-            ? { ...sec, items: sec.items.filter(item => item.id !== currentSelectedItemId) }
-            : sec
-        );
-         // Se a seção do item deletado ficou vazia e não é a única seção, deleta a seção também
-         if (newSections.some(sec => sec.id === currentSelectedSectionId && sec.items.length === 0) && newSections.length > 1) {
-            return newSections.filter(sec => sec.id !== currentSelectedSectionId);
-         }
-        return newSections;
-      });
-
-      // Limpa a seleção após a exclusão
-      setSelectedItemIdGlobal(null);
-      focusedElementRef.current = null;
-      setSelectedSectionIdForStyling(null);
-      setSidebarTargetTop(null);
-    }
-  }, [sectionsData, selectedItemIdGlobal, clearBlurTimeout]);
-
-  const handleDeleteSectionForSidebar = useCallback(() => {
-    const activeSectionId = getActiveSectionIdForActions();
-    if (!activeSectionId || sectionsData.length <= 1) {
-      // Adiciona uma validação para não deletar a última seção
-      console.warn("Não é possível deletar a última seção.");
+  // Efeito para posicionar a ActionSidebar quando o elemento focado ou o scroll mudam
+  useEffect(() => {
+    // Adiciona a verificação de ambiente
+    if (typeof window === 'undefined' || !scrollableAreaRef.current) {
+      setSidebarTargetTop(null); // Garante que a sidebar fica escondida no servidor ou sem scrollarea
       return;
     }
-    clearBlurTimeout(); // Limpa timeout de blur
 
-    setSectionsData(prev => prev.filter(sec => sec.id !== activeSectionId));
+    const focusedElement = focusedElementRef.current;
+    const scrollableAreaElement = scrollableAreaRef.current;
 
-    // Limpa a seleção após a exclusão
-    if (selectedSectionIdForStyling === activeSectionId) {
-      setSelectedSectionIdForStyling(null);
+    // A sidebar só aparece no modo de edição E QUANDO um campo editável DENTRO de um item está focado.
+    // Verifica se focusedElement existe, é um HTMLElement e se é descendente de um elemento com id começando com "dossier-item-"
+    const isItemFieldFocused = focusedElement instanceof HTMLElement && focusedElement.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
+
+    if (!isEditingMode || !isItemFieldFocused) {
+      setSidebarTargetTop(null); // Esconde a sidebar
+      return;
     }
-    // Verifica se o item selecionado pertencia à seção deletada
-    const sectionBeingDeleted = sectionsData.find(s => s.id === activeSectionId);
-    if (sectionBeingDeleted && selectedItemIdGlobal && sectionBeingDeleted.items.some(it => it.id === selectedItemIdGlobal)) {
-      setSelectedItemIdGlobal(null);
-    }
-     focusedElementRef.current = null;
-     setSidebarTargetTop(null);
-  }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling, getActiveSectionIdForActions, clearBlurTimeout]);
 
+    // Se chegamos aqui, estamos em modo de edição e um campo de item está focado.
+    // Precisamos encontrar o container pai do item para o cálculo da posição.
+    const parentItemElement = focusedElement.closest(`[id^="dossier-item-"]`) as HTMLElement; // Já verificamos que é um HTMLElement
 
-  // Efeito para posicionar a ActionSidebar quando o elemento focado muda
-   useEffect(() => {
-    // Adiciona a verificação de ambiente
-    if (typeof window === 'undefined') {
-        setSidebarTargetTop(null); // Garante que a sidebar fica escondida no servidor
+    if (!parentItemElement) {
+        // Isso não deve acontecer dado a verificação acima, mas por segurança
+        setSidebarTargetTop(null);
         return;
     }
 
-    // A sidebar só aparece no modo de edição E QUANDO um campo editável DENTRO de um item está focado E EXISTE no DOM.
-    // focusedElementRef.current é o input/textarea focado. Precisamos do seu parent item.
-    // Verifica se focusedElementRef.current existe e é um HTMLElement antes de chamar closest()
-    if (!isEditingMode || !scrollableAreaRef.current || !(focusedElementRef.current instanceof HTMLElement)) {
-        setSidebarTargetTop(null); // Esconde a sidebar
-        return;
-    }
+    // Calcula a posição do topo do container do item pai RELATIVO ao topo do container scrollável
+    // Usamos getBoundingClientRect para obter a posição no viewport e subtraímos a posição do scrollableArea
+    const parentItemRect = parentItemElement.getBoundingClientRect();
+    const scrollAreaRect = scrollableAreaElement.getBoundingClientRect();
 
-    // Encontra o container pai do item a partir do elemento focado
-    const parentItemElement = focusedElementRef.current.closest(`[id^="dossier-item-"]`);
+    // Posição vertical do topo do item em relação ao topo visível da área scrollável
+    const itemTopRelativeToScrollAreaViewport = parentItemRect.top - scrollAreaRect.top;
 
-    // Verifica se o container pai do item foi encontrado e é um HTMLElement válido para offsetTop
-    if (!parentItemElement || !(parentItemElement instanceof HTMLElement)) {
-         setSidebarTargetTop(null); // Esconde a sidebar se o parent item não for encontrado ou não for HTMLElement
-         return;
-    }
+    // Adicionamos o scroll actual para obter a posição do topo do item em relação ao TOPO DO CONTEÚDO scrollável
+    const itemTopRelativeToScrollAreaContent = itemTopRelativeToScrollAreaViewport + scrollableAreaElement.scrollTop;
 
-    // Agora temos certeza que parentItemElement é um HTMLElement válido e scrollableAreaRef.current não é null.
-    const scrollableAreaElement = scrollableAreaRef.current as HTMLDivElement; // Cast seguro após a verificação
-    const parentItemElementTyped = parentItemElement as HTMLElement; // Cast seguro
-
-    // Calcula a posição do topo do container do item pai dentro da área scrollável (offsetTop é relativo ao offsetParent)
-    const parentItemOffsetTop = parentItemElementTyped.offsetTop;
-    // Obtém a altura do container do item pai
-    const targetRectHeight = parentItemElementTyped.offsetHeight; // Use offsetHeight
 
     // Calcula a posição Y desejada para o centro da sidebar (centralizada verticalmente com o item)
-    let finalSidebarTop = parentItemOffsetTop + (targetRectHeight / 2) - (sidebarHeightEstimate / 2);
+    let finalSidebarTop = itemTopRelativeToScrollAreaContent + (parentItemRect.height / 2) - (sidebarHeightEstimate / 2);
+
 
     // Limita a posição para garantir que a sidebar fique visível e dentro da área scrollável
-    const minTop = 0; // Começa no topo da área scrollável
-    // Ajustar maxTop para considerar a altura da sidebar dentro da área scrollável total
-    // scrollHeight é a altura total do conteúdo, offsetHeight é a altura visível do contêiner.
-    // A posição máxima "top" da sidebar deve ser a altura total do conteúdo menos a altura da sidebar.
-    const maxTop = scrollableAreaElement.scrollHeight - sidebarHeightEstimate;
+    // A posição mínima é 0 (topo do conteúdo scrollável)
+    const minTop = 0;
+    // A posição máxima é a altura total do conteúdo menos a altura da sidebar
+    // Ajustamos para evitar que a sidebar vá para muito perto do fim se o conteúdo for pequeno
+    const maxTop = scrollableAreaElement.scrollHeight > sidebarHeightEstimate
+                   ? scrollableAreaElement.scrollHeight - sidebarHeightEstimate
+                   : 0; // Se a área scrollável é menor que a sidebar, posiciona no topo
+
 
     // Aplica os limites
     finalSidebarTop = Math.max(minTop, finalSidebarTop);
@@ -357,80 +264,66 @@ const DossierAppPage: React.FC = () => {
     // Define a nova posição da sidebar
     setSidebarTargetTop(finalSidebarTop);
 
-    // Este useEffect depende do elemento focado (para saber onde posicionar) e dos dados das seções
-    // (em caso de adição/remoção que mude o offset dos elementos)
-  }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, scrollableAreaRef, sectionsData]);
-
-
-  // Efeito para atualizar a posição da sidebar DURANTE o scroll
-  // Este efeito adiciona/remove o listener de scroll
-  useEffect(() => {
-     // Adiciona a verificação de ambiente
-    if (typeof window === 'undefined') {
-        return undefined; // Retorna função de limpeza que não faz nada no servidor
-    }
-
-    const scrollArea = scrollableAreaRef.current;
-
-    // A sidebar só deve estar visível e precisar de re-posicionamento em scroll
-    // QUANDO estiver em modo de edição E um CAMPO DE ITEM estiver focado (parent item existe e é HTMLElement).
-     const isItemFieldFocused = focusedElementRef.current instanceof HTMLElement && focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
-
-
-    // Se não estamos em edição, não há área scrollável, ou nenhum campo de item está focado,
-    // não precisamos do listener de scroll para a sidebar. Esconde a sidebar e sai.
-    if (!scrollArea || !isEditingMode || !isItemFieldFocused) {
-        setSidebarTargetTop(null); // Garante que a sidebar some
-        return undefined; // Retorna uma função de limpeza que remove o listener (se adicionado)
-    }
-
-    // Se chegamos aqui, estamos em modo de edição e um campo de item VÁLIDO está focado.
-    // Adicionamos o listener de scroll.
+    // Adiciona o listener de scroll APENAS QUANDO a sidebar está visível (ou seja, um item field está focado)
     const handleScroll = () => {
-       // Dentro do handler de scroll, precisamos verificar novamente se as condições ainda são válidas
-       // (principalmente se o elemento focado ainda existe e é um campo de item)
-       const currentTargetElement = focusedElementRef.current;
-       const currentScrollableAreaElement = scrollableAreaRef.current;
+       // Recalcula a posição no scroll. A lógica é a mesma do cálculo inicial.
+       // Verifica novamente se o estado ainda é válido (item field focado)
+       const currentTargetElement = focusedElementRef.current; // Pega o ref atual
+       const currentScrollableAreaElement = scrollableAreaRef.current; // Pega o ref atual
 
-       // Verifica se o elemento focado ainda é um HTMLElement e se o parent item ainda existe e é HTMLElement
-       if (!isEditingMode || !currentScrollableAreaElement || !(currentTargetElement instanceof HTMLElement)) {
-            setSidebarTargetTop(null); // Esconde a sidebar se algo invalidou o estado
-            return; // Sai do handler de scroll
+        // Se não estamos em modo de edição, não há área scrollável, ou nenhum campo de item está focado,
+        // remove o listener e esconde a sidebar.
+        const isCurrentItemFieldFocused = currentTargetElement instanceof HTMLElement && currentTargetElement.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
+
+        if (!isEditingMode || !currentScrollableAreaElement || !isCurrentItemFieldFocused) {
+             // Remove o listener aqui para garantir que ele não continue disparando desnecessariamente
+             currentScrollableAreaElement?.removeEventListener('scroll', handleScroll);
+             setSidebarTargetTop(null); // Esconde a sidebar
+             return; // Sai do handler de scroll
        }
+
         const currentParentItemElement = currentTargetElement.closest(`[id^="dossier-item-"]`);
 
-        // Verifica se o parent item ainda é válido (é HTMLElement)
-       if (currentParentItemElement && currentParentItemElement instanceof HTMLElement) {
-           // Recalcula a posição da sidebar com base na nova posição de scroll
-           const parentItemOffsetTop = currentParentItemElement.offsetTop;
-           const targetRectHeight = currentParentItemElement.offsetHeight;
+        if (currentParentItemElement && currentParentItemElement instanceof HTMLElement) {
+            const currentParentItemRect = currentParentItemElement.getBoundingClientRect();
+            const currentScrollAreaRect = currentScrollableAreaElement.getBoundingClientRect();
 
-           let targetTop = parentItemOffsetTop + (targetRectHeight / 2) - (sidebarHeightEstimate / 2);
+            const currentItemTopRelativeToScrollAreaViewport = currentParentItemRect.top - currentScrollAreaRect.top;
+            const currentItemTopRelativeToScrollAreaContent = currentItemTopRelativeToScrollAreaViewport + currentScrollableAreaElement.scrollTop;
 
-           const minTop = 0;
-           const maxTop = currentScrollableAreaElement.scrollHeight - sidebarHeightEstimate;
+            let currentTargetTop = currentItemTopRelativeToScrollAreaContent + (currentParentItemRect.height / 2) - (sidebarHeightEstimate / 2);
 
-           targetTop = Math.max(minTop, targetTop);
-           targetTop = Math.min(targetTop, maxTop);
+             const currentMinTop = 0;
+             const currentMaxTop = currentScrollableAreaElement.scrollHeight > sidebarHeightEstimate
+                                 ? currentScrollableAreaElement.scrollHeight - sidebarHeightEstimate
+                                 : 0;
 
-           setSidebarTargetTop(targetTop);
+            currentTargetTop = Math.max(currentMinTop, currentTargetTop);
+            currentTargetTop = Math.min(currentTargetTop, currentMaxTop);
+
+            setSidebarTargetTop(currentTargetTop);
        } else {
             // Se o elemento focado não está mais em um item válido (foi deletado, etc.)
             setSidebarTargetTop(null); // Esconde a sidebar
-            // A limpeza dos refs deve vir do handler que causou a mudança (delete/blur).
+            // A limpeza dos refs/seleção deve vir do handler que causou a mudança (delete/blur).
        }
     };
 
-    scrollArea.addEventListener('scroll', handleScroll);
+    // Adiciona o listener de scroll
+    scrollableAreaElement.addEventListener('scroll', handleScroll);
 
+    // Limpeza: Remove o listener de scroll quando este efeito for re-executado ou componente desmontado
     return () => {
-      // Limpeza: Remove o listener de scroll quando este useEffect for re-executado ou o componente for desmontado
-      scrollArea.removeEventListener('scroll', handleScroll);
+        scrollableAreaElement.removeEventListener('scroll', handleScroll);
     };
 
-    // Este useEffect depende do elemento focado (para saber SE adicionar o listener e qual elemento observar)
-    // e do modo de edição/área scrollável.
-  }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, scrollableAreaRef]);
+    // Dependências do useEffect:
+    // focusedElementRef.current: Dispara quando o elemento focado muda (incluindo null)
+    // isEditingMode: Dispara quando o modo muda
+    // sidebarHeightEstimate: Dispara se a estimativa de altura mudar (improvável)
+    // sectionsData: Dispara se os dados mudarem (adicionar/remover itens/seções pode mudar offsets)
+    // scrollableAreaRef.current: Dispara se a área scrollável mudar (improvável)
+  }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, sectionsData, scrollableAreaRef.current]);
 
 
   const handleBackClick = useCallback(() => { console.log('Navigate back'); }, []);
@@ -444,7 +337,7 @@ const DossierAppPage: React.FC = () => {
         setSelectedItemIdGlobal(null);
         setSelectedSectionIdForStyling(null);
         setSidebarTargetTop(null);
-         // TODO: Adicionar lógica para perguntar se quer salvar antes de sair do modo de edição
+        // TODO: Adicionar lógica para perguntar se quer salvar antes de sair do modo de edição
       }
       return !prev;
     });
@@ -454,24 +347,6 @@ const DossierAppPage: React.FC = () => {
   const handleDossierTitleChange = useCallback((newTitle: string) => { setDossierTitle(newTitle); }, []);
   const handleDossierDescriptionChange = useCallback((newDescription: string) => { setDossierDescription(newDescription); }, []);
   const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => { setEvaluationConcept(concept); }, []);
-
-
-  // Este handler é para cliques na área da seção (não em um item ou campo editável)
-  // Ele agora APENAS controla a seleção visual da seção, NÃO posiciona a sidebar.
-  const handleSectionAreaClick = useCallback((sectionId: string) => {
-    if (!isEditingMode) return;
-
-    clearBlurTimeout();
-
-    // Clicar na área da seção deve desselecionar qualquer item e focar/selecionar a seção
-    setSelectedItemIdGlobal(null);
-    // Seleciona visualmente a seção
-    setSelectedSectionIdForStyling(sectionId);
-
-    // Clicar na área da seção tira o foco de qualquer campo e esconde a sidebar
-    focusedElementRef.current = null;
-    setSidebarTargetTop(null);
-  }, [isEditingMode, clearBlurTimeout]);
 
 
   // Handler para mudança na descrição da seção
@@ -486,55 +361,9 @@ const DossierAppPage: React.FC = () => {
 
   // Handler para mudança no peso da seção - agora espera uma string numérica (ou vazia)
   const handleSectionWeightChange = useCallback((sectionId: string, newWeight: string) => {
-     // O filtro de caracteres não numéricos já ocorre em Section.tsx antes de chamar este handler
+    // O filtro de caracteres não numéricos já ocorre em Section.tsx antes de chamar este handler
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, weight: newWeight } : sec)));
   }, []);
-
-
-  // Este handler é para cliques na div do item (não em um campo editável dentro dele)
-  // Ele agora controla a seleção visual do item E tenta focar no primeiro campo editável do item.
-  const handleItemSelect = useCallback((itemId: string | null) => {
-    if (!isEditingMode || itemId === null) return;
-
-    clearBlurTimeout();
-
-    // Se o item clicado já está selecionado, deseleciona tudo.
-    // Se não, seleciona o item e a seção pai, e tenta focar no primeiro campo editável do item.
-    if (selectedItemIdGlobal === itemId) {
-        setSelectedItemIdGlobal(null);
-        setSelectedSectionIdForStyling(null);
-        focusedElementRef.current = null;
-        setSidebarTargetTop(null);
-    } else {
-        setSelectedItemIdGlobal(itemId);
-         const sectionOfItem = sectionsData.find(sec => sec.items.some(item => item.id === itemId));
-         if (sectionOfItem) {
-             setSelectedSectionIdForStyling(sectionOfItem.id);
-         } else {
-             setSelectedSectionIdForStyling(null);
-         }
-        // Tenta encontrar o elemento DOM do item e focar no primeiro campo editável
-         requestAnimationFrame(() => {
-             const itemElement = document.getElementById(`dossier-item-${itemId}`);
-             if (itemElement) {
-                 // Seleciona o primeiro campo editável dentro do item (geralmente a descrição)
-                 const editableField = itemElement.querySelector('input, textarea');
-                 if (editableField instanceof HTMLElement) {
-                     editableField.focus(); // Isso aciona handleFieldFocus
-                 } else {
-                     // Fallback: se não encontrar campo editável, a sidebar não aparecerá,
-                     // pois ela só aparece com foco em campo editável de item.
-                     focusedElementRef.current = null; // Garante que o ref está nulo
-                     setSidebarTargetTop(null); // Garante que a sidebar está escondida
-                 }
-             } else {
-                 // Se o elemento do item não foi encontrado (improvável após requestAnimationFrame)
-                 focusedElementRef.current = null;
-                 setSidebarTargetTop(null);
-             }
-         });
-    }
-  }, [isEditingMode, sectionsData, selectedItemIdGlobal, clearBlurTimeout]);
 
 
   const handleItemChange = useCallback(
@@ -547,6 +376,232 @@ const DossierAppPage: React.FC = () => {
         )
       );
     }, []);
+
+
+  // Action Sidebar Handlers:
+  // As ações devem operar na seção/item atualmente selecionado (que é refletido pelo foco do item ou clique na seção)
+
+  const handleAddNewSectionForSidebar = useCallback(() => {
+    if (!isEditingMode) return;
+    clearBlurTimeout();
+
+    const newSectionId = `section-${Date.now()}`;
+    const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
+    const newSectionData: SectionData = {
+      id: newSectionId,
+      title: `Nova Seção`,
+      description: `Descrição da nova seção...`,
+      weight: '0', // peso inicial como string numérica
+      items: [{ id: newItemId, description: 'Novo item inicial', value: 'N/A' }],
+    };
+
+    let newSections = [...sectionsData];
+    let targetSectionIndex = -1;
+
+    // Encontra a seção selecionada (ou a seção do item selecionado/focado) para inserir a nova seção após ela
+    if (selectedSectionIdForStyling) {
+      targetSectionIndex = sectionsData.findIndex(sec => sec.id === selectedSectionIdForStyling);
+    } else if (selectedItemIdGlobal) { // Fallback caso um item esteja selecionado mas a seção não
+       const sectionOfSelectedItem = sectionsData.find(s => s.items.some(item => item.id === selectedItemIdGlobal));
+       if(sectionOfSelectedItem) {
+         targetSectionIndex = sectionsData.findIndex(sec => sec.id === sectionOfSelectedItem.id);
+       }
+    }
+
+
+    if (targetSectionIndex !== -1) {
+      newSections = [...sectionsData.slice(0, targetSectionIndex + 1), newSectionData, ...sectionsData.slice(targetSectionIndex + 1)];
+    } else {
+      // Adiciona ao final se nenhuma seção/item estiver selecionado
+      newSections = [...sectionsData, newSectionData];
+    }
+
+    setSectionsData(newSections);
+
+    // Limpa a seleção de item (se houver) e seleciona a nova seção
+    setSelectedItemIdGlobal(null); // Item antigo desselecionado
+    setSelectedSectionIdForStyling(newSectionId); // Nova seção selecionada
+
+     // Tenta focar no primeiro campo editável do novo item para posicionar a sidebar
+     // Usamos o ID do novo item que está na *nova* seção
+     requestAnimationFrame(() => {
+         const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
+         if (newItemElement) {
+             const editableField = newItemElement.querySelector('input, textarea');
+             if (editableField instanceof HTMLElement) {
+                editableField.focus(); // Isso aciona handleFieldFocus com o novo item
+             } else {
+                 // Se não encontrou campo editável no novo item, limpa o foco
+                 focusedElementRef.current = null;
+                 setSidebarTargetTop(null);
+                 // A seleção visual da nova seção permanece
+             }
+         } else {
+             // Se o elemento do item não foi encontrado (improvável)
+             focusedElementRef.current = null;
+             setSidebarTargetTop(null);
+              // A seleção visual da nova seção permanece
+         }
+     });
+
+
+  }, [sectionsData, isEditingMode, clearBlurTimeout, selectedSectionIdForStyling, selectedItemIdGlobal]);
+
+
+  const handleAddItemForSidebar = useCallback(() => {
+    if (!isEditingMode) return;
+    clearBlurTimeout();
+
+    let targetSectionId = selectedSectionIdForStyling; // Adiciona na seção selecionada
+     // Se nenhuma seção selecionada, mas um item selecionado, adiciona na seção daquele item
+    if (!targetSectionId && selectedItemIdGlobal) {
+        const sectionOfSelectedItem = sectionsData.find(s => s.items.some(item => item.id === selectedItemIdGlobal));
+        targetSectionId = sectionOfSelectedItem ? sectionOfSelectedItem.id : null;
+    }
+
+
+    if (!targetSectionId) {
+      // Se nenhuma seção ou item está selecionado/focado, adiciona uma nova seção e o item nela
+      const newSectionId = `section-${Date.now()}`;
+      const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
+      const newSectionData: SectionData = {
+        id: newSectionId,
+        title: `Nova Seção (Automática)`,
+        description: `Descrição da seção automática...`,
+        weight: '0', // peso inicial como string numérica
+        items: [{ id: newItemId, description: 'Novo Item Adicionado', value: 'N/A' }],
+      };
+      setSectionsData(prev => [...prev, newSectionData]);
+      targetSectionId = newSectionId;
+      // Seleciona a nova seção e o novo item
+      setSelectedSectionIdForStyling(newSectionId);
+      setSelectedItemIdGlobal(newItemId);
+
+      // Tenta focar no novo item imediatamente após adicionar
+      requestAnimationFrame(() => {
+        const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
+        if (newItemElement) {
+          const editableField = newItemElement.querySelector('input, textarea');
+          if (editableField instanceof HTMLElement) {
+            editableField.focus(); // Isso aciona handleFieldFocus
+          } else {
+              focusedElementRef.current = null;
+              setSidebarTargetTop(null);
+          }
+        } else {
+            focusedElementRef.current = null;
+            setSidebarTargetTop(null);
+        }
+      });
+
+      return; // Termina aqui após adicionar nova seção e item
+    }
+
+    // Lógica para adicionar item na seção alvo (existente)
+    const newItemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    setSectionsData(prev =>
+      prev.map(sec =>
+        sec.id === targetSectionId
+          ? { ...sec, items: [...sec.items, { id: newItemId, description: 'Novo Item Adicionado', value: 'N/A' }] }
+          : sec
+      )
+    );
+    // Seleciona o novo item na seção alvo
+    setSelectedSectionIdForStyling(targetSectionId); // Garante que a seção pai está selecionada
+    setSelectedItemIdGlobal(newItemId); // Seleciona o novo item
+
+    // Tenta focar no novo item imediatamente após adicionar
+     requestAnimationFrame(() => {
+         const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
+         if (newItemElement) {
+             const editableField = newItemElement.querySelector('input, textarea');
+             if (editableField instanceof HTMLElement) {
+                editableField.focus(); // Isso aciona handleFieldFocus
+             } else {
+                 // Se não encontrou campo editável no novo item, limpa o foco/sidebar
+                 focusedElementRef.current = null;
+                 setSidebarTargetTop(null);
+                 // A seleção visual do novo item e da seção pai permanece
+             }
+         } else {
+              // Se o elemento do item não foi encontrado (improvável)
+              focusedElementRef.current = null;
+              setSidebarTargetTop(null);
+              // A seleção visual do novo item e da seção pai permanece
+         }
+     });
+
+  }, [sectionsData, isEditingMode, clearBlurTimeout, selectedSectionIdForStyling, selectedItemIdGlobal]);
+
+
+  const handleDeleteItemForSidebar = useCallback(() => {
+    // Só permite deletar se houver um item selecionado (que acontece quando um campo de item está focado)
+    if (!isEditingMode || !selectedItemIdGlobal) return;
+
+    clearBlurTimeout(); // Limpa timeout de blur
+
+    const currentSelectedItemId = selectedItemIdGlobal;
+    const sectionOfItem = sectionsData.find(s => s.items.some(i => i.id === currentSelectedItemId));
+
+    if (!sectionOfItem) return; // Item não encontrado (estado inconsistente?)
+
+    const currentSelectedSectionId = sectionOfItem.id;
+
+    setSectionsData(prev => {
+      const newSections = prev.map(sec =>
+        sec.id === currentSelectedSectionId
+          ? { ...sec, items: sec.items.filter(item => item.id !== currentSelectedItemId) }
+          : sec
+      );
+
+      // Se a seção do item deletado ficou vazia E não é a única seção, deleta a seção também
+      const sectionIsEmpty = newSections.some(sec => sec.id === currentSelectedSectionId && sec.items.length === 0);
+      if (sectionIsEmpty && newSections.length > 1) {
+        return newSections.filter(sec => sec.id !== currentSelectedSectionId);
+      }
+      return newSections;
+    });
+
+    // Limpa a seleção e o foco após a exclusão
+    setSelectedItemIdGlobal(null);
+    setSelectedSectionIdForStyling(null); // Limpa a seleção da seção também (ela pode ter sido deletada ou o item era o último)
+    focusedElementRef.current = null;
+    setSidebarTargetTop(null); // Esconde a sidebar
+
+  }, [sectionsData, selectedItemIdGlobal, isEditingMode, clearBlurTimeout]);
+
+
+  const handleDeleteSectionForSidebar = useCallback(() => {
+     // Só permite deletar se houver uma seção selecionada E houver mais de uma seção no total
+    if (!isEditingMode || !selectedSectionIdForStyling || sectionsData.length <= 1) {
+      if (sectionsData.length <= 1) console.warn("Não é possível deletar a última seção.");
+      return;
+    }
+
+    clearBlurTimeout(); // Limpa timeout de blur
+
+    const sectionIdToDelete = selectedSectionIdForStyling;
+
+    setSectionsData(prev => prev.filter(sec => sec.id !== sectionIdToDelete));
+
+    // Limpa a seleção e o foco após a exclusão
+    // Verifica se o item selecionado pertencia à seção deletada
+    const sectionBeingDeleted = sectionsData.find(s => s.id === sectionIdToDelete);
+    if (sectionBeingDeleted && selectedItemIdGlobal && sectionBeingDeleted.items.some(it => it.id === selectedItemIdGlobal)) {
+      setSelectedItemIdGlobal(null);
+    }
+    setSelectedSectionIdForStyling(null); // Limpa a seleção da seção
+    focusedElementRef.current = null;
+    setSidebarTargetTop(null); // Esconde a sidebar
+
+  }, [sectionsData, selectedItemIdGlobal, selectedSectionIdForStyling, isEditingMode, clearBlurTimeout]);
+
+
+  const handleDossierSettingsClick = useCallback(() => {
+    clearBlurTimeout();
+    console.log('Configurações do Dossiê (clicado via botão no header)');
+  }, [clearBlurTimeout]);
+
 
   // Usando a função adaptadora e a função de API
   const handleSave = useCallback(async () => { // Torna a função assíncrona
@@ -574,7 +629,7 @@ const DossierAppPage: React.FC = () => {
       alert("Dossiê salvo com sucesso (simulado)!");
 
       // Opcional: Transicionar para o modo de visualização após salvar
-      // setIsEditingMode(false);
+      // setIsEditingMode(false); // Pode querer manter no modo edição para continuar trabalhando
 
     } catch (error: any) {
       console.error("Erro ao salvar dossiê:", error);
@@ -585,13 +640,23 @@ const DossierAppPage: React.FC = () => {
 
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, MOCK_PROFESSOR_ID, clearBlurTimeout]); // Adiciona dependências
 
+
   // Determina se a ActionSidebar deve ser exibida
   // A sidebar aparece apenas no modo de edição E QUANDO um campo editável DENTRO de um item está focado E estamos no cliente.
   // A verificação `typeof window !== 'undefined'` é crucial aqui.
-   const showActionSidebar = isEditingMode &&
-                           typeof window !== 'undefined' && // VERIFICAÇÃO ADICIONADA
-                           focusedElementRef.current instanceof HTMLElement &&
-                           focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
+  const showActionSidebar = isEditingMode &&
+    typeof window !== 'undefined' && // Verifica se está no navegador
+    focusedElementRef.current instanceof HTMLElement && // Verifica se há um elemento focado
+    focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement; // Verifica se o elemento focado está dentro de um item
+
+
+  // Determina se o botão "Excluir Item" na sidebar deve estar habilitado
+  // Habilitado apenas se houver um item selecionado (que acontece quando um campo de item está focado)
+  const canDeleteItem = !!selectedItemIdGlobal;
+
+  // Determina se o botão "Excluir Seção" na sidebar deve estar habilitado
+  // Habilitado se houver uma seção selecionada E houver mais de uma seção no total
+  const canDeleteSection = !!selectedSectionIdForStyling && sectionsData.length > 1;
 
 
   return (
@@ -608,9 +673,10 @@ const DossierAppPage: React.FC = () => {
             className={styles.pageHeader}
             backButtonClassName={styles.pageHeader_backButton}
             backButtonIconClassName={styles.pageHeader_backIcon}
-            toggleButtonClassName={`${styles.pageHeader_toggleButtonBase} ${
-              isEditingMode ? styles.pageHeader_toggleButtonEditing : styles.pageHeader_toggleButtonViewing
-            }`}
+            toggleButtonClassName={`${styles.pageHeader_toggleButtonBase} ${isEditingMode ? styles.pageHeader_toggleButtonEditing : styles.pageHeader_toggleButtonViewing
+              }`}
+            onFieldFocus={handleFieldFocus} // Passa para que os botões possam limpar o estado de foco
+            onFieldBlur={handleFieldBlur} // Passa para que os botões possam limpar o estado de foco
           />
 
           {/* Área scrollável para o conteúdo principal */}
@@ -627,6 +693,9 @@ const DossierAppPage: React.FC = () => {
               onSettingsClick={handleDossierSettingsClick}
               // Mostrar botão de settings apenas em modo de edição e se NÃO for avaliação numérica
               showSettingsButton={isEditingMode && evaluationConcept !== 'numerical'}
+              onFieldFocus={handleFieldFocus} // Passa para que os campos do header possam limpar o estado de foco do item
+              onFieldBlur={handleFieldBlur} // Passa para que os campos do header possam limpar o estado de foco do item
+
               className={styles.dossierHeaderContainer}
               titleTextClassName={styles.dossierHeader_titleText}
               titleInputClassName={styles.dossierHeader_titleInput}
@@ -651,14 +720,14 @@ const DossierAppPage: React.FC = () => {
               isEditing={isEditingMode}
               selectedSectionIdForStyling={selectedSectionIdForStyling}
               selectedItemId={selectedItemIdGlobal}
-              onSectionAreaClick={handleSectionAreaClick}
+              onSectionAreaClick={handleSectionAreaClick} // Passa o handler de clique na área da seção
               onSectionTitleChange={handleSectionTitleChange}
               onSectionDescriptionChange={handleSectionDescriptionChange}
               onSectionWeightChange={handleSectionWeightChange}
               onItemChange={handleItemChange}
-              onItemSelect={handleItemSelect}
-              onFieldFocus={handleFieldFocus}
-              onFieldBlur={handleFieldBlur}
+              onItemSelect={handleItemSelect} // Passa o handler de clique na div do item (seleção visual)
+              onFieldFocus={handleFieldFocus} // Passa o handler de foco para EditableFields
+              onFieldBlur={handleFieldBlur} // Passa o handler de blur para EditableFields
 
               className={styles.sectionListContainer}
               sectionComponentClassName={styles.section_outerContainer}
@@ -695,11 +764,13 @@ const DossierAppPage: React.FC = () => {
             {showActionSidebar && (
               <ActionSidebar
                 targetTopPosition={sidebarTargetTop}
-                onAddItemToSection={handleAddItemForSidebar}
-                onAddNewSection={handleAddNewSectionForSidebar}
-                onDeleteItemFromSection={handleDeleteItemForSidebar}
-                onDeleteSection={handleDeleteSectionForSidebar}
-                canDeleteItem={!!selectedItemIdGlobal}
+                onAddItemToSection={handleAddItemForSidebar} // Adiciona item na seção selecionada/focada
+                onAddNewSection={handleAddNewSectionForSidebar} // Adiciona nova seção após a selecionada/focada
+                onDeleteItemFromSection={handleDeleteItemForSidebar} // Deleta o item selecionado/focado
+                onDeleteSection={handleDeleteSectionForSidebar} // Deleta a seção selecionada/focada
+                canDeleteItem={canDeleteItem} // Habilita/desabilita botão de deletar item
+                canDeleteSection={canDeleteSection} // Habilita/desabilita botão de deletar seção
+
                 containerClassNameFromPage={styles.actionSidebarVisualBase}
                 buttonClassNameFromPage={styles.actionSidebarButtonVisualBase}
                 disabledButtonClassNameFromPage={styles.actionSidebarButtonDisabledVisualBase}

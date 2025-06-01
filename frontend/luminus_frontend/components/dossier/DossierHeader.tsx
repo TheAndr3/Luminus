@@ -9,7 +9,9 @@ const SettingsIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-
+// Handlers de foco/blur não são relevantes para os campos do DossierHeader no contexto da sidebar
+// pois a sidebar deve aparecer apenas para foco em itens.
+// Mantemos os handlers aqui para consistência, mas eles não acionarão a sidebar.
 interface DossierHeaderProps {
   title: string;
   description: string;
@@ -22,6 +24,12 @@ interface DossierHeaderProps {
   // Novos handlers e props para o botão de settings
   onSettingsClick?: () => void;
   showSettingsButton?: boolean;
+
+  // Handlers de foco/blur passados do pai (page.tsx) - usados aqui apenas para limpar o estado global de foco
+  // se o foco sair de um item para um campo do header.
+  onFieldFocus?: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
+  onFieldBlur?: () => void;
+
 
   className?: string;
   titleTextClassName?: string;
@@ -55,6 +63,8 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
   onEvaluationConceptChange,
   onSettingsClick, // Recebe handler
   showSettingsButton, // Recebe flag de visibilidade
+  onFieldFocus, // Recebe handler de foco do pai
+  onFieldBlur,  // Recebe handler de blur do pai
   className = '',
   titleTextClassName = '',
   titleInputClassName = '',
@@ -72,8 +82,26 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
   settingsButtonClassName = '',
   settingsButtonIconClassName = '',
 }) => {
+  // Handlers locais para chamar os handlers passados pelo pai, com contexto adequado
+  // Esses handlers são usados para limpar o estado global de foco/seleção de item
+  // quando o foco sai de um item para um campo ou controle do header.
+  const handleLocalFocus = (element: HTMLElement, fieldType: 'title' | 'description' | 'settings') => {
+      if (onFieldFocus) {
+          // Para fins de seleção visual (se a page estilizar o header), usamos um ID fixo.
+          // Para a sidebar, a page.tsx ignora o contexto que não seja 'item'.
+          onFieldFocus(element, { type: 'section', id: 'dossier-header' }); // Usando type 'section' e id fixo para o header
+      }
+  };
+
+  const handleLocalBlur = () => {
+      if (onFieldBlur) {
+          onFieldBlur();
+      }
+  };
+
+
   return (
-    <div className={className}>
+    <div id="dossier-header" className={className}> {/* Adiciona ID para possível seleção visual na page */}
       {/* Campo do Título */}
       {isEditing ? (
         <input
@@ -83,6 +111,8 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
           className={titleInputClassName}
           aria-label="Título do Dossiê"
           placeholder="Digite o título do dossiê"
+          onFocus={(e) => handleLocalFocus(e.target, 'title')} // Usa handler local
+          onBlur={handleLocalBlur} // Usa handler local
         />
       ) : (
         <h1 className={titleTextClassName}>{title}</h1>
@@ -107,6 +137,10 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
                        checked={evaluationConcept === 'numerical'}
                        onChange={() => onEvaluationConceptChange('numerical')}
                        className={evaluationConceptRadioInputClassName}
+                        // Foco/Blur nos rádios podem ser tratados genericamente, não precisam de elemento específico
+                        // A sidebar não aparecerá para rádios, mas limparão o foco de um item se ele existir.
+                       onFocus={() => handleLocalFocus(document.activeElement as HTMLElement, 'settings')} // Elemento ativo, type 'settings' genérico
+                       onBlur={handleLocalBlur}
                      />
                      Numeral (0.0 - 10.0)
                    </label>
@@ -118,6 +152,8 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
                        checked={evaluationConcept === 'letter'}
                        onChange={() => onEvaluationConceptChange('letter')}
                        className={evaluationConceptRadioInputClassName}
+                       onFocus={() => handleLocalFocus(document.activeElement as HTMLElement, 'settings')} // Elemento ativo, type 'settings' genérico
+                       onBlur={handleLocalBlur}
                      />
                      Conceito (A, B, C...)
                    </label>
@@ -132,6 +168,9 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
                      aria-label="Configurações do Dossiê"
                      title="Configurações do Dossiê"
                      className={settingsButtonClassName}
+                     // Botões podem receber foco e blur. Usamos os handlers para limpar o estado global.
+                     onFocus={(e) => handleLocalFocus(e.target, 'settings')} // Passa o botão, type 'settings' genérico
+                     onBlur={handleLocalBlur}
                  >
                      <SettingsIcon className={settingsButtonIconClassName} />
                  </button>
@@ -172,6 +211,8 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
           aria-label="Descrição do Dossiê"
           placeholder="Digite a descrição do dossiê"
           rows={3}
+          onFocus={(e) => handleLocalFocus(e.target, 'description')} // Usa handler local
+          onBlur={handleLocalBlur} // Usa handler local
         />
       ) : (
         <p id="dossier-description-field" className={descriptionTextClassName}>

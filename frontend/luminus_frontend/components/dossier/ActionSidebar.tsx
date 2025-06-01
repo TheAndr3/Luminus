@@ -28,13 +28,14 @@ const DeleteSectionIcon = ({ className }: { className?: string }) => (
 // --- Fim dos Ícones SVG Placeholder ---
 
 interface ActionSidebarProps {
-  targetTopPosition: number | null; // Pode ser null para ocultar
+  targetTopPosition: number | null; // Pode ser null para ocultar (via animação para fora da tela)
   onAddItemToSection: () => void;
   onAddNewSection: () => void;
-  // onSectionSettings: () => void; // Removido
-  onDeleteSection: () => void;
-  canDeleteItem: boolean;
   onDeleteItemFromSection?: () => void;
+  onDeleteSection: () => void;
+  canDeleteItem: boolean; // Indica se o botão de deletar item deve estar habilitado
+  canDeleteSection: boolean; // Indica se o botão de deletar seção deve estar habilitado
+
   containerClassNameFromPage?: string;
   buttonClassNameFromPage?: string;
   disabledButtonClassNameFromPage?: string;
@@ -45,10 +46,10 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
   targetTopPosition,
   onAddItemToSection,
   onAddNewSection,
-  // onSectionSettings, // Removido
+  onDeleteItemFromSection,
   onDeleteSection,
   canDeleteItem,
-  onDeleteItemFromSection,
+  canDeleteSection, // Recebe a prop
   containerClassNameFromPage = '',
   buttonClassNameFromPage = '',
   disabledButtonClassNameFromPage = '',
@@ -66,26 +67,25 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
 
    // Otimização para não renderizar o DOM quando completamente invisível.
    // Espera a opacidade chegar a 0 e a posição sair da tela antes de renderizar null.
-  if (targetTopPosition === null && springProps.opacity.get() < 0.01 && springProps.top.get() < -50) {
+   // Usamos targetTopPosition === null como o estado "escondido"
+  if (targetTopPosition === null) {
       return null;
   }
 
 
-  const getButtonClasses = () => {
-    return `${buttonClassNameFromPage}`.trim();
-  };
-
-  const getDeleteItemButtonClasses = () => {
+  const getButtonClasses = (enabled: boolean) => {
     let classes = `${buttonClassNameFromPage}`;
-    if (!canDeleteItem) {
+    if (!enabled) {
       classes += ` ${disabledButtonClassNameFromPage}`;
     }
     return classes.trim();
   };
 
+
   // A ActionSidebar é renderizada condicionalmente em page.tsx, então não precisa de lógica aqui para mostrar/esconder baseada em targetTopPosition === null
   // O `springProps.opacity` e `top` cuidam da animação de entrada/saída.
   // A renderização condicional em page.tsx gerencia o montagem/desmontagem.
+  // O componente só será montado se showActionSidebar for true.
 
   return (
     <animated.aside
@@ -95,9 +95,10 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
       <button
         type="button"
         onClick={onAddItemToSection}
-        className={getButtonClasses()}
+        className={getButtonClasses(true)} // Adicionar Item está sempre habilitado no modo de edição
         aria-label="Adicionar item à seção"
         title="Adicionar item à seção"
+        disabled={false}
       >
         <AddItemIcon className={iconClassNameFromPage} />
       </button>
@@ -105,15 +106,13 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
       <button
         type="button"
         onClick={onAddNewSection}
-        className={getButtonClasses()}
+        className={getButtonClasses(true)} // Adicionar Seção está sempre habilitado no modo de edição
         aria-label="Adicionar nova seção abaixo"
         title="Adicionar nova seção abaixo"
+        disabled={false}
       >
         <AddSectionIcon className={iconClassNameFromPage} />
       </button>
-
-      {/* Botão de Settings removido daqui */}
-      {/* <button ...> <SettingsIcon /> </button> */}
 
       <button
         type="button"
@@ -122,8 +121,8 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
             onDeleteItemFromSection();
           }
         }}
-        disabled={!canDeleteItem}
-        className={getDeleteItemButtonClasses()}
+        disabled={!canDeleteItem} // Desabilitado se canDeleteItem for false
+        className={getButtonClasses(canDeleteItem)}
         aria-label="Excluir item selecionado"
         title="Excluir item selecionado"
       >
@@ -133,7 +132,8 @@ const ActionSidebar: React.FC<ActionSidebarProps> = ({
       <button
         type="button"
         onClick={onDeleteSection}
-        className={getButtonClasses()}
+        disabled={!canDeleteSection} // Desabilitado se canDeleteSection for false
+        className={getButtonClasses(canDeleteSection)}
         aria-label="Excluir seção inteira"
         title="Excluir seção inteira"
       >

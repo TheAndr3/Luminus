@@ -7,12 +7,12 @@ interface SectionItemProps {
   description: string;
   value: string | number; // Mantido para dados, mas não visível por padrão
   isEditing: boolean;
-  isSelected: boolean;
-  onSelect: () => void; // Handler para clique na div do item
+  isSelected: boolean; // Usado para estilização visual
+  onSelect: () => void; // Handler para clique na div do item (seleção visual)
   onDescriptionChange: (newDescription: string) => void;
   onValueChange: (newValue: string) => void; // Mantido para dados
 
-  // Novos handlers de foco/blur passados para EditableFields internos
+  // Handlers de foco/blur passados do pai (Section)
   onFieldFocus?: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
   onFieldBlur?: () => void;
 
@@ -38,11 +38,11 @@ const SectionItem: React.FC<SectionItemProps> = ({
   value,
   isEditing,
   isSelected,
-  onSelect, // Recebe handler de clique na área do item
+  onSelect, // Recebe handler de clique na área do item (agora só para seleção visual)
   onDescriptionChange,
   onValueChange, // Recebe handler para mudança no valor
-  onFieldFocus, // Recebe handler de foco
-  onFieldBlur,  // Recebe handler de blur
+  onFieldFocus, // Recebe handler de foco do pai
+  onFieldBlur,  // Recebe handler de blur do pai
   showValueField = false, // Default para não mostrar o campo de valor
   className = '',
   selectedClassName = '',
@@ -66,22 +66,25 @@ const SectionItem: React.FC<SectionItemProps> = ({
   const stringValue = String(value);
 
   // Handler para clique na div externa do item
+  // Esta função agora se concentra APENAS em chamar onSelect para a seleção visual.
+  // O foco em um campo EditableField interno é que acionará o onFieldFocus e posicionará a sidebar.
   const handleItemClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    // Permite clique para seleção apenas no modo de edição
+    // Permite clique para seleção visual apenas no modo de edição
     if (isEditing) {
-      // Verifica se o clique NÃO foi em um input, textarea ou span.editableField_textDisplay dentro do EditableField
-      // Isso permite que o clique no EditableField (foco) funcione normalmente,
-      // mas o clique na área do item (sem ser os campos editáveis) também selecione o item.
-      const targetTagName = (event.target as HTMLElement).tagName.toLowerCase();
-      const isClickOnEditableField = targetTagName === 'input' || targetTagName === 'textarea' || (targetTagName === 'span' && (event.target as HTMLElement).classList.contains('editableField_textDisplay'));
+       // Se o clique NÃO foi em um input, textarea ou span.editableField_textDisplay
+       // (ou seja, foi na área "vazia" da div do item), aciona a seleção visual.
+       // Cliques nos EditableFields internos serão tratados pelos handlers de foco/blur deles.
+        const targetTagName = (event.target as HTMLElement).tagName.toLowerCase();
+        const isClickOnEditableField = targetTagName === 'input' || targetTagName === 'textarea' || (targetTagName === 'span' && (event.target as HTMLElement).classList.contains('editableField_textDisplay'));
 
-      if (!isClickOnEditableField) {
-         onSelect(); // Chama o handler de seleção do item
-      }
+        if (!isClickOnEditableField) {
+           onSelect(); // Chama o handler de seleção visual do item
+        }
     }
   };
 
   // Handler para foco em um EditableField dentro do item (descrição/valor)
+  // Propaga o evento de foco para o pai (Section), adicionando o contexto do item.
   const handleItemFieldFocus = (element: HTMLElement) => {
       // Apenas chame o handler pai se ele existir
       if (onFieldFocus) {
@@ -89,11 +92,12 @@ const SectionItem: React.FC<SectionItemProps> = ({
       }
   };
 
+
   return (
     <div
-      id={`dossier-item-${id}`} // ID para a ActionSidebar encontrar o elemento
+      id={`dossier-item-${id}`} // ID para a ActionSidebar encontrar o elemento pai
       className={itemClasses}
-      onClick={handleItemClick} // Handler de clique na div externa
+      onClick={handleItemClick} // Handler de clique na div externa (para seleção visual)
       aria-current={isSelected ? 'true' : undefined}
       // Style inline mantido, mas classes CSS são preferíveis
       style={{ display: 'flex', alignItems: 'center', width: '100%' }}
@@ -107,11 +111,12 @@ const SectionItem: React.FC<SectionItemProps> = ({
           ariaLabel={`Descrição para o item ${id}`}
           textDisplayClassName={descriptionTextDisplayClassName}
           inputClassName={descriptionInputClassName}
-          onFocus={handleItemFieldFocus} // Passa handler de foco
-          onBlur={onFieldBlur}   // Repassa handler de blur
+          onFocus={handleItemFieldFocus} // Passa handler de foco local
+          onBlur={onFieldBlur}   // Repassa handler de blur do pai
         />
       </div>
 
+      {/* Campo de Valor (oculto por padrão com showValueField={false} em Section.tsx) */}
       {showValueField && (
         <div
           className={valueFieldContainerClassName}
@@ -126,8 +131,8 @@ const SectionItem: React.FC<SectionItemProps> = ({
             ariaLabel={`Valor para o item ${id}`}
             textDisplayClassName={valueTextDisplayClassName}
             inputClassName={valueInputClassName}
-             onFocus={handleItemFieldFocus} // Passa handler de foco
-             onBlur={onFieldBlur}   // Repassa handler de blur
+             onFocus={handleItemFieldFocus} // Passa handler de foco local
+             onBlur={onFieldBlur}   // Repassa handler de blur do pai
           />
         </div>
       )}
