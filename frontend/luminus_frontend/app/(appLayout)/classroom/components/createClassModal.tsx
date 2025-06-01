@@ -79,65 +79,62 @@ export default function DialogPage() {
     };
 
     // Função chamada ao clicar no botão de "Concluir"
-     const handleClick = async () => {
-        // Validação dos campos da turma
-        // Garante que o título foi alterado do valor padrão
-        if (!inputDisc || !inputPer || titulo === title || titulo.trim() === "") {
-            setMessageErro("Por favor, preencha o nome da turma, disciplina e período!");
-            setMissingDialog(true);
-            return;
-        }
-
-        setSave(true);
-        setMessageButton("Carregando...");
-
-        const formData = new FormData();
-        formData.append('name', titulo);
-        formData.append('description', inputDisc); // Usando inputDisc como description (disciplina)
-        formData.append('season', inputPer);
-        formData.append('institution', inputInst || '');
-        formData.append('professor_id', "1"); // TODO: Substituir pelo ID do professor logado dinamicamente
-
-        if (csvFileToUpload) {
-            formData.append('csvfile', csvFileToUpload, csvFileToUpload.name);
-        }
+    const handleClick = async () => {
+        setSave(true); // Marca que o salvamento está em andamento
+        setMessageButton("Carregando..."); // Atualiza o texto do botão
 
         try {
-            // CHAMA A NOVA FUNÇÃO DE SERVIÇO QUE ENVIA FormData
-            const response = await CreateClassroomWithCSV(formData); // Assegure-se que esta função está definida em classroomServices.ts
-            
-            if (response && response.msg) { // Verifique a estrutura da sua resposta de sucesso
-                toast.success(response.msg || "Turma criada com CSV com sucesso!");
-                setOpen(false); 
-                handleDialogClose();
-            // TODO: Atualizar lista de turmas na página principal
-            } else {
-                toast.error(response.msg || "Resposta inesperada do servidor ao criar turma com CSV.");
-            }
-            
-            // Tratamento de sucesso da API real
-            if (response && response.msg) { // Ajuste 'response.msg' conforme a estrutura da sua API
-                toast.success(response.msg || "Turma criada com sucesso!");
-                setOpen(false); // Fecha o modal principal
-                handleDialogClose(); // Reseta os estados do formulário e do CSV
-                // TODO: Implementar a atualização da lista de turmas na página pai (classroom/page.tsx)
-                // Ex: chamar uma props.onClassroomCreated();
-            } else {
-                // Se a API responder com sucesso (2xx) mas sem a mensagem esperada
-                toast.error(response.msg || "Resposta inesperada do servidor.");
+            // Obtém o ID do professor do localStorage
+            const professorId = localStorage.getItem('professorId');
+            if (!professorId) {
+                throw new Error('ID do professor não encontrado');
             }
 
-        } catch (error: any) {
-            console.error("Erro ao tentar criar turma:", error);
-            // Tenta pegar a mensagem de erro da resposta da API, se houver
-            const errorMsg = error.response?.data?.msg || error.message || "Erro ao processar a criação da turma.";
-            setMessageErro(errorMsg);
+            // Verifica se há um arquivo CSV para upload
+            if (csvFileToUpload) {
+                // Cria a turma com o arquivo CSV
+                const formData = new FormData();
+                formData.append('file', csvFileToUpload);
+                formData.append('professor_Id', professorId);
+                formData.append('name', titulo);
+                formData.append('description', inputDisc);
+                formData.append('season', inputPer);
+                formData.append('institution', inputInst || '');
+
+                const response = await CreateClassroomWithCSV(formData);
+                if (response.msg) {
+                    setOpen(false);
+                    handleDialogClose();
+                    window.location.reload();
+                }
+            } else {
+                // Verifica se os campos obrigatórios estão preenchidos para criação sem CSV
+                if (!inputDisc || !inputPer || titulo === title) {
+                    throw new Error("Por favor, preencha todos os campos obrigatórios!");
+                }
+
+                // Cria a turma sem o arquivo CSV
+                const newClassData = {
+                    professor_Id: Number(professorId),
+                    name: titulo,
+                    description: inputDisc,
+                    season: inputPer,
+                    institution: inputInst || ''
+                }
+
+                const response = await CreateClassroom(newClassData);
+                if (response.msg) {
+                    setOpen(false);
+                    handleDialogClose();
+                    window.location.reload();
+                }
+            }
+        } catch (err: any) {
+            setMessageErro(err.message || "Impossível salvar os dados. Por favor, tente novamente!");
             setMissingDialog(true);
-        } finally {
-            setSave(false);
             setMessageButton("Concluir");
         }
-    };
+    }
     
 
     return (
