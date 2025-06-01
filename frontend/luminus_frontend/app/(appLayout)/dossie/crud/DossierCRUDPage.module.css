@@ -22,9 +22,9 @@ body {
 /* --- DossierAppPage Layout --- */
 .appContainer {
   display: flex;
-  min-height: 100vh; /* Ocupa pelo menos a altura da viewport */
-  height: 100vh;     /* Força a ocupar exatamente a altura da viewport */
-  overflow: hidden;   /* Impede que o appContainer cause scroll na página */
+  min-height: 100vh; 
+  height: 100vh;     
+  overflow: hidden;   
 }
 
 .mainContent {
@@ -36,13 +36,13 @@ body {
   margin-left: auto;
   margin-right: auto;
   position: relative;
-  height: 100%;       /* Ocupa toda a altura do appContainer */
-  overflow: hidden;   /* Impede que mainContent scrolle, passando para scrollableArea */
+  height: 100%;       
+  overflow: hidden;   
 }
 
 .scrollableArea {
-  flex-grow: 1;       /* Permite que cresça para preencher o espaço em mainContent */
-  overflow-y: auto;   /* Scroll vertical SOMENTE AQUI */
+  flex-grow: 1;       
+  overflow-y: auto;   
   overflow-x: hidden;
   position: relative;
   padding-right: 85px; /* Espaço para scrollbar Y e ActionSidebar */
@@ -51,9 +51,9 @@ body {
 
 
 .footerActions {
-  position: absolute; /* Relativo ao .mainContent */
+  position: absolute; 
   bottom: 20px;
-  right: 30px; /* Alinhado com o padding lateral do mainContent */
+  right: 30px; 
   z-index: 20;
 }
 
@@ -78,9 +78,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px; /* Espaço antes do DossierHeader */
+  margin-bottom: 20px; 
   padding: 5px 0;
-  flex-shrink: 0; /* Impede que o header encolha */
+  flex-shrink: 0; 
 }
 /* ... (restante dos estilos do PageHeader) ... */
 .pageHeader_backButton {
@@ -138,7 +138,7 @@ body {
   border-radius: 8px;
   margin-bottom: 25px;
   color: white;
-  flex-shrink: 0; /* Impede que o header encolha */
+  flex-shrink: 0; 
 }
 /* ... (restante dos estilos do DossierHeader, Section, SectionItem, EditableField) ... */
 
@@ -166,27 +166,26 @@ body {
 /* Novo layout para a linha do Conceito de Avaliação + Settings */
 .dossierHeader_evaluationAndSettings {
   display: flex;
-  justify-content: space-between; /* Espaça o conteúdo e o botão */
-  align-items: center; /* Alinha verticalmente */
-  gap: 15px; /* Espaço entre o conteúdo de avaliação e o botão */
+  justify-content: space-between; 
+  align-items: center; 
+  gap: 15px; 
   margin-top: 10px;
   margin-bottom: 15px;
 }
 /* Ajusta o container de avaliação para ocupar o espaço disponível dentro do flex */
 .dossierHeader_evaluationConceptContainer {
-  margin-top: 0; /* Remove margin-top duplicado devido ao novo container pai */
-  margin-bottom: 0; /* Remove margin-bottom duplicado devido ao novo container pai */
-  flex-grow: 1; /* Permite que o conteúdo de avaliação ocupe o espaço */
+  margin-top: 0; 
+  margin-bottom: 0; 
+  flex-grow: 1; 
 }
 
-.dossierHeader_settingsButton { /* Estilo para o botão de configurações do header */
-  composes: pageHeader_backButton; /* Reusa estilos do botão de voltar */
-  background-color: rgba(255, 255, 255, 0.2); /* Adaptação da cor para fundo roxo */
+.dossierHeader_settingsButton { 
+  composes: pageHeader_backButton; 
+  background-color: rgba(255, 255, 255, 0.2); 
   border-color: transparent;
-  flex-shrink: 0; /* Impede que o botão encolha */
-  width: 28px; /* Tamanho menor */
-  height: 28px; /* Tamanho menor */
-   /* Ajustar padding/margin conforme necessário para alinhamento visual */
+  flex-shrink: 0; 
+  width: 28px; 
+  height: 28px; 
 }
 .dossierHeader_settingsButton:hover {
   background-color: rgba(255, 255, 255, 0.4);
@@ -247,6 +246,7 @@ body {
   border-radius: 6px;
   white-space: pre-wrap;
   word-break: break-word;
+  color: white; /* Cor do texto da descrição do header */
 }
 .dossierHeader_descriptionTextDisplay:empty {
   min-height: 20px;
@@ -271,7 +271,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-bottom: 20px; /* Espaço no final da lista dentro do scroll */
+  padding-bottom: 20px; 
 }
 
 /* --- Section --- */
@@ -287,9 +287,9 @@ body {
 .section_selectedStyling > .section_contentWrapper::before {
   content: '';
   position: absolute;
-  left: -15px; /* Relativo ao padding do section_outerContainer */
-  top: 0; /* Alinha com o topo do contentWrapper */
-  bottom: 0; /* Alinha com o fundo do contentWrapper */
+  left: -15px; 
+  top: 0; 
+  bottom: 0; 
   width: 5px;
   background-color: hotpink;
   border-radius: 3px 0 0 3px;
@@ -311,7 +311,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 15px; /* Espaço antes da descrição ou lista de itens */
   color: white;
 }
 .section_titleContainer {
@@ -362,6 +362,33 @@ body {
   min-width: 90px;
   box-sizing: border-box;
 }
+
+/* --- NOVAS CLASSES PARA DESCRIÇÃO DA SEÇÃO --- */
+.section_descriptionContainer {
+    margin-bottom: 15px; /* Espaço entre a descrição e a lista de itens */
+}
+.section_descriptionText {
+   composes: editableField_textDisplay;
+   color: rgba(255, 255, 255, 0.9); /* Cor clara para o texto da descrição da seção */
+   font-size: 0.95rem;
+   font-style: italic;
+   padding: 0 2px; /* Ajustar padding para visualização */
+}
+.section_descriptionTextarea {
+   composes: editableField_inputBase;
+   background-color: rgba(255, 255, 255, 0.9);
+   color: #333;
+   font-size: 0.95rem;
+   padding: 8px 10px;
+   min-height: 50px; /* Altura mínima para o textarea */
+   resize: vertical;
+}
+.section_descriptionTextarea::placeholder {
+    color: #9CA3AF;
+}
+/* --- FIM NOVAS CLASSES PARA DESCRIÇÃO DA SEÇÃO --- */
+
+
 .section_itemsList {
   display: flex;
   flex-direction: column;
@@ -446,9 +473,9 @@ body {
   background-color: #DFE1E6;
   border-radius: 22px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  width: auto; /* Auto-ajusta à largura dos botões */
+  width: auto; 
   position: absolute;
-  right: 25px; /* Distância da borda DIREITA do .scrollableArea. Ajuste conforme necessário */
+  right: 25px; 
   z-index: 15;
 }
 .actionSidebarButtonVisualBase {

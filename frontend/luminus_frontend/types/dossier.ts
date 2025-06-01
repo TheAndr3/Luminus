@@ -7,6 +7,7 @@ export interface ItemData {
 export interface SectionData {
   id: string;
   title: string;
+  description: string;
   weight: string; // Para armazenar o peso como "XX%"
   items: ItemData[];
 }
