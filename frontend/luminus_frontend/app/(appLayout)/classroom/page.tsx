@@ -85,6 +85,8 @@ export default function VizualizationClass() {
   }, []);
 
   // ============ FUNÇÕES ============
+
+
   // Alterna seleção de todas as turmas visíveis
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
