@@ -107,25 +107,14 @@ export default function ListClass({
                 className="w-6 h-6 accent-blue-600"
               />
             </th>
-            {/* Texto do cabeçalho para selecionar todos */}
-            <th className="px-2vh text-lg">Selecionar todos</th>
+            {/* Ícone */}
+            <th className="px-2vh text-lg"></th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
             <th className="px-2vh text-lg pl-4">Disciplina</th>
             <th className="px-2vh text-lg pl-10">Turma</th>
             <th className="px-2vh text-lg pl-4">Dossiê</th>
-
-            {/* Área com botões para alternar visualização e criar nova turma */}
-            <th className="px-2vh text-lg">
-              <div className="flex gap-2 items-center justify-end">
-                <ClassViewMode
-                  visualization={visualization}
-                  setVisualization={setVisualization}
-                />
-                {/* Botão/modal para criar nova turma */}
-                <DialogPage />
-              </div>
-            </th>
+            <th className="px-2vh text-lg"></th>
           </tr>
         </thead>
         <tbody>
