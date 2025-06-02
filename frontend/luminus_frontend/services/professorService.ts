@@ -8,12 +8,11 @@ interface LoginPayLoad {
   password: string
 }
 
-interface LoginResponse {
-  message: string,
-  id: number,
-  idInstitution: number,
-  nome: string,
-  email_professor: string
+// Interface que reflete EXATAMENTE o objeto 'data' do backend
+interface LoginResponseData { // Renomeei para ser mais claro
+  id: number;
+  nome: string;
+  email: string; // O backend envia 'email', não 'email_professor'
 }
 
 // CADASTRO
@@ -51,7 +50,7 @@ interface NewPasswordResponse {
 // FUNÇÕES
 
 //Login
-export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponse> => {
+export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponseData> => { // Altere o tipo de retorno aqui
   try {
     //pegar chave pública
     const publicKey = await getPublicKey();
@@ -64,10 +63,18 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
       ...payLoad,
       password: encryptedPassword
     });
-    return response.data.professor;
+
+    // Certifique-se de que response.data.data existe e tem a estrutura esperada
+    if (!response.data || !response.data.data) {
+        throw new Error("Resposta de login inesperada do servidor.");
+    }
+
+    // Retorna o objeto 'data' do backend
+    return response.data.data;
 
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Erro ao fazer login';
+    // Mantenha o tratamento de erro aqui, como já está (ou ajuste a mensagem)
+    const message = error.response?.data?.msg || 'Erro ao fazer login'; // Se o backend retorna msg
     throw new Error(message);
   }
 }

@@ -127,8 +127,6 @@ exports.AssociateDossier = async (req, res) => {
       { dossier_id: dossier.id, dossier_professor_id: dossier.professor_id }
     );
 
-    
-
     return res.status(200).json({ msg: 'Dossiê associado' });
   } catch (error) {
     console.error(error);
