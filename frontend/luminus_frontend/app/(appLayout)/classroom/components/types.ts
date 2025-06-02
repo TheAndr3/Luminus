@@ -1,5 +1,5 @@
 export type Classroom = {
-    selected: unknown;
+    selected: boolean;
     id: number;
     disciplina: string;
     codigo: string;

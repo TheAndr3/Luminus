@@ -17,8 +17,10 @@ import { useEffect, useState } from "react";
 
 // Modal para editar uma turma
 import EditClassModal from "./editClassModal";
-// Ícone de lápis para representar a ação de editar
-import { Pencil } from "lucide-react";
+// Ícones para as ações de editar, excluir, arquivar e download
+import { Archive, Download, Pencil, Trash } from "lucide-react";
+
+import { useRouter } from "next/navigation"; 
 
 
 // Definição do tipo das propriedades que o componente ListClass recebe
@@ -35,7 +37,6 @@ type ListclassroomsProps = {
   onDeleteClass: () => void;  // Função para deletar as turmas selecionadas
   toArchiveClass: () => void;  // Função para arquivar as turmas selecionadas
 };
-
 
 // Componente principal que renderiza a lista de turmas (classrooms)
 export default function ListClass({
@@ -62,6 +63,11 @@ export default function ListClass({
   // Estado que guarda a turma atualmente sendo editada (ou null se nenhuma)
   const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
 
+  // Estado que controla se o hover está bloqueado (ex: quando um modal está aberto)
+  const [lockHover, setLockHover] = useState(false);
+
+  const router = useRouter()
+
   // useEffect que atualiza o estado hasSelected sempre que a lista de turmas muda
   // Ele verifica se alguma turma está selecionada e atualiza o estado local
   useEffect(() => {
@@ -78,8 +84,16 @@ export default function ListClass({
     toggleSelectAll();
   };
 
+  const handleClickPageStudent = (id: number) => {
+    
+    router.push(`/classroom/${id+1}`)
+    
+    
+    //pesquisar sobre cache que mano maike falou
+  }
+
   return (
-    <div className="w-full">
+    <div className="w-full -mt-5">
       {/* Tabela que exibe as turmas com seus dados */}
       <table className="w-full text-left border-separate border-spacing-y-2">
         <thead>
@@ -88,23 +102,22 @@ export default function ListClass({
             <th className="w-[0px] px-2 gap-10">
               <input
                 type="checkbox"
-                onChange={handleToggleAll}  // Chama a função que seleciona ou desmarca todas
-                checked={!!isAllSelected}  // Marca o checkbox se todas as turmas estiverem selecionadas
+                onChange={handleToggleAll}
+                checked={!!isAllSelected}
                 className="w-6 h-6 accent-blue-600"
               />
             </th>
             {/* Texto do cabeçalho para selecionar todos */}
-            <th className="px-2vh text-lg ">Selecionar todos</th>
+            <th className="px-2vh text-lg">Selecionar todos</th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
-            <th className="px-2vh text-lg absolute left-[35vw]">Disciplina</th>
-            <th className="px-2vh text-lg absolute left-[54vw]">Turma</th>
-            <th className="px-2vh text-lg flex items-center mt-4">
-              <span className="absolute left-[74vw]">Dossiê</span>
+            <th className="px-2vh text-lg pl-4">Disciplina</th>
+            <th className="px-2vh text-lg pl-10">Turma</th>
+            <th className="px-2vh text-lg pl-4">Dossiê</th>
 
-              {/* Área com botões para alternar visualização e criar nova turma */}
-              <div className="flex gap-2 absolute right-[10vh] top-[22vh]">
-                {/* Componente que alterna o modo de visualização (lista ou grade) */}
+            {/* Área com botões para alternar visualização e criar nova turma */}
+            <th className="px-2vh text-lg">
+              <div className="flex gap-2 items-center justify-end">
                 <ClassViewMode
                   visualization={visualization}
                   setVisualization={setVisualization}
@@ -120,12 +133,13 @@ export default function ListClass({
           {classrooms.map((classroom) => (
             <tr
               key={classroom.id}
-              onMouseEnter={() => setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
-              onMouseLeave={() => setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
+              onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
+              onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
               className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh] "
+              onClick={() => handleClickPageStudent(classroom.id)}
             >
               {/* Checkbox para selecionar essa turma individualmente */}
-              <td className="p-2 w-[50px]">
+              <td className="p-2 w-[50px]" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="checkbox"
                   checked={!!classroom.selected}  // Marca se a turma está selecionada
@@ -150,25 +164,55 @@ export default function ListClass({
                 <td className="p-2 text-xl">{classroom.dossie}</td>
               </>
 
-              {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-              <td className="p-1 w-8">
+              {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
+              <td className="p-1 w-[5vw]" onClick={(e) => e.stopPropagation()}>
                 {hovered === classroom.id && (
-                  <>
-                    {/* Botão de edição com ícone de lápis */}
+                  <div className="flex gap-2 justify-end mr-2">
+                    {/* Botões de ação: editar, excluir, arquivar e download */}
                     <button
                       className="hover:text-yellow-400"
                       onClick={() => {
+                        
                         setOpenEditingModal(true);  // Abre o modal de edição
                         setEditingClassroom(classroom);  // Define qual turma está sendo editada
+                        setLockHover(true)
                       }}
                     >
-                      <Pencil size={18} />
+                      <Pencil />
+                    </button>
+                    
+                    <button
+                      className="hover:text-yellow-400"
+                      onClick={()=> {
+                        classroom.selected = true;
+                        onDeleteClass()
+                        classroom.selected = false;
+                      }}
+                    >
+                      <Trash></Trash>
+                    </button>
+
+                    <button
+                      className="hover:text-yellow-400"
+                      onClick={()=> {
+                        classroom.selected = true;
+                        toArchiveClass();
+                        classroom.selected = false;
+                      }}
+                    >
+                      <Archive></Archive>
+                    </button>
+
+                    <button
+                      className="hover:text-yellow-400"
+                    >
+                      <Download></Download>
                     </button>
 
                     {/* Modal de edição da turma */}
                     <EditClassModal
                       open={openEditingModal}
-                      onCancel={() => setOpenEditingModal(false)}  // Fecha o modal ao cancelar
+                      onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
                       classroom={{
                         id: classroom.id,
                         name: classroom.disciplina,
@@ -176,7 +220,7 @@ export default function ListClass({
                         institution: classroom.dossie,
                       }}
                     />
-                  </>
+                  </div>
                 )}
               </td>
             </tr>
@@ -184,22 +228,24 @@ export default function ListClass({
         </tbody>
       </table>
 
-      {/* Controle de paginação posicionado na parte inferior direita da tela */}
-      <div className="absolute right-[5vw] top-[83vh]">
+      {/* Controlador de paginação */}
+      <div className="-mt-5">
         <PageController
-          currentPage={currentPage}  // Página atual
-          totalPages={totalPages}    // Total de páginas
-          setCurrentPage={setCurrentPage}  // Função para alterar página
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
         />
       </div>
 
-      {/* Painel de ações visível apenas se alguma turma estiver selecionada */}
-      {hasSelected && (
-        <ActionPanel
-          onDeleted={onDeleteClass}  // Função chamada para deletar turmas selecionadas
-          toArchive={toArchiveClass}  // Função chamada para arquivar turmas selecionadas
-        />
-      )}
+      {/* Painel de ações que aparece quando há turmas selecionadas */}
+      <div className="-mt-10">
+        {hasSelected && (
+          <ActionPanel
+            onDeleted={onDeleteClass}
+            toArchive={toArchiveClass}
+          />
+        )}
+      </div>
     </div>
   );
 }
