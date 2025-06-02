@@ -1,6 +1,6 @@
 // src/pages/DossierAppPage.tsx
 "use client"
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'; // Adicionado useMemo
 import Head from 'next/head';
 
 import PageHeader from '../../../../components/dossier/PageHeader';
@@ -372,7 +372,7 @@ const DossierAppPage: React.FC = () => {
 
   const handleDeleteItemForSidebar = useCallback(() => {
     console.log('%cACTION: handleDeleteItemForSidebar: START', 'color: #DC143C; font-weight: bold;', { selectedItemIdGlobal });
-    if (!isEditingMode || !selectedItemIdGlobal) return;
+    if (!isEditingMode || !selectedItemIdGlobal) return; // Esta checagem já é coberta por canDeleteItem, mas é bom ter uma validação extra.
 
     const currentSelectedItemId = selectedItemIdGlobal;
     const sectionOfItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(i => i.id === currentSelectedItemId));
@@ -450,8 +450,39 @@ const DossierAppPage: React.FC = () => {
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, MOCK_PROFESSOR_ID]);
 
 
-  const canDeleteItem = !!selectedItemIdGlobal;
-  const canDeleteSection = (!!selectedSectionIdForStyling || !!selectedItemIdGlobal) && sectionsData.length > 1;
+  const canDeleteItem = useMemo(() => {
+    if (!selectedItemIdGlobal) {
+      return false;
+    }
+
+    // Encontra a seção que contém o item selecionado
+    const sectionOfSelectedItem = sectionsData.find(s => 
+      Array.isArray(s.items) && s.items.some(item => item.id === selectedItemIdGlobal)
+    );
+
+    // Se o item selecionado não for encontrado em nenhuma seção (caso improvável)
+    if (!sectionOfSelectedItem) {
+      return true; 
+    }
+
+    // Verifica se é o último item na sua seção
+    const isLastItemInSection = sectionOfSelectedItem.items.length === 1 && sectionOfSelectedItem.items[0].id === selectedItemIdGlobal;
+
+    // Verifica se existe apenas uma seção no dossiê
+    const isOnlySection = sectionsData.length === 1;
+
+    // Permite a exclusão se:
+    // 1. Não for o último item da seção (isLastItemInSection é falso), OU
+    // 2. Não for a única seção (isOnlySection é falso).
+    // Ou seja, impede a exclusão APENAS se for o último item E a única seção.
+    return !(isLastItemInSection && isOnlySection);
+  }, [selectedItemIdGlobal, sectionsData]);
+
+  const canDeleteSection = useMemo(() => {
+    const hasSelection = !!selectedSectionIdForStyling || !!selectedItemIdGlobal;
+    const isMoreThanOneSection = sectionsData.length > 1;
+    return hasSelection && isMoreThanOneSection;
+  }, [selectedSectionIdForStyling, selectedItemIdGlobal, sectionsData.length]);
 
 
   const isFocusedElementAnItemField = isClient && 
