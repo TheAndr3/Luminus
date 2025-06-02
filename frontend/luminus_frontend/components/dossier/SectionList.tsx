@@ -1,23 +1,22 @@
 // components/SectionList.tsx
 import React from 'react';
 import Section from './Section';
-import { SectionData } from '../../types/dossier'; // Ajuste o caminho se necessário
+import { SectionData } from '../../types/dossier'; 
 
 interface SectionListProps {
   sections: SectionData[];
   isEditing: boolean;
-  selectedSectionIdForStyling: string | null; // Passado para Section
-  selectedItemId: string | null; // Passado para Section (que passa para SectionItem)
+  selectedSectionIdForStyling: string | null; 
+  selectedItemId: string | null; 
 
-  onSectionAreaClick: (sectionId: string) => void; // Passado para Section
-  onItemSelect: (itemId: string) => void; // Passado para Section (que passa para SectionItem)
+  onSectionAreaClick: (sectionId: string) => void; 
+  onItemSelect: (itemId: string) => void; 
 
   onSectionTitleChange: (sectionId: string, newTitle: string) => void;
   onSectionDescriptionChange: (sectionId: string, newDescription: string) => void;
   onSectionWeightChange: (sectionId: string, newWeight: string) => void;
   onItemChange: (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => void;
 
-  // Handlers de foco/blur passados do pai (page.tsx) para Section e SectionItem
   onFieldFocus: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
   onFieldBlur: () => void;
 
@@ -32,7 +31,6 @@ interface SectionListProps {
   sectionComponentTitleTextClassName?: string;
   sectionComponentTitleInputClassName?: string;
 
-  // Classes para a descrição da seção (passadas para Section)
   sectionComponentDescriptionContainerClassName?: string;
   sectionComponentDescriptionEditableFieldClassName?: string;
   sectionComponentDescriptionTextClassName?: string;
@@ -45,8 +43,6 @@ interface SectionListProps {
 
   sectionComponentItemsListClassName?: string;
 
-  // Props para SectionItem (prefixadas com sectionItem em SectionListProps)
-  // CORRIGIDO: Estes nomes estão corretos aqui em SectionListProps
   sectionItemClassName?: string;
   sectionItemSelectedClassName?: string;
   sectionItemDescriptionFieldContainerClassName?: string;
@@ -59,8 +55,8 @@ const SectionList: React.FC<SectionListProps> = ({
   isEditing,
   selectedSectionIdForStyling,
   selectedItemId,
-  onSectionAreaClick, // Passado para Section
-  onItemSelect, // Passado para Section
+  onSectionAreaClick, 
+  onItemSelect, 
   onSectionTitleChange,
   onSectionDescriptionChange,
   onSectionWeightChange,
@@ -76,7 +72,6 @@ const SectionList: React.FC<SectionListProps> = ({
   sectionComponentTitleEditableFieldClassName,
   sectionComponentTitleTextClassName,
   sectionComponentTitleInputClassName,
-  // Classes de descrição da seção com defaults
   sectionComponentDescriptionContainerClassName = '',
   sectionComponentDescriptionEditableFieldClassName = '',
   sectionComponentDescriptionTextClassName = '',
@@ -86,7 +81,6 @@ const SectionList: React.FC<SectionListProps> = ({
   sectionComponentWeightTextClassName,
   sectionComponentWeightInputClassName,
   sectionComponentItemsListClassName,
-  // Recebendo as classes para SectionItem
   sectionItemClassName,
   sectionItemSelectedClassName,
   sectionItemDescriptionFieldContainerClassName,
@@ -105,16 +99,16 @@ const SectionList: React.FC<SectionListProps> = ({
           items={section.items}
           isEditing={isEditing}
           selectedItemId={selectedItemId}
-          onItemSelect={onItemSelect} // Passa o handler onItemSelect para Section
+          onItemSelect={onItemSelect} 
           onTitleChange={(newTitle: string) => onSectionTitleChange(section.id, newTitle)}
           onDescriptionChange={(newDescription: string) => onSectionDescriptionChange(section.id, newDescription)}
           onWeightChange={(newWeight: string) => onSectionWeightChange(section.id, newWeight)}
           onItemChange={onItemChange}
-          onSectionAreaClick={onSectionAreaClick} // Passa o handler onSectionAreaClick para Section
+          onSectionAreaClick={onSectionAreaClick} 
           isSectionSelectedForStyling={section.id === selectedSectionIdForStyling}
 
-          onFieldFocus={onFieldFocus} // Passa handler de foco do pai
-          onFieldBlur={onFieldBlur}   // Passa handler de blur do pai
+          onFieldFocus={onFieldFocus} 
+          onFieldBlur={onFieldBlur}   
 
           className={sectionComponentClassName}
           contentWrapperClassName={sectionComponentContentWrapperClassName}
@@ -126,7 +120,6 @@ const SectionList: React.FC<SectionListProps> = ({
           titleTextClassName={sectionComponentTitleTextClassName}
           titleInputClassName={sectionComponentTitleInputClassName}
 
-          // Passa as classes da descrição da seção para Section
           descriptionContainerClassName={sectionComponentDescriptionContainerClassName}
           descriptionEditableFieldClassName={sectionComponentDescriptionEditableFieldClassName}
           descriptionTextClassName={sectionComponentDescriptionTextClassName}
@@ -139,14 +132,11 @@ const SectionList: React.FC<SectionListProps> = ({
 
           itemsListClassName={sectionComponentItemsListClassName}
 
-          // CORRIGIDO: Passa as classes para SectionItem com os nomes corretos esperados por SectionProps
-          // Section espera descriptionFieldContainerClassName, etc., não sectionItem...
           sectionItemClassName={sectionItemClassName}
           sectionItemSelectedClassName={sectionItemSelectedClassName}
           descriptionFieldContainerClassName={sectionItemDescriptionFieldContainerClassName}
           descriptionTextDisplayClassName={sectionItemDescriptionTextDisplayClassName}
           descriptionInputClassName={sectionItemDescriptionInputClassName}
-          // Note: value field classes are not passed as showValueField is false in SectionItem
         />
       ))}
     </div>

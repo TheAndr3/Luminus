@@ -1,5 +1,5 @@
 // components/EditableField.tsx
-import React from 'react'; // Removido useEffect e useRef
+import React from 'react'; 
 
 interface EditableFieldProps {
   value: string;
@@ -12,7 +12,6 @@ interface EditableFieldProps {
   inputClassName?: string;
   textareaClassName?: string;
   ariaLabel?: string;
-  // Novos handlers de foco/blur que PASSAM O ELEMENTO DOM
   onFocus?: (element: HTMLElement) => void;
   onBlur?: () => void;
 }
@@ -28,8 +27,8 @@ const EditableField: React.FC<EditableFieldProps> = ({
   inputClassName = '',
   textareaClassName = '',
   ariaLabel,
-  onFocus, // Recebe handler
-  onBlur,  // Recebe handler
+  onFocus, 
+  onBlur,  
 }) => {
   const effectiveAriaLabel = ariaLabel || placeholder || 'Campo editável';
 
@@ -37,15 +36,12 @@ const EditableField: React.FC<EditableFieldProps> = ({
     return [className, ...specificClasses].filter(Boolean).join(' ').trim();
   };
 
-  // Handler local para foco que chama o handler externo, passando o elemento
   const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (onFocus) {
-          // O e.target aqui é o elemento DOM específico (input ou textarea) que recebeu foco.
           onFocus(e.target);
       }
   };
 
-  // Handler local para blur que chama o handler externo
   const handleBlur = () => {
       if (onBlur) {
           onBlur();
@@ -59,8 +55,8 @@ const EditableField: React.FC<EditableFieldProps> = ({
       onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => onChange(e.target.value),
       placeholder,
       'aria-label': effectiveAriaLabel,
-      onFocus: handleFocus, // Passa o handler local
-      onBlur: handleBlur,   // Passa o handler local
+      onFocus: handleFocus, 
+      onBlur: handleBlur,   
     };
 
     if (multiline) {
@@ -81,7 +77,6 @@ const EditableField: React.FC<EditableFieldProps> = ({
     }
   } else {
     return (
-      // Span não recebe foco por padrão, então handlers de foco/blur não se aplicam aqui no modo de visualização
       <span
         className={combinedClassName(textDisplayClassName)}
         aria-label={ariaLabel || (value ? undefined : 'Campo vazio')}
