@@ -1,6 +1,6 @@
 // src/pages/DossierAppPage.tsx
 "use client"
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'; // Adicionado useMemo
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 
 import PageHeader from '../../../../components/dossier/PageHeader';
@@ -439,12 +439,68 @@ const DossierAppPage: React.FC = () => {
   const handleSave = useCallback(async () => {
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
     ignoreNextBlurRef.current = false;
+
+    // 1. Name do Dossie não pode ser uma string vazia
+    if (!dossierTitle.trim()) {
+      throw new Error("O título do Dossiê não pode ser vazio.");
+    }
+
+    // 2. Professor ID não pode ser vazio
+    // Assumindo que MOCK_PROFESSOR_ID é um número fixo.
+    // Se fosse dinâmico, você precisaria de uma checagem mais robusta (ex: !MOCK_PROFESSOR_ID || MOCK_PROFESSOR_ID <= 0).
+    // Como é um mock fixo aqui, essa validação é mais para um cenário onde o ID viria de uma prop/contexto.
+    if (!MOCK_PROFESSOR_ID) {
+      throw new Error("O ID do Professor não pode ser vazio.");
+    }
+
+    // 3. Deve haver um Evaluation Method
+    if (!evaluationConcept) {
+      throw new Error("Um Conceito de Avaliação deve ser selecionado.");
+    }
+    
+    // 6. Todo Dossier deve ter pelo menos uma Section com uma Question (verificado antes das seções individuais)
+    const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
+    if (!hasSectionWithQuestion) {
+      throw new Error("O Dossiê deve conter pelo menos uma seção com um item/questão.");
+    }
+
+    // Validações por seção
+    let totalWeight = 0;
+    for (const sec of sectionsData) {
+      // 5. Nenhuma Section deve ter uma string vazia como Name
+      if (!sec.title.trim()) {
+        throw new Error(`A seção com ID "${sec.id}" não pode ter um título vazio.`);
+      }
+
+      // Validação: Nenhuma SectionItem deve ter uma string vazia como Name (descrição)
+      if (Array.isArray(sec.items)) {
+        for (const item of sec.items) {
+          if (!item.description.trim()) {
+            throw new Error(`O item com ID "${item.id}" na seção "${sec.title}" não pode ter a descrição vazia.`);
+          }
+        }
+      }
+
+      const parsedWeight = parseInt(sec.weight, 10);
+      if (isNaN(parsedWeight)) {
+        throw new Error(`O peso da seção "${sec.title}" é inválido. Deve ser um número.`);
+      }
+      totalWeight += parsedWeight;
+    }
+    
+    // 4. A soma dos Weights devem ser igual a 100
+    if (totalWeight !== 100) {
+      throw new Error(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
+    }
+
+    // Se todas as validações passarem, prossegue com o salvamento
     const payload: CreateDossierPayload = adaptDossierStateToPayload(
       dossierTitle, dossierDescription, evaluationConcept, sectionsData, MOCK_PROFESSOR_ID
     );
     console.log("Payload para o Backend:", payload);
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // await createDossier(payload); // Descomente esta linha para usar a API real
+      await new Promise(resolve => setTimeout(resolve, 300)); // Simulação de delay
       alert("Dossiê salvo com sucesso (simulado)!");
     } catch (error: any) { alert(`Falha ao salvar dossiê: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);}
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, MOCK_PROFESSOR_ID]);
