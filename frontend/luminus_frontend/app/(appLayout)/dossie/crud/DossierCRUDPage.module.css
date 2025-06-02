@@ -180,7 +180,7 @@ body {
 }
 
 .dossierHeader_settingsButton {
-  composes: pageHeader_backButton;
+  /*composes: pageHeader_backButton;*/
   background-color: rgba(255, 255, 255, 0.2);
   border-color: transparent;
   flex-shrink: 0;
@@ -342,7 +342,7 @@ body {
   flex-shrink: 0;
 }
 .section_weightInput {
-  composes: editableField_inputBase;
+  /*composes: editableField_inputBase;*/
   background-color: white;
   color: #333;
   font-size: 0.9rem;
@@ -368,14 +368,14 @@ body {
     margin-bottom: 15px; /* Espaço entre a descrição e a lista de itens */
 }
 .section_descriptionText {
-   composes: editableField_textDisplay;
+   /*composes: editableField_textDisplay;*/
    color: rgba(255, 255, 255, 0.9); /* Cor clara para o texto da descrição da seção */
    font-size: 0.95rem;
    font-style: italic;
    padding: 0 2px; /* Ajustar padding para visualização */
 }
 .section_descriptionTextarea {
-   composes: editableField_inputBase;
+   /*composes: editableField_inputBase;*/
    background-color: rgba(255, 255, 255, 0.9);
    color: #333;
    font-size: 0.95rem;
@@ -438,9 +438,9 @@ body {
   /* Adicionado cursor pointer para indicar que pode ser clicado para editar (em modo edição) */
   cursor: text;
 }
-.editableField_textDisplayItem {
-  composes: editableField_textDisplay;
-}
+/*.editableField_textDisplayItem {
+  /*composes: editableField_textDisplay;*/
+/*}*/
 .editableField_inputBase {
   padding: 6px 8px;
   border: 1px solid #D1D5DB;
@@ -462,7 +462,7 @@ body {
   color: #9CA3AF;
 }
 .editableField_inputItem {
-  composes: editableField_inputBase;
+  /*composes: editableField_inputBase;*/
   background-color: white;
 }
 
@@ -504,6 +504,6 @@ body {
   background-color: #F4F5F7 !important; /* Garante que o fundo não mude no hover */
   border-color: #DCDFE4 !important; /* Garante que a borda não mude no hover */
 }
-.actionSidebarIconVisualBase {
+/*.actionSidebarIconVisualBase {
   /* Estilos específicos para ícones se necessário */
-}
+/*}*/
