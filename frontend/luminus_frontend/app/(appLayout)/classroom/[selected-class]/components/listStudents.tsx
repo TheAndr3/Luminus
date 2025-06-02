@@ -14,15 +14,19 @@ import { Check, X, User as UserIcon } from 'lucide-react'; // Importa ícones de
 // Componente de imagem otimizada do Next.js
 import Image from "next/image";
 // Painel de ações que aparece quando studentss são selecionadas
-import ActionPanel from "@/app/(appLayout)/classroom/components/actionPainel";
+import ActionPanel from "@/app/(appLayout)/classroom/[selected-class]/components/ActionPanel";
 // Hooks do React para efeitos colaterais e estado
 import { useEffect, useState } from "react";
 // Componente com ações disponíveis para cada students
 import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomActions";
-import { Classroom } from "../../components/types";
+
+//onCsvFileSelected={handleProcessCsvFile}
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
+  mainColor?: string;
+  hoverColor: string;
+
   students: Students[];                        // Lista de alunos visíveis (paginadas)
 
   toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
@@ -44,10 +48,15 @@ interface ListStudentsProps {
   handleCancelInlineAdd: () => void;           // Função para cancelar a adição
   inlineAddStudentError: string | null;        // Erro da adição inline
   isLoading: boolean;                          // Estado de loading global
+
+  onCsvFileSelected: (file: File) => void;
 };
 
 // Componente principal que renderiza a lista de studentss
 export default function ListStudents({
+  mainColor,
+  hoverColor,
+
   students,
 
   toggleSelectAll,
@@ -69,6 +78,8 @@ export default function ListStudents({
   handleCancelInlineAdd,
   inlineAddStudentError,
   isLoading,
+
+  onCsvFileSelected,
 }: ListStudentsProps) {
 
   // Estado local para verificar se algum item está selecionado
@@ -280,6 +291,18 @@ export default function ListStudents({
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
+      </div>
+
+      {/* Painel de ações que aparece quando há turmas selecionadas */}
+      <div className="-mt-10">
+        {hasSelected && (
+          <ActionPanel
+            mainColor={mainColor}
+            hoverColor={hoverColor}
+            onDeleted={onDeleteStudents}
+            onCsvFileSelected={onCsvFileSelected}
+          />
+        )}
       </div>
     </div>
   );

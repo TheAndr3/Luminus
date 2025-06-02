@@ -363,6 +363,8 @@ export default function VisualizacaoAlunos() {
 
         <div className="px-10 flex items-center justify-center mt-10 ml-auto"> {/*px-10 no original*/}
           <ListStudents
+            mainColor={color}
+            hoverColor={hoverColor}
             students={alunosVisiveis}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
@@ -380,6 +382,7 @@ export default function VisualizacaoAlunos() {
             handleInlineAddStudent={async () => {}}
             handleCancelInlineAdd={() => {}}
             isLoading={isLoading}
+            onCsvFileSelected={handleProcessCsvFile}
           />
         </div>
       </div>
