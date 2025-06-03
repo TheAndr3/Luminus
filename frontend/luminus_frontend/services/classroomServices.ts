@@ -34,13 +34,9 @@ export const CreateClassroom = async (payload: ClassroomData): Promise<CreateRes
     }
 };
 
-// NOVA FUNÇÃO para criar turma COM CSV usando FormData
 export const CreateClassroomWithCSV = async (formData: FormData): Promise<CreateResponse> => {
     try {
-        // O endpoint '/classroom/create-with-csv' é um exemplo.
-        // Você precisará definir este novo endpoint no seu backend.
         const response = await api.post('/classroom/create-with-csv', formData, {
-            // O Axios define o Content-Type automaticamente para FormData
         });
         return response.data;
     } catch (error: any) {
