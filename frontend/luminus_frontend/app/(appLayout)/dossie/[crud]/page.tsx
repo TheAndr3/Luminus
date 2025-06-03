@@ -4,6 +4,7 @@
 // Importações de bibliotecas React e Next.js
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Head from 'next/head'; // Componente para manipular o <head> do HTML da página
+import { useRouter } from 'next/navigation'; // Importa o hook de navegação do Next.js
 
 // Importações de componentes customizados da aplicação
 import PageHeader from '../../../../components/dossier/PageHeader';
@@ -97,6 +98,7 @@ const DossierAppPage: React.FC = () => {
 
   // Estado para garantir que o código dependente do cliente (ex: window) só rode após a montagem no cliente
   const [isClient, setIsClient] = useState(false);
+  const router = useRouter(); // Inicializa o router
   useEffect(() => {
     setIsClient(true); // Define como true após a primeira renderização no cliente
   }, []); // Roda apenas uma vez após a montagem
@@ -289,8 +291,10 @@ const DossierAppPage: React.FC = () => {
 
 
   // --- Manipuladores de Ações da UI (PageHeader, DossierHeader) ---
-  // MOCK: Ação de voltar, atualmente apenas loga. Em produção, usaria o router do Next.js ou outra lógica de navegação.
-  const handleBackClick = useCallback(() => { console.log('Navigate back'); }, []);
+  // Função para voltar à página de dossiês
+  const handleBackClick = useCallback(() => {
+    router.push('/dossie'); // Redireciona para a página de dossiês
+  }, [router]);
 
   const handleToggleEditMode = useCallback(() => {
     setIsEditingMode(prev => {

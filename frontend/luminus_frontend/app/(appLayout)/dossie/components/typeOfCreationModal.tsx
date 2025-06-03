@@ -12,7 +12,7 @@ import {
 
 import { useState } from "react"; 
 // Importa hooks do React. 
-
+import { useRouter } from "next/navigation"; // Importa o hook de navegação do Next.js
 
 import { Folder } from "lucide-react"; 
 // Importa o ícone de pasta (Folder) da biblioteca de ícones `lucide-react`.
@@ -26,11 +26,13 @@ interface TypeOfCreationModalProps {
 // Componente principal que representa o modal de criação de dossiês.
 export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationModalProps) {
     const [save, setSave] = useState(false); 
-    // Estado local chamado 'save', provavelmente reservado para lógica futura (atualmente não usado).
+    const router = useRouter(); // Inicializa o router
 
     // Função chamada quando o usuário clica em "Criar novo dossiê".
     const handleClickNewDossie = () => {
-        // TODO: Implementar a lógica para criar um novo dossiê.
+        console.log('Botão clicado - tentando redirecionar');
+        onClose(); // Fecha o modal
+        router.push('/dossie/crud'); // Redireciona para a página de criação de dossiê
     }
 
     // Função chamada quando o usuário clica em "Criar a partir de um modelo".
