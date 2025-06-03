@@ -1,12 +1,30 @@
 /* src/pages/DossierCRUDPage.module.css */
 
 /* --- Globals (Referência) --- */
-/* ... (mantenha seus globais ou remova se não usados) ... */
+/* Se você tiver um globals.css, adicione 'body { overflow: hidden; }' lá.
+   Caso contrário, o overflow:hidden no appContainer e mainContent tentará o mesmo efeito. */
+/*
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #E5E7EB;
+  color: #1F2937;
+  overflow: hidden; /* IDEALMENTE AQUI, PARA IMPEDIR SCROLL DA PÁGINA */
+/*}
+* { box-sizing: border-box; }
+*/
+
+/* Custom Scrollbar (Opcional, mas melhora a estética) */
+/* ... (mantenha seus estilos de scrollbar se desejar) ... */
+
 
 /* --- DossierAppPage Layout --- */
 .appContainer {
   display: flex;
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .mainContent {
@@ -18,17 +36,17 @@
   margin-left: auto;
   margin-right: auto;
   position: relative;
+  height: 100%;
+  overflow: hidden;
 }
 
 .scrollableArea {
   flex-grow: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  margin-bottom: 70px; /* Espaço para o botão de salvar */
-  position: relative;
-  /* Ajuste o padding-right para acomodar a scrollbar E a ActionSidebar
-     Ex: Sidebar ~56px + Gap ~10px + Scrollbar ~15px = ~81px */
-  padding-right: 85px; /* Aumentado para espaço reservado da ActionSidebar */
+  position: relative; /* Necessário para posicionar a sidebar absolutamente dentro */
+  padding-right: 85px; /* Espaço para scrollbar Y e ActionSidebar */
+  /* O padding-bottom foi movido para .sectionListContainer para melhor controle */
 }
 
 
@@ -62,7 +80,9 @@
   align-items: center;
   margin-bottom: 20px;
   padding: 5px 0;
+  flex-shrink: 0;
 }
+/* ... (restante dos estilos do PageHeader) ... */
 .pageHeader_backButton {
   background: #000000;
   border: none;
@@ -110,6 +130,7 @@
   background-color: #6B7280;
 }
 
+
 /* --- DossierHeader --- */
 .dossierHeaderContainer {
   background-color: #7E85C7;
@@ -117,7 +138,10 @@
   border-radius: 8px;
   margin-bottom: 25px;
   color: white;
+  flex-shrink: 0;
 }
+/* ... (restante dos estilos do DossierHeader, Section, SectionItem, EditableField) ... */
+
 .dossierHeader_titleText {
   font-size: 1.6rem;
   font-weight: bold;
@@ -133,18 +157,47 @@
   width: 100%;
   background-color: white;
   color: #333;
-  margin-bottom: 10px; /* Espaço antes do seletor de conceito */
+  margin-bottom: 10px;
 }
 .dossierHeader_titleInput::placeholder {
   color: #9CA3AF;
 }
 
-/* Estilos para o seletor de conceito de avaliação */
-.dossierHeader_evaluationConceptContainer {
+/* Novo layout para a linha do Conceito de Avaliação + Settings */
+.dossierHeader_evaluationAndSettings {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
   margin-top: 10px;
-  margin-bottom: 15px; /* Espaço antes da divisória */
+  margin-bottom: 15px;
 }
-.dossierHeader_evaluationConceptLabelText { /* Para o texto "Conceito de Avaliação:" */
+/* Ajusta o container de avaliação para ocupar o espaço disponível dentro do flex */
+.dossierHeader_evaluationConceptContainer {
+  margin-top: 0;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.dossierHeader_settingsButton {
+  composes: pageHeader_backButton;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+}
+.dossierHeader_settingsButton:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+/* Ajustar tamanho do ícone dentro do botão menor */
+.dossierHeader_settingsButton > svg {
+  width: 16px;
+  height: 16px;
+}
+
+
+.dossierHeader_evaluationConceptLabelText {
   font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: 6px;
@@ -152,10 +205,10 @@
 }
 .dossierHeader_evaluationRadioGroup {
   display: flex;
-  gap: 20px; /* Espaço entre as opções de radio */
+  gap: 20px;
   align-items: center;
 }
-.dossierHeader_evaluationRadioLabel { /* Label de cada radio (inclui input e texto) */
+.dossierHeader_evaluationRadioLabel {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -165,21 +218,18 @@
 }
 .dossierHeader_evaluationRadioInput {
   cursor: pointer;
-  /* Para melhor controle visual, pode-se usar apariencia: none e estilizar com pseudo-elementos */
 }
-.dossierHeader_evaluationConceptDisplay { /* Para mostrar o conceito em modo visualização */
+.dossierHeader_evaluationConceptDisplay {
   font-size: 0.95rem;
   font-weight: bold;
   margin: 0;
-  color: white; /* Ou a cor que preferir */
+  color: white;
 }
-
-
 .dossierHeader_divider {
   border: none;
   height: 1px;
   background-color: rgba(255, 255, 255, 0.5);
-  margin: 15px 0; /* Ajuste conforme necessário */
+  margin: 15px 0;
 }
 .dossierHeader_descriptionLabel {
   font-size: 0.9rem;
@@ -196,6 +246,7 @@
   border-radius: 6px;
   white-space: pre-wrap;
   word-break: break-word;
+  color: white; /* Cor do texto da descrição do header */
 }
 .dossierHeader_descriptionTextDisplay:empty {
   min-height: 20px;
@@ -220,6 +271,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding-bottom: 20px;
 }
 
 /* --- Section --- */
@@ -236,8 +288,8 @@
   content: '';
   position: absolute;
   left: -15px;
-  top: -15px;
-  bottom: -15px;
+  top: 0;
+  bottom: 0;
   width: 5px;
   background-color: hotpink;
   border-radius: 3px 0 0 3px;
@@ -247,32 +299,30 @@
   content: '';
   position: absolute;
   left: -15px;
-  top: -15px;
-  bottom: -15px;
+  top: 0;
+  bottom: 0;
   width: 5px;
   background-color: #A5B4FC;
   border-radius: 3px 0 0 3px;
   z-index: 0;
 }
-
-/* Container para título da seção e campo de peso */
 .section_titleAndWeightContainer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px; /* Espaço entre título e peso */
-  margin-bottom: 15px;
+  gap: 10px;
+  margin-bottom: 15px; /* Espaço antes da descrição ou lista de itens */
   color: white;
 }
-.section_titleContainer { /* Container apenas para o EditableField do título */
-  flex-grow: 1; /* Título ocupa o espaço restante */
+.section_titleContainer {
+  flex-grow: 1;
 }
 .section_titleText {
   font-size: 1.1rem;
   font-weight: 600;
   padding: 6px 2px;
   word-break: break-word;
-  display: block; /* Garante que o padding seja aplicado corretamente */
+  display: block;
 }
 .section_titleInput {
   font-size: 1.1rem;
@@ -287,14 +337,12 @@
 .section_titleInput::placeholder {
   color: #9CA3AF;
 }
-
-/* Estilos para o campo de peso da seção */
 .section_weightFieldContainer {
-  min-width: 90px; /* Largura mínima para o campo de peso */
-  flex-shrink: 0; /* Não encolher */
+  min-width: 90px;
+  flex-shrink: 0;
 }
-.section_weightInput { /* Input para o peso */
-  composes: editableField_inputBase; /* Herda estilos base */
+.section_weightInput {
+  composes: editableField_inputBase;
   background-color: white;
   color: #333;
   font-size: 0.9rem;
@@ -302,18 +350,43 @@
   text-align: right;
 }
 .section_weightInput::placeholder {
-  text-align: left; /* Placeholder alinhado à esquerda */
+  text-align: left;
   color: #9CA3AF;
 }
-.section_weightText { /* Texto do peso em modo visualização */
+.section_weightText {
   font-size: 0.95rem;
   font-weight: 500;
   color: white;
-  padding: 5px 8px; /* Similar ao input para alinhamento */
+  padding: 5px 8px;
   text-align: right;
-  min-width: 90px; /* Para manter o alinhamento com o input */
+  min-width: 90px;
   box-sizing: border-box;
 }
+
+/* --- NOVAS CLASSES PARA DESCRIÇÃO DA SEÇÃO --- */
+.section_descriptionContainer {
+    margin-bottom: 15px; /* Espaço entre a descrição e a lista de itens */
+}
+.section_descriptionText {
+   composes: editableField_textDisplay;
+   color: rgba(255, 255, 255, 0.9); /* Cor clara para o texto da descrição da seção */
+   font-size: 0.95rem;
+   font-style: italic;
+   padding: 0 2px; /* Ajustar padding para visualização */
+}
+.section_descriptionTextarea {
+   composes: editableField_inputBase;
+   background-color: rgba(255, 255, 255, 0.9);
+   color: #333;
+   font-size: 0.95rem;
+   padding: 8px 10px;
+   min-height: 50px; /* Altura mínima para o textarea */
+   resize: vertical;
+}
+.section_descriptionTextarea::placeholder {
+    color: #9CA3AF;
+}
+/* --- FIM NOVAS CLASSES PARA DESCRIÇÃO DA SEÇÃO --- */
 
 
 .section_itemsList {
@@ -331,40 +404,39 @@
   background-color: white;
   border: 1px solid #D1D5DB;
   border-radius: 6px;
-  cursor: default; /* Default, muda para pointer no hover em modo edição */
+  cursor: default; /* Cursor default para não confundir, o clique para seleção agora é na div, mas a sidebar é pelo foco do input */
   transition: border-color 0.2s, box-shadow 0.2s;
-  width: 100%; /* Para ocupar toda a largura disponível na lista */
+  width: 100%;
 }
-.sectionItem_containerEditable { /* Aplicado via JS na page.tsx */
-  /* cursor: pointer; Não é mais necessário aqui, o clique é no div todo */
+.sectionItem_containerEditable {
+  cursor: pointer; /* Cursor pointer na área do item editável para indicar que pode ser clicado para selecionar */
 }
 .sectionItem_containerEditable:hover {
-   border-color: #60A5FA; /* Hover no item quando editável */
+   border-color: #60A5FA;
 }
-
 .sectionItem_selected {
   border-color: #3B82F6 !important;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
 }
 .sectionItem_descriptionFieldWrapper {
-  flex-grow: 1; /* Descrição ocupa o espaço */
-  /* margin-right: 15px; Removido pois não há campo de valor ao lado por padrão */
+  flex-grow: 1;
   min-width: 0;
-  width: 100%; /* Para o EditableField interno usar 100% */
+  width: 100%;
 }
-/* .sectionItem_valueFieldWrapper { ... } Removido/Comentado pois não está visível */
 
 /* --- EditableField --- */
 .editableField_textDisplay {
   display: block;
   padding: 6px 2px;
-  min-height: 1.5em;
-  white-space: pre-wrap;
-  word-break: break-word;
+  min-height: 1.5em; /* Garante altura mínima para spans vazios */
+  white-space: pre-wrap; /* Preserva quebras de linha e espaços */
+  word-break: break-word; /* Quebra palavras longas */
   color: #374151;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%; /* Para ocupar todo o espaço do wrapper */
+  /* overflow: hidden; REMOVIDO para não cortar conteúdo, o word-break já ajuda */
+  /* text-overflow: ellipsis; REMOVIDO junto com overflow */
+  width: 100%;
+  /* Adicionado cursor pointer para indicar que pode ser clicado para editar (em modo edição) */
+  cursor: text;
 }
 .editableField_textDisplayItem {
   composes: editableField_textDisplay;
@@ -379,7 +451,7 @@
   background-color: #F9FAFB;
   color: #1F2937;
   transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box; /* Para o padding não aumentar a largura total */
+  box-sizing: border-box;
 }
 .editableField_inputBase:focus {
   border-color: #3B82F6;
@@ -404,11 +476,8 @@
   border-radius: 22px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   width: auto;
-  position: absolute;
-  /* Ajuste 'right' para ficar dentro do padding-right do .scrollableArea,
-     à esquerda da scrollbar. Se padding-right é 85px e scrollbar ~15px,
-     um 'right' de 20px a 25px deve funcionar. */
-  right: 25px;
+  position: absolute; /* Posicionado absolutamente dentro de .scrollableArea */
+  right: 25px; /* Distância da direita */
   z-index: 15;
 }
 .actionSidebarButtonVisualBase {
@@ -429,16 +498,12 @@
   background-color: #EBECF0;
   border-color: #C1C7D0;
 }
-.actionSidebarButtonVisualBase > svg {
-  width: 22px;
-  height: 22px;
-}
 .actionSidebarButtonDisabledVisualBase {
   opacity: 0.5;
   cursor: not-allowed;
-  background-color: #F4F5F7 !important;
-  border-color: #DCDFE4 !important;
+  background-color: #F4F5F7 !important; /* Garante que o fundo não mude no hover */
+  border-color: #DCDFE4 !important; /* Garante que a borda não mude no hover */
 }
-.actionSidebarIconVisualBase {
+/*.actionSidebarIconVisualBase {
   /* Estilos específicos para ícones se necessário */
-}
+/*}*/
