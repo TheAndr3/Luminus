@@ -65,13 +65,14 @@ export default function VizualizationClass() {
         
         const data = await ListClassroom(Number(professorId));
         // Mapear a resposta da API para o formato local
-        const turmasFormatadas = data ? data.map(turma => ({
+        const turmasFormatadas = Array.isArray(data) ? data.map(turma => ({
           id: turma.id,
           disciplina: turma.name,
           codigo: turma.season,
           dossie: turma.description,
           selected: false
         })) : [];
+        console.log(turmasFormatadas);
         setClassi(turmasFormatadas);
       } catch (error: any) {
         console.error("Erro ao carregar turmas:", error);
