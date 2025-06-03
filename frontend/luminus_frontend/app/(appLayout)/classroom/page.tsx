@@ -163,21 +163,37 @@ export default function VizualizationClass() {
     setarchiveConfirmation(true);
   }
 
-  // 3. Aqui deveria ter a chamada real para a API de arquivamento
-  // const confirmArchive = async () => {
-  //   try {
-  //     await fetch('/api/turmas/archive', {
-  //       method: 'POST',
-  //       body: JSON.stringify({ ids: idsToArchive }),
-  //       headers: { 'Content-Type': 'application/json' }
-  //     });
-  //     // Atualizar estado conforme necessário
-  //   } catch (error) {
-  //    setMessageErro("Erro ao arquivar os dados desejados!")
-  //    setMissingDialog(true) 
+  // Function to handle class export
+  const handleExportClass = () => {
+    const selectedClasses = classi.filter(turma => turma.selected);
+    if (selectedClasses.length === 0) {
+      setMessageErro("Selecione pelo menos uma turma para exportar");
+      setMissingDialog(true);
+      return;
+    }
 
-  //   }
-  // };
+    // Create CSV content
+    const headers = ["ID", "Disciplina", "Código", "Dossiê"];
+    const csvContent = [
+      headers.join(","),
+      ...selectedClasses.map(turma => [
+        turma.id,
+        turma.disciplina,
+        turma.codigo,
+        turma.dossie
+      ].join(","))
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "turmas_exportadas.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div>
@@ -242,6 +258,7 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
+              toExportClass={handleExportClass}
             />
           </div>
         ) : (
@@ -258,6 +275,7 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
+              toExportClass={handleExportClass}
             />
           </div>
         )}

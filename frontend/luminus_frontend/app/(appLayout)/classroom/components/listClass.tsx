@@ -11,7 +11,7 @@ import class_icon from "@/components/icon/icon_classroom.svg";
 // Componente do Next.js para otimizar a exibição de imagens
 import Image from "next/image";
 // Painel de ações que aparece quando pelo menos uma turma está selecionada
-import ActionPanel from "./actionPainel";
+import ActionPanel from "./actionPanel";
 // Hooks do React para controlar estados e efeitos colaterais
 import { useEffect, useState } from "react";
 
@@ -36,6 +36,7 @@ type ListclassroomsProps = {
   setVisualization: (set: "grid" | "list") => void;  // Função para alterar o tipo de visualização
   onDeleteClass: () => void;  // Função para deletar as turmas selecionadas
   toArchiveClass: () => void;  // Função para arquivar as turmas selecionadas
+  toExportClass: () => void;
 };
 
 // Componente principal que renderiza a lista de turmas (classrooms)
@@ -51,6 +52,7 @@ export default function ListClass({
   setVisualization,
   onDeleteClass,
   toArchiveClass,
+  toExportClass
 }: ListclassroomsProps) {
   // Estado que indica se há pelo menos uma turma selecionada
   const [hasSelected, setHasSelected] = useState(false);
@@ -194,6 +196,12 @@ export default function ListClass({
 
                     <button
                       className="hover:text-yellow-400"
+                      onClick={() => {
+                        classroom.selected = true;
+                        toExportClass();
+                        classroom.selected = false
+                      }}
+
                     >
                       <Download></Download>
                     </button>
@@ -232,6 +240,7 @@ export default function ListClass({
           <ActionPanel
             onDeleted={onDeleteClass}
             toArchive={toArchiveClass}
+            toExport={toExportClass}
           />
         )}
       </div>

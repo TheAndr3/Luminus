@@ -3,9 +3,10 @@ import { Trash2, Download, Archive, BarChart2 } from "lucide-react";
 interface ActionPanelProps{
     onDeleted: () => void
     toArchive: () => void
+    toExport: () => void
 }
 
-export default function ActionPanel( {onDeleted, toArchive} : ActionPanelProps) {
+export default function ActionPanel( {onDeleted, toArchive, toExport} : ActionPanelProps) {
 
     
         return (
@@ -17,7 +18,9 @@ export default function ActionPanel( {onDeleted, toArchive} : ActionPanelProps) 
                 />
             </button>
             <button className="hover:bg-[#123a4f] p-2 rounded-xl">
-                <Download className="w-6 h-6 text-white" />
+                <Download className="w-6 h-6 text-white"
+                    onClick={toExport}
+                />
             </button>
             <button className="hover:bg-[#123a4f] p-2 rounded-xl">
                 <Archive className="w-6 h-6 text-white" 
