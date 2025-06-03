@@ -115,4 +115,84 @@ async function pgDossieSelect(id) {
     return data.rows;
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect}
+async function pgDossieUpdate(data) {
+
+    try {
+        await pgDelete('Section',{dossie_id:data.id});
+
+        var sections = data.sections;
+
+        for(let i = 0; i < sections.length; i++){
+            var section = sections[i];
+            await pgInsert('section', section);
+            
+            for (let j = 0; j < section.questions.length; j++) {
+                var question = section.questions[j];
+                await pgInsert('question', question)
+            }
+        }
+        const payload = {
+            name: data.name,
+            description: data.description,
+            evaluation_method: data.evaluation_method
+        };
+        const data = pgUpdate('dossier',payload, {id:data.id})
+    } catch (error) {
+        throw error;
+    }
+    
+}
+
+async function pgAppraisalSelect(id) {
+    const query = 'SELECT * FROM Evaluation WHERE appraisal_id == $1';
+
+    const client = await connect();
+
+    const response = await client.query(query, [id]);
+    const data = response.rows;
+    var result = {id:data[0].appraisal_id, sections:[], dossier_id:data[0].dossier_id, student_id:data[0].student_id, professor_id:data[0].professor_id,};
+    for(let i=0; i < data.length; i++){
+        var row = data[i];
+
+        if(!Object.keys(result.sections).find(row.section_id)) {
+            result.sections[row.section_id] = []
+        }
+        result.sections[row.section_id].push({question:row.question_id, option: row.question_option, evaluation:row.id})
+        
+    }
+    return result;
+}
+
+async function pgAppraisalUpdate(data) {
+    try {
+        await pgDelete('Evaluation', {appraisal_id:data.id});
+
+        var evaluations = data.evaluation;
+
+        for (let i = 0; i < evaluations.length; i++) {
+            const ev = evaluations[i];
+            await pgInsert('Evaluation', ev);
+        }
+
+        const payload = {
+            points: data.points,
+            filling_date: data.filling_date
+        };
+        return await pgUpdate('Appraisal', payload, {id:data.id});
+    } catch (error) {
+        throw error
+    }
+}
+
+async function pgAppraisalGetPoints(classId) {
+    try {
+        const response = await pgSelect('Appraisal', {classroom_id: classId});
+
+        const classPoints = response.map(i => { return {student_id:i.student_id, average:i.points}});
+        return classPoints;
+    } catch (error) {
+        throw error
+    }
+}
+
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints};

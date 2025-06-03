@@ -3,7 +3,7 @@
 // Componentes e tipos
 import ListClass from "./components/listClass";
 import { Classroom } from "@/app/(appLayout)/classroom/components/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GridClass from "./components/gridClass";
 import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
@@ -11,22 +11,22 @@ import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
-import { ExportConfirmDialog } from "../dossie/components/exportConfirmDialog";
-import ExportDownloadDialog from "../dossie/components/exportDownloadDialog";
+import { ListClassroom, DeleteClassroom } from "@/services/classroomServices";
+import DialogPage from "./components/createClassModal";
 
 export default function VizualizationClass() {
   // ============ ESTADOS ============
   // Mock de dados - DEVERIA SER SUBSTITUÍDO POR CHAMADA API
-  const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    disciplina: 'Matematica',
-    codigo: `EXA502 - TP${i + 1}`,
-    dossie: `Dossiê Turma ${i + 1}`,
-    selected: false,
-  }));
+  // const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
+  //   id: i,
+  //   disciplina: 'Matematica',
+  //   codigo: `EXA502 - TP${i + 1}`,
+  //   dossie: `Dossiê Turma ${i + 1}`,
+  //   selected: false,
+  // }));
   
-  const [visualization, setVisualization] = useState<'grid' | 'list'>('grid'); // Modo de visualização
-  const [classi, setClassi] = useState(mockClass); // Lista de turmas
+  const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
+  const [classi, setClassi] = useState<Classroom[]>([]); // Lista de turmas
   const [currentPage, setCurrentPage] = useState(1); // Paginação
   const turmasPorPagina = visualization === 'grid' ? 6 : 6; // Itens por página
   const [confirmOpen, setConfirmOpen] = useState(false); // Controle do modal de delete
@@ -37,22 +37,14 @@ export default function VizualizationClass() {
   const [classDescription, setClassDescription] = useState("") // Descrição para modal
   const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
   const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
-
   const [missingDialog, setMissingDialog] = useState(false); //para abrir dialog de erro
   const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
-
-  const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
-  const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
-  
-  const [idsToExport, setIdsToExport] = useState<number[]>([]);
-
-  let typeOfData = "Classroom";
-  
+  const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
 
   // ============ CÁLCULOS DERIVADOS ============
-  const totalPages = Math.ceil(classi.length / turmasPorPagina);
+  const totalPages = Math.ceil((classi?.length || 0) / turmasPorPagina);
   const startIndex = (currentPage - 1) * turmasPorPagina;
-  const turmasVisiveis = classi.slice(startIndex, startIndex + turmasPorPagina);
+  const turmasVisiveis = classi?.slice(startIndex, startIndex + turmasPorPagina) || [];
   const isAllSelected = turmasVisiveis.every((t) => t.selected);
   const filteredClasses = turmasVisiveis.filter((turma) =>
     turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -60,7 +52,42 @@ export default function VizualizationClass() {
     turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ============ CHAMADAS À API ============
+  useEffect(() => {
+    const fetchTurmas = async () => {
+      try {
+        setIsLoading(true);
+        // Pegar o ID do professor do localStorage (definido durante o login)
+        const professorId = localStorage.getItem('professorId');
+        if (!professorId) {
+          throw new Error('ID do professor não encontrado');
+        }
+        
+        const data = await ListClassroom(Number(professorId));
+        // Mapear a resposta da API para o formato local
+        const turmasFormatadas = Array.isArray(data) ? data.map(turma => ({
+          id: turma.id,
+          disciplina: turma.name,
+          codigo: turma.season,
+          dossie: turma.description,
+          selected: false
+        })) : [];
+        setClassi(turmasFormatadas);
+      } catch (error: any) {
+        console.error("Erro ao carregar turmas:", error);
+        setMessageErro(error.message || "Erro ao carregar turmas");
+        setMissingDialog(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTurmas();
+  }, []);
+
   // ============ FUNÇÕES ============
+
+
   // Alterna seleção de todas as turmas visíveis
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
@@ -82,17 +109,6 @@ export default function VizualizationClass() {
     );
   };
 
-  // ============ CHAMADAS À API (FALTANTES) ============
-  // 1. Aqui deveria ter uma chamada para carregar as turmas inicialmente
-  // useEffect(() => {
-  //   const fetchTurmas = async () => {
-  //     const response = await fetch('/api/turmas');
-  //     const data = await response.json();
-  //     setClassi(data);
-  //   };
-  //   fetchTurmas();
-  // }, []);
-
   // Prepara turmas para exclusão
   const handleDeleteClass = async () => {
     const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
@@ -101,25 +117,14 @@ export default function VizualizationClass() {
     setConfirmOpen(true);
   };
   
-  // 2. Aqui deveria ter a chamada real para a API de exclusão
+  // Confirma exclusão das turmas
   const confirmDeletion = async () => {
     try {
-      console.log("Excluir:", idsToDelete);
-      
-      /*
-      try {
-        const response = await axios.post('/api/turmas/delete', {
-          ids: idsToDelete,
-        });
-
-        //mensagem de delete complete
-        return response.data;
-      } catch (error: any) {
-        setMessageErro("Erro ao excluir os dados desejados!")
-        setMissingDialog(true) 
+      setIsLoading(true);
+      // Deletar cada turma selecionada
+      for (const id of idsToDelete) {
+        await DeleteClassroom(id);
       }
-      
-      */
 
       // Atualização otimista do estado
       setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
@@ -127,10 +132,12 @@ export default function VizualizationClass() {
       if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
         setCurrentPage(1);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao excluir turmas:", error);
-      alert("Erro ao excluir.");
+      setMessageErro(error.message || "Erro ao excluir turmas");
+      setMissingDialog(true);
     } finally {
+      setIsLoading(false);
       setConfirmOpen(false);
     }
   };
@@ -171,17 +178,6 @@ export default function VizualizationClass() {
   //   }
   // };
 
-
-  const exportHandle = async () => {
-    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
-
-    if (selecionadas.length === 0) return;
-
-    setIdsToExport(selecionadas); 
-
-    setOpenExportConfirmDialog(true)
-
-  };
   return (
     <div>
       {/* Cabeçalho */}
@@ -202,7 +198,36 @@ export default function VizualizationClass() {
 
       {/* Renderização condicional */}
       <div className="-mt-4">
-        {visualization === 'list' && (
+        {/* Barra de ferramentas - sempre visível */}
+        <div className="flex justify-between items-center mb-3 px-[6vh]">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={toggleSelectAll}
+              className="w-6 h-6 accent-blue-600"
+              disabled={!classi || classi.length === 0}
+            />
+            <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
+          </div>
+          <div className="flex gap-2 items-center">
+            <ClassViewMode
+              visualization={visualization}
+              setVisualization={setVisualization}
+            />
+            <DialogPage/>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <p>Carregando turmas...</p>
+          </div>
+        ) : filteredClasses.length === 0 ? (
+          <div className="flex justify-center items-center h-40">
+            <p>Nenhuma turma encontrada. Crie uma nova turma para começar!</p>
+          </div>
+        ) : visualization === 'list' ? (
           <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
             <ListClass
               classrooms={filteredClasses}
@@ -216,13 +241,10 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
-              toExportClass={exportHandle}
             />
           </div>
-        )}
-
-        {visualization === 'grid' && (
-          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
+        ) : (
+          <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
             <GridClass
               classrooms={filteredClasses}
               toggleSelectAll={toggleSelectAll}
@@ -235,7 +257,6 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
-              toExportClass={exportHandle}
             />
           </div>
         )}
@@ -264,23 +285,6 @@ export default function VizualizationClass() {
         onConfirm={() => setMissingDialog(false)}
         description={messageErro}
       />
-
-      <ExportConfirmDialog 
-              open={openExportConfirmDialog}
-              onCancel={() => setOpenExportConfirmDialog(false)}
-              onConfirm={() => setOpenDownloadDialog(true)}
-              description={"Tem certeza que quer exportar a (s) turma (s) selecionada (s)"}
-            />
-      
-            <ExportDownloadDialog
-              open={openDownloadDialog}
-              IdToExport={idsToExport}
-              onClose={()=>setOpenDownloadDialog(false)}
-              description={"Turma exportada"}
-              typeOfData={typeOfData}
-            />
-
-
 
     </div>
   );

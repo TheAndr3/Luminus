@@ -42,24 +42,33 @@ exports.Create = async (req, res) => {
         await db.pgInsert('question', payload);
       }
     }
-    res.status(201).json({msg:'dossie criado com sucesso'});
+    return res.status(201).json({msg:'dossie criado com sucesso', data:dossie});
   } catch (err) {
     console.log(err);
-    res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+    return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
   }
 }
 
 exports.List = async(req, res) => {
   const professor_id = req.params.professorid;
+  const start = 0;
+  const size = 6;
 
+  try{
+    start = req.query.start;
+    size = req.query.size;
+  } catch (erro) {
+    console.log(erro);
+  }
+  
   try {
     const payload = {professor_id:professor_id};
-    const result = db.pgSelect('dossier', payload);
+    const result = await db.pgSelect('dossier', payload);
 
-    res.status(200).json({msg:'sucesso', data:result});
+    return res.status(200).json({msg:'sucesso', data:result.slice(start, start+size-1), ammount:result.length});
   } catch (error) {
     console.log(error);
-    res.status(400).json({msg:'falha ao atender sua solicitacao'});
+    return res.status(400).json({msg:'falha ao atender sua solicitacao'});
   }
 }
 
@@ -68,9 +77,9 @@ exports.Get = async (req, res) => {
 
   try {
     const dossier = await db.pgDossieSelect(id);
-    res.status(200).json({msg:'sucesso', data:dossier});
+    return res.status(200).json({msg:'sucesso', data:dossier});
   } catch (error) {
-    res.status(400).json({msg:'falha no envio da solicitação'})
+    return res.status(400).json({msg:'falha no envio da solicitação'})
   }
 }
 
@@ -82,43 +91,14 @@ exports.Update = async (req, res) => {
     const haveAssociationInAnyClass = await db.pgSelect('appraisal', {dossier_id:id})
 
     if (haveAssociationInAnyClass.length > 0) {
-      res.status(400).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'})
+      return res.status(400).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'})
     } else {
-      const sections = body.sections;
-
-      for (let i = 0; i < sections.length; i++) {
-        var section = sections[i]
-
-        var questions = section.questions;
-
-        for(let j=0; j < questions.length; j++){
-          var question = questions[j];
-          var payload = {description:question.description};
-
-          try {
-            const resp = db.pgUpdate('question', payload, {id:question.id});
-          } catch (error) {
-            console.log(error);
-            res.status(500).json({msg:'erro interno do servidor'});
-          }
-        }
-        var payload = {
-            name:section.name,
-            weigth:section.weigth,
-            description:section.description
-          }
-        try {
-          const resp = db.pgUpdate('section', payload, {id:section.id});
-        } catch (error) {
-          console.log(error)
-          res.status(500).json({msg:'erro interno do banco de dados'});
-        }
-      }
-      res.status(202).json({msg:'sucess'});
+      const response = await db.pgDossieUpdate(body)
+      return res.status(202).json({msg:'sucess', data:response});
     }
   } catch (error) {
     console.log(error)
-    res.status(400).json({msg:'erro no envio das informações'})
+    return res.status(400).json({msg:'erro no envio das informações'})
   }
 }
 
@@ -127,10 +107,10 @@ exports.Delete = async (req, res) => {
 
   try {
     const resp = await db.pgDelete('dossier', {id:id});
-    res.status(204).json({msg:'sucess'});
+    return res.status(204).json({msg:'sucess', data:resp});
   } catch (error) {
     console.log(error);
-    res.status(400).json({msg:"falha ao remover o dossie"});
+    return res.status(400).json({msg:"falha ao remover o dossie"});
   }
   
 }

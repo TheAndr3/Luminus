@@ -16,12 +16,14 @@
 
 // Diretiva de Componente de Cliente, necessária para hooks (useState), manipulação de eventos,
 // e interatividade do formulário.
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import Image from 'next/image'; // Componente otimizado para imagens do Next.js
 import Link from 'next/link'; // Componente para navegação client-side
 import styles from './login.module.css'; // Importa estilos CSS Modules específicos para esta página
+import { useRouter } from 'next/navigation';
+import { LoginProfessor } from '@/services/professorService';
 
 // --- Importações de Componentes de Input Customizados ---
 import { EmailInput } from '@/components/inputs/EmailInput';
@@ -80,6 +82,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   // Sinaliza se o usuário já tentou submeter (usado pelo PasswordInput).
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const router = useRouter();
 
   // --- Função Auxiliar de Validação ---
   /** Valida o formato básico de um endereço de email usando Regex. */
@@ -174,34 +177,26 @@ export default function LoginPage() {
       return; // Interrompe a submissão.
     }
 
-    // --- Tentativa de Login (Simulação) ---
-    console.log('Validação OK. Submetendo Login (simulado):', formData);
     try {
-        // Simula chamada de API com delay.
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Simula sucesso ou falha aleatoriamente (substituir por chamada real).
-        const loginSucesso = Math.random() > 0.2; // 80% de chance de sucesso
+      // Chamada à API de login
+      const response = await LoginProfessor({
+        email_professor: formData.email,
+        password: formData.password
+      });
 
-        if (loginSucesso) {
-            // Simulação de sucesso: Exibe alerta (substituir por navegação/feedback real).
-            alert(`Login (simulado) sucesso!\nEmail: ${formData.email}\nManter Conectado: ${formData.rememberMe}`);
-            // Reseta o formulário e estados relacionados.
-            setFormData({ email: '', password: '', rememberMe: false });
-            setFormErrors({});
-            setHasAttemptedSubmit(false);
-            // Lógica de navegação comentada (requer import e uso de `useRouter`).
-            // router.push('/dashboard'); // Exemplo: navegar para o painel
-        } else {
-            // Simulação de falha: Lança um erro para ser pego pelo `catch`.
-            throw new Error("Credenciais inválidas"); // Mensagem de erro simulada.
-        }
-    } catch (error: any) { // Captura erros da API (simulada ou real).
-      console.error("Erro durante o login (simulado):", error);
-      // Define um erro geral a ser exibido para o usuário.
-      setFormErrors({ general: `Falha no login: ${error.message || 'Verifique suas credenciais.'}` });
-      setHasAttemptedSubmit(false); // Reseta tentativa em caso de falha na API.
+      // Salvar o ID do professor no localStorage
+      if (response.id) {
+        localStorage.setItem('professorId', response.id.toString());
+      }
+
+      // Redirecionar para a página inicial
+      router.push('/home');
+    } catch (error: any) {
+      console.error("Erro durante o login:", error);
+      setFormErrors({ general: error.message || 'Erro ao fazer login. Verifique suas credenciais.' });
+      setHasAttemptedSubmit(false);
     } finally {
-      setIsLoading(false); // Garante que o carregamento termine sempre.
+      setIsLoading(false);
     }
   };
 

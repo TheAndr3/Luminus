@@ -1,212 +1,388 @@
+// luminus_frontend/app/(appLayout)/classroom/[selected-class]/page.tsx
 "use client"
 
 // Componentes e tipos
 import ListStudents from "./components/listStudents";
-import { Classroom } from "@/app/(appLayout)/classroom/components/types";
-import React from 'react';
+import { Students } from "./components/types"; // Corrigido o caminho se 'types.ts' estiver na mesma pasta de componentes
+import React, { useState, useEffect, useRef } from 'react'; // Adicionado useRef
 import { Button } from "@/components/ui/button";
 import { darkenHexColor } from '@/utils/colorHover';
-import { BaseInput } from "@/components/inputs/BaseInput";
+// import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
 import { Header } from "./components/Header";
-import { ActionBar} from "./components/Action-bar";
-import { Folder, User, ClipboardEdit, Plus } from "lucide-react";
-import styles from './selected-classroom.module.css'; // Importa estilos CSS Modules específicos para esta página
+import { ActionBar} from "./components/ActionBar"; // Corrigido nome do componente para ActionBar
+import { FileText } from "lucide-react"; // Manteve FileText
+import styles from './selected-classroom.module.css';
+import { toast } from 'react-hot-toast'; 
+import { api } from "@/services/api";
+// Removido CreateStudent pois a importação em massa usará um endpoint diferente
+// import { CreateStudent } from "@/services/studentService"; 
+import { usePathname } from 'next/navigation';
 
-import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogOverlay
+} from "@/components/ui/dialog";
 
-interface Dossie {
-  id: number;
+type ParsedStudent = {
+  matricula: string;
   nome: string;
-  selecionado: boolean;
-}
-
-
-
+};
 
 export default function VisualizacaoAlunos() {
+  const pathname = usePathname();
+  const getTurmaIdFromPath = () => {
+    const parts = pathname.split('/');
+    const idStr = parts[parts.length - 1];
+    const id = parseInt(idStr, 10);
+    return isNaN(id) ? null : id;
+  };
 
-
-  /*LÓGICA PARA GET E SET DE CORES*/
-  
   const color = "#ec3360";
-  const hoverColor = darkenHexColor(color, 25); //escurece cor para hover
-  const classTitle = "Álgebra EXA 502";
+  const hoverColor = darkenHexColor(color, 25);
+  const [classTitle, setClassTitle] = useState("Carregando Turma..."); // Tornar dinâmico
 
-  // ============ ESTADOS ============
-  // Mock de dados - DEVERIA SER SUBSTITUÍDO POR CHAMADA API
-  const mockClass: Classroom[] = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    disciplina: 'Matematica',
-    codigo: `EXA502 - TP${i + 1}`,
-    dossie: `Dossiê Turma ${i + 1}`,
-    selected: false,
-  }));
+  // const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Se não usar grid, pode remover
+  const [classi, setClassi] = useState<Students[]>([]); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const alunosPorPagina = 6; // Ajuste conforme necessário
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false); // Renomeado para clareza
+  const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   
-  const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
-  const [classi, setClassi] = useState(mockClass); // Lista de turmas
-  const [currentPage, setCurrentPage] = useState(1); // Paginação
-  const turmasPorPagina = visualization === 'grid' ? 8 : 6; // Itens por página
-  const [confirmOpen, setConfirmOpen] = useState(false); // Controle do modal de delete
-  const [idsToDelete, setIdsToDelete] = useState<number[]>([]); // IDs para deletar
-  const [archiveConfirmation, setarchiveConfirmation] = useState(false) // Modal de arquivamento
-  const [idsToArchive, setIdsToArchive] = useState<number[]>([]); // IDs para arquivar
-  const [titleClass, setTitleClass] = useState<string | undefined>(undefined); // Info da turma
-  const [classDescription, setClassDescription] = useState("") // Descrição para modal
-  const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
-  const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
-  
+  // Estados para CSV
+  const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
+  const [showCsvConfirmation, setShowCsvConfirmation] = useState(false);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null); // << NOVO ESTADO
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // << NOVO REF
 
-  // ============ CÁLCULOS DERIVADOS ============
-  const totalPages = Math.ceil(classi.length / turmasPorPagina);
-  const startIndex = (currentPage - 1) * turmasPorPagina;
-  const turmasVisiveis = classi.slice(startIndex, startIndex + turmasPorPagina);
-  const isAllSelected = turmasVisiveis.every((t) => t.selected);
-  const filteredClasses = turmasVisiveis.filter((turma) =>
-    turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    turma.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
+  const [currentTurmaId, setCurrentTurmaId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingStudents, setIsFetchingStudents] = useState(false); // Loading específico para fetchStudents
+
+
+  // Função para buscar alunos da API
+  const fetchStudents = async (turmaId: number) => {
+    if (!turmaId) return;
+    setIsFetchingStudents(true);
+    try {
+      const response = await api.get(`/student/${turmaId}/list`);
+      // ATENÇÃO: O backend `/student/${turmaId}/list` PRECISA retornar student_id e name.
+      // Se ele retorna { student_id: 1, name: "Aluno X" }, o map abaixo funciona.
+      // Se ele retorna SÓ { student_id: 1 }, você NÃO TERÁ O NOME e precisará ajustar o backend.
+      const studentsFromApi = response.data.map((student: any) => ({
+        matricula: student.student_id || student.matricula || student.id, // Tente diferentes chaves comuns
+        nome: student.name || student.nome || "Nome não disponível", // Fallback se nome não vier
+        selected: false,
+      }));
+      
+      // Filtrar alunos que não puderam ser mapeados corretamente (sem matricula ou nome)
+      const validStudents = studentsFromApi.filter(
+          (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
+      );
+
+      if (validStudents.length !== studentsFromApi.length && studentsFromApi.length > 0) {
+          console.warn("Alguns alunos da API não tinham ID ou nome e foram filtrados.", studentsFromApi);
+          toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
+      }
+      
+      setClassi(validStudents);
+    } catch (error: any) {
+      console.error("Erro ao buscar alunos:", error);
+      const errorMsg = error.response?.data?.msg || `Falha ao carregar alunos da turma ${turmaId}.`;
+      toast.error(errorMsg);
+      setClassi([]);
+    } finally {
+      setIsFetchingStudents(false);
+    }
+  };
+
+  useEffect(() => {
+    const turmaId = getTurmaIdFromPath();
+    setCurrentTurmaId(turmaId);
+    if (turmaId !== null) {
+      // TODO: Chamar API para carregar detalhes da turma para `classTitle`
+      // Ex: fetchClassDetails(turmaId).then(data => setClassTitle(data.name));
+      console.log("ID da Turma para carregar alunos:", turmaId);
+      fetchStudents(turmaId);
+    }
+  }, [pathname]); // Removido getTurmaIdFromPath das dependências se ela for estável ou definida fora.
+                  // Se getTurmaIdFromPath depender de 'pathname' e for definida dentro, pode ficar como está.
+
+  const totalPages = Math.ceil(classi.length / alunosPorPagina);
+  const startIndex = (currentPage - 1) * alunosPorPagina;
+  // Aplicar filtro de busca ANTES da paginação para que a paginação reflita o total filtrado
+  const alunosFiltradosParaCalculo = classi.filter((aluno) =>
+    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const totalPagesFiltradas = Math.ceil(alunosFiltradosParaCalculo.length / alunosPorPagina);
+  const alunosVisiveis = alunosFiltradosParaCalculo.slice(startIndex, startIndex + alunosPorPagina);
+  const isAllSelected = alunosVisiveis.length > 0 && alunosVisiveis.every((t) => t.selected);
 
-  // ============ FUNÇÕES ============
-  // Alterna seleção de todas as turmas visíveis
+
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
-    const novaLista = classi.map((turma, index) => {
-      if (index >= startIndex && index < startIndex + turmasPorPagina) {
-        return { ...turma, selected: newSelected };
+    const idsVisiveis = alunosVisiveis.map(a => a.matricula);
+    const novaLista = classi.map((aluno) => {
+      if (idsVisiveis.includes(aluno.matricula)) {
+        return { ...aluno, selected: newSelected };
       }
-      return turma;
+      return aluno;
     });
     setClassi(novaLista);
   };
 
-  // Alterna seleção individual
   const toggleOne = (id: number) => {
     setClassi((prev) =>
-      prev.map((turma) =>
-        turma.id === id ? { ...turma, selected: !turma.selected } : turma
+      prev.map((aluno) =>
+        aluno.matricula === id ? { ...aluno, selected: !aluno.selected } : aluno
       )
     );
   };
 
-  // ============ CHAMADAS À API (FALTANTES) ============
-  // 1. Aqui deveria ter uma chamada para carregar as turmas inicialmente
-  // useEffect(() => {
-  //   const fetchTurmas = async () => {
-  //     const response = await fetch('/api/turmas');
-  //     const data = await response.json();
-  //     setClassi(data);
-  //   };
-  //   fetchTurmas();
-  // }, []);
-
-  // Prepara turmas para exclusão
-  const handleDeleteClass = async () => {
-    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
+  const handleDeleteStudent = async () => {
+    const selecionadas = classi.filter(aluno => aluno.selected).map(aluno => aluno.matricula);
     if (selecionadas.length === 0) return;
     setIdsToDelete(selecionadas);
-    setConfirmOpen(true);
+    setConfirmDeleteOpen(true);
   };
   
-  // 2. Aqui deveria ter a chamada real para a API de exclusão
   const confirmDeletion = async () => {
+    if (!currentTurmaId || idsToDelete.length === 0) return;
+    setIsLoading(true);
     try {
-      console.log("Excluir:", idsToDelete);
-      
-      // CHAMADA À API FALTANTE:
-      // await fetch('/api/turmas/delete', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ ids: idsToDelete }),
-      //   headers: { 'Content-Type': 'application/json' }
-      // });
+      // TODO: Iterar e chamar a API de deleção para cada ID em idsToDelete
+      // Ex: await Promise.all(idsToDelete.map(id => api.delete(`/student/${currentTurmaId}/delete/${id}`)));
+      console.log("Simulando exclusão de alunos com IDs:", idsToDelete, "da turma", currentTurmaId);
+      await new Promise(r => setTimeout(r, 500)); // Simulação de delay
 
-      // Atualização otimista do estado
-      setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
+      toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso (simulação).`);
+      fetchStudents(currentTurmaId); // Recarrega a lista
 
-      if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
-        setCurrentPage(1);
-      }
-    } catch (error) {
-      console.error("Erro ao excluir turmas:", error);
-      alert("Erro ao excluir.");
+    } catch (error: any) {
+      console.error("Erro ao excluir alunos:", error);
+      toast.error(error.response?.data?.msg || "Erro ao excluir alunos.");
     } finally {
-      setConfirmOpen(false);
+      setConfirmDeleteOpen(false);
+      setIdsToDelete([]);
+      setIsLoading(false);
     }
   };
 
-  // Prepara turmas para arquivamento
-  const archiveHandle = async () => {
-    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
-    if (selecionadas.length === 0) return;
+  const handleProcessCsvFile = (file: File) => {
+    const reader = new FileReader();
+    setCsvError(null);
+    setParsedStudentsFromCSV([]);
+    setCsvFileToUpload(null); // Limpa o arquivo anterior
 
-    if (selecionadas.length === 1) {
-      const turmaSelecionada = classi.find(turma => turma.id === selecionadas[0]);
-      setTitleClass(turmaSelecionada?.disciplina);
-      setCodeClass(turmaSelecionada?.codigo);
-      setClassDescription("Tem certeza que deseja arquivar a turma: ");
-    } else {
-      setTitleClass(undefined);
-      setCodeClass(undefined);
-      setClassDescription("Tem certeza que deseja arquivar as turmas selecionadas?"); 
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      // Divide o texto do CSV em linhas
+      const lines = text.split(/\r?\n/);
+      // No final do try bem-sucedido do parse:
+      const header = lines[0].toLowerCase().split(','); // Supondo que 'lines' existe
+      const matriculaIndex = header.indexOf('matricula');
+      const nomeIndex = header.indexOf('nome');
+
+      if (matriculaIndex === -1 || nomeIndex === -1) {
+        setCsvError("Cabeçalho do CSV deve conter 'matricula' e 'nome'.");
+        setShowCsvConfirmation(true);
+        return;
+      }
+      const students: ParsedStudent[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === '') continue;
+        const data = line.split(',');
+        if (data.length < Math.max(matriculaIndex, nomeIndex) + 1) continue;
+        const matricula = data[matriculaIndex]?.trim();
+        const nome = data[nomeIndex]?.trim();
+        if (matricula && nome) {
+          students.push({ matricula, nome });
+        }
+      }
+
+      if (students.length === 0 && !csvError) {
+        setCsvError("Nenhum aluno válido encontrado no CSV.");
+      }
+      setParsedStudentsFromCSV(students);
+      setCsvFileToUpload(file); // << GUARDA O ARQUIVO
+      setShowCsvConfirmation(true);
+      // ... (catch para erros de parse) ...
+    };
+    reader.onerror = () => { /* ... */ };
+    reader.readAsText(file);
+  };
+  
+  const resetCsvState = () => {
+    setShowCsvConfirmation(false);
+    setParsedStudentsFromCSV([]);
+    setCsvError(null);
+    setCsvFileToUpload(null); // << LIMPA O ARQUIVO
+    if (fileInputRef.current) {
+        fileInputRef.current.value = ""; 
+    }
+  };
+
+  // ESTA É A VERSÃO QUE ENVIA O ARQUIVO PARA O BACKEND
+  const handleConfirmCsvImport = async () => {
+    if (!currentTurmaId) {
+      toast.error("ID da turma não encontrado. Não é possível importar alunos.");
+      setIsLoading(false);
+      return;
+    }
+    if (!csvFileToUpload) {
+      toast.error("Nenhum arquivo CSV selecionado para importar.");
+      setIsLoading(false);
+      return;
     }
 
-    setIdsToArchive(selecionadas);
-    setarchiveConfirmation(true);
-  }
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append('csvfile', csvFileToUpload); 
 
+    try {
+      const response = await api.post(`/student/${currentTurmaId}/importcsv`, formData);
 
-  const [dossies, setDossies] = useState<Dossie[]>(
-    Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      nome: `Dossiê ${i + 1}`,
-      selecionado: false,
-    }))
-  );
-
-  const toggleSelecionado = (id: number) => {
-    setDossies((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, selecionado: !d.selecionado } : d
-      )
-    );
+      if (response.status === 201 || response.status === 207) {
+        toast.success(response.data.msg || "Importação de alunos processada!");
+        if (response.data.failures && response.data.failures.length > 0) {
+          console.warn("Alguns alunos não puderam ser importados:", response.data.failures);
+          toast(`Falhas na importação: ${response.data.failures.length} aluno(s). Verifique o console.`);
+        }
+        if (response.data.processingErrors && response.data.processingErrors.length > 0) {
+          console.warn("Erros de processamento de linha no CSV:", response.data.processingErrors);
+          toast(`Algumas linhas do CSV tiveram problemas. Verifique o console.`, { icon: "⚠️" });
+        }
+        fetchStudents(currentTurmaId); // ATUALIZA A LISTA APÓS SUCESSO
+      } else {
+        toast.error(response.data.msg || "Ocorreu um problema durante a importação.");
+      }
+    } catch (error: any) {
+      console.error("Erro ao importar alunos via CSV:", error);
+      const errorMsg = error.response?.data?.msg || "Erro ao conectar com o servidor para importar alunos.";
+      toast.error(errorMsg);
+    } finally {
+      setIsLoading(false);
+      resetCsvState();
+    }
   };
-
-  const toggleSelecionarTodos = () => {
-    const todosSelecionados = dossies.every((d) => d.selecionado);
-    setDossies((prev) =>
-      prev.map((d) => ({ ...d, selecionado: !todosSelecionados }))
-    );
-  };
-
 
   return (
     <div className={styles.pageContainer}>
+      <div className="flex-1 bg-white px-1"> {/* Ajustado para px-1 como no código original */}
+        <Header title={classTitle} mainColor={color} hoverColor={hoverColor} />
+        <ActionBar
+          mainColor={color}
+          hoverColor={hoverColor}
+          onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          onAddStudentClick={() => { /* TODO: modal para adicionar aluno individual */ }}
+        />
 
-      {/* Main content */}
-      <div className="flex-1 bg-white p-4">
+        {/* Modal de Confirmação de CSV */}
+        <Dialog open={showCsvConfirmation} onOpenChange={(isOpen) => {
+            if (!isOpen) resetCsvState();
+            // setShowCsvConfirmation(isOpen); // resetCsvState já faz setShowCsvConfirmation(false)
+        }}>
+          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
+          <DialogContent className="max-w-2xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
+            <DialogHeader className="mb-4">
+              <div className="flex items-center gap-3 justify-center">
+                  <FileText className="w-8 h-8 text-white" />
+                  <DialogTitle className="text-2xl font-bold text-center">
+                    Confirmar Importação de Alunos
+                  </DialogTitle>
+              </div>
+            </DialogHeader>
+            
+            {csvError && (
+              <div className="my-4 p-3 border border-red-700 bg-red-100 text-red-700 rounded-md text-sm">
+                <p className="font-semibold">Erro ao processar CSV:</p>
+                <p>{csvError}</p>
+              </div>
+            )}
 
-        {/* Header */}
-        <Header title={classTitle} mainColor={color} hoverColor = {hoverColor} />
+            {parsedStudentsFromCSV.length > 0 && !csvError && (
+              <>
+                <DialogDescription className="text-center text-gray-300 mb-1">
+                  Os seguintes {parsedStudentsFromCSV.length} alunos serão importados para a turma:
+                </DialogDescription>
+                <div className="max-h-72 overflow-y-auto mb-4 border border-gray-600 rounded-md p-1 bg-gray-800">
+                  <table className="min-w-full text-sm text-left">
+                    <thead className="bg-gray-700"><tr><th className="p-2">Matrícula</th><th className="p-2">Nome</th></tr></thead>
+                    <tbody>
+                      {parsedStudentsFromCSV.map((student, index) => (
+                        <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50">
+                          <td className="p-2">{student.matricula}</td><td className="p-2">{student.nome}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+            {parsedStudentsFromCSV.length === 0 && !csvError && (
+                <p className="text-center text-gray-400 my-4">Nenhum aluno para importar do arquivo selecionado.</p>
+            )}
+            <DialogFooter className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" onClick={resetCsvState} className="bg-gray-500 hover:bg-gray-600 text-white border-gray-600 rounded-full px-5 py-2 h-auto" disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button onClick={handleConfirmCsvImport} disabled={isLoading || !!csvError || parsedStudentsFromCSV.length === 0} className="bg-green-600 hover:bg-green-700 text-white rounded-full px-5 py-2 h-auto">
+                {isLoading ? "Importando..." : "Importar Alunos"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        {/* Barra de ação */}
-        <ActionBar mainColor={color} hoverColor = {hoverColor}/>
+        {/* Modal de Confirmação de Exclusão de Alunos (exemplo, se você tiver) */}
+        <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
+            <DialogContent className="max-w-md bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-center">Confirmar Exclusão</DialogTitle>
+                </DialogHeader>
+                <DialogDescription className="text-center my-4">
+                    Tem certeza que deseja excluir {idsToDelete.length} aluno(s) selecionado(s)?
+                </DialogDescription>
+                <DialogFooter className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white" disabled={isLoading}>Cancelar</Button>
+                    <Button onClick={confirmDeletion} className="bg-red-600 hover:bg-red-700 text-white" disabled={isLoading}>
+                        {isLoading ? "Excluindo..." : "Excluir"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
-        <div className="px-10 flex items-center justify-center mt-10 ml-auto">
+        <div className="px-10 flex items-center justify-center mt-10 ml-auto"> {/*px-10 no original*/}
           <ListStudents
-            students={filteredClasses}
+            students={alunosVisiveis}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
+            onDeleteStudents={handleDeleteStudent}
             isAllSelected={isAllSelected}
             currentPage={currentPage}
-            totalPages={totalPages}
+            totalPages={totalPagesFiltradas}
             setCurrentPage={setCurrentPage}
-            visualization={visualization}
-            setVisualization={setVisualization}
-            onDeleteClass={handleDeleteClass}
-            toArchiveClass={archiveHandle}
+            showInlineAddStudent={false}
+            inlineNewStudentMatricula={""}
+            setInlineNewStudentMatricula={() => {}}
+            inlineNewStudentName={""}
+            setInlineNewStudentName={() => {}}
+            inlineAddStudentError={null}
+            handleInlineAddStudent={async () => {}}
+            handleCancelInlineAdd={() => {}}
+            isLoading={isLoading}
           />
         </div>
       </div>
     </div>
   );
-}  
+}

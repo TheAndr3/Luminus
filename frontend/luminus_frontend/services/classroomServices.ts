@@ -1,12 +1,12 @@
 import {api} from './api';
 
-//CRIAR CLASSE
-interface CreatePayLoad {
-    professor_Id: number,
-    name: string,
-    description: string,
-    season: string,
-    institution: string
+// Interface para os dados da turma (sem o CSV, já que ele vai no FormData)
+interface ClassroomData {
+    professor_Id: number | string;
+    name: string;
+    description: string;
+    season: string;
+    institution: string;
 }
 
 interface CreateResponse {
@@ -24,15 +24,26 @@ interface GetClassroomResponse {
 }
 
 //FUNÇÕES
-export const CreateClassroom = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
+export const CreateClassroom = async (payload: ClassroomData): Promise<CreateResponse> => {
     try {
-        const response = await api.post('/classroom/create', payLoad);
+        const response = await api.post('/classroom/create', payload);
         return response.data;
     } catch (error:any) {
         const message = error.response?.data || 'Erro ao criar classe';
         throw new Error(message);
     }
-}
+};
+
+export const CreateClassroomWithCSV = async (formData: FormData): Promise<CreateResponse> => {
+    try {
+        const response = await api.post('/classroom/create-with-csv', formData, {
+        });
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao criar turma com CSV';
+        throw new Error(message);
+    }
+};
 
 //buscar uma turma específica
 export const GetClassroom = async (id: number): Promise<GetClassroomResponse> => {
