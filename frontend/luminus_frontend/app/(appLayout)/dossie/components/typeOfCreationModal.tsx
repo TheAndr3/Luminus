@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation"; // Importa o hook de navegação do Next.js
 
 import { Folder } from "lucide-react"; 
+import DossieTemplateDialog from "./dossieTemplateDialog";
 // Importa o ícone de pasta (Folder) da biblioteca de ícones `lucide-react`.
 
 // Tipagem das props recebidas no componente.
@@ -25,7 +26,7 @@ interface TypeOfCreationModalProps {
 
 // Componente principal que representa o modal de criação de dossiês.
 export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationModalProps) {
-    const [save, setSave] = useState(false); 
+    const [openTemplateDossie, setOpenTemplateDossie] = useState(false); 
     const router = useRouter(); // Inicializa o router
 
     // Função chamada quando o usuário clica em "Criar novo dossiê".
@@ -38,6 +39,8 @@ export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationMod
     // Função chamada quando o usuário clica em "Criar a partir de um modelo".
     const handleClickUsedDossie = () => {
         // TODO: Implementar a lógica para criar a partir de um dossiê existente.
+        setOpenTemplateDossie(true)
+
     }
 
     return (
@@ -83,6 +86,12 @@ export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationMod
                         >
                             Criar a partir de um modelo
                         </Button>
+
+
+                        <DossieTemplateDialog
+                            open={openTemplateDossie}
+                            onClose={()=> setOpenTemplateDossie(false)}
+                        />
                     </div>
                 </DialogContent>
             </Dialog>
