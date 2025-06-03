@@ -14,7 +14,7 @@ import { Check, X, User as UserIcon } from 'lucide-react'; // Importa ícones de
 // Componente de imagem otimizada do Next.js
 import Image from "next/image";
 // Painel de ações que aparece quando studentss são selecionadas
-import ActionPanel from "@/app/(appLayout)/classroom/components/actionPainel";
+import ActionPanel from "@/app/(appLayout)/classroom/components/actionPanel";
 // Hooks do React para efeitos colaterais e estado
 import { useEffect, useState } from "react";
 // Componente com ações disponíveis para cada students

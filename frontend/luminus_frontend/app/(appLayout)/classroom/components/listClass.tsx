@@ -11,7 +11,7 @@ import class_icon from "@/components/icon/icon_classroom.svg";
 // Componente do Next.js para otimizar a exibição de imagens
 import Image from "next/image";
 // Painel de ações que aparece quando pelo menos uma turma está selecionada
-import ActionPanel from "./actionPainel";
+import ActionPanel from "./actionPanel";
 // Hooks do React para controlar estados e efeitos colaterais
 import { useEffect, useState } from "react";
 

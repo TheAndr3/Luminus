@@ -6,7 +6,7 @@ import ClassViewMode from './classViewMode';
 import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
-import ActionPanel from './actionPainel';
+import ActionPanel from './actionPanel';
 import { Archive, Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
 import { useRouter } from 'next/navigation';
