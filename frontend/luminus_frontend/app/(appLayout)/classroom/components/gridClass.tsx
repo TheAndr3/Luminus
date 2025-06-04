@@ -73,6 +73,27 @@ export default function Gridclassrooms({
 
   return (
     <div className="w-full -mt-5">
+      {/* Header */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-[2vw] gap-x-[4vh] vw-1 max-w-1xl mx-auto mb-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            onChange={toggleSelectAll}
+            checked={!!isAllSelected}
+            className="w-6 h-6 accent-blue-600"
+          />
+          <span className="text-lg text-gray-600 font-bold">Selecionar todos</span>
+        </div>
+        <div></div>
+        <div className="flex gap-2 items-center justify-end">
+          <ClassViewMode
+            visualization={visualization}
+            setVisualization={setVisualization}
+          />
+          <DialogPage/>
+        </div>
+      </div>
+
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-[2vw] gap-x-[4vh] vw-1 max-w-1xl mx-auto">
         {classrooms.map((classroom) => (

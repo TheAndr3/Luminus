@@ -11,7 +11,7 @@ import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
-import { ListClassroom, DeleteClassroom } from "@/services/classroomServices";
+import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
 import DialogPage from "./components/createClassModal";
 
 export default function VizualizationClass() {
@@ -59,20 +59,24 @@ export default function VizualizationClass() {
         setIsLoading(true);
         // Pegar o ID do professor do localStorage (definido durante o login)
         const professorId = localStorage.getItem('professorId');
+        console.log('Professor ID from localStorage:', professorId);
+        
         if (!professorId) {
           throw new Error('ID do professor não encontrado');
         }
         
-        const data = await ListClassroom(Number(professorId));
+        const response = await ListClassroom(Number(professorId));
+        console.log('API Response:', response);
+        
         // Mapear a resposta da API para o formato local
-        const turmasFormatadas = Array.isArray(data) ? data.map(turma => ({
+        const turmasFormatadas = response.data.map((turma: GetClassroomResponse) => ({
           id: turma.id,
           disciplina: turma.name,
           codigo: turma.season,
           dossie: turma.description,
           selected: false
-        })) : [];
-        console.log(turmasFormatadas);
+        }));
+        console.log('Turmas Formatadas:', turmasFormatadas);
         setClassi(turmasFormatadas);
       } catch (error: any) {
         console.error("Erro ao carregar turmas:", error);
@@ -217,23 +221,27 @@ export default function VizualizationClass() {
       <div className="-mt-4">
         {/* Barra de ferramentas - sempre visível */}
         <div className="flex justify-between items-center mb-3 px-[6vh]">
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={isAllSelected}
-              onChange={toggleSelectAll}
-              className="w-6 h-6 accent-blue-600"
-              disabled={!classi || classi.length === 0}
-            />
-            <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
-          </div>
-          <div className="flex gap-2 items-center">
-            <ClassViewMode
-              visualization={visualization}
-              setVisualization={setVisualization}
-            />
-            <DialogPage/>
-          </div>
+          {(!classi || classi.length === 0) && (
+            <>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={toggleSelectAll}
+                  className="w-6 h-6 accent-blue-600"
+                  disabled={!classi || classi.length === 0}
+                />
+                <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ClassViewMode
+                  visualization={visualization}
+                  setVisualization={setVisualization}
+                />
+                <DialogPage/>
+              </div>
+            </>
+          )}
         </div>
 
         {isLoading ? (
