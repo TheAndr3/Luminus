@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 // Componente com ações disponíveis para cada students
 import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomActions";
 import { Classroom } from "../../components/types";
+import AssociarDossie from "./associarDossie";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
@@ -119,6 +120,7 @@ export default function ListStudents({
 
   return (
     <div className="w-full">
+      
       {/* Cabeçalho da tabela */}
       <table className="table-fixed w-full text-left border-separate border-spacing-y-2 rounded-md">
         <thead className="bg-gray-100">
@@ -137,7 +139,7 @@ export default function ListStudents({
             <th className="w-14 px-2"></th> {/* Ações */}
           </tr>
         </thead>
-
+        
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
