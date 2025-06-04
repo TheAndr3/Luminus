@@ -11,7 +11,7 @@ import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
-import { ListClassroom, DeleteClassroom } from "@/services/classroomServices";
+import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
 import DialogPage from "./components/createClassModal";
 
 export default function VizualizationClass() {
@@ -59,19 +59,24 @@ export default function VizualizationClass() {
         setIsLoading(true);
         // Pegar o ID do professor do localStorage (definido durante o login)
         const professorId = localStorage.getItem('professorId');
+        console.log('Professor ID from localStorage:', professorId);
+        
         if (!professorId) {
           throw new Error('ID do professor não encontrado');
         }
         
-        const data = await ListClassroom(Number(professorId));
+        const response = await ListClassroom(Number(professorId));
+        console.log('API Response:', response);
+        
         // Mapear a resposta da API para o formato local
-        const turmasFormatadas = Array.isArray(data) ? data.map(turma => ({
+        const turmasFormatadas = response.data.map((turma: GetClassroomResponse) => ({
           id: turma.id,
           disciplina: turma.name,
           codigo: turma.season,
           dossie: turma.description,
           selected: false
-        })) : [];
+        }));
+        console.log('Formatted classrooms:', turmasFormatadas);
         setClassi(turmasFormatadas);
       } catch (error: any) {
         console.error("Erro ao carregar turmas:", error);
