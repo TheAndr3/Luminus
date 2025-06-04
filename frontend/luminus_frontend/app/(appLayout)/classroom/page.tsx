@@ -76,7 +76,7 @@ export default function VizualizationClass() {
           dossie: turma.description,
           selected: false
         }));
-        console.log('Formatted classrooms:', turmasFormatadas);
+        console.log('Turmas Formatadas:', turmasFormatadas);
         setClassi(turmasFormatadas);
       } catch (error: any) {
         console.error("Erro ao carregar turmas:", error);
