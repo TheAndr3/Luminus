@@ -101,21 +101,33 @@ export default function ListClass({
         <thead>
           <tr className="text-sm text-gray-600">
             {/* Coluna com checkbox para selecionar todas as turmas */}
-            <th className="w-[0px] px-2 gap-10">
-              <input
-                type="checkbox"
-                onChange={handleToggleAll}
-                checked={!!isAllSelected}
-                className="w-6 h-6 accent-blue-600"
-              />
+            <th className="w-[0px] px-2 gap-10 whitespace-nowrap">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  onChange={handleToggleAll}
+                  checked={!!isAllSelected}
+                  className="w-6 h-6 accent-blue-600"
+                />
+                <span className="text-lg text-gray-600 font-bold">Selecionar todos</span>
+              </div>
             </th>
             {/* Ícone */}
             <th className="px-2vh text-lg"></th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
             <th className="px-2vh text-lg pl-4">Disciplina</th>
-            <th className="px-2vh text-lg pl-10">Turma</th>
-            <th className="px-2vh text-lg pl-4">Dossiê</th>
+            <th className="px-2vh text-lg pl-2">Turma</th>
+            <th className="px-2vh text-lg pl-15">Dossiê</th>
+            <th className="px-2vh text-lg">
+              <div className="flex gap-2 items-center justify-end">
+                <ClassViewMode
+                  visualization={visualization}
+                  setVisualization={setVisualization}
+                />
+                <DialogPage/>
+              </div>
+            </th>
             <th className="px-2vh text-lg"></th>
           </tr>
         </thead>
