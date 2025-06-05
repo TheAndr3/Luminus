@@ -223,23 +223,23 @@ export default function VizualizationClass() {
         <div className="flex justify-between items-center mb-3 px-[6vh]">
           {(!classi || classi.length === 0) && (
             <>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={toggleSelectAll}
+              className="w-6 h-6 accent-blue-600"
+              disabled={!classi || classi.length === 0}
+            />
+            <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
+          </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={toggleSelectAll}
-                  className="w-6 h-6 accent-blue-600"
-                  disabled={!classi || classi.length === 0}
-                />
-                <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ClassViewMode
-                  visualization={visualization}
-                  setVisualization={setVisualization}
-                />
-                <DialogPage/>
-              </div>
+            <ClassViewMode
+              visualization={visualization}
+              setVisualization={setVisualization}
+            />
+            <DialogPage/>
+          </div>
             </>
           )}
         </div>
