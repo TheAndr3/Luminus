@@ -94,7 +94,7 @@ export const UpdateClassroom = async (id: number, data: {
 //deletar uma turma
 export const DeleteClassroom = async (id: number): Promise<DeleteClassroomResponse> => {
     const response = await api.delete(`/classroom/${id}`);
-    return response.data;
+        return response.data;
 };
 
 //associar um dossiê a uma turma

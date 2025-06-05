@@ -117,7 +117,7 @@ export default function ListDossie({
                   }}
                   className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal"
                 >
-                  <Plus size={16} className="mr-1" /> Adicionar Dossiê +
+                  <Plus size={16} className="mr-1" /> Adicionar Dossiê
                 </button>
               </div>
             </th>
@@ -157,11 +157,7 @@ export default function ListDossie({
                       className="hover:text-yellow-400"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // TODO: Implementar edição
-                        console.log("Editar dossiê:", dossie.id);
-                        setOpenEditingModal(true);  // Abre o modal de edição
-                        setEditingDossie(dossie);  // Define qual turma está sendo editada
-                        setLockHover(true)
+                        router.push(`/dossie/crud?mode=update&id=${dossie.id}`);
                       }}
                     >
                       <Pencil />

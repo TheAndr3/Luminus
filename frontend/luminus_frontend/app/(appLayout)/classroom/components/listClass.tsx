@@ -116,7 +116,7 @@ export default function ListClass({
             <th className="px-2vh text-lg"></th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
-            <th className="px-2vh text-lg pl-4">Disciplina</th>
+            <th className="px-2vh text-lg pl-24">Disciplina</th>
             <th className="px-2vh text-lg pl-2">Turma</th>
             <th className="px-2vh text-lg pl-15">Dossiê</th>
             <th className="px-2vh text-lg">
@@ -152,7 +152,7 @@ export default function ListClass({
               </td>
 
               {/* Ícone que representa a turma */}
-              <td className="p-2 flex items-center">
+              <td className="p-2 -ml-30 flex items-center">
                 <Image
                   src={class_icon}
                   alt="icone classroom"
@@ -162,7 +162,7 @@ export default function ListClass({
 
               {/* Colunas com dados da turma: disciplina, código da turma e dossiê */}
               <>
-                <td className="p-2 text-xl">{classroom.disciplina}</td>
+                <td className="p-2 pl-20 text-xl">{classroom.disciplina}</td>
                 <td className="p-2 text-xl">{classroom.codigo}</td>
                 <td className="p-2 text-xl">{classroom.dossie}</td>
               </>
