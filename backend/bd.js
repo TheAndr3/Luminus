@@ -67,13 +67,16 @@ async function pgDelete(table, data) {
 
 async function pgUpdate(table, data, keys) {
     const keysNewObject = Object.keys(data);
-    const values = Object.values(data);
-    const placeHolderToWhere = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
-    const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1}`).join(', ');
+    const valuesNewObject = Object.values(data);
+    const keysWhere = Object.keys(keys);
+    const valuesWhere = Object.values(keys);
+    
+    const placeHolderToWhere = keysWhere.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+    const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1+valuesWhere.length}`).join(', ');
     const query = `UPDATE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
 
     const client = await connect();
-    return await client.query(query, values);
+    return await client.query(query, [...valuesWhere, ...valuesNewObject]);
 }
 
 async function pgDossieSelect(id) {

@@ -22,10 +22,8 @@ exports.Login = async (req, res) => {
     try {
         // Desencriptar a senha recebida
         const decryptedPassword = await decryptPassword(password);
-        console.log(decryptedPassword);
         // Buscar o professor pelo email usando pgSelect
         const rows = await db.pgSelect('Professor', { professor_email: email_professor });
-        console.log(rows);
 
         if (rows.length == 0) {
             return res.status(404).json({msg:'Usuário não encontrado'});
@@ -34,7 +32,7 @@ exports.Login = async (req, res) => {
         const professor = rows[0];
 
         // Comparar a senha desencriptada com o hash salvo
-        const passwordMatch = await bcrypt.compare(decryptedPassword, professor.password); // <--- AQUI!
+        const passwordMatch = await bcrypt.compare(decryptedPassword, professor.password); //
 
 
         if (!passwordMatch) {

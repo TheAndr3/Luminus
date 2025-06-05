@@ -6,7 +6,7 @@ import ClassViewMode from './classViewMode';
 import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
-import ActionPanel from './actionPainel';
+import ActionPanel from './actionPanel';
 import { Archive, Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
 import { useRouter } from 'next/navigation';
@@ -24,6 +24,7 @@ type GridclassroomsProps = {
 
   onDeleteClass: () => void;
   toArchiveClass: () => void;
+  toExportClass: () => void;
 };
 
 export default function Gridclassrooms({
@@ -37,7 +38,8 @@ export default function Gridclassrooms({
   visualization,
   setVisualization,
   onDeleteClass,
-  toArchiveClass
+  toArchiveClass,
+  toExportClass
 
 }: GridclassroomsProps) {
 
@@ -71,19 +73,19 @@ export default function Gridclassrooms({
 
   return (
     <div className="w-full -mt-5">
-      {/* Título e barra de ferramentas */}
-      <div className="flex justify-between items-center mb-3">
+      {/* Header */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-[2vw] gap-x-[4vh] vw-1 max-w-1xl mx-auto mb-3">
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={isAllSelected}
             onChange={toggleSelectAll}
+            checked={!!isAllSelected}
             className="w-6 h-6 accent-blue-600"
           />
-          <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
+          <span className="text-lg text-gray-600 font-bold">Selecionar todos</span>
         </div>
-        <div className="flex gap-2 items-center">
-          {/*Renderização tipo de visualização das classrooms (lista ou grade) */}
+        <div></div>
+        <div className="flex gap-2 items-center justify-end">
           <ClassViewMode
             visualization={visualization}
             setVisualization={setVisualization}
@@ -162,6 +164,11 @@ export default function Gridclassrooms({
                       
                         <button
                           className="hover:text-yellow-400"
+                          onClick={() => {
+                            classroom.selected = true;
+                            toExportClass();
+                            classroom.selected = false;
+                          }}
                         >
                       
                           <Download size={18}></Download>
@@ -208,7 +215,7 @@ export default function Gridclassrooms({
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
         {hasSelected && (
           <div className="absolute bottom-1 left">
-            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass}/>
+            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} toExport={toExportClass}/>
           </div>
         )}
       </div>

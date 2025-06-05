@@ -3,29 +3,38 @@ const csvParser = require('csv-parser'); // Importe o csv-parser
 const { Readable } = require('stream'); // Para criar um stream a partir do buffer do arquivo
 
 exports.List = async (req, res) => {
-
-  const profesor_id = req.params.profesorid;
+  const professor_id = req.params.professorid;
   var start = 0;
-  var size = 0;
+  var size = 6; // Tamanho padrão de 6 turmas por página
+
+  console.log('Listando turmas para o professor:', professor_id);
 
   try {
-    start = req.query.start;
-    size = req.query.size;
+    start = parseInt(req.query.start) || 0;
+    size = parseInt(req.query.size) || 6;
+    console.log('Parâmetros de paginação - início:', start, 'tamanho:', size);
   } catch (error) {
-    console.log(error);
+    console.log('Erro ao analisar parâmetros de paginação:', error);
   }
 
   try{
-    const classData = await db.pgSelect('classroom', {professor_id:profesor_id});
-    return res.status(200).json({msg:'sucesso', data:classData.slice(start, start+size-1), ammount:classData.length});
+    const classData = await db.pgSelect('Classroom', {professor_id:professor_id});
+    console.log('Dados brutos das turmas:', classData);
+    
+    const endIndex = start + size;
+    const slicedData = classData.slice(start, endIndex);
+    console.log('Dados fatiados:', slicedData);
+    
+    return res.status(200).json({
+      msg:'sucesso', 
+      data: slicedData, 
+      ammount: classData.length
+    });
   }
     catch (err) {
-      console.log(err)
-
+      console.log('Erro ao buscar turmas:', err)
       return res.status(400).json({msg:'falha ao atender solicitacao'});
-
     }
-  
 }
 
 exports.Get = async (req, res) => {
@@ -116,26 +125,29 @@ exports.AssociateDossier = async (req, res) => {
   try {
     //Verifica se o dossiê existe e obtém o professor_id
     const dossier = await db.pgSelect('Dossier', { id: dossierId });
-    if (!dossier) {
+    if (!dossier || dossier.length === 0) {
       return res.status(404).json({ msg: 'Dossiê não encontrado' });
     }
 
-    //Atualiza a classe com os dois campos exigidos pela FK composta
-    await db.pgUpdate(
-      'Classroom',
-      { id: classId },
-      { dossier_id: dossier.id, dossier_professor_id: dossier.professor_id }
-    );
+    // Primeiro, verifica se a turma existe
+    const classroom = await db.pgSelect('Classroom', { id: classId });
+    if (!classroom || classroom.length === 0) {
+      return res.status(404).json({ msg: 'Turma não encontrada' });
+    }
 
-    
+    // Atualiza a classe com os dois campos exigidos pela FK composta
+    const updateData = {
+      dossier_id: dossier[0].id,
+      dossier_professor_id: dossier[0].professor_id
+    };
 
-    return res.status(200).json({ msg: 'Dossiê associado' });
+    await db.pgUpdate('Classroom', updateData, { id: classId });
+
+    return res.status(200).json({ msg: 'Dossiê associado com sucesso' });
   } catch (error) {
-    console.error(error);
+    console.error('Erro ao associar dossiê:', error);
     return res.status(500).json({ msg: 'Erro ao associar dossiê' });
   }
-
-  
 };
 
 // NOVA FUNÇÃO para criar turma e importar alunos de um CSV

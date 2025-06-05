@@ -11,7 +11,7 @@ import class_icon from "@/components/icon/icon_classroom.svg";
 // Componente do Next.js para otimizar a exibição de imagens
 import Image from "next/image";
 // Painel de ações que aparece quando pelo menos uma turma está selecionada
-import ActionPanel from "./actionPainel";
+import ActionPanel from "./actionPanel";
 // Hooks do React para controlar estados e efeitos colaterais
 import { useEffect, useState } from "react";
 
@@ -36,6 +36,7 @@ type ListclassroomsProps = {
   setVisualization: (set: "grid" | "list") => void;  // Função para alterar o tipo de visualização
   onDeleteClass: () => void;  // Função para deletar as turmas selecionadas
   toArchiveClass: () => void;  // Função para arquivar as turmas selecionadas
+  toExportClass: () => void;
 };
 
 // Componente principal que renderiza a lista de turmas (classrooms)
@@ -51,6 +52,7 @@ export default function ListClass({
   setVisualization,
   onDeleteClass,
   toArchiveClass,
+  toExportClass
 }: ListclassroomsProps) {
   // Estado que indica se há pelo menos uma turma selecionada
   const [hasSelected, setHasSelected] = useState(false);
@@ -99,33 +101,34 @@ export default function ListClass({
         <thead>
           <tr className="text-sm text-gray-600">
             {/* Coluna com checkbox para selecionar todas as turmas */}
-            <th className="w-[0px] px-2 gap-10">
-              <input
-                type="checkbox"
-                onChange={handleToggleAll}
-                checked={!!isAllSelected}
-                className="w-6 h-6 accent-blue-600"
-              />
+            <th className="w-[0px] px-2 gap-10 whitespace-nowrap">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  onChange={handleToggleAll}
+                  checked={!!isAllSelected}
+                  className="w-6 h-6 accent-blue-600"
+                />
+                <span className="text-lg text-gray-600 font-bold">Selecionar todos</span>
+              </div>
             </th>
-            {/* Texto do cabeçalho para selecionar todos */}
-            <th className="px-2vh text-lg">Selecionar todos</th>
+            {/* Ícone */}
+            <th className="px-2vh text-lg"></th>
 
             {/* Cabeçalhos para as colunas principais da tabela */}
-            <th className="px-2vh text-lg pl-4">Disciplina</th>
-            <th className="px-2vh text-lg pl-10">Turma</th>
-            <th className="px-2vh text-lg pl-4">Dossiê</th>
-
-            {/* Área com botões para alternar visualização e criar nova turma */}
+            <th className="px-2vh text-lg pl-24">Disciplina</th>
+            <th className="px-2vh text-lg pl-2">Turma</th>
+            <th className="px-2vh text-lg pl-15">Dossiê</th>
             <th className="px-2vh text-lg">
               <div className="flex gap-2 items-center justify-end">
                 <ClassViewMode
                   visualization={visualization}
                   setVisualization={setVisualization}
                 />
-                {/* Botão/modal para criar nova turma */}
-                <DialogPage />
+                <DialogPage/>
               </div>
             </th>
+            <th className="px-2vh text-lg"></th>
           </tr>
         </thead>
         <tbody>
@@ -149,7 +152,7 @@ export default function ListClass({
               </td>
 
               {/* Ícone que representa a turma */}
-              <td className="p-2 flex items-center">
+              <td className="p-2 -ml-30 flex items-center">
                 <Image
                   src={class_icon}
                   alt="icone classroom"
@@ -159,7 +162,7 @@ export default function ListClass({
 
               {/* Colunas com dados da turma: disciplina, código da turma e dossiê */}
               <>
-                <td className="p-2 text-xl">{classroom.disciplina}</td>
+                <td className="p-2 pl-20 text-xl">{classroom.disciplina}</td>
                 <td className="p-2 text-xl">{classroom.codigo}</td>
                 <td className="p-2 text-xl">{classroom.dossie}</td>
               </>
@@ -205,6 +208,12 @@ export default function ListClass({
 
                     <button
                       className="hover:text-yellow-400"
+                      onClick={() => {
+                        classroom.selected = true;
+                        toExportClass();
+                        classroom.selected = false
+                      }}
+
                     >
                       <Download></Download>
                     </button>
@@ -243,6 +252,7 @@ export default function ListClass({
           <ActionPanel
             onDeleted={onDeleteClass}
             toArchive={toArchiveClass}
+            toExport={toExportClass}
           />
         )}
       </div>

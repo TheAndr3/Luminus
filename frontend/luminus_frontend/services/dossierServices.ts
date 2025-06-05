@@ -1,4 +1,4 @@
-// dossier.ts (arquivo único com tudo)
+import { api } from './api';
 
 export interface Question {
   description: string;
@@ -21,6 +21,7 @@ export interface CreateDossierPayload {
 
 export interface CreateDossierResponse {
   msg: string;
+  data?: any;
 }
 
 export interface Dossier {
@@ -34,14 +35,12 @@ export interface Dossier {
 export interface ListDossierResponse {
   msg: string;
   data: Dossier[];
+  ammount?: number;
 }
-
-// Funções axios
-import { api } from './api';
 
 export const createDossier = async (payload: CreateDossierPayload): Promise<CreateDossierResponse> => {
   try {
-    const response = await api.post('/dossiers', payload);
+    const response = await api.post('/dossier/create', payload);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao criar dossiê';
@@ -49,12 +48,56 @@ export const createDossier = async (payload: CreateDossierPayload): Promise<Crea
   }
 };
 
-export const listDossiers = async (professorId: number): Promise<ListDossierResponse> => {
+export const listDossiers = async (
+  professorId: number,
+  start?: number,
+  size?: number
+): Promise<ListDossierResponse> => {
   try {
-    const response = await api.get(`/dossiers/professor/${professorId}`);
+    const params: any = {};
+    if (start !== undefined) params.start = start;
+    if (size !== undefined) params.size = size;
+
+    const response = await api.get(`/dossier/list/${professorId}`, { params });
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 404) {
+      return {
+        msg: "Nenhum dossiê encontrado",
+        data: []
+      };
+    }
     const message = error.response?.data?.msg || 'Erro ao listar dossiês';
+    throw new Error(message);
+  }
+};
+
+export const getDossier = async (id: number): Promise<{ msg: string; data: Dossier }> => {
+  try {
+    const response = await api.get(`/dossier/${id}`);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao obter dossiê';
+    throw new Error(message);
+  }
+};
+
+export const updateDossier = async (id: number, payload: Partial<CreateDossierPayload>) => {
+  try {
+    const response = await api.put(`/dossier/${id}/edit`, payload);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao atualizar dossiê';
+    throw new Error(message);
+  }
+};
+
+export const deleteDossier = async (id: number) => {
+  try {
+    const response = await api.delete(`/dossier/${id}/delete`);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao excluir dossiê';
     throw new Error(message);
   }
 };

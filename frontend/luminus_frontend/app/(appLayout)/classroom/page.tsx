@@ -11,7 +11,8 @@ import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
-import { ListClassroom, DeleteClassroom } from "@/services/classroomServices";
+import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
+import DialogPage from "./components/createClassModal";
 
 export default function VizualizationClass() {
   // ============ ESTADOS ============
@@ -41,9 +42,9 @@ export default function VizualizationClass() {
   const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
 
   // ============ CÁLCULOS DERIVADOS ============
-  const totalPages = Math.ceil(classi.length / turmasPorPagina);
+  const totalPages = Math.ceil((classi?.length || 0) / turmasPorPagina);
   const startIndex = (currentPage - 1) * turmasPorPagina;
-  const turmasVisiveis = classi.slice(startIndex, startIndex + turmasPorPagina);
+  const turmasVisiveis = classi?.slice(startIndex, startIndex + turmasPorPagina) || [];
   const isAllSelected = turmasVisiveis.every((t) => t.selected);
   const filteredClasses = turmasVisiveis.filter((turma) =>
     turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -58,19 +59,24 @@ export default function VizualizationClass() {
         setIsLoading(true);
         // Pegar o ID do professor do localStorage (definido durante o login)
         const professorId = localStorage.getItem('professorId');
+        console.log('Professor ID from localStorage:', professorId);
+        
         if (!professorId) {
           throw new Error('ID do professor não encontrado');
         }
         
-        const data = await ListClassroom(Number(professorId));
+        const response = await ListClassroom(Number(professorId));
+        console.log('API Response:', response);
+        
         // Mapear a resposta da API para o formato local
-        const turmasFormatadas = data.map(turma => ({
+        const turmasFormatadas = response.data.map((turma: GetClassroomResponse) => ({
           id: turma.id,
           disciplina: turma.name,
           codigo: turma.season,
           dossie: turma.description,
           selected: false
         }));
+        console.log('Turmas Formatadas:', turmasFormatadas);
         setClassi(turmasFormatadas);
       } catch (error: any) {
         console.error("Erro ao carregar turmas:", error);
@@ -161,21 +167,37 @@ export default function VizualizationClass() {
     setarchiveConfirmation(true);
   }
 
-  // 3. Aqui deveria ter a chamada real para a API de arquivamento
-  // const confirmArchive = async () => {
-  //   try {
-  //     await fetch('/api/turmas/archive', {
-  //       method: 'POST',
-  //       body: JSON.stringify({ ids: idsToArchive }),
-  //       headers: { 'Content-Type': 'application/json' }
-  //     });
-  //     // Atualizar estado conforme necessário
-  //   } catch (error) {
-  //    setMessageErro("Erro ao arquivar os dados desejados!")
-  //    setMissingDialog(true) 
+  // Function to handle class export
+  const handleExportClass = () => {
+    const selectedClasses = classi.filter(turma => turma.selected);
+    if (selectedClasses.length === 0) {
+      setMessageErro("Selecione pelo menos uma turma para exportar");
+      setMissingDialog(true);
+      return;
+    }
 
-  //   }
-  // };
+    // Create CSV content
+    const headers = ["ID", "Disciplina", "Código", "Dossiê"];
+    const csvContent = [
+      headers.join(","),
+      ...selectedClasses.map(turma => [
+        turma.id,
+        turma.disciplina,
+        turma.codigo,
+        turma.dossie
+      ].join(","))
+    ].join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "turmas_exportadas.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div>
@@ -197,7 +219,40 @@ export default function VizualizationClass() {
 
       {/* Renderização condicional */}
       <div className="-mt-4">
-        {visualization === 'list' && (
+        {/* Barra de ferramentas - sempre visível */}
+        <div className="flex justify-between items-center mb-3 px-[6vh]">
+          {(!classi || classi.length === 0) && (
+            <>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={toggleSelectAll}
+              className="w-6 h-6 accent-blue-600"
+              disabled={!classi || classi.length === 0}
+            />
+            <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
+          </div>
+              <div className="flex items-center gap-2">
+            <ClassViewMode
+              visualization={visualization}
+              setVisualization={setVisualization}
+            />
+            <DialogPage/>
+          </div>
+            </>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <p>Carregando turmas...</p>
+          </div>
+        ) : filteredClasses.length === 0 ? (
+          <div className="flex justify-center items-center h-40">
+            <p>Nenhuma turma encontrada. Crie uma nova turma para começar!</p>
+          </div>
+        ) : visualization === 'list' ? (
           <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
             <ListClass
               classrooms={filteredClasses}
@@ -211,11 +266,10 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
+              toExportClass={handleExportClass}
             />
           </div>
-        )}
-
-        {visualization === 'grid' && (
+        ) : (
           <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
             <GridClass
               classrooms={filteredClasses}
@@ -229,6 +283,7 @@ export default function VizualizationClass() {
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
               toArchiveClass={archiveHandle}
+              toExportClass={handleExportClass}
             />
           </div>
         )}

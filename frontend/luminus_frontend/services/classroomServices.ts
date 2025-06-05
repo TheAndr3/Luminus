@@ -14,13 +14,21 @@ interface CreateResponse {
 }
 
 //OBTER CLASSE
-interface GetClassroomResponse {
+export interface GetClassroomResponse {
     id: number;
-    professor_id: number;
     name: string;
-    description: string;
     season: string;
-    institution: string;
+    description: string;
+}
+
+export interface ListClassroomResponse {
+    msg: string;
+    data: GetClassroomResponse[];
+    ammount: number;
+}
+
+export interface DeleteClassroomResponse {
+    msg: string;
 }
 
 //FUNÇÕES
@@ -34,13 +42,9 @@ export const CreateClassroom = async (payload: ClassroomData): Promise<CreateRes
     }
 };
 
-// NOVA FUNÇÃO para criar turma COM CSV usando FormData
 export const CreateClassroomWithCSV = async (formData: FormData): Promise<CreateResponse> => {
     try {
-        // O endpoint '/classroom/create-with-csv' é um exemplo.
-        // Você precisará definir este novo endpoint no seu backend.
         const response = await api.post('/classroom/create-with-csv', formData, {
-            // O Axios define o Content-Type automaticamente para FormData
         });
         return response.data;
     } catch (error: any) {
@@ -61,7 +65,7 @@ export const GetClassroom = async (id: number): Promise<GetClassroomResponse> =>
 }
 
 //listar as turmas
-export const ListClassroom = async (professorID: number): Promise<GetClassroomResponse[]> => {
+export const ListClassroom = async (professorID: number): Promise<ListClassroomResponse> => {
     try {
         const response = await api.get(`/classroom/list/${professorID}`);
         return response.data;
@@ -88,15 +92,10 @@ export const UpdateClassroom = async (id: number, data: {
 }
 
 //deletar uma turma
-export const DeleteClassroom = async (id: number): Promise<CreateResponse> => {
-    try {
-        const response = await api.delete(`/classroom/${id}/delete`);
+export const DeleteClassroom = async (id: number): Promise<DeleteClassroomResponse> => {
+    const response = await api.delete(`/classroom/${id}`);
         return response.data;
-    } catch (error: any) {
-        const message = error.response?.data?.msg || 'Erro ao deletar turma';
-        throw new Error(message);
-    }
-}
+};
 
 //associar um dossiê a uma turma
 export const AssociateDossier = async (classId: number, dossierId: number): Promise<CreateResponse> => {
