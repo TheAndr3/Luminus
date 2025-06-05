@@ -30,6 +30,8 @@ import { Dossie } from "./types";
 import PageController from "./paginationController";
 // Importa componente responsável pela paginação dos dossiês
 
+import { listDossiers } from "@/services/dossierServices";
+
 // Tipagem das props recebidas no componente.
 interface DossieTemplateDialogProps {
     open: boolean;        // Controla se o Dialog está aberto ou fechado.
@@ -40,81 +42,46 @@ interface DossieTemplateDialogProps {
 export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDialogProps) {
 
     const router = useRouter(); 
-    // Inicializa o router do Next.js (não está sendo usado no momento)
+    // Inicializa o router do Next.js
     
     const [searchTerm, setSearchTerm] = useState("");
     // Estado para armazenar o termo de busca digitado pelo usuário
     
     const [currentPage, setCurrentPage] = useState(0);
-    // Estado para controlar qual página da paginação está being exibida
+    // Estado para controlar qual página da paginação está sendo exibida
     
-    // Estados para integração com backend (comentados para usar mock)
-    // const [dossies, setDossies] = useState<Dossie[]>([]);
-    // const [loading, setLoading] = useState(true);
-    // const [error, setError] = useState<string | null>(null);
+    const [dossies, setDossies] = useState<Dossie[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // =============================================================================
-    // BUSCA DADOS DO BACKEND (COMENTADO PARA USAR MOCK)
-    // =============================================================================
-    /*
     useEffect(() => {
         const fetchDossies = async () => {
+            if (!open) return;
+            
             try {
                 setLoading(true);
                 setError(null);
+                const professorId = Number(localStorage.getItem('professorId'));
                 
-                // Requisição para o endpoint do backend
-                const response = await fetch('/api/dossies', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Adicione headers de autenticação se necessário
-                        // 'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                // Verifica se a requisição foi bem-sucedida
-                if (!response.ok) {
-                    throw new Error(`Erro ao buscar dossiês: ${response.status} ${response.statusText}`);
+                if (!professorId) {
+                    throw new Error('ID do professor não encontrado');
                 }
 
-                // Converte a resposta para JSON
-                const data = await response.json();
-                
-                // Atualiza o estado com os dados recebidos
-                setDossies(data);
-                
-            } catch (err) {
-                // Captura e trata erros
-                const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao carregar dossiês';
-                setError(errorMessage);
-                console.error('Erro ao buscar dossiês:', err);
-                
+                const response = await listDossiers(professorId);
+                if (response.data) {
+                    setDossies(response.data);
+                }
+            } catch (error: any) {
+                console.error('Falha ao carregar dossiês:', error);
+                setError(error.message || 'Erro ao carregar dossiês');
             } finally {
                 // Remove o loading independente do resultado
                 setLoading(false);
             }
         };
 
-        // Executa a função apenas quando o modal está aberto
-        if (open) {
-            fetchDossies();
-        }
-    }, [open]); // Dependência: reexecuta quando 'open' muda
-    */
-    
-    // =============================================================================
-    // DADOS MOCK - Exemplo populado para demonstração (ATIVO)
-    // =============================================================================
-    const dossies: Dossie[] = Array.from({ length: 30 }, (_, i) => ({
-        id: i + 1,                              // ID único do dossiê
-        name: `Dossiê ${i + 1}`,               // Nome do dossiê
-        description: `Descrição do dossiê ${i + 1}`, // Descrição do dossiê
-        evaluation_method: 'Prova escrita',     // Método de avaliação
-        professor_id: 100 + i,                  // ID do professor responsável
-    }));
-    // Cria 30 dossiês fictícios para demonstração usando Array.from()
-    // Para usar dados do backend, comente esta seção e descomente o useEffect acima
+        fetchDossies();
+    }, [open]);
 
     // =============================================================================
     // LÓGICA DE PAGINAÇÃO E FILTRO
@@ -216,61 +183,11 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                     {/* LISTA DE DOSSIÊS                                        */}
                     {/* ======================================================= */}
                     <div className="w-full min-h-[300px] space-y-2">
-                        {/* Usando dados mock - para backend descomente as seções de loading/error */}
-                        {filteredDossies.length === 0 ? (
-                            // Estado sem resultados
-                            <div className="flex justify-center items-center h-64">
-                                <div className="text-black text-xl">
-                                    {searchTerm ? 
-                                        `Nenhum dossiê encontrado para "${searchTerm}"` : 
-                                        'Nenhum dossiê disponível'
-                                    }
-                                </div>
-                            </div>
-                        ) : (
-                            // Lista de dossiês (estado normal)
-                            filteredDossies
-                                .slice(currentPage * dossiesPerPage, (currentPage + 1) * dossiesPerPage)
-                                // Aplica paginação: pega apenas os itens da página atual
-                                .map((dossie) => (
-                                    // Cada item da lista é renderizado como uma linha clicável
-                                    <div
-                                        key={dossie.id}
-                                        onClick={() => handleClickDossie(dossie)}
-                                        className="bg-[#0A2B3D] text-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors"
-                                    >
-                                        {/* Container do ícone com largura fixa */}
-                                        <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
-                                            <Folder className="w-10 h-10 text-white" />
-                                        </div>
-                                        
-                                        {/* Container do texto que ocupa o espaço restante */}
-                                        <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis pl-4">
-                                            {dossie.name}
-                                            {/* 
-                                            Classes aplicadas:
-                                            - flex-1: ocupa todo espaço disponível
-                                            - whitespace-nowrap: impede quebra de linha
-                                            - overflow-hidden: esconde texto que excede o container
-                                            - text-ellipsis: adiciona "..." quando texto é cortado
-                                            */}
-                                        </div>
-                                        
-                                        
-                                        
-                                    </div>
-                                ))
-                        )}
-                        
-                        {/* Versão com loading/error para backend (comentada): */}
-                        {/*
                         {loading ? (
-                            // Estado de carregamento
                             <div className="flex justify-center items-center h-64">
                                 <div className="text-black text-xl">Carregando dossiês...</div>
                             </div>
                         ) : error ? (
-                            // Estado de erro
                             <div className="flex justify-center items-center h-64">
                                 <div className="text-red-600 text-xl text-center">
                                     <p>Erro ao carregar dossiês:</p>
@@ -284,34 +201,44 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                                 </div>
                             </div>
                         ) : filteredDossies.length === 0 ? (
-                            // Estado sem resultados...
+                            <div className="flex justify-center items-center h-64">
+                                <div className="text-black text-xl">
+                                    {searchTerm ? 
+                                        `Nenhum dossiê encontrado para "${searchTerm}"` : 
+                                        'Nenhum dossiê disponível'
+                                    }
+                                </div>
+                            </div>
                         ) : (
-                            // Lista de dossiês...
+                            <>
+                                {filteredDossies
+                                    .slice(currentPage * dossiesPerPage, (currentPage + 1) * dossiesPerPage)
+                                    .map((dossie) => (
+                                        <div
+                                            key={dossie.id}
+                                            onClick={() => handleClickDossie(dossie)}
+                                            className="bg-[#0A2B3D] text-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors"
+                                        >
+                                            <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
+                                                <Folder className="w-10 h-10 text-white" />
+                                            </div>
+                                            <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis pl-4">
+                                                {dossie.name}
+                                            </div>
+                                        </div>
+                                    ))}
+                                {filteredDossies.length > 0 && (
+                                    <div className="mt-2">
+                                        <PageController
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            setCurrentPage={setCurrentPage}
+                                        />
+                                    </div>
+                                )}
+                            </>
                         )}
-                        */}
                     </div>
-                    
-                    {/* ======================================================= */}
-                    {/* CONTROLES DE PAGINAÇÃO                                  */}
-                    {/* ======================================================= */}
-                    {filteredDossies.length > 0 && (
-                        <div className="mt-6">
-                            <PageController
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                setCurrentPage={setCurrentPage}
-                            />
-                            {/* 
-                            Componente que renderiza:
-                            - Botões "Anterior" e "Próximo"
-                            - Números das páginas
-                            - Controla navegação entre páginas
-                            - Só é exibido quando há dados para paginar
-                            
-                            Para backend, use: !loading && !error && filteredDossies.length > 0
-                            */}
-                        </div>
-                    )}
                 </DialogContent>
             </Dialog>
         </>
