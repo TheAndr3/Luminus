@@ -1,44 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { Folder } from "lucide-react";
 import { Dossie } from "@/app/(appLayout)/dossie/components/types";
 import { useRouter } from "next/navigation";
-
+import { listDossiers } from "@/services/dossierServices";
+import { AssociateDossier } from "@/services/classroomServices";
+import { useParams } from "next/navigation";
 
 export default function AssociarDossie() {
-    const router = useRouter(); // Inicializa o router
+    const router = useRouter();
+    const params = useParams();
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
     const [currentPage, setCurrentPage] = useState(0);
-    // Estado para controlar qual página da paginação está sendo exibida
+    const [dossies, setDossies] = useState<Dossie[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isAssociating, setIsAssociating] = useState(false);
 
     const dossiesPerPage = 5;
-    // Define quantos dossiês serão exibidos por página
 
-    const dossies: Dossie[] = Array.from({ length: 0 }, (_, i) => ({
-            id: i + 1,                              // ID único do dossiê
-            name: `Dossiê ${i + 1}`,               // Nome do dossiê
-            description: `Descrição do dossiê ${i + 1}`, // Descrição do dossiê
-            evaluation_method: 'Prova escrita',     // Método de avaliação
-            professor_id: 100 + i,                  // ID do professor responsável
-        }));
+    useEffect(() => {
+        const fetchDossies = async () => {
+            if (!open) return;
+            
+            try {
+                setIsLoading(true);
+                setError(null);
+                const professorId = Number(localStorage.getItem('professorId'));
+                
+                if (!professorId) {
+                    throw new Error('ID do professor não encontrado');
+                }
+
+                const response = await listDossiers(professorId);
+                if (response.data) {
+                    setDossies(response.data);
+                }
+            } catch (error: any) {
+                console.error('Falha ao carregar dossiês:', error);
+                setError(error.message || 'Erro ao carregar dossiês');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDossies();
+    }, [open]);
 
     // FILTRO DE DOSSIÊS
     const filteredDossies = dossies.filter(dossie =>
         dossie.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleClickDossie = (dossie: Dossie) => {
-        // Implementar ação ao clicar no dossiê
+    const handleClickDossie = async (dossie: Dossie) => {
+        try {
+            setIsAssociating(true);
+            const classId = Number(params['selected-class']);
+            
+            if (!classId) {
+                throw new Error('ID da turma não encontrado');
+            }
+
+            await AssociateDossier(classId, dossie.id);
+            setOpen(false);
+            router.refresh(); // Refresh the page to show the updated association
+        } catch (error: any) {
+            console.error('Erro ao associar dossiê:', error);
+            setError(error.message || 'Erro ao associar dossiê');
+        } finally {
+            setIsAssociating(false);
+        }
     }
 
     const createDossie = () => {
-        router.push('/dossie/crud'); // Redireciona para a página de criação de dossiê
+        router.push('/dossie/crud');
         setOpen(false);
     }
 
@@ -54,27 +94,17 @@ export default function AssociarDossie() {
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
 
                 <DialogContent className="h-[600px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
-
-                    
-                        <div className="relative mb-6">
-                        
-                        {/* Container principal do cabeçalho com ícone e título */}
+                    <DialogTitle className="sr-only">Associar Dossiê</DialogTitle>
+                    <div className="relative mb-6">
                         <div className="flex items-center gap-2 justify-center">
-                            
-                            {/* Ícone de pasta posicionado à esquerda */}
                             <div className="absolute left-0 top-18 -translate-y-1/2 w-12 h-38 rounded-lg">
                                 <Folder color="white" size={50} /> 
                             </div>
-                            
-                            {/* Título principal do modal */}
                             <span className="text-4xl font-bold text-white">
-                                Titulo
+                                Associar Dossiê
                             </span>
                         </div>
 
-                        {/* ======================================================= */}
-                        {/* BARRA DE BUSCA                                          */}
-                        {/* ======================================================= */}
                         <div className="flex justify-center items-center my-[2vh] mb-[4vh]">
                             <BaseInput
                                 type="text"
@@ -86,11 +116,16 @@ export default function AssociarDossie() {
                         </div>
                     </div>
 
-                    {/* ======================================================= */}
-                    {/* LISTA DE DOSSIÊS OU ESTADO VAZIO                       */}
-                    {/* ======================================================= */}
                     <div className="w-full min-h-[300px] space-y-2 flex flex-col items-center justify-start">
-                        {filteredDossies.length === 0 ? (
+                        {isLoading ? (
+                            <div className="text-white text-2xl mb-4">
+                                Carregando dossiês...
+                            </div>
+                        ) : error ? (
+                            <div className="text-white text-2xl mb-4">
+                                {error}
+                            </div>
+                        ) : filteredDossies.length === 0 ? (
                             <>
                                 <div className="text-white text-2xl mb-4">
                                     Sem dossiês criados
@@ -105,8 +140,8 @@ export default function AssociarDossie() {
                                 .map((dossie) => (
                                     <div
                                         key={dossie.id}
-                                        onClick={() => handleClickDossie(dossie)}
-                                        className="bg-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors"
+                                        onClick={() => !isAssociating && handleClickDossie(dossie)}
+                                        className={`bg-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors ${isAssociating ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
                                             <Folder className="w-10 h-10 text-black" />
