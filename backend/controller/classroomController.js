@@ -125,24 +125,29 @@ exports.AssociateDossier = async (req, res) => {
   try {
     //Verifica se o dossiê existe e obtém o professor_id
     const dossier = await db.pgSelect('Dossier', { id: dossierId });
-    if (!dossier) {
+    if (!dossier || dossier.length === 0) {
       return res.status(404).json({ msg: 'Dossiê não encontrado' });
     }
 
-    //Atualiza a classe com os dois campos exigidos pela FK composta
-    await db.pgUpdate(
-      'Classroom',
-      { id: classId },
-      { dossier_id: dossier.id, dossier_professor_id: dossier.professor_id }
-    );
+    // Primeiro, verifica se a turma existe
+    const classroom = await db.pgSelect('Classroom', { id: classId });
+    if (!classroom || classroom.length === 0) {
+      return res.status(404).json({ msg: 'Turma não encontrada' });
+    }
 
-    return res.status(200).json({ msg: 'Dossiê associado' });
+    // Atualiza a classe com os dois campos exigidos pela FK composta
+    const updateData = {
+      dossier_id: dossier[0].id,
+      dossier_professor_id: dossier[0].professor_id
+    };
+
+    await db.pgUpdate('Classroom', updateData, { id: classId });
+
+    return res.status(200).json({ msg: 'Dossiê associado com sucesso' });
   } catch (error) {
-    console.error(error);
+    console.error('Erro ao associar dossiê:', error);
     return res.status(500).json({ msg: 'Erro ao associar dossiê' });
   }
-
-  
 };
 
 // NOVA FUNÇÃO para criar turma e importar alunos de um CSV
