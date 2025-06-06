@@ -2,7 +2,7 @@ import {api} from './api';
 
 // Interface para os dados da turma (sem o CSV, já que ele vai no FormData)
 interface ClassroomData {
-    professor_Id: number | string;
+    professor_id: number | string;
     name: string;
     description: string;
     season: string;
