@@ -56,8 +56,9 @@ exports.Create = async (req, res) => {
             id: req.body.id,
             name: req.body.name
         };
-
+        console.log('Backend: Tentando inserir em student com payload:', payload); // Novo log
         const studentresp = await db.pgInsert('student', payload);
+        console.log('Backend: student inserido com sucesso:', studentresp);
 
         payload = {
             professor_id:req.body.professor_id,

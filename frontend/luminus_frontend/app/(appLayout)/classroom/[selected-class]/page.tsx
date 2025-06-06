@@ -1,20 +1,32 @@
-
 // luminus_frontend/app/(appLayout)/classroom/[selected-class]/page.tsx
-"use client";
+"use client"
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { usePathname } from 'next/navigation';
-import { Header } from "./components/Header";
-import { ActionBar } from "./components/ActionBar";
+// Componentes e tipos
 import ListStudents from "./components/listStudents";
-import { Students } from "./components/types";
-import { GetClassroom, GetClassroomResponse as TurmaDetailsResponse } from '@/services/classroomServices';
-import { ListStudents as ListStudentsService, StudentListResponse, StudentGetResponse } from '@/services/studentService';
-import { toast } from 'react-hot-toast';
+import { Students } from "./components/types"; // Corrigido o caminho se 'types.ts' estiver na mesma pasta de componentes
+import React, { useState, useEffect, useRef } from 'react'; // Adicionado useRef
+import { Button } from "@/components/ui/button";
 import { darkenHexColor } from '@/utils/colorHover';
+// import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
+import { Header } from "./components/Header";
+import { ActionBar} from "./components/ActionBar"; // Corrigido nome do componente para ActionBar
+import { FileText } from "lucide-react"; // Manteve FileText
 import styles from './selected-classroom.module.css';
-import { FileText, Users } from "lucide-react";
-import { api } from '@/services/api'; // Importa o Axios instance (ajuste o caminho se necessário)
+import { toast } from 'react-hot-toast'; 
+import { api } from "@/services/api";
+// Removido CreateStudent pois a importação em massa usará um endpoint diferente
+// import { CreateStudent } from "@/services/studentService"; 
+import { usePathname } from 'next/navigation';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogOverlay
+} from "@/components/ui/dialog";
 
 type ParsedStudent = {
   matricula: string;
@@ -30,108 +42,25 @@ interface ExpectedCreateResponse {
 
 export default function VisualizacaoAlunos() {
   const pathname = usePathname();
-
-  const [turmaId, setTurmaId] = useState<number | null>(null);
-  const [turmaDetails, setTurmaDetails] = useState<TurmaDetailsResponse | null>(null);
-  const [students, setStudents] = useState<Students[]>([]);
-  const [isLoadingTurma, setIsLoadingTurma] = useState(true);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
-  const [errorState, setErrorState] = useState<string | null>(null);
-
-  // UI states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const alunosPorPagina = 6;
+  const getTurmaIdFromPath = () => {
+    const parts = pathname.split('/');
+    const idStr = parts[parts.length - 1];
+    const id = parseInt(idStr, 10);
+    return isNaN(id) ? null : id;
+  };
 
   const color = "#ec3360";
   const hoverColor = darkenHexColor(color, 25);
+  const [classTitle, setClassTitle] = useState("Carregando Turma..."); // Tornar dinâmico
 
-  // 1. Extrai o ID da turma da URL
-  useEffect(() => {
-    if (pathname) {
-      const segments = pathname.split('/');
-      const idString = segments[segments.length - 1];
-      const id = parseInt(idString, 10);
-      if (!isNaN(id) && id > 0) {
-        setTurmaId(id);
-      } else {
-        setErrorState("Turma não encontrada (ID inválido).");
-        setIsLoadingTurma(false);
-        setIsLoadingStudents(false);
-      }
-    }
-  }, [pathname]);
-
-  // 2. Busca detalhes da turma
-  const fetchTurmaDetails = useCallback(async (id: number) => {
-    setIsLoadingTurma(true);
-    setErrorState(null);
-    try {
-      const data = await GetClassroom(id);
-      setTurmaDetails(data);
-    } catch (error: any) {
-      setErrorState(error.message || "Falha ao carregar dados da turma.");
-      setTurmaDetails(null);
-      toast.error(error.message || "Falha ao carregar dados da turma.");
-    } finally {
-      setIsLoadingTurma(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (turmaId !== null) {
-      fetchTurmaDetails(turmaId);
-    }
-  }, [turmaId, fetchTurmaDetails]);
-
-  // 3. Busca alunos da turma
-  const fetchStudents = useCallback(async (id: number) => {
-    setIsLoadingStudents(true);
-    try {
-      const response = await ListStudentsService(id);
-      if (response && Array.isArray(response)) {
-        const formattedStudents: Students[] = response.map((student: StudentGetResponse) => ({
-          matricula: student.id,
-          nome: student.name,
-          selected: false,
-        }));
-        setStudents(formattedStudents);
-      } else {
-        setStudents([]);
-      }
-    } catch (error: any) {
-      setStudents([]);
-    } finally {
-      setIsLoadingStudents(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (turmaId !== null) {
-      fetchStudents(turmaId);
-    }
-  }, [turmaId, fetchStudents]);
-
-  // Filtros, paginação e seleção
-  const alunosFiltrados = students.filter((aluno) =>
-    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    aluno.matricula.toString().includes(searchTerm)
-  );
-  const totalPages = Math.ceil(alunosFiltrados.length / alunosPorPagina);
-  const startIndex = (currentPage - 1) * alunosPorPagina;
-  const alunosVisiveis = alunosFiltrados.slice(startIndex, startIndex + alunosPorPagina);
-  const isAllSelected = alunosVisiveis.length > 0 && alunosVisiveis.every((s) => s.selected);
-
-  const toggleSelectAll = () => {
-    const newState = !isAllSelected;
-    setStudents(prev => prev.map(s =>
-      alunosVisiveis.find(av => av.matricula === s.matricula) ? { ...s, selected: newState } : s
-    ));
-  };
-  const toggleOne = (matricula: number) => {
-    setStudents(prev => prev.map(s => s.matricula === matricula ? { ...s, selected: !s.selected } : s));
-  };
-
+  // const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Se não usar grid, pode remover
+  const [classi, setClassi] = useState<Students[]>([]); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const alunosPorPagina = 6; // Ajuste conforme necessário
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false); // Renomeado para clareza
+  const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  
   // Estados para CSV
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
   const [showCsvConfirmation, setShowCsvConfirmation] = useState(false);
@@ -139,6 +68,7 @@ export default function VisualizacaoAlunos() {
   const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null); // << NOVO ESTADO
   const fileInputRef = useRef<HTMLInputElement | null>(null); // << NOVO REF
 
+  const [currentTurmaId, setCurrentTurmaId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingStudents, setIsFetchingStudents] = useState(false); // Loading específico para fetchStudents
 
@@ -156,7 +86,7 @@ export default function VisualizacaoAlunos() {
 
 
   // Função para buscar alunos da API
-  const fetchStudentsApi = async (turmaId: number) => {
+  const fetchStudents = async (turmaId: number) => {
     if (!turmaId) return;
     setIsFetchingStudents(true);
     try {
@@ -180,52 +110,134 @@ export default function VisualizacaoAlunos() {
           toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
       }
       
-      setStudents(validStudents);
+      setClassi(validStudents);
     } catch (error: any) {
       console.error("Erro ao buscar alunos:", error);
       const errorMsg = error.response?.data?.msg || `Falha ao carregar alunos da turma ${turmaId}.`;
       toast.error(errorMsg);
-      setStudents([]);
+      setClassi([]);
     } finally {
       setIsFetchingStudents(false);
     }
   };
 
   useEffect(() => {
-    if (turmaId !== null) {
-      fetchStudentsApi(turmaId);
-    }
+    const turmaId = getTurmaIdFromPath();
+    setCurrentTurmaId(turmaId);
     if (turmaId !== null) {
       // TODO: Chamar API para carregar detalhes da turma para `classTitle`
       // Ex: fetchClassDetails(turmaId).then(data => setClassTitle(data.name));
       console.log("ID da Turma para carregar alunos:", turmaId);
-      fetchStudentsApi(turmaId);
+      fetchStudents(turmaId);
     }
   }, [pathname]); // Removido getTurmaIdFromPath das dependências se ela for estável ou definida fora.
                   // Se getTurmaIdFromPath depender de 'pathname' e for definida dentro, pode ficar como está.
 
-  // Placeholder para ações (adapte conforme necessário)
-  const handleProcessCsvFile = (file: File) => {
-    if (!turmaId) return;
-    toast(`Implementar upload de CSV '${file.name}' para turma ID ${turmaId}`);
-    // Lembre-se de chamar fetchStudents(turmaId) após o sucesso do upload para atualizar a lista.
-  };
-  const handleAddStudentClick = () => {
-    if (!turmaId) return;
-    toast(`Implementar adição de aluno individual para turma ID ${turmaId}`);
-    // Lembre-se de chamar fetchStudents(turmaId) após o sucesso para atualizar a lista.
-  };
-  const handleDeleteStudents = () => {
-    if (!turmaId) return;
-    const selectedStudents = students.filter(s => s.selected).map(s => s.matricula);
-    if (selectedStudents.length === 0) {
-      toast.error("Nenhum aluno selecionado.");
-      return;
-    }
-    toast(`Implementar deleção dos alunos: ${selectedStudents.join(', ')} da turma ID ${turmaId}`);
-    // Lembre-se de chamar fetchStudents(turmaId) após o sucesso para atualizar a lista.
+  const totalPages = Math.ceil(classi.length / alunosPorPagina);
+  const startIndex = (currentPage - 1) * alunosPorPagina;
+  // Aplicar filtro de busca ANTES da paginação para que a paginação reflita o total filtrado
+  const alunosFiltradosParaCalculo = classi.filter((aluno) =>
+    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPagesFiltradas = Math.ceil(alunosFiltradosParaCalculo.length / alunosPorPagina);
+  const alunosVisiveis = alunosFiltradosParaCalculo.slice(startIndex, startIndex + alunosPorPagina);
+  const isAllSelected = alunosVisiveis.length > 0 && alunosVisiveis.every((t) => t.selected);
+
+
+  const toggleSelectAll = () => {
+    const newSelected = !isAllSelected;
+    const idsVisiveis = alunosVisiveis.map(a => a.matricula);
+    const novaLista = classi.map((aluno) => {
+      if (idsVisiveis.includes(aluno.matricula)) {
+        return { ...aluno, selected: newSelected };
+      }
+      return aluno;
+    });
+    setClassi(novaLista);
   };
 
+  const toggleOne = (id: number) => {
+    setClassi((prev) =>
+      prev.map((aluno) =>
+        aluno.matricula === id ? { ...aluno, selected: !aluno.selected } : aluno
+      )
+    );
+  };
+
+  const handleDeleteStudent = async () => {
+    const selecionadas = classi.filter(aluno => aluno.selected).map(aluno => aluno.matricula);
+    if (selecionadas.length === 0) return;
+    setIdsToDelete(selecionadas);
+    setConfirmDeleteOpen(true);
+  };
+  
+  const confirmDeletion = async () => {
+    if (!currentTurmaId || idsToDelete.length === 0) return;
+    setIsLoading(true);
+    try {
+      // TODO: Iterar e chamar a API de deleção para cada ID em idsToDelete
+      // Ex: await Promise.all(idsToDelete.map(id => api.delete(`/student/${currentTurmaId}/delete/${id}`)));
+      console.log("Simulando exclusão de alunos com IDs:", idsToDelete, "da turma", currentTurmaId);
+      await new Promise(r => setTimeout(r, 500)); // Simulação de delay
+
+      toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso (simulação).`);
+      fetchStudents(currentTurmaId); // Recarrega a lista
+
+    } catch (error: any) {
+      console.error("Erro ao excluir alunos:", error);
+      toast.error(error.response?.data?.msg || "Erro ao excluir alunos.");
+    } finally {
+      setConfirmDeleteOpen(false);
+      setIdsToDelete([]);
+      setIsLoading(false);
+    }
+  };
+
+  const handleProcessCsvFile = (file: File) => {
+    const reader = new FileReader();
+    setCsvError(null);
+    setParsedStudentsFromCSV([]);
+    setCsvFileToUpload(null); // Limpa o arquivo anterior
+
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      // Divide o texto do CSV em linhas
+      const lines = text.split(/\r?\n/);
+      // No final do try bem-sucedido do parse:
+      const header = lines[0].toLowerCase().split(','); // Supondo que 'lines' existe
+      const matriculaIndex = header.indexOf('matricula');
+      const nomeIndex = header.indexOf('nome');
+
+      if (matriculaIndex === -1 || nomeIndex === -1) {
+        setCsvError("Cabeçalho do CSV deve conter 'matricula' e 'nome'.");
+        setShowCsvConfirmation(true);
+        return;
+      }
+      const students: ParsedStudent[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim() === '') continue;
+        const data = line.split(',');
+        if (data.length < Math.max(matriculaIndex, nomeIndex) + 1) continue;
+        const matricula = data[matriculaIndex]?.trim();
+        const nome = data[nomeIndex]?.trim();
+        if (matricula && nome) {
+          students.push({ matricula, nome });
+        }
+      }
+
+      if (students.length === 0 && !csvError) {
+        setCsvError("Nenhum aluno válido encontrado no CSV.");
+      }
+      setParsedStudentsFromCSV(students);
+      setCsvFileToUpload(file); // << GUARDA O ARQUIVO
+      setShowCsvConfirmation(true);
+      // ... (catch para erros de parse) ...
+    };
+    reader.onerror = () => { /* ... */ };
+    reader.readAsText(file);
+  };
+  
   const resetCsvState = () => {
     setShowCsvConfirmation(false);
     setParsedStudentsFromCSV([]);
@@ -238,7 +250,7 @@ export default function VisualizacaoAlunos() {
 
   // ESTA É A VERSÃO QUE ENVIA O ARQUIVO PARA O BACKEND
   const handleConfirmCsvImport = async () => {
-    if (!turmaId) {
+    if (!currentTurmaId) {
       toast.error("ID da turma não encontrado. Não é possível importar alunos.");
       setIsLoading(false);
       return;
@@ -254,7 +266,7 @@ export default function VisualizacaoAlunos() {
     formData.append('csvfile', csvFileToUpload); 
 
     try {
-      const response = await api.post(`/student/${turmaId}/importcsv`, formData);
+      const response = await api.post(`/student/${currentTurmaId}/importcsv`, formData);
 
       if (response.status === 201 || response.status === 207) {
         toast.success(response.data.msg || "Importação de alunos processada!");
@@ -266,7 +278,7 @@ export default function VisualizacaoAlunos() {
           console.warn("Erros de processamento de linha no CSV:", response.data.processingErrors);
           toast(`Algumas linhas do CSV tiveram problemas. Verifique o console.`, { icon: "⚠️" });
         }
-        fetchStudents(turmaId); // ATUALIZA A LISTA APÓS SUCESSO
+        fetchStudents(currentTurmaId); // ATUALIZA A LISTA APÓS SUCESSO
       } else {
         toast.error(response.data.msg || "Ocorreu um problema durante a importação.");
       }
@@ -375,12 +387,12 @@ export default function VisualizacaoAlunos() {
 
   return (
     <div className={styles.pageContainer}>
-      <div className="flex-1 bg-white px-1">
+      <div className="flex-1 bg-white px-1"> {/* Ajustado para px-1 como no código original */}
         <Header title={classTitle} mainColor={color} hoverColor={hoverColor} />
         <ActionBar
           mainColor={color}
           hoverColor={hoverColor}
-          onCsvFileSelected={handleProcessCsvFile}
+          onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
           onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
