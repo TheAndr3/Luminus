@@ -13,13 +13,14 @@ exports.Create = async (req, res) => {
     
     //insere no banco de dados o novo dossie
     const dossie = await db.pgInsert('dossier', payload);
+    const lastDossie = await db.pgSelect('dossier', {professor_id:professor_id, name:name});
 
     //pra cada sessao existente insere no banco de dados as sessoes pertencentes a esse dossie
     for (let i = 0; i < sections.length; i++) {
       var section = sections[i];
       const questions = section.questions;
       payload = {
-        dossier_id:dossie.id,
+        dossier_id:lastDossie[0].id,
         professor_id:professor_id,
         name:section.name,
         description:section.description,
@@ -27,15 +28,16 @@ exports.Create = async (req, res) => {
       }
 
       //atualiza o objeto sessao para conter agora tambem seu Id
-      section = await db.pgInsert('Section', payload);
+      await db.pgInsert('Section', payload);
+      var lastSection = await db.pgSelect('Section', {professor_id:professor_id, name:section.name, dossier_id:lastDossie[0].id});
 
       //para cada questao dentro desta sessao, cria uma nova entrada no banco de dados
       for (let j = 0; j < questions.length; j++) {
         var question = questions[j];
         payload = {
           professor_id:professor_id,
-          dossier_id:dossie.id,
-          section_id:section.id,
+          dossier_id:lastDossie[0].id,
+          section_id:lastSection[0].id,
           description:question.description
         }
         
