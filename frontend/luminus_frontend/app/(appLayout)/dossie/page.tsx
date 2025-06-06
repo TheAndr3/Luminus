@@ -10,7 +10,9 @@ import { ArchiveConfirmation } from "./components/archiveConfirmation";
 import { ErroMessageDialog } from "./components/erroMessageDialog";
 import { ExportConfirmDialog } from './components/exportConfirmDialog';
 import ExportDownloadDialog from './components/exportDownloadDialog';
+import TypeOfCreationModal from './components/typeOfCreationModal';
 import { listDossiers, deleteDossier } from '@/services/dossierServices';
+
 
 export default function GerenciarDossies() {
   // ============ ESTADOS ============
@@ -31,6 +33,8 @@ export default function GerenciarDossies() {
   const [idsToExport, setIdsToExport] = useState<number[]>([]);
   const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
   const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
+
+  const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
 
   let typeOfData = "Dossie";
 
@@ -116,7 +120,7 @@ export default function GerenciarDossies() {
   };
 
   const handleCreateDossie = () => {
-    // TODO: Implementar criação de dossiê
+    setOpenTypeOfCreation(true);
     console.log("Criando dossiê");
   };
 
@@ -315,6 +319,12 @@ export default function GerenciarDossies() {
         onClose={()=>setOpenDownloadDialog(false)}
         description={"Dossiê exportado"}
         typeOfData={typeOfData}
+      />
+
+      {/* Modal de criação de dossiê */}
+      <TypeOfCreationModal
+        open={openTypeOfCreation}
+        onClose={() => setOpenTypeOfCreation(false)}
       />
     </div>
   );
