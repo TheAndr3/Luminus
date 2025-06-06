@@ -130,16 +130,34 @@ export default function GerenciarDossies() {
   const confirmDeletion = async () => {
     try {
       setIsLoading(true);
+      const failedDeletions: number[] = [];
+      
       // Deletar cada dossiê selecionado
       for (const id of idsToDelete) {
-        await deleteDossier(id);
+        try {
+          await deleteDossier(id);
+        } catch (error) {
+          console.error(`Erro ao deletar dossiê ${id}:`, error);
+          failedDeletions.push(id);
+        }
+      }
+
+      // Se houver falhas, mostra mensagem de erro
+      if (failedDeletions.length > 0) {
+        setMessageErro(`Não foi possível excluir ${failedDeletions.length} dossiê(s). Por favor, tente novamente.`);
+        setMissingDialog(true);
+        return;
       }
 
       // Atualização otimista do estado
       setDossies(prev => prev.filter(dossie => !idsToDelete.includes(dossie.id)));
 
-      if (currentPage > Math.ceil((dossies.length - idsToDelete.length) / dossiesPorPagina)) {
-        setCurrentPage(1);
+      // Ajusta a página atual se necessário
+      const remainingDossiers = dossies.length - idsToDelete.length;
+      const newTotalPages = Math.ceil(remainingDossiers / dossiesPorPagina);
+      
+      if (currentPage > newTotalPages) {
+        setCurrentPage(Math.max(1, newTotalPages));
       }
     } catch (error: any) {
       console.error("Erro ao excluir dossiês:", error);
@@ -148,6 +166,7 @@ export default function GerenciarDossies() {
     } finally {
       setIsLoading(false);
       setConfirmOpen(false);
+      setIdsToDelete([]); // Limpa os IDs após a operação
     }
   };
 
