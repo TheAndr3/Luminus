@@ -80,42 +80,59 @@ async function pgUpdate(table, data, keys) {
 }
 
 async function pgDossieSelect(id) {
+    // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
     const query = `
+    WITH dossier_data AS (
+        SELECT d.id, d.name, d.description, d.evaluation_method
+        FROM dossier d
+        WHERE d.id = $1
+    )
     SELECT 
-    json_build_object(
-        'id', d.id,
-        'name', d.name,
-        'description', d.description,
-        'evaluation_method', d.evaluation_method,
-        'sections', json_agg(
-        DISTINCT jsonb_build_object(
-            'id', s.id,
-            'name', s.name,
-            'description', s.description,
-            'weigth', s.weigth,
-            'questions', (
-            SELECT COALESCE(json_agg(
-                jsonb_build_object(
-                'id', q.id,
-                'description', q.description
-                )
-            ), '[]'::json)
-            FROM question q
-            WHERE q.section_id = s.id AND q.dossier_id = d.id
+        json_build_object(
+            'id', d.id,
+            'name', d.name,
+            'description', d.description,
+            'evaluation_method', d.evaluation_method,
+            'sections', COALESCE(
+                json_agg(
+                    jsonb_build_object(
+                        'id', s.id,
+                        'name', s.name,
+                        'description', s.description,
+                        'weigth', s.weigth,
+                        'questions', (
+                            SELECT COALESCE(
+                                json_agg(
+                                    jsonb_build_object(
+                                        'id', q.id,
+                                        'description', q.description
+                                    )
+                                ),
+                                '[]'::json
+                            )
+                            FROM question q
+                            WHERE q.section_id = s.id AND q.dossier_id = d.id
+                        )
+                    )
+                ) FILTER (WHERE s.id IS NOT NULL),
+                '[]'::json
             )
-        )
-        )
-    ) AS dossier
-    FROM dossier d
+        ) AS dossier
+    FROM dossier_data d
     LEFT JOIN section s ON s.dossier_id = d.id
-    WHERE d.id = $1
-    GROUP BY d.id, d.name;
+    GROUP BY d.id, d.name, d.description, d.evaluation_method;
 `;
 
     const client = await connect();
-
     const data = await client.query(query, [id]);
-    return data.rows;
+    
+    // Retorna null se nenhum dossiê for encontrado
+    if (!data.rows || data.rows.length === 0) {
+        return null;
+    }
+    
+    // Retorna o objeto dossiê diretamente
+    return data.rows[0].dossier;
 }
 
 async function pgDossieUpdate(data) {

@@ -22,7 +22,7 @@ export default function AssociarDossie() {
     const [error, setError] = useState<string | null>(null);
     const [isAssociating, setIsAssociating] = useState(false);
 
-    const dossiesPerPage = 5;
+    const dossiesPerPage = 6;
 
     useEffect(() => {
         const fetchDossies = async () => {

@@ -1,0 +1,223 @@
+/*preencherDossie/preencherDossie.module.css */
+
+.pageContainer {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f4f6f8;
+    /* Cor de fundo suave */
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.pageHeader {
+    background-color: #7E85C7;
+    /* Roxo  */
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pageHeader h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.headerActions button {
+    margin-left: 15px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.toggleButton {
+    background-color: #60A5FA;
+    /* Azul*/
+    color: white;
+}
+
+.toggleButton:hover {
+    background-color: #3B82F6;
+}
+
+.saveButton {
+    background-color: #000000;
+    /* Preto */
+    color: white;
+}
+
+.saveButton:hover {
+    background-color: #333;
+}
+
+.mainContent {
+    flex-grow: 1;
+    padding: 25px 35px;
+    max-width: 900px;
+    /* Limita a largura */
+    margin: 0 auto;
+    /* Centraliza o conteúdo */
+    width: 100%;
+}
+
+.dossierHeader {
+    background-color: #ffffff;
+    padding: 20px 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dossierHeader h2 {
+    font-size: 1.5rem;
+    color: #7E85C7;
+    /* Roxo */
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.dossierDescription {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.dossierMeta {
+    font-size: 0.9rem;
+    color: #777;
+    font-style: italic;
+}
+
+.dossierMetaField {
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.dossierMetaField label {
+    margin-right: 8px;
+    color: #555;
+    font-weight: 500;
+}
+
+.metaInput {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-width: 250px;
+}
+
+.sectionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.sectionCard {
+    background-color: #ffffff;
+    padding: 20px 25px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border-left: 5px solid #A5B4FC;
+    /* Cor de destaque */
+}
+
+.sectionTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #374151;
+    /* Cor escura  */
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.sectionGuidance {
+    font-size: 0.9rem;
+    color: #6B7280;
+    /* Cinza */
+    margin-bottom: 20px;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.itemsList {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* Espaçamento maior entre itens */
+}
+
+.itemRow {
+    border-top: 1px solid #e5e7eb;
+    /* Divisor sutil */
+    padding-top: 15px;
+}
+
+.itemRow:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.itemDescriptionLabel {
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1F2937;
+    /* Cor escura do seu exemplo */
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.itemTextarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    /* Borda */
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #333;
+    resize: vertical;
+    /* Permite redimensionar verticalmente */
+    min-height: 60px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.itemTextarea:focus {
+    border-color: #3B82F6;
+    /* Azul */
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.itemTextarea::placeholder {
+    color: #9CA3AF;
+    /* Placeholder */
+}
+
+.itemAnswerDisplay {
+    font-size: 0.95rem;
+    color: #333;
+    background-color: #f9fafb;
+    padding: 10px 12px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    /* Mantém quebras de linha */
+    word-break: break-word;
+    min-height: 40px;
+    /* Para alinhar visualmente com o textarea */
+}
+
+.emptyAnswer {
+    color: #9CA3AF;
+    font-style: italic;
+}

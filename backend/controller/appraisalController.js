@@ -19,7 +19,7 @@ exports.List = async (req, res) => {
 
         if (Object.values(dataStudent).length > 0) {
 
-            return res.status(200).json({msg:"sucess", data:dataStudent.slice(start, start+size-1), ammount:dataStudent.length});
+            return res.status(200).json({msg:"sucess", data:dataStudent, ammount:dataStudent.length});
         } else {
             return res.status(400).json({msg:'nao ha estudantes nessa turma'});
         }
