@@ -22,7 +22,7 @@ exports.List = async (req, res) => {
     console.log('Dados brutos das turmas:', classData);
     
     const endIndex = start + size;
-    const slicedData = classData.slice(start, endIndex);
+    const slicedData = classData;
     console.log('Dados fatiados:', slicedData);
     
     return res.status(200).json({
