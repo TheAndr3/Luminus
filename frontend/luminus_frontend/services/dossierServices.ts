@@ -30,6 +30,16 @@ export interface Dossier {
   name: string;
   description: string;
   evaluation_method: string;
+  sections: {
+    id: number;
+    name: string;
+    description: string;
+    weigth: number;
+    questions: {
+      id: number;
+      description: string;
+    }[];
+  }[];
 }
 
 export interface ListDossierResponse {
