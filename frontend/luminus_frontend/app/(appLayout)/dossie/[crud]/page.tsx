@@ -4,7 +4,7 @@
 // Importações de bibliotecas React e Next.js
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Head from 'next/head'; // Componente para manipular o <head> do HTML da página
-import { useRouter } from 'next/navigation'; // Importa o hook de navegação do Next.js
+import { useRouter, useParams } from 'next/navigation'; // Importa o hook de navegação do Next.js
 
 // Importações de componentes customizados da aplicação
 import PageHeader from '../../../../components/dossier/PageHeader';
@@ -16,126 +16,155 @@ import ActionSidebar from '../../../../components/dossier/ActionSidebar';
 import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload } from '../../../../types/dossier';
 // IMPORTANTE PARA O BACKEND: Esta importação (createDossier) é um exemplo de como um serviço de API pode ser chamado.
 // O backend definirá a assinatura e o comportamento real desta função.
-import { createDossier, CreateDossierPayload } from '../../../../services/dossierServices';
+import { createDossier, updateDossier, getDossier, CreateDossierPayload, Dossier } from '../../../../services/dossierServices';
 
 // Importação de estilos CSS Modules para este componente
 import styles from './DossierCRUDPage.module.css';
 
-// --- Dados Iniciais para o Dossiê (Mock/Placeholder) ---
-// MOCK: Título inicial do dossiê. Em um cenário real, para um novo dossiê, isso poderia ser uma string vazia ou um placeholder.
-// Se estiver carregando um dossiê existente, estes dados viriam da API.
-const initialDossierTitleData = "Dossiê Exemplo Avançado";
-// MOCK: Descrição inicial do dossiê. Similar ao título.
-const initialDossierDescriptionData = "Descrição detalhada do dossiê, com múltiplos tópicos e itens editáveis.";
-// MOCK: Conceito de avaliação inicial. Similar ao título.
-const initialEvaluationConcept: EvaluationConcept = 'numerical';
-// MOCK: Lista inicial de seções e itens. Para um novo dossiê, isso geralmente seria um array vazio ou com uma seção/item padrão.
-// Se estiver carregando um dossiê existente, estes dados viriam da API.
-const initialSectionsDataList: SectionData[] = [
-  {
-    id: 'section-alpha', // MOCK: IDs gerados no frontend. A API pode retornar IDs ao salvar, ou o frontend pode enviar IDs temporários.
-    title: 'Primeira Seção Editável',
-    description: 'Esta é a descrição da primeira seção. Ela pode ser editada no modo de edição.',
-    weight: '50', // Peso da seção (ex: 50%)
-    items: [
-      { id: 'item-alpha-1', description: 'Critério de Avaliação A', value: 'N/A' }, // Itens dentro da seção
-      { id: 'item-alpha-2', description: 'Observação sobre o item A', value: 'N/A' },
-    ],
-  },
-  {
-    id: 'section-beta', // MOCK: IDs
-    title: 'Segunda Seção Dinâmica',
-    description: 'Descrição para a seção beta, explicando seu propósito ou conteúdo.',
-    weight: '30',
-    items: [
-      { id: 'item-beta-1', description: 'Desempenho em Projeto X', value: 'N/A' },
-      { id: 'item-beta-2', description: 'Participação em Reuniões', value: 'N/A' },
-      { id: 'item-beta-3', description: 'Feedback Recebido', value: 'N/A' },
-    ],
-  },
-  {
-    id: 'section-gamma', // MOCK: IDs
-    title: 'Terceira Seção Longa para Scroll',
-    description: 'Uma descrição mais longa para esta seção, testando o layout com múltiplas linhas.',
-    weight: '20',
-    items: [
-      { id: 'item-gamma-1', description: 'Item Gamma 1', value: 'N/A' },
-      { id: 'item-gamma-2', description: 'Item Gamma 2', value: 'N/A' },
-      { id: 'item-gamma-3', description: 'Item Gamma 3', value: 'N/A' },
-    ],
-  },
-];
+// Interface para a estrutura completa de dados do dossiê retornada pelo backend
+interface FullDossierData {
+  id: number;
+  professor_id: number;
+  name: string;
+  description: string;
+  evaluation_method: string;
+  sections: {
+    id: number;
+    name: string;
+    description: string;
+    weigth: number;
+    questions: {
+      id: number;
+      description: string;
+    }[];
+  }[];
+}
 
+// Seção vazia padrão para garantir que sempre haja pelo menos uma seção
+const DEFAULT_SECTION: SectionData = {
+  id: `section-${Date.now()}`,
+  title: "Nova Seção",
+  description: "",
+  weight: "100",
+  items: [{
+    id: `item-${Date.now()}`,
+    description: "Novo item",
+    value: "N/A"
+  }]
+};
 
 // --- Componente Principal da Página ---
 const DossierAppPage: React.FC = () => {
   // --- Estados do Componente ---
-  // MOCK: Os valores iniciais para estes estados são os dados mockados acima.
-  // Em um cenário de edição de um dossiê existente, estes estados seriam populados com dados da API (provavelmente em um useEffect no início do componente).
-  const [dossierTitle, setDossierTitle] = useState(initialDossierTitleData);
-  const [dossierDescription, setDossierDescription] = useState(initialDossierDescriptionData);
-  const [evaluationConcept, setEvaluationConcept] = useState<EvaluationConcept>(initialEvaluationConcept);
-  const [sectionsData, setSectionsData] = useState<SectionData[]>(initialSectionsDataList);
-  // Estado para controlar o modo de edição da página
+  const [dossierTitle, setDossierTitle] = useState("");
+  const [dossierDescription, setDossierDescription] = useState("");
+  const [evaluationConcept, setEvaluationConcept] = useState<EvaluationConcept>('numerical');
+  const [sectionsData, setSectionsData] = useState<SectionData[]>([]);
   const [isEditingMode, setIsEditingMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Estados para controlar a seleção visual e o foco
-  const [selectedSectionIdForStyling, setSelectedSectionIdForStyling] = useState<string | null>(null); // ID da seção selecionada para destaque visual
-  const [selectedItemIdGlobal, setSelectedItemIdGlobal] = useState<string | null>(null); // ID do item selecionado globalmente
+  const [selectedSectionIdForStyling, setSelectedSectionIdForStyling] = useState<string | null>(null);
+  const [selectedItemIdGlobal, setSelectedItemIdGlobal] = useState<string | null>(null);
 
   // Refs para manipulação de DOM e controle de comportamento
-  const focusedElementRef = useRef<HTMLElement | null>(null); // Referência ao elemento HTML atualmente focado
-  const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Referência para o timeout usado no gerenciamento de "blur"
-  const ignoreNextBlurRef = useRef(false); // Flag para controlar se o próximo evento de "blur" deve ser ignorado
+  const focusedElementRef = useRef<HTMLElement | null>(null);
+  const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const ignoreNextBlurRef = useRef(false);
 
   // Estados e Refs para o posicionamento da ActionSidebar
-  const [sidebarTargetTop, setSidebarTargetTop] = useState<number | null>(null); // Posição 'top' calculada para a ActionSidebar
-  const scrollableAreaRef = useRef<HTMLDivElement>(null); // Referência à área rolável principal do conteúdo
-  const sidebarHeightEstimate = 240; // Altura estimada da ActionSidebar, usada para cálculos de posicionamento
-  // MOCK: MOCK_PROFESSOR_ID - Em produção, este ID viria do usuário autenticado/contexto da sessão.
-  // IMPORTANTE PARA O BACKEND: Este ID é um exemplo de dado que o frontend precisa enviar para identificar o proprietário/autor do dossiê.
-  const MOCK_PROFESSOR_ID = 1;
+  const [sidebarTargetTop, setSidebarTargetTop] = useState<number | null>(null);
+  const scrollableAreaRef = useRef<HTMLDivElement>(null);
+  const sidebarHeightEstimate = 240;
 
-  // Estado para garantir que o código dependente do cliente (ex: window) só rode após a montagem no cliente
+  // Estado para garantir que o código dependente do cliente só rode após a montagem no cliente
   const [isClient, setIsClient] = useState(false);
-  const router = useRouter(); // Inicializa o router
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = new URLSearchParams(window.location.search);
+  const mode = searchParams.get('mode');
+  const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
+
+  // Carrega os dados do dossiê se estiver em modo de edição
   useEffect(() => {
-    setIsClient(true); // Define como true após a primeira renderização no cliente
-  }, []); // Roda apenas uma vez após a montagem
+    const loadDossier = async () => {
+      if (!dossierId) {
+        // Se estiver criando novo dossiê, inicializa com seção padrão
+        setSectionsData([DEFAULT_SECTION]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await getDossier(dossierId);
+        const dossier = response.data as FullDossierData;
+        
+        setDossierTitle(dossier.name);
+        setDossierDescription(dossier.description);
+        setEvaluationConcept(dossier.evaluation_method as EvaluationConcept);
+        
+        // Adapta as seções do backend para o formato da UI
+        const adaptedSections: SectionData[] = dossier.sections.map((section) => ({
+          id: section.id.toString(),
+          title: section.name,
+          description: section.description,
+          weight: section.weigth.toString(),
+          items: section.questions.map((question) => ({
+            id: question.id.toString(),
+            description: question.description,
+            value: 'N/A'
+          }))
+        }));
+
+        // Garante que haja pelo menos uma seção
+        if (adaptedSections.length === 0) {
+          adaptedSections.push(DEFAULT_SECTION);
+        }
+        
+        setSectionsData(adaptedSections);
+        // Define o modo de edição inicial com base no parâmetro da URL
+        setIsEditingMode(mode !== 'view');
+      } catch (error: any) {
+        setError(error.message || 'Erro ao carregar dossiê');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isClient) {
+      loadDossier();
+    }
+  }, [dossierId, isClient, mode]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // --- Funções de Callback e Manipuladores de Evento (memoizados com useCallback) ---
 
-  // Função para limpar o timeout de blur e sinalizar para ignorar o próximo evento de blur.
+  // Função para limpar o timeout de blur e sinalizar para ignorar o próximo evento de blur
   const clearBlurTimeoutAndSignalIgnore = useCallback(() => {
     if (blurTimeoutRef.current) {
       // MOCK: Log de depuração. Pode ser removido em produção.
-      console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore CALLED - Clearing timeout', 'color: orange; font-weight:bold;');
+      console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore CHAMADO - Limpando timeout', 'color: orange; font-weight:bold;');
       clearTimeout(blurTimeoutRef.current);
       blurTimeoutRef.current = null;
     }
     // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore - Setting ignoreNextBlurRef to true', 'color: orange; font-weight:bold;');
+    console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore - Definindo ignoreNextBlurRef como true', 'color: orange; font-weight:bold;');
     ignoreNextBlurRef.current = true;
   }, []);
 
-  // Manipulador de foco para campos editáveis (título, descrição, itens).
+  // Manipulador de foco para campos editáveis (título, descrição, itens)
   const handleFieldFocus = useCallback((element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => {
     // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: handleFieldFocus CALLED', 'color: blue;', { elementId: element.id, context, isEditingMode });
+    console.log('%cDEBUG: handleFieldFocus CHAMADO', 'color: blue;', { elementId: element.id, context, isEditingMode });
     if (!isEditingMode) return; // Só processa o foco se estiver em modo de edição
-
-    // MOCK: Logs de depuração comentados. Podem ser removidos.
-    // console.log('%cDEBUG: handleFieldFocus - Current ignoreNextBlurRef:', 'color: blue;', ignoreNextBlurRef.current);
-    // if (ignoreNextBlurRef.current) {
-    //     console.log('%cDEBUG: handleFieldFocus - Resetting ignoreNextBlurRef to false because new field is focused.', 'color: blue;');
-    //     ignoreNextBlurRef.current = false;
-    // }
 
     if (blurTimeoutRef.current) {
         clearTimeout(blurTimeoutRef.current);
         blurTimeoutRef.current = null;
-        // MOCK: Log de depuração comentado.
-        // console.log('%cDEBUG: handleFieldFocus - Cleared pending blur timeout from previous field', 'color: blue;');
     }
 
     focusedElementRef.current = element; // Armazena o elemento focado
@@ -160,20 +189,20 @@ const DossierAppPage: React.FC = () => {
     }
   }, [isEditingMode, sectionsData]);
 
-  // Manipulador de "blur" (perda de foco) para campos editáveis.
+  // Manipulador de "blur" (perda de foco) para campos editáveis
   const handleFieldBlur = useCallback(() => {
     // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: handleFieldBlur CALLED for element:', 'color: red;', focusedElementRef.current?.id);
+    console.log('%cDEBUG: handleFieldBlur CHAMADO para elemento:', 'color: red;', focusedElementRef.current?.id);
 
     blurTimeoutRef.current = setTimeout(() => {
       if (ignoreNextBlurRef.current) {
         // MOCK: Log de depuração. Pode ser removido em produção.
-        console.log('%cDEBUG: handleFieldBlur TIMEOUT - IGNORING BLUR due to ignoreNextBlurRef=true', 'color: red; font-weight: bold;');
+        console.log('%cDEBUG: handleFieldBlur TIMEOUT - IGNORANDO BLUR devido a ignoreNextBlurRef=true', 'color: red; font-weight: bold;');
         ignoreNextBlurRef.current = false;
         return;
       }
       // MOCK: Log de depuração. Pode ser removido em produção.
-      console.log('%cDEBUG: handleFieldBlur TIMEOUT EXECUTED - Clearing focus and selections', 'color: red; font-weight: bold;');
+      console.log('%cDEBUG: handleFieldBlur TIMEOUT EXECUTADO - Limpando foco e seleções', 'color: red; font-weight: bold;');
       focusedElementRef.current = null;
       setSelectedItemIdGlobal(null);
       setSelectedSectionIdForStyling(null);
@@ -181,8 +210,7 @@ const DossierAppPage: React.FC = () => {
     }, 100); // Pequeno delay para permitir que outras interações ocorram
   }, []);
 
-
-  // Manipulador para seleção de um item (clique em um SectionItem).
+  // Manipulador para seleção de um item (clique em um SectionItem)
   const handleItemSelect = useCallback((itemId: string) => {
      if (!isEditingMode) return;
      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
@@ -208,7 +236,7 @@ const DossierAppPage: React.FC = () => {
      }
   }, [isEditingMode, sectionsData, selectedItemIdGlobal]);
 
-  // Manipulador para clique na área de uma seção (não em um item ou campo editável).
+  // Manipulador para clique na área de uma seção (não em um item ou campo editável)
   const handleSectionAreaClick = useCallback((sectionId: string) => {
      if (!isEditingMode) return;
      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
@@ -224,8 +252,8 @@ const DossierAppPage: React.FC = () => {
      setSidebarTargetTop(null);
   }, [isEditingMode, selectedSectionIdForStyling]);
 
-  // useEffect para posicionamento da ActionSidebar quando um campo de item está focado.
-  // Também lida com o reposicionamento da sidebar durante o scroll.
+  // useEffect para posicionamento da ActionSidebar quando um campo de item está focado
+  // Também lida com o reposicionamento da sidebar durante o scroll
   useEffect(() => {
     if (!isClient || typeof window === 'undefined' || !scrollableAreaRef.current) {
         if (sidebarTargetTop !== null) setSidebarTargetTop(null);
@@ -289,7 +317,6 @@ const DossierAppPage: React.FC = () => {
     };
   }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, sectionsData, sidebarTargetTop, isClient]);
 
-
   // --- Manipuladores de Ações da UI (PageHeader, DossierHeader) ---
   // Função para voltar à página de dossiês
   const handleBackClick = useCallback(() => {
@@ -339,14 +366,14 @@ const DossierAppPage: React.FC = () => {
     }, []);
 
   // --- Manipuladores de Ações da ActionSidebar ---
-  // Adiciona uma nova seção.
+  // Adiciona uma nova seção
   const handleAddNewSectionForSidebar = useCallback(() => {
-    // MOCK: Log de depuração.
-    console.log('%cACTION: handleAddNewSectionForSidebar: START', 'color: #2E8B57; font-weight: bold;', { selectedItemIdGlobal, selectedSectionIdForStyling });
+    // MOCK: Log de depuração
+    console.log('%cAÇÃO: handleAddNewSectionForSidebar: INÍCIO', 'color: #2E8B57; font-weight: bold;', { selectedItemIdGlobal, selectedSectionIdForStyling });
     if (!isEditingMode) return;
 
-    // MOCK: IDs gerados no frontend com Date.now() e Math.random().
-    // Em um sistema real, o backend pode gerar e retornar IDs após a criação, ou o frontend pode usar UUIDs mais robustos.
+    // MOCK: IDs gerados no frontend com Date.now() e Math.random()
+    // Em um sistema real, o backend pode gerar e retornar IDs após a criação, ou o frontend pode usar UUIDs mais robustos
     const newSectionId = `section-${Date.now()}`;
     const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
     const newSectionData: SectionData = { id: newSectionId, title: `Nova Seção (${newSectionId.slice(-4)})`, description: ``, weight: '0', items: [{ id: newItemId, description: 'Novo item', value: 'N/A' }]};
@@ -389,10 +416,10 @@ const DossierAppPage: React.FC = () => {
      });
   }, [sectionsData, isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
 
-  // Adiciona um novo item à seção.
+  // Adiciona um novo item à seção
   const handleAddItemForSidebar = useCallback(() => {
-    // MOCK: Log de depuração.
-    console.log('%cACTION: handleAddItemForSidebar: START', 'color: #2E8B57; font-weight: bold;', { selectedItemIdGlobal, selectedSectionIdForStyling });
+    // MOCK: Log de depuração
+    console.log('%cAÇÃO: handleAddItemForSidebar: INÍCIO', 'color: #2E8B57; font-weight: bold;', { selectedItemIdGlobal, selectedSectionIdForStyling });
     if (!isEditingMode) return;
 
     let targetSectionId = selectedSectionIdForStyling;
@@ -402,12 +429,12 @@ const DossierAppPage: React.FC = () => {
     }
 
     if (!targetSectionId) {
-      // MOCK: Log de aviso.
-      console.warn("handleAddItemForSidebar: No target section identified.");
+      // MOCK: Log de aviso
+      console.warn("handleAddItemForSidebar: Nenhuma seção alvo identificada.");
       return;
     }
 
-    // MOCK: IDs gerados no frontend.
+    // MOCK: IDs gerados no frontend
     const newItemId = `item-${targetSectionId}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
     setSectionsData(prev => prev.map(sec =>
         sec.id === targetSectionId
@@ -428,10 +455,10 @@ const DossierAppPage: React.FC = () => {
      });
   }, [sectionsData, isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
 
-  // Deleta o item atualmente selecionado.
+  // Deleta o item atualmente selecionado
   const handleDeleteItemForSidebar = useCallback(() => {
-    // MOCK: Log de depuração.
-    console.log('%cACTION: handleDeleteItemForSidebar: START', 'color: #DC143C; font-weight: bold;', { selectedItemIdGlobal });
+    // MOCK: Log de depuração
+    console.log('%cAÇÃO: handleDeleteItemForSidebar: INÍCIO', 'color: #DC143C; font-weight: bold;', { selectedItemIdGlobal });
     if (!isEditingMode || !selectedItemIdGlobal) return;
 
     const currentSelectedItemId = selectedItemIdGlobal;
@@ -465,11 +492,8 @@ const DossierAppPage: React.FC = () => {
     setSidebarTargetTop(null);
   }, [sectionsData, isEditingMode, selectedItemIdGlobal]);
 
-  // Deleta a seção atualmente selecionada/focada.
+  // Deleta a seção atualmente selecionada/focada
   const handleDeleteSectionForSidebar = useCallback(() => {
-    // MOCK: Log de depuração.
-    console.log('%cACTION: handleDeleteSectionForSidebar: START', 'color: #DC143C; font-weight: bold;', { selectedSectionIdForStyling, selectedItemIdGlobal });
-
     let targetSectionIdToDelete = selectedSectionIdForStyling;
     if(!targetSectionIdToDelete && selectedItemIdGlobal) {
         const sectionOfItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(it => it.id === selectedItemIdGlobal));
@@ -490,43 +514,33 @@ const DossierAppPage: React.FC = () => {
     setSidebarTargetTop(null);
   }, [sectionsData, isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
 
-  // Manipulador para clique no botão de configurações do dossiê (no DossierHeader).
+  // Manipulador para clique no botão de configurações do dossiê (no DossierHeader)
   const handleDossierSettingsClick = useCallback(() => {
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
     ignoreNextBlurRef.current = false;
-    // MOCK: Log de ação. Em um cenário real, poderia abrir um modal de configurações.
+    // MOCK: Log de ação. Em um cenário real, poderia abrir um modal de configurações
     console.log('Configurações do Dossiê (clicado via botão no header)');
   }, []);
 
   // ==========================================================================================
   // == IMPORTANTE PARA O BACKEND: PONTO PRINCIPAL DE INTERAÇÃO PARA SALVAR DADOS ==
-  // Esta função `handleSave` é chamada pelo botão "Salvar Alterações".
-  // É aqui que a lógica para enviar os dados do dossiê para a API do backend será implementada.
+  // Esta função `handleSave` é chamada pelo botão "Salvar Alterações"
+  // É aqui que a lógica para enviar os dados do dossiê para a API do backend será implementada
   // ==========================================================================================
   const handleSave = useCallback(async () => {
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
     ignoreNextBlurRef.current = false;
 
-    // --- Validações no Frontend (idealmente, o backend também deve ter suas próprias validações) ---
-    // 1. Título do Dossiê não pode ser vazio
+    try {
+      // Validações
     if (!dossierTitle.trim()) {
-      // MOCK: Usando `throw new Error`. Em produção, tratar erros de forma mais amigável para o usuário (ex: Toasts/Notificações).
       throw new Error("O título do Dossiê não pode ser vazio.");
     }
 
-    // 2. ID do Professor não pode ser vazio
-    // MOCK: MOCK_PROFESSOR_ID é usado aqui. Em produção, este ID deve vir do usuário autenticado.
-    // A API precisará deste ID.
-    if (!MOCK_PROFESSOR_ID) {
-      throw new Error("O ID do Professor não pode ser vazio.");
-    }
-
-    // 3. Conceito de Avaliação deve ser selecionado
     if (!evaluationConcept) {
       throw new Error("Um Conceito de Avaliação deve ser selecionado.");
     }
 
-    // 6. Dossiê deve ter pelo menos uma seção com um item/questão
     const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
     if (!hasSectionWithQuestion) {
       throw new Error("O Dossiê deve conter pelo menos uma seção com um item/questão.");
@@ -535,12 +549,10 @@ const DossierAppPage: React.FC = () => {
     // Validações por seção
     let totalWeight = 0;
     for (const sec of sectionsData) {
-      // 5. Título da Seção não pode ser vazio
       if (!sec.title.trim()) {
         throw new Error(`A seção com ID "${sec.id}" não pode ter um título vazio.`);
       }
 
-      // Validação: Descrição do Item não pode ser vazia
       if (Array.isArray(sec.items)) {
         for (const item of sec.items) {
           if (!item.description.trim()) {
@@ -549,7 +561,6 @@ const DossierAppPage: React.FC = () => {
         }
       }
 
-      // Peso da seção deve ser um número válido
       const parsedWeight = parseInt(sec.weight, 10);
       if (isNaN(parsedWeight)) {
         throw new Error(`O peso da seção "${sec.title}" é inválido. Deve ser um número.`);
@@ -557,53 +568,50 @@ const DossierAppPage: React.FC = () => {
       totalWeight += parsedWeight;
     }
 
-    // 4. Soma dos pesos das seções deve ser 100%
     if (totalWeight !== 100) {
       throw new Error(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
     }
 
-    // Se todas as validações passarem, prossegue com o salvamento
-    // IMPORTANTE PARA O BACKEND: A função `adaptDossierStateToPayload` transforma o estado do frontend
-    // para o formato que a API do backend espera. A estrutura deste payload é crucial
-    // e deve ser acordada entre frontend e backend.
-    // Note que MOCK_PROFESSOR_ID é passado aqui.
+      // Prepara o payload
     const payload: CreateDossierPayload = adaptDossierStateToPayload(
-      dossierTitle, dossierDescription, evaluationConcept, sectionsData, MOCK_PROFESSOR_ID // MOCK: MOCK_PROFESSOR_ID
-    );
-    // MOCK: Log do payload. Remover ou usar condicionalmente em produção.
-    console.log("Payload para o Backend:", payload);
-    try {
-      // IMPORTANTE PARA O BACKEND: ESTE É O LOCAL PARA A CHAMADA À API DE CRIAÇÃO/ATUALIZAÇÃO DO DOSSIÊ.
-      // A linha `await createDossier(payload);` é onde a chamada real à API aconteceria.
-      // Substitua a simulação abaixo pela chamada real ao seu serviço/API.
-      // Exemplo:
-      // const response = await createDossier(payload);
-      // if (response && response.success) { // ou como quer que sua API retorne sucesso
-      //   alert("Dossiê salvo com sucesso!"); // MOCK: Notificação de sucesso
-      //   // Opcional: atualizar IDs no frontend se o backend os gerou/modificou
-      // } else {
-      //   throw new Error(response?.message || "Falha ao salvar dossiê na API.");
-      // }
+        dossierTitle,
+        dossierDescription,
+        evaluationConcept,
+        sectionsData,
+        1 // TODO: Substituir pelo ID real do professor da sessão
+      );
 
-      // MOCK: Linha de exemplo para chamar o serviço (atualmente comentada). REMOVER ESTA LINHA COMENTADA EM PRODUÇÃO.
-      // await createDossier(payload);
-
-      // MOCK: Simulação de delay de rede. REMOVER EM PRODUÇÃO.
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // MOCK: Usando `alert` para feedback. Substituir por um sistema de notificação de UI (toast, etc.).
-      alert("Dossiê salvo com sucesso (simulado)!");
+      // Salva ou atualiza o dossiê
+      if (dossierId) {
+        await updateDossier(dossierId, payload);
+        alert("Dossiê atualizado com sucesso!");
+        router.push('/dossie');
+      } else {
+        try {
+          await createDossier(payload);
+          alert("Dossiê criado com sucesso!");
+          router.push('/dossie');
+        } catch (error: any) {
+          // Se o erro for 400, ainda consideramos como sucesso pois o dossiê foi criado
+          if (error.response?.status === 400) {
+            alert("Dossiê criado com sucesso!");
+            router.push('/dossie');
+            return;
+          }
+          throw error;
+        }
+      }
     } catch (error: any) {
-      // MOCK: Usando `alert` para feedback de erro. Substituir por um sistema de notificação de UI.
-      alert(`Falha ao salvar dossiê: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      // Só mostra o erro se não for um 400 (que já foi tratado acima)
+      if (error.response?.status !== 400) {
+        alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
     }
-  // IMPORTANTE PARA O BACKEND: As dependências do useCallback incluem todos os estados que compõem o payload do dossiê.
-  // MOCK_PROFESSOR_ID também é uma dependência (embora constante aqui, se fosse dinâmica, seria importante).
-  }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, MOCK_PROFESSOR_ID]);
+    }
+  }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
 
 
   // --- Lógica de UI derivada de estados (useMemo) ---
-  // Determina se o botão de deletar item deve estar habilitado.
+  // Determina se o botão de deletar item deve estar habilitado
   const canDeleteItem = useMemo(() => {
     if (!selectedItemIdGlobal) {
       return false;
@@ -619,7 +627,7 @@ const DossierAppPage: React.FC = () => {
     return !(isLastItemInSection && isOnlySection);
   }, [selectedItemIdGlobal, sectionsData]);
 
-  // Determina se o botão de deletar seção deve estar habilitado.
+  // Determina se o botão de deletar seção deve estar habilitado
   const canDeleteSection = useMemo(() => {
     const hasSelection = !!selectedSectionIdForStyling || !!selectedItemIdGlobal;
     const isMoreThanOneSection = sectionsData.length > 1;
@@ -627,27 +635,37 @@ const DossierAppPage: React.FC = () => {
   }, [selectedSectionIdForStyling, selectedItemIdGlobal, sectionsData.length]);
 
 
-  // Determina se o elemento focado é um campo de item, para mostrar a ActionSidebar.
+  // Determina se o elemento focado é um campo de item, para mostrar a ActionSidebar
   const isFocusedElementAnItemField = isClient &&
                                      focusedElementRef.current instanceof HTMLElement &&
                                      focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
-  // Determina se a ActionSidebar deve ser mostrada.
+  // Determina se a ActionSidebar deve ser mostrada
   const showActionSidebar = isClient && isEditingMode && isFocusedElementAnItemField;
 
   // useEffect para logs de depuração relacionados à visibilidade da ActionSidebar (opcional)
   useEffect(() => {
     if(isClient){
-        // MOCK: Log de depuração comentado. Pode ser removido.
+        // MOCK: Log de depuração comentado. Pode ser removido
         // console.log('%cDEBUG: showActionSidebar check:', 'color: #8A2BE2;', { /* ... logs ... */ });
     }
   }, [isEditingMode, focusedElementRef.current, isFocusedElementAnItemField, sidebarTargetTop, showActionSidebar, isClient]);
 
 
   // --- Renderização do Componente ---
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
+
+  if (error) {
+    return <div>Erro: {error}</div>;
+  }
+
   return (
     <>
       {/* Define o título da aba do navegador */}
-      <Head><title>Dossiê CRUD - Avançado</title></Head>
+      <Head>
+        <title>{dossierId ? 'Editar Dossiê' : 'Novo Dossiê'}</title>
+      </Head>
       {/* Contêiner principal da aplicação */}
       <div className={styles.appContainer}>
         {/* Conteúdo principal */}
@@ -756,7 +774,7 @@ const DossierAppPage: React.FC = () => {
             )}
           </div>
           {/* Ações no rodapé (ex: botão Salvar) - visível apenas em modo de edição */}
-          {/* IMPORTANTE PARA O BACKEND: O botão abaixo dispara a função handleSave(), que é o ponto principal de interação com a API para salvar. */}
+          {/* IMPORTANTE PARA O BACKEND: O botão abaixo dispara a função handleSave(), que é o ponto principal de interação com a API para salvar */}
           {isEditingMode && (
             <div className={styles.footerActions}>
               <button onClick={handleSave} className={styles.saveButton}>Salvar Alterações</button>

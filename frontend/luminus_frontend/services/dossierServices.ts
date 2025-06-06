@@ -43,8 +43,7 @@ export const createDossier = async (payload: CreateDossierPayload): Promise<Crea
     const response = await api.post('/dossier/create', payload);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.msg || 'Erro ao criar dossiê';
-    throw new Error(message);
+    throw error;
   }
 };
 

@@ -51,12 +51,12 @@ exports.Create = async (req, res) => {
 
 exports.List = async(req, res) => {
   const professor_id = req.params.professorid;
-  const start = 0;
-  const size = 6;
+  let start = 0;
+  let size = 6;
 
   try{
-    start = req.query.start;
-    size = req.query.size;
+    start = parseInt(req.query.start) || 0;
+    size = parseInt(req.query.size) || 6;
   } catch (erro) {
     console.log(erro);
   }
@@ -65,7 +65,7 @@ exports.List = async(req, res) => {
     const payload = {professor_id:professor_id};
     const result = await db.pgSelect('dossier', payload);
 
-    return res.status(200).json({msg:'sucesso', data:result.slice(start, start+size-1), ammount:result.length});
+    return res.status(200).json({msg:'sucesso', data:result, ammount:result.length});
   } catch (error) {
     console.log(error);
     return res.status(400).json({msg:'falha ao atender sua solicitacao'});
@@ -77,9 +77,13 @@ exports.Get = async (req, res) => {
 
   try {
     const dossier = await db.pgDossieSelect(id);
+    if (!dossier) {
+      return res.status(404).json({msg:'Dossiê não encontrado'});
+    }
     return res.status(200).json({msg:'sucesso', data:dossier});
   } catch (error) {
-    return res.status(400).json({msg:'falha no envio da solicitação'})
+    console.error('Erro ao buscar dossiê:', error);
+    return res.status(500).json({msg:'Erro interno ao buscar dossiê'});
   }
 }
 

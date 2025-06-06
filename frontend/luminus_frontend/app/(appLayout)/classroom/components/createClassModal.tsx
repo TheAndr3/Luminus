@@ -94,8 +94,8 @@ export default function DialogPage() {
             if (csvFileToUpload) {
                 // Cria a turma com o arquivo CSV
                 const formData = new FormData();
-                formData.append('file', csvFileToUpload);
-                formData.append('professor_Id', professorId);
+                formData.append('csvfile', csvFileToUpload);
+                formData.append('professor_id', professorId);
                 formData.append('name', titulo);
                 formData.append('description', inputDisc);
                 formData.append('season', inputPer);
@@ -115,7 +115,7 @@ export default function DialogPage() {
 
                 // Cria a turma sem o arquivo CSV
                 const newClassData = {
-                    professor_Id: Number(professorId),
+                    professor_id: Number(professorId),
                     name: titulo,
                     description: inputDisc,
                     season: inputPer,
