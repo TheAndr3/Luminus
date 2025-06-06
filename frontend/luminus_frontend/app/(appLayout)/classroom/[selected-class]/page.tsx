@@ -324,53 +324,46 @@ export default function VisualizacaoAlunos() {
         return;
       }
 
-      // ***** INÍCIO DA MUDANÇA PARA SIMULAÇÃO DO BACKEND *****
-
-      // Simulação da chamada à API com um atraso para demonstrar o loading
-      await new Promise(resolve => setTimeout(resolve, 500)); // Espera 0.5 segundos
-
-      // Simula a resposta de sucesso da API
-      const simulatedResponse: ExpectedCreateResponse = {
-        success: true,
-        message: "Aluno adicionado com sucesso (simulação)!"
+      // Constrói o corpo da requisição com os dados do novo aluno
+      const studentData = {
+        matricula: matriculaNum,
+        nome: inlineNewStudentName.trim(),
+        turmaId: currentTurmaId, // Se o backend precisar do ID da turma para criar o aluno
       };
 
-      // VERIFIQUE SE ESTE BLOCO ESTÁ COMENTADO SE VOCÊ NÃO QUISER SIMULAR UM ERRO
-      // Se você quiser simular um erro, descomente e use este bloco:
-      // const simulatedResponse: ExpectedCreateResponse = {
-      //   success: false,
-      //   message: "Erro simulado: matrícula inválida!"
-      // };
-      // if (matriculaNum === 999) { // Exemplo de erro simulado
-      //   throw new Error("Simulação de erro na matrícula 999");
-      // }
+      // Exemplo de chamada real à API para criar um aluno
+      // Ajuste o endpoint e o método (POST, PUT) conforme seu backend
+      const response = await api.post(`/student/${currentTurmaId}/create`, studentData); // OU `/student/${currentTurmaId}/create`
 
-
-      if (simulatedResponse.success) {
+      // Verifica a resposta da API
+      if (response.status === 201) { // 201 Created é um status comum para criação
         const newStudent: Students = {
-          matricula: matriculaNum,
-          nome: inlineNewStudentName.trim(),
+          matricula: response.data.matricula || matriculaNum, // Idealmente, o backend retorna a matrícula/ID do aluno criado
+          nome: response.data.nome || inlineNewStudentName.trim(),
           selected: false,
         };
-        // Adiciona o aluno à lista localmente
+        // Adiciona o aluno à lista localmente APÓS a confirmação do backend
         setClassi(prevClassi => [...prevClassi, newStudent]);
-        toast.success(`Aluno "${inlineNewStudentName.trim()}" adicionado com sucesso (simulação)!`);
+        toast.success(`Aluno "${inlineNewStudentName.trim()}" adicionado com sucesso!`);
         setInlineNewStudentMatricula('');
         setInlineNewStudentName('');
         setShowInlineAddStudent(false);
+
+        // Opcional: Se a lista de alunos pode mudar após a adição (ex: ordenação no backend),
+        // considere chamar fetchStudents(currentTurmaId); para recarregar.
+        // fetchStudents(currentTurmaId);
+
       } else {
-        // Se a simulação for um erro
-        setInlineAddStudentError(simulatedResponse.message || "Erro desconhecido na simulação.");
-        toast.error(simulatedResponse.message || "Erro desconhecido na simulação.");
+        // Se a API retornar um status de erro (ex: 400 Bad Request, 500 Internal Server Error)
+        setInlineAddStudentError(response.data.message || "Erro desconhecido ao adicionar aluno.");
+        toast.error(response.data.message || "Erro desconhecido ao adicionar aluno.");
       }
 
-      // ***** FIM DA MUDANÇA PARA SIMULAÇÃO DO BACKEND *****
-
     } catch (error: any) {
-      console.error("Erro na simulação de adição de aluno:", error);
-      // Garante que qualquer erro jogado na simulação ainda seja capturado
-      setInlineAddStudentError(error.message || "Erro crítico na simulação.");
-      toast.error(error.message || "Erro crítico na simulação.");
+      console.error("Erro ao adicionar aluno:", error);
+      // Captura erros de rede ou respostas de erro da API
+      setInlineAddStudentError(error.response?.data?.message || "Erro ao conectar com o servidor ou adicionar aluno.");
+      toast.error(error.response?.data?.message || "Erro ao conectar com o servidor ou adicionar aluno.");
     } finally {
       setIsLoading(false);
     }
