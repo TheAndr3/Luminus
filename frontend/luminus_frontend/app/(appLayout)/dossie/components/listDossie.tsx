@@ -157,7 +157,7 @@ export default function ListDossie({
                       className="hover:text-yellow-400"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/dossie/crud?mode=update&id=${dossie.id}`);
+                        router.push(`/dossie/${dossie.id}?mode=edit`);
                       }}
                     >
                       <Pencil />

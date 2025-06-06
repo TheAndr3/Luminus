@@ -110,11 +110,23 @@ exports.Delete = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const resp = await db.pgDelete('dossier', {id:id});
-    return res.status(204).json({msg:'sucess', data:resp});
+    // Primeiro verifica se o dossiê existe
+    const dossier = await db.pgSelect('dossier', {id: id});
+    if (!dossier || dossier.length === 0) {
+      return res.status(404).json({msg: "Dossiê não encontrado"});
+    }
+
+    // Deleta as questões relacionadas
+    await db.pgDelete('question', {dossier_id: id});
+
+    // Deleta as seções relacionadas
+    await db.pgDelete('section', {dossier_id: id});
+
+    // Deleta o dossiê
+    const resp = await db.pgDelete('dossier', {id: id});
+    return res.status(204).json({msg: 'Dossiê removido com sucesso', data: resp});
   } catch (error) {
     console.log(error);
-    return res.status(400).json({msg:"falha ao remover o dossie"});
+    return res.status(400).json({msg: "falha ao remover o dossiê"});
   }
-  
 }
