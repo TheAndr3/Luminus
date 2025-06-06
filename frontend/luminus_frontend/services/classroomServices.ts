@@ -13,6 +13,14 @@ interface CreateResponse {
     msg: string
 }
 
+type UpdateData = {
+    professor_id: number;
+    name?: string;
+    description?: string;
+    season?: string;
+    institution?: string;
+};
+
 // Interface para a resposta da API ao buscar UMA turma
 export interface GetClassroomResponse {
     id: number;
@@ -38,14 +46,18 @@ export interface DeleteClassroomResponse {
 
 //FUNÇÕES
 export const CreateClassroom = async (payload: ClassroomData): Promise<CreateResponse> => {
+    console.log('Entrou na função CreateClassroom');
     try {
         const response = await api.post('/classroom/create', payload);
+        console.log('Saiu com sucesso');
         return response.data;
-    } catch (error:any) {
+    } catch (error: any) {
         const message = error.response?.data || 'Erro ao criar classe';
+        console.log('Saiu  com erro:', message);
         throw new Error(message);
     }
 };
+
 
 export const CreateClassroomWithCSV = async (formData: FormData): Promise<CreateResponse> => {
     try {
@@ -100,12 +112,7 @@ export const ListClassroom = async (professorID: number): Promise<ListClassroomR
 }
 
 // atualizar uma turma
-export const UpdateClassroom = async (id: number, data: {
-    name?: string;
-    description?: string;
-    season?: string;
-    institution?: string;
-}): Promise<CreateResponse> => {
+export const UpdateClassroom = async (id: number, data: UpdateData): Promise<CreateResponse> => {
     try {
         const response = await api.put(`/classroom/${id}/update`, data);
         return response.data;
@@ -119,7 +126,7 @@ export const UpdateClassroom = async (id: number, data: {
 export const DeleteClassroom = async (id: number, professorId: number): Promise<DeleteClassroomResponse> => {
     try {
         const response = await api.delete(`/classroom/${id}/delete`, {
-            data: { professor_id: professorId } // <<< ADICIONADO: Enviando o professor_id no corpo
+            data: { professor_id: professorId } 
         });
         return response.data;
     } catch (error: any) {
