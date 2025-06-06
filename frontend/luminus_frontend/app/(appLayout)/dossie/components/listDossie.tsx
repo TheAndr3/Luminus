@@ -73,7 +73,7 @@ export default function ListDossie({
   };
 
   const handleClickDossie = (id: number) => {
-    router.push(`/dossie/${id}`);
+    router.push(`/dossie/${id}?mode=view`);
   };
 
 
