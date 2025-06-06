@@ -11,7 +11,7 @@ interface CreateResponse {
 }
 
 
-interface StudentGetResponse {
+export interface StudentGetResponse {
     id: number;
     name: string;
     classroom_id: number;

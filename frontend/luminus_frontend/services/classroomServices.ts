@@ -13,14 +13,20 @@ interface CreateResponse {
     msg: string
 }
 
-//OBTER CLASSE
+// Interface para a resposta da API ao buscar UMA turma
 export interface GetClassroomResponse {
     id: number;
     name: string;
     season: string;
     description: string;
+    professor_id?: number;
+    institution?: string;
+    dossier_id?: number;
+    dossier_professor_id?: number;
+    // Adicione outros campos conforme necessário
 }
 
+//OBTER CLASSE
 export interface ListClassroomResponse {
     msg: string;
     data: GetClassroomResponse[];
@@ -53,18 +59,38 @@ export const CreateClassroomWithCSV = async (formData: FormData): Promise<Create
     }
 };
 
-//buscar uma turma específica
+// buscar uma turma específica
 export const GetClassroom = async (id: number): Promise<GetClassroomResponse> => {
     try {
         const response = await api.get(`/classroom/${id}`);
-        return response.data[0];
+        // Espera-se: { msg: 'sucesso', data: [...] }
+        if (
+            response.data &&
+            response.data.data &&
+            Array.isArray(response.data.data) &&
+            response.data.data.length > 0
+        ) {
+            return response.data.data[0];
+        } else if (
+            response.data &&
+            response.data.data &&
+            Array.isArray(response.data.data) &&
+            response.data.data.length === 0
+        ) {
+            throw new Error(`Turma com ID ${id} não encontrada.`);
+        } else {
+            console.error("GetClassroom: Resposta inesperada da API:", response.data);
+            throw new Error(`Resposta inesperada da API ao buscar turma com ID ${id}.`);
+        }
     } catch (error: any) {
-        const message = error.response?.data?.msg || 'Erro ao buscar turma';
+        const apiErrorMessage = error.response?.data?.msg || error.response?.data?.message;
+        const message = apiErrorMessage || error.message || `Erro ao buscar turma com ID ${id}.`;
+        console.error(`GetClassroom Service Error (ID: ${id}):`, error);
         throw new Error(message);
     }
 }
 
-//listar as turmas
+// listar as turmas
 export const ListClassroom = async (professorID: number): Promise<ListClassroomResponse> => {
     try {
         const response = await api.get(`/classroom/list/${professorID}`);
@@ -75,7 +101,7 @@ export const ListClassroom = async (professorID: number): Promise<ListClassroomR
     }
 }
 
-//atualizar uma turma
+// atualizar uma turma
 export const UpdateClassroom = async (id: number, data: {
     name?: string;
     description?: string;
@@ -91,13 +117,13 @@ export const UpdateClassroom = async (id: number, data: {
     }
 }
 
-//deletar uma turma
+// deletar uma turma
 export const DeleteClassroom = async (id: number): Promise<DeleteClassroomResponse> => {
     const response = await api.delete(`/classroom/${id}`);
         return response.data;
 };
 
-//associar um dossiê a uma turma
+// associar um dossiê a uma turma
 export const AssociateDossier = async (classId: number, dossierId: number): Promise<CreateResponse> => {
     try {
         const response = await api.put(`/classroom/${classId}/associate-dossier/${dossierId}`);

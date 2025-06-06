@@ -88,7 +88,7 @@ export default function ListClass({
 
   const handleClickPageStudent = (id: number) => {
     
-    router.push(`/classroom/${id+1}`)
+    router.push(`/classroom/${id}`)
     
     
     //pesquisar sobre cache que mano maike falou
