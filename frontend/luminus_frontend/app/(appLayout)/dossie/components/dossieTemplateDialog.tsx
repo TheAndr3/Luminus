@@ -86,7 +86,7 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
     // =============================================================================
     // LÓGICA DE PAGINAÇÃO E FILTRO
     // =============================================================================
-    const dossiesPerPage = 5;
+    const dossiesPerPage = 6;
     // Define quantos dossiês serão exibidos por página
     
     const filteredDossies = dossies.filter(dossie =>
