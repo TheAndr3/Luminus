@@ -115,7 +115,7 @@ export default function DialogPage() {
 
                 // Cria a turma sem o arquivo CSV
                 const newClassData = {
-                    professor_Id: Number(professorId),
+                    professor_id: Number(professorId),
                     name: titulo,
                     description: inputDisc,
                     season: inputPer,
