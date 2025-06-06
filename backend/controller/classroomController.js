@@ -51,8 +51,6 @@ exports.Get = async (req, res) => {
 exports.Create = async (req, res) => {
 
   try {
-
-    console.log('entrou na funcao');
     console.log(req.body.professor_id)
     const professor = await db.pgSelect('professor', {id: req.body.professor_id})
     console.log(professor)
@@ -66,10 +64,7 @@ exports.Create = async (req, res) => {
         institution: req.body.institution
       }
 
-      console.log('enviou pro banco de dados');
       const resp = await db.pgInsert('classroom', payload);
-
-      console.log("saiu do bd");
 
       return res.status(201).json({msg:'classe criada com sucesso', data:resp});
 
