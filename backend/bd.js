@@ -44,6 +44,19 @@ async function pgSelect(table, data) {
 
 }
 
+async function pgSelectStudentsInClassroom(classroom_id) {
+    const query = `
+        SELECT cs.student_id, s.name, s.id AS matricula
+        FROM ClassroomStudent cs
+        JOIN student s ON cs.student_id = s.id
+        WHERE cs.classroom_id = $1
+    `;
+    const client = await connect();
+    const res = await client.query(query, [classroom_id]);
+    client.release();
+    return res.rows;
+}
+
 async function pgInsert(table, data) {
 
     const keys = Object.keys(data);
@@ -224,4 +237,4 @@ async function pgAppraisalGetPoints(classId) {
     }
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints};
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints, pgSelectStudentsInClassroom};
