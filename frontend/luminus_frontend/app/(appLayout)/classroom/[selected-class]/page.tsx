@@ -318,56 +318,63 @@ export default function VisualizacaoAlunos() {
     setIsLoading(true);
 
     try {
-      if (!currentTurmaId) {
-        toast.error("ID da turma não encontrado. Não é possível adicionar o aluno.");
-        setIsLoading(false);
-        return;
-      }
+        if (!currentTurmaId) {
+          toast.error("ID da turma não encontrado. Não é possível adicionar o aluno.");
+          setIsLoading(false);
+          return;
+        }
 
-      // Constrói o corpo da requisição com os dados do novo aluno
-      const studentData = {
-        matricula: matriculaNum,
-        nome: inlineNewStudentName.trim(),
-        turmaId: currentTurmaId, // Se o backend precisar do ID da turma para criar o aluno
-      };
+        // --- NOVO: Definir o professor_id ---
+        // OPÇÃO 1: Hardcoded (apenas para teste inicial, não recomendado para produção)
+        const professorId = 1; // Substitua por um ID de professor real ou logicamente obtido.
+                              // Se o professor_id vem do contexto do usuário logado, você precisará buscá-lo.
+                              // Por exemplo, de um hook de autenticação, um localStorage, ou um Context API.
 
-      // Exemplo de chamada real à API para criar um aluno
-      // Ajuste o endpoint e o método (POST, PUT) conforme seu backend
-      const response = await api.post(`/student/${currentTurmaId}/create`, studentData); // OU `/student/${currentTurmaId}/create`
-
-      // Verifica a resposta da API
-      if (response.status === 201) { // 201 Created é um status comum para criação
-        const newStudent: Students = {
-          matricula: response.data.matricula || matriculaNum, // Idealmente, o backend retorna a matrícula/ID do aluno criado
-          nome: response.data.nome || inlineNewStudentName.trim(),
-          selected: false,
+        // Constrói o corpo da requisição com os dados do novo aluno
+        const studentData = {
+          id: matriculaNum, // O backend espera 'id' para a matrícula
+          name: inlineNewStudentName.trim(), // O backend espera 'name' para o nome
+          professor_id: professorId, // Adiciona o professor_id necessário para a tabela ClassroomStudent
         };
-        // Adiciona o aluno à lista localmente APÓS a confirmação do backend
-        setClassi(prevClassi => [...prevClassi, newStudent]);
-        toast.success(`Aluno "${inlineNewStudentName.trim()}" adicionado com sucesso!`);
-        setInlineNewStudentMatricula('');
-        setInlineNewStudentName('');
-        setShowInlineAddStudent(false);
 
-        // Opcional: Se a lista de alunos pode mudar após a adição (ex: ordenação no backend),
-        // considere chamar fetchStudents(currentTurmaId); para recarregar.
-        // fetchStudents(currentTurmaId);
+        // --- NOVO: Chamada real à API ---
+        // Ajuste o endpoint conforme a sua rota no Node.js (ex: /student/:classid/create)
+        const response = await api.post(`/student/${currentTurmaId}/create`, studentData); // OU `api.post('/student/create', studentData)` se classid for no corpo.
 
-      } else {
-        // Se a API retornar um status de erro (ex: 400 Bad Request, 500 Internal Server Error)
-        setInlineAddStudentError(response.data.message || "Erro desconhecido ao adicionar aluno.");
-        toast.error(response.data.message || "Erro desconhecido ao adicionar aluno.");
+        // Verifica a resposta da API
+        if (response.status === 201) { // 201 Created é o status de sucesso do seu backend
+          const newStudent: Students = {
+            matricula: matriculaNum, // Usamos a matrícula que o usuário inseriu, pois o backend usa o 'id' fornecido
+            nome: inlineNewStudentName.trim(),
+            selected: false,
+          };
+          
+          // Adiciona o aluno à lista localmente APÓS a confirmação do backend
+          setClassi(prevClassi => [...prevClassi, newStudent]);
+          toast.success(response.data.msg); // Usa a mensagem de sucesso do backend: "estudante inserido com sucesso"
+          setInlineNewStudentMatricula('');
+          setInlineNewStudentName('');
+          setShowInlineAddStudent(false);
+
+          // É fundamental recarregar a lista de alunos para garantir que a UI reflita o estado real do backend
+          fetchStudents(currentTurmaId);
+
+        } else {
+          // Se a API retornar um status de erro (ex: 400 Bad Request, 500 Internal Server Error)
+          // O backend retorna 'msg' em caso de erro
+          setInlineAddStudentError(response.data.msg || "Erro desconhecido ao adicionar aluno.");
+          toast.error(response.data.msg || "Erro desconhecido ao adicionar aluno.");
+        }
+
+      } catch (error: any) {
+        console.error("Erro ao adicionar aluno:", error);
+        // Captura erros de rede ou respostas de erro da API
+        setInlineAddStudentError(error.response?.data?.msg || "Erro ao conectar com o servidor ou adicionar aluno.");
+        toast.error(error.response?.data?.msg || "Erro ao conectar com o servidor ou adicionar aluno.");
+      } finally {
+        setIsLoading(false);
       }
-
-    } catch (error: any) {
-      console.error("Erro ao adicionar aluno:", error);
-      // Captura erros de rede ou respostas de erro da API
-      setInlineAddStudentError(error.response?.data?.message || "Erro ao conectar com o servidor ou adicionar aluno.");
-      toast.error(error.response?.data?.message || "Erro ao conectar com o servidor ou adicionar aluno.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
   // Função para cancelar a adição inline e limpar os campos
   const handleCancelInlineAdd = () => {
@@ -478,14 +485,14 @@ export default function VisualizacaoAlunos() {
             currentPage={currentPage}
             totalPages={totalPagesFiltradas}
             setCurrentPage={setCurrentPage}
-            showInlineAddStudent={false}
-            inlineNewStudentMatricula={""}
-            setInlineNewStudentMatricula={() => {}}
-            inlineNewStudentName={""}
-            setInlineNewStudentName={() => {}}
-            inlineAddStudentError={null}
-            handleInlineAddStudent={async () => {}}
-            handleCancelInlineAdd={() => {}}
+            showInlineAddStudent={showInlineAddStudent}
+            inlineNewStudentMatricula={inlineNewStudentMatricula}
+            setInlineNewStudentMatricula={setInlineNewStudentMatricula}
+            inlineNewStudentName={inlineNewStudentName}
+            setInlineNewStudentName={setInlineNewStudentName}
+            handleInlineAddStudent={handleInlineAddStudent}
+            handleCancelInlineAdd={handleCancelInlineAdd}
+            inlineAddStudentError={inlineAddStudentError}
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
           />
