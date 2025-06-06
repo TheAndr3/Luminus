@@ -39,8 +39,22 @@ async function pgSelect(table, data) {
 
     const client = await connect();
     const res = await client.query(sqlString, values);
+    client.release();
     return res.rows;
 
+}
+
+async function pgSelectStudentsInClassroom(classroom_id) {
+    const query = `
+        SELECT cs.student_id, s.name, s.id AS matricula
+        FROM ClassroomStudent cs
+        JOIN student s ON cs.student_id = s.id
+        WHERE cs.classroom_id = $1
+    `;
+    const client = await connect();
+    const res = await client.query(query, [classroom_id]);
+    client.release();
+    return res.rows;
 }
 
 async function pgInsert(table, data) {
@@ -52,7 +66,9 @@ async function pgInsert(table, data) {
 
 
     const client = await connect();
-    return await client.query(query, values);
+    const resp = await client.query(query, values);
+    client.release();
+    return resp;
 }
 
 async function pgDelete(table, data) {
@@ -62,7 +78,9 @@ async function pgDelete(table, data) {
     const query = `DELETE FROM ${table} WHERE ${placeHolder}`;
 
     const client = await connect();
-    return await client.query(query, values);
+    const resp = await client.query(query, values);
+    client.release();
+    return resp;
 }
 
 async function pgUpdate(table, data, keys) {
@@ -76,7 +94,9 @@ async function pgUpdate(table, data, keys) {
     const query = `UPDATE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
 
     const client = await connect();
-    return await client.query(query, [...valuesWhere, ...valuesNewObject]);
+    const resp = await client.query(query, [...valuesWhere, ...valuesNewObject]);
+    client.release();
+    return resp;
 }
 
 async function pgDossieSelect(id) {
@@ -125,6 +145,7 @@ async function pgDossieSelect(id) {
 
     const client = await connect();
     const data = await client.query(query, [id]);
+    client.release();
     
     // Retorna null se nenhum dossiê for encontrado
     if (!data.rows || data.rows.length === 0) {
@@ -169,6 +190,7 @@ async function pgAppraisalSelect(id) {
     const client = await connect();
 
     const response = await client.query(query, [id]);
+    client.release();
     const data = response.rows;
     var result = {id:data[0].appraisal_id, sections:[], dossier_id:data[0].dossier_id, student_id:data[0].student_id, professor_id:data[0].professor_id,};
     for(let i=0; i < data.length; i++){
@@ -215,4 +237,4 @@ async function pgAppraisalGetPoints(classId) {
     }
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints};
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints, pgSelectStudentsInClassroom};

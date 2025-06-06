@@ -4,7 +4,7 @@
 // Componentes e tipos
 import ListStudents from "./components/listStudents";
 import { Students } from "./components/types"; // Corrigido o caminho se 'types.ts' estiver na mesma pasta de componentes
-import React, { useState, useEffect, useRef } from 'react'; // Adicionado useRef
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // Adicionado useRef
 import { Button } from "@/components/ui/button";
 import { darkenHexColor } from '@/utils/colorHover';
 // import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
@@ -14,6 +14,9 @@ import { FileText } from "lucide-react"; // Manteve FileText
 import styles from './selected-classroom.module.css';
 import { toast } from 'react-hot-toast'; 
 import { api } from "@/services/api";
+import { GetClassroom } from '@/services/classroomServices';
+import { ListStudents as ListStudentsService } from '@/services/studentService';
+
 // Removido CreateStudent pois a importação em massa usará um endpoint diferente
 // import { CreateStudent } from "@/services/studentService"; 
 import { usePathname } from 'next/navigation';
@@ -65,7 +68,6 @@ export default function VisualizacaoAlunos() {
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
   const [showCsvConfirmation, setShowCsvConfirmation] = useState(false);
   const [csvError, setCsvError] = useState<string | null>(null);
-  const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null); // << NOVO ESTADO
   const fileInputRef = useRef<HTMLInputElement | null>(null); // << NOVO REF
 
   const [currentTurmaId, setCurrentTurmaId] = useState<number | null>(null);
@@ -91,25 +93,22 @@ export default function VisualizacaoAlunos() {
     setIsFetchingStudents(true);
     try {
       const response = await api.get(`/student/${turmaId}/list`);
-      // ATENÇÃO: O backend `/student/${turmaId}/list` PRECISA retornar student_id e name.
-      // Se ele retorna { student_id: 1, name: "Aluno X" }, o map abaixo funciona.
-      // Se ele retorna SÓ { student_id: 1 }, você NÃO TERÁ O NOME e precisará ajustar o backend.
+      // Mapeamento aqui:
       const studentsFromApi = response.data.map((student: any) => ({
-        matricula: student.student_id || student.matricula || student.id, // Tente diferentes chaves comuns
-        nome: student.name || student.nome || "Nome não disponível", // Fallback se nome não vier
+        matricula: student.matricula || student.student_id || student.id,
+        nome: student.name || student.nome || "Nome não disponível",
         selected: false,
       }));
-      
-      // Filtrar alunos que não puderam ser mapeados corretamente (sem matricula ou nome)
+
+      // Filtro para garantir que só alunos válidos sejam exibidos
       const validStudents = studentsFromApi.filter(
-          (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
+        (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
       );
 
       if (validStudents.length !== studentsFromApi.length && studentsFromApi.length > 0) {
-          console.warn("Alguns alunos da API não tinham ID ou nome e foram filtrados.", studentsFromApi);
-          toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
+        toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
       }
-      
+
       setClassi(validStudents);
     } catch (error: any) {
       console.error("Erro ao buscar alunos:", error);
@@ -121,17 +120,58 @@ export default function VisualizacaoAlunos() {
     }
   };
 
+  // Busca o nome da turma pelo ID e define no título da página
+  const fetchClassDetails = async (turmaId: number) => {
+    try {
+      const response = await api.get(`/classroom/${turmaId}`);
+      // O nome da turma deve vir do backend no campo 'name' (ou 'titulo' se for esse o nome)
+      setClassTitle(response.data.name || response.data.titulo || "Turma sem nome");
+    } catch (error) {
+      setClassTitle("Turma não encontrada");
+    }
+  };
+
+  // Função única para buscar detalhes da turma e alunos em paralelo
+  const fetchPageData = useCallback(async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Busca detalhes da turma e lista de alunos em paralelo
+      const [classDetails, studentsFromService] = await Promise.all([
+        GetClassroom(id), // Serviço que já trata o retorno corretamente
+        ListStudentsService(id)
+      ]);
+
+      // Ajuste conforme o retorno real do seu backend:
+      // Se vier { data: [{ name: ... }] }, use:
+      // setClassTitle(classDetails.data?.[0]?.name || `Turma ${id}`);
+      // Se vier { name: ... }, use:
+      setClassTitle(classDetails.name || `Turma ${id}`);
+
+      // Mapeia e define o estado dos alunos
+      const formattedStudents = studentsFromService.map(student => ({
+        matricula: student.id,
+        nome: student.name,
+        selected: false,
+      }));
+      setClassi(formattedStudents);
+
+    } catch (error: any) {
+      console.error("Erro ao carregar dados da turma:", error);
+      setClassTitle("Turma não encontrada");
+      toast.error(error.message || "Falha ao carregar a página da turma.");
+      setClassi([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const turmaId = getTurmaIdFromPath();
     setCurrentTurmaId(turmaId);
     if (turmaId !== null) {
-      // TODO: Chamar API para carregar detalhes da turma para `classTitle`
-      // Ex: fetchClassDetails(turmaId).then(data => setClassTitle(data.name));
-      console.log("ID da Turma para carregar alunos:", turmaId);
-      fetchStudents(turmaId);
+      fetchPageData(turmaId);
     }
-  }, [pathname]); // Removido getTurmaIdFromPath das dependências se ela for estável ou definida fora.
-                  // Se getTurmaIdFromPath depender de 'pathname' e for definida dentro, pode ficar como está.
+  }, [pathname, fetchPageData]);
 
   const totalPages = Math.ceil(classi.length / alunosPorPagina);
   const startIndex = (currentPage - 1) * alunosPorPagina;
@@ -197,7 +237,6 @@ export default function VisualizacaoAlunos() {
     const reader = new FileReader();
     setCsvError(null);
     setParsedStudentsFromCSV([]);
-    setCsvFileToUpload(null); // Limpa o arquivo anterior
 
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -230,7 +269,6 @@ export default function VisualizacaoAlunos() {
         setCsvError("Nenhum aluno válido encontrado no CSV.");
       }
       setParsedStudentsFromCSV(students);
-      setCsvFileToUpload(file); // << GUARDA O ARQUIVO
       setShowCsvConfirmation(true);
       // ... (catch para erros de parse) ...
     };
@@ -242,7 +280,6 @@ export default function VisualizacaoAlunos() {
     setShowCsvConfirmation(false);
     setParsedStudentsFromCSV([]);
     setCsvError(null);
-    setCsvFileToUpload(null); // << LIMPA O ARQUIVO
     if (fileInputRef.current) {
         fileInputRef.current.value = ""; 
     }
@@ -255,18 +292,20 @@ export default function VisualizacaoAlunos() {
       setIsLoading(false);
       return;
     }
-    if (!csvFileToUpload) {
-      toast.error("Nenhum arquivo CSV selecionado para importar.");
+    if (!parsedStudentsFromCSV || parsedStudentsFromCSV.length === 0) {
+      toast.error("Nenhum aluno válido para importar.");
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    const formData = new FormData();
-    formData.append('csvfile', csvFileToUpload); 
 
     try {
-      const response = await api.post(`/student/${currentTurmaId}/importcsv`, formData);
+      // Agora enviando como JSON!
+      const response = await api.post(
+        `/student/${currentTurmaId}/importcsv`,
+        { alunos: parsedStudentsFromCSV }
+      );
 
       if (response.status === 201 || response.status === 207) {
         toast.success(response.data.msg || "Importação de alunos processada!");

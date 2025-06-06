@@ -1,31 +1,18 @@
 const db = require('../bd');
-const multer = require('multer');
-const csvParser = require('csv-parser');
-const { Readable } = require('stream');
 
-// Configuração do multer para armazenar o arquivo em memória
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
 
-//Controller de student
-
+//Controller de studen
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
-    
     try {
-        const payload = {classroom_id:class_id}
-        const dataStudent = await db.pgSelect('ClassroomStudent', payload);
+        const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
-        if (Object.values(dataStudent).length > 0) {
-            res.status(200).json(dataStudent);
-        } else {
-            res.status(400).json({msg:'nao ha estudantes nessa turma'});
-        }
+        // Sempre retorna 200, mesmo se não houver alunos
+        res.status(200).json(dataStudent);
     } catch (error) {
         console.log(error);
         res.status(400).json({msg:'falha ao atender a solicitacao'});
     }
-
 }
 
 exports.Get = async (req, res) => {
@@ -141,135 +128,85 @@ exports.Update = async (req, res) => {
   
 
 
-exports.ImportCsv = [
-    upload.single('csvfile'), // 'csvfile' deve ser o nome do campo no FormData do frontend
-    async (req, res) => {
-        const classId = req.params.classid; // Ajustado para classid
+exports.ImportCsv = async (req, res) => {
+  const classId = req.params.classid;
+  const alunos = req.body.alunos;
 
-        if (!req.file) {
-            return res.status(400).json({ msg: 'Nenhum arquivo CSV enviado.' });
-        }
+  if (!classId) {
+    return res.status(400).json({ msg: 'ID da turma não fornecido.' });
+  }
+  if (!Array.isArray(alunos) || alunos.length === 0) {
+    return res.status(400).json({ msg: 'Nenhum aluno enviado.' });
+  }
 
-        if (!classId) {
-            return res.status(400).json({ msg: 'ID da turma não fornecido.' });
-        }
+  const imported = [];
+  const failures = [];
 
-        const studentsFromCsv = [];
-        const processingErrors = [];
-        let professorIdDaTurma;
-
-        try {
-            // 1. Obter o professor_id da turma
-            const classroomDetailsArray = await db.pgSelect('Classroom', { id: parseInt(classId) }); //
-            if (!classroomDetailsArray || classroomDetailsArray.length === 0) {
-                return res.status(404).json({ msg: `Turma com ID ${classId} não encontrada.` });
-            }
-            professorIdDaTurma = classroomDetailsArray[0].professor_id;
-            if (!professorIdDaTurma) {
-                return res.status(500).json({ msg: `Não foi possível encontrar o professor para a turma ${classId}.`});
-            }
-
-
-            const readableFileStream = Readable.from(req.file.buffer.toString());
-
-            readableFileStream
-                .pipe(csvParser()) // Assumindo que o CSV tem cabeçalhos 'matricula' e 'nome'
-                .on('data', (row) => {
-                    const matricula = row.matricula ? parseInt(row.matricula.trim(), 10) : null;
-                    const nome = row.nome ? row.nome.trim() : null;
-
-                    if (matricula && nome) {
-                        studentsFromCsv.push({ matricula, nome });
-                    } else {
-                        processingErrors.push({ row, error: 'Matrícula ou nome ausentes ou inválidos.' });
-                    }
-                })
-                .on('end', async () => {
-                    if (studentsFromCsv.length === 0) {
-                        return res.status(400).json({ 
-                            msg: 'Nenhum aluno válido encontrado no CSV para importar.', 
-                            details: processingErrors 
-                        });
-                    }
-
-                    const importedStudents = [];
-                    const failedImports = [];
-
-                    for (const studentData of studentsFromCsv) {
-                        try {
-                            // 2. Verificar se o aluno já existe na tabela Student ou criar/atualizar
-                            let studentExists = await db.pgSelect('Student', { id: studentData.matricula }); //
-
-                            if (studentExists.length === 0) {
-                                await db.pgInsert('Student', { id: studentData.matricula, name: studentData.nome }); //
-                            } else {
-                                // Opcional: Atualizar o nome do aluno se estiver diferente
-                                if (studentExists[0].name !== studentData.nome) {
-                                    await db.pgUpdate('Student', { name: studentData.nome }, { id: studentData.matricula }); //
-                                }
-                            }
-
-                            // 3. Verificar se o aluno já está na turma (ClassroomStudent)
-                            const classroomStudentExists = await db.pgSelect('ClassroomStudent', { //
-                                classroom_id: parseInt(classId),
-                                student_id: studentData.matricula,
-                                professor_id: professorIdDaTurma
-                            });
-
-                            if (classroomStudentExists.length > 0) {
-                                failedImports.push({ student: studentData, error: 'Aluno já cadastrado nesta turma.' });
-                            } else {
-                                // 4. Inserir aluno na ClassroomStudent
-                                await db.pgInsert('ClassroomStudent', { //
-                                    classroom_id: parseInt(classId),
-                                    student_id: studentData.matricula,
-                                    professor_id: professorIdDaTurma
-                                });
-                                importedStudents.push(studentData);
-                            }
-                        } catch (dbError) {
-                            console.error(`Erro ao processar aluno ${studentData.matricula}:`, dbError);
-                            failedImports.push({ student: studentData, error: 'Erro no banco de dados ao inserir/verificar aluno.' });
-                        }
-                    }
-
-                    if (failedImports.length > 0 && importedStudents.length === 0) {
-                         return res.status(400).json({
-                            msg: 'Falha ao importar todos os alunos.',
-                            successCount: importedStudents.length,
-                            failureCount: failedImports.length,
-                            failures: failedImports,
-                            processingErrors: processingErrors
-                        });
-                    }
-                    
-                    if (failedImports.length > 0) {
-                        return res.status(207).json({ // Multi-Status
-                            msg: `Importação parcialmente concluída. ${importedStudents.length} alunos importados. ${failedImports.length} falharam.`,
-                            successCount: importedStudents.length,
-                            failureCount: failedImports.length,
-                            imported: importedStudents,
-                            failures: failedImports,
-                            processingErrors: processingErrors
-                        });
-                    }
-
-                    return res.status(201).json({ 
-                        msg: `${importedStudents.length} alunos importados com sucesso!`,
-                        successCount: importedStudents.length,
-                        failureCount: 0,
-                        imported: importedStudents,
-                        processingErrors: processingErrors
-                    });
-                })
-                .on('error', (parseError) => { // Erro no parsing do CSV
-                    console.error('Erro ao parsear CSV:', parseError);
-                    return res.status(400).json({ msg: 'Erro ao ler o arquivo CSV. Verifique o formato.' });
-                });
-
-        } catch (error) {
-            console.error('Erro geral ao importar CSV:', error);
-            return res.status(500).json({ msg: 'Erro interno do servidor ao processar o arquivo CSV.' });
-        }
+  // Buscar o professor_id da turma
+  let professorId;
+  try {
+    const turma = await db.pgSelect('Classroom', { id: parseInt(classId) });
+    if (!turma || turma.length === 0) {
+      return res.status(404).json({ msg: 'Turma não encontrada.' });
     }
-];
+    professorId = turma[0].professor_id;
+    if (!professorId) {
+      return res.status(500).json({ msg: 'professor_id não encontrado para a turma.' });
+    }
+  } catch (err) {
+    return res.status(500).json({ msg: 'Erro ao buscar turma.', error: err.message });
+  }
+
+  for (const aluno of alunos) {
+    if (!aluno.matricula || !aluno.nome) {
+      failures.push({ aluno, error: 'Dados incompletos.' });
+      continue;
+    }
+    try {
+      // 1. Inserir ou atualizar o aluno na tabela student
+      const existingStudent = await db.pgSelect('student', { id: aluno.matricula });
+      if (existingStudent.length === 0) {
+        await db.pgInsert('student', { id: aluno.matricula, name: aluno.nome });
+      } else if (existingStudent[0].name !== aluno.nome) {
+        await db.pgUpdate('student', { name: aluno.nome }, { id: aluno.matricula });
+      }
+
+      // 2. Associar o aluno à turma na tabela ClassroomStudent
+      const existsInClass = await db.pgSelect('ClassroomStudent', {
+        classroom_id: classId,
+        student_id: aluno.matricula,
+        professor_id: professorId
+      });
+      if (existsInClass.length === 0) {
+        await db.pgInsert('ClassroomStudent', {
+          classroom_id: classId,
+          student_id: aluno.matricula,
+          professor_id: professorId
+        });
+        imported.push(aluno);
+      } else {
+        failures.push({ aluno, error: 'Aluno já está associado à turma.' });
+      }
+    } catch (err) {
+      failures.push({ aluno, error: err.message });
+    }
+  }
+
+  if (failures.length && imported.length) {
+    return res.status(207).json({
+      msg: 'Importação parcial.',
+      imported,
+      failures
+    });
+  }
+  if (failures.length && !imported.length) {
+    return res.status(400).json({
+      msg: 'Falha ao importar todos os alunos.',
+      failures
+    });
+  }
+  return res.status(201).json({
+    msg: 'Todos os alunos importados com sucesso!',
+    imported
+  });
+};
