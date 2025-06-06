@@ -11,7 +11,18 @@ import { listDossiers } from "@/services/dossierServices";
 import { AssociateDossier } from "@/services/classroomServices";
 import { useParams } from "next/navigation";
 
-export default function AssociarDossie() {
+import { ColoredButton } from "@/components/colored-button/colored-button";
+
+interface AssociarDossieProps {
+  mainColor?: string;
+  hoverColor?: string;
+}
+
+
+export default function AssociarDossie({
+  mainColor = '',
+  hoverColor = '',
+}: AssociarDossieProps) {
     const router = useRouter();
     const params = useParams();
     const [open, setOpen] = useState(false);
@@ -82,12 +93,24 @@ export default function AssociarDossie() {
         setOpen(false);
     }
 
+/*      OLD BUTTON              
+<div className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
+        Associar dossiê
+</div> 
+*/
+
     return (
         <>
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                    <div className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
-                        Associar dossiê
+
+                    <div>
+                        <ColoredButton // NEW BUTTON
+                            mainColor={mainColor}
+                            hoverColor={hoverColor}
+                            text={'Associar dossiê'}
+                            haveBorder={false}
+                        ></ColoredButton>
                     </div>
                 </DialogTrigger>
 

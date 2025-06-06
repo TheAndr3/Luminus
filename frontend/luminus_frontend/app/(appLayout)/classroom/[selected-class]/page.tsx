@@ -33,6 +33,13 @@ type ParsedStudent = {
   nome: string;
 };
 
+interface ExpectedCreateResponse {
+  success: boolean;
+  message?: string; // Mensagem opcional, geralmente presente em caso de erro
+  // Adicione outras propriedades aqui se a API retornar dados do aluno criado no sucesso,
+  // por exemplo: student?: Students;
+}
+
 export default function VisualizacaoAlunos() {
   const pathname = usePathname();
   const getTurmaIdFromPath = () => {
@@ -64,6 +71,18 @@ export default function VisualizacaoAlunos() {
   const [currentTurmaId, setCurrentTurmaId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingStudents, setIsFetchingStudents] = useState(false); // Loading específico para fetchStudents
+
+  // Estados para o modal de adicionar aluno (mantido para referência, mas não usado para a nova funcionalidade)
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [newStudentMatricula, setNewStudentMatricula] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [addStudentError, setAddStudentError] = useState<string | null>(null);
+
+  // Novos estados para a linha de adição direta
+  const [showInlineAddStudent, setShowInlineAddStudent] = useState(false);
+  const [inlineNewStudentMatricula, setInlineNewStudentMatricula] = useState('');
+  const [inlineNewStudentName, setInlineNewStudentName] = useState('');
+  const [inlineAddStudentError, setInlineAddStudentError] = useState<string | null>(null);
 
 
   // Função para buscar alunos da API
@@ -273,6 +292,99 @@ export default function VisualizacaoAlunos() {
     }
   };
 
+  const handleInlineAddStudent = async () => {
+    setInlineAddStudentError(null);
+
+    if (!inlineNewStudentName.trim()) {
+      setInlineAddStudentError("O nome do aluno não pode ser vazio.");
+      return;
+    }
+    if (!inlineNewStudentMatricula.trim()) {
+      setInlineAddStudentError("A matrícula do aluno não pode ser vazia.");
+      return;
+    }
+
+    const matriculaNum = parseInt(inlineNewStudentMatricula, 10);
+    if (isNaN(matriculaNum)) {
+      setInlineAddStudentError("A matrícula deve ser um número válido.");
+      return;
+    }
+
+    if (classi.some(s => s.matricula === matriculaNum)) {
+      setInlineAddStudentError("Já existe um aluno com esta matrícula.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (!currentTurmaId) {
+        toast.error("ID da turma não encontrado. Não é possível adicionar o aluno.");
+        setIsLoading(false);
+        return;
+      }
+
+      // ***** INÍCIO DA MUDANÇA PARA SIMULAÇÃO DO BACKEND *****
+
+      // Simulação da chamada à API com um atraso para demonstrar o loading
+      await new Promise(resolve => setTimeout(resolve, 500)); // Espera 0.5 segundos
+
+      // Simula a resposta de sucesso da API
+      const simulatedResponse: ExpectedCreateResponse = {
+        success: true,
+        message: "Aluno adicionado com sucesso (simulação)!"
+      };
+
+      // VERIFIQUE SE ESTE BLOCO ESTÁ COMENTADO SE VOCÊ NÃO QUISER SIMULAR UM ERRO
+      // Se você quiser simular um erro, descomente e use este bloco:
+      // const simulatedResponse: ExpectedCreateResponse = {
+      //   success: false,
+      //   message: "Erro simulado: matrícula inválida!"
+      // };
+      // if (matriculaNum === 999) { // Exemplo de erro simulado
+      //   throw new Error("Simulação de erro na matrícula 999");
+      // }
+
+
+      if (simulatedResponse.success) {
+        const newStudent: Students = {
+          matricula: matriculaNum,
+          nome: inlineNewStudentName.trim(),
+          selected: false,
+        };
+        // Adiciona o aluno à lista localmente
+        setClassi(prevClassi => [...prevClassi, newStudent]);
+        toast.success(`Aluno "${inlineNewStudentName.trim()}" adicionado com sucesso (simulação)!`);
+        setInlineNewStudentMatricula('');
+        setInlineNewStudentName('');
+        setShowInlineAddStudent(false);
+      } else {
+        // Se a simulação for um erro
+        setInlineAddStudentError(simulatedResponse.message || "Erro desconhecido na simulação.");
+        toast.error(simulatedResponse.message || "Erro desconhecido na simulação.");
+      }
+
+      // ***** FIM DA MUDANÇA PARA SIMULAÇÃO DO BACKEND *****
+
+    } catch (error: any) {
+      console.error("Erro na simulação de adição de aluno:", error);
+      // Garante que qualquer erro jogado na simulação ainda seja capturado
+      setInlineAddStudentError(error.message || "Erro crítico na simulação.");
+      toast.error(error.message || "Erro crítico na simulação.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para cancelar a adição inline e limpar os campos
+  const handleCancelInlineAdd = () => {
+    setInlineNewStudentMatricula('');
+    setInlineNewStudentName('');
+    setInlineAddStudentError(null);
+    setShowInlineAddStudent(false);
+  };
+
+
   return (
     <div className={styles.pageContainer}>
       <div className="flex-1 bg-white px-1"> {/* Ajustado para px-1 como no código original */}
@@ -283,7 +395,7 @@ export default function VisualizacaoAlunos() {
           onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
-          onAddStudentClick={() => { /* TODO: modal para adicionar aluno individual */ }}
+          onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
         />
 
         {/* Modal de Confirmação de CSV */}
