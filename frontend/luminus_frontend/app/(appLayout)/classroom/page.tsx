@@ -13,6 +13,7 @@ import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
 import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
 import DialogPage from "./components/createClassModal";
+import toast from 'react-hot-toast';
 
 export default function VizualizationClass() {
   // ============ ESTADOS ============
@@ -40,6 +41,8 @@ export default function VizualizationClass() {
   const [missingDialog, setMissingDialog] = useState(false); //para abrir dialog de erro
   const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
   const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
+  
+  
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil((classi?.length || 0) / turmasPorPagina);
@@ -126,14 +129,25 @@ export default function VizualizationClass() {
   const confirmDeletion = async () => {
     try {
       setIsLoading(true);
+      
+      const professorId = localStorage.getItem('professorId'); // Pega o ID do professor do localStorage
+      if (!professorId) {
+        throw new Error('ID do professor não autenticado.');
+      }
+
       // Deletar cada turma selecionada
       for (const id of idsToDelete) {
-        await DeleteClassroom(id);
+        // Chama a função de serviço ATUALIZADA com o id da turma e do professor
+        await DeleteClassroom(id, Number(professorId));
       }
+
+      // Exibe uma notificação de sucesso
+      toast.success(`${idsToDelete.length} turma(s) deletada(s) com sucesso!`);
 
       // Atualização otimista do estado
       setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
 
+      // Ajusta a página atual se a última página ficou vazia
       if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
         setCurrentPage(1);
       }
@@ -141,9 +155,11 @@ export default function VizualizationClass() {
       console.error("Erro ao excluir turmas:", error);
       setMessageErro(error.message || "Erro ao excluir turmas");
       setMissingDialog(true);
+      toast.error(error.message || "Falha ao excluir turmas.");
     } finally {
       setIsLoading(false);
-      setConfirmOpen(false);
+      setConfirmOpen(false); // Fecha o diálogo de confirmação
+      setIdsToDelete([]); // Limpa a lista de IDs para deletar
     }
   };
 
