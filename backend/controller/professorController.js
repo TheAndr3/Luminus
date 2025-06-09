@@ -62,7 +62,6 @@ exports.Create = async (req, res) => {
     if (!email_professor || !password || !name) {
         return res.status(400).json({ msg: "Os campos precisam estar preenchidos corretamente" });
     }
-
     try {
         // Desencriptar a senha
         const decryptedPassword = await decryptPassword(password);
@@ -78,9 +77,37 @@ exports.Create = async (req, res) => {
             await db.pgInsert('Professor', {
                 professor_email: email_professor, 
                 password: hashedPassword, 
-                name: name
+                name: name,
+                role:"unknow"
             });
-            return res.status(201).json({ msg: 'Usuário criado com sucesso!' });
+            const professor = await db.pgSelect('Professor', { professor_email: email_professor });
+            const data = new Date();
+            var code = genRandomCode(0, 9999);
+            const old_code = await db.pgSelect('verifyCode', {professor_id:professor[0].id, data_sol:data.toISOString()});
+
+            const used_codes = old_code.map((iten) => {
+                iten.code
+            })
+            
+            while (used_codes.includes(code)) {
+                code = genRandomCode(0, 9999);
+            }
+
+            emailSender.sendEmail(professor[0].professor_email, code);
+            const payload = {userId: professor[0].id, email:professor[0].email, code:code, data:data}
+
+            //geracao do token a ser utilizado
+            const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
+
+            try {
+
+                const resp = await db.pgInsert('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString, status:0});
+                return res.status(200).json({msg:'email enviado', token:token});
+            } catch(err) {
+                console.log('erro ao inserir no banco de dados: ', err);
+                return res.status(400).json({msg:"falha ao enviar codigo"})
+            }
+
         } else {
             return res.status(409).json({ msg: 'Esse e-mail já possui um cadastro' });
         }
@@ -235,6 +262,43 @@ exports.NewPassword = async (req, res) => {
     }
 }
 
+exports.ConfirmEmail = async (req, res) => {
+    const {email, token} = req.body;
+    try {
+        const professor = await db.pgSelect('professor', {email:email});
+        if (professor.length == 0) {
+            return res.status(404).json({msg:'email nao encontrado'});
+        }
+        const bd_code = await db.pgSelect('verifyCode', {code:code, professor_id:professor[0].id, data_sol:data.toISOString()});
+
+        if(bd_code[0].status == 0) {
+            bd_code[0].status = 1;
+
+
+            await db.pgUpdate('verifyCode', {status:bd_code.status}, {professor_id:professor[0].id, code:code, data_sol:data.toISOString()});
+            const decode =  jwt.verify(token, process.env.SECRET_KEY);
+            const result = await db.pgSelect('tokencode', {token:token, professor_id:professor[0].id});
+            await db.pgUpdate('verifyCode', {status:bd_code.status}, {professor_id:professor[0].id, code:code, data_sol:data.toISOString()});
+            if (result.length == 0) {
+                return res.status(403).json({msg:'token invalido'});
+            } else {
+                const data = new Date();
+                const resp = await db.pgUpdate('professor', {
+                    email:email,
+                    role:"professor",
+                    }, {id:professor[0].id});
+                }
+                return res.status(201).json({msg:'email confirmado com sucesso'})
+        } else {
+            return res.status(400).json({msg:'codigo ja utilizado'});
+        }
+    } catch (err) {
+        console.log('erro: ', err);
+        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+    }
+}
+
+
 
 function genRandomCode(max, min) {
     min = Math.ceil(min);
@@ -242,9 +306,4 @@ function genRandomCode(max, min) {
 
     return Math.floor(Math.random() * (max - min + 1)) + min;
 
-}
-
-async function sendCodeEmail(email, code) {
-    const transporter = nodemailer.Create
-    
 }

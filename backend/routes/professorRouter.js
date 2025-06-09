@@ -29,4 +29,8 @@ routerProfessor.get('/professor/send-email/:id', professorController.SendEmail);
 //Nova Senha
 routerProfessor.post('/professor/new-password/:token', professorController.NewPassword);
 
+//confirmar email
+routerProfessor.post('/professor/confirm-email', professorController.ConfirmEmail);
+
+
 module.exports = routerProfessor;
