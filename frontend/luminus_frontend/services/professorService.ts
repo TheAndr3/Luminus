@@ -81,6 +81,7 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
 //Cadastrar
 export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
   try {
+    console.log('entrou aqui')
     //pegar chave pública
     const publicKey = await getPublicKey();
 
