@@ -51,8 +51,10 @@ exports.Get = async (req, res) => {
 exports.Create = async (req, res) => {
 
   try {
+    console.log(req.body.professor_id)
     const professor = await db.pgSelect('professor', {id: req.body.professor_id})
-
+    console.log(professor)
+    
     if (Object.values(professor).length > 0) {
       const payload = {
         professor_id: req.body.professor_id,

@@ -22,21 +22,14 @@ import { createDossier, updateDossier, getDossier, CreateDossierPayload, Dossier
 import styles from './DossierCRUDPage.module.css';
 
 // Interface para a estrutura completa de dados do dossiê retornada pelo backend
-interface FullDossierData {
+interface DossierSection {
   id: number;
-  professor_id: number;
   name: string;
   description: string;
-  evaluation_method: string;
-  sections: {
+  weigth: number;
+  questions: {
     id: number;
-    name: string;
     description: string;
-    weigth: number;
-    questions: {
-      id: number;
-      description: string;
-    }[];
   }[];
 }
 
@@ -82,7 +75,7 @@ const DossierAppPage: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const mode = searchParams.get('mode');
   const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
 
@@ -98,19 +91,19 @@ const DossierAppPage: React.FC = () => {
 
       try {
         const response = await getDossier(dossierId);
-        const dossier = response.data as FullDossierData;
+        const dossier = response.data;
         
         setDossierTitle(dossier.name);
         setDossierDescription(dossier.description);
         setEvaluationConcept(dossier.evaluation_method as EvaluationConcept);
         
         // Adapta as seções do backend para o formato da UI
-        const adaptedSections: SectionData[] = dossier.sections.map((section) => ({
+        const adaptedSections: SectionData[] = dossier.sections.map((section: DossierSection) => ({
           id: section.id.toString(),
           title: section.name,
           description: section.description,
           weight: section.weigth.toString(),
-          items: section.questions.map((question) => ({
+          items: section.questions.map((question: { id: number; description: string }) => ({
             id: question.id.toString(),
             description: question.description,
             value: 'N/A'
@@ -533,47 +526,47 @@ const DossierAppPage: React.FC = () => {
 
     try {
       // Validações
-    if (!dossierTitle.trim()) {
-      throw new Error("O título do Dossiê não pode ser vazio.");
-    }
-
-    if (!evaluationConcept) {
-      throw new Error("Um Conceito de Avaliação deve ser selecionado.");
-    }
-
-    const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
-    if (!hasSectionWithQuestion) {
-      throw new Error("O Dossiê deve conter pelo menos uma seção com um item/questão.");
-    }
-
-    // Validações por seção
-    let totalWeight = 0;
-    for (const sec of sectionsData) {
-      if (!sec.title.trim()) {
-        throw new Error(`A seção com ID "${sec.id}" não pode ter um título vazio.`);
+      if (!dossierTitle.trim()) {
+        throw new Error("O título do Dossiê não pode ser vazio.");
       }
 
-      if (Array.isArray(sec.items)) {
-        for (const item of sec.items) {
-          if (!item.description.trim()) {
-            throw new Error(`O item com ID "${item.id}" na seção "${sec.title}" não pode ter a descrição vazia.`);
+      if (!evaluationConcept) {
+        throw new Error("Um Conceito de Avaliação deve ser selecionado.");
+      }
+
+      const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
+      if (!hasSectionWithQuestion) {
+        throw new Error("O Dossiê deve conter pelo menos uma seção com um item/questão.");
+      }
+
+      // Validações por seção
+      let totalWeight = 0;
+      for (const sec of sectionsData) {
+        if (!sec.title.trim()) {
+          throw new Error(`A seção com ID "${sec.id}" não pode ter um título vazio.`);
+        }
+
+        if (Array.isArray(sec.items)) {
+          for (const item of sec.items) {
+            if (!item.description.trim()) {
+              throw new Error(`O item com ID "${item.id}" na seção "${sec.title}" não pode ter a descrição vazia.`);
+            }
           }
         }
+
+        const parsedWeight = parseInt(sec.weight, 10);
+        if (isNaN(parsedWeight)) {
+          throw new Error(`O peso da seção "${sec.title}" é inválido. Deve ser um número.`);
+        }
+        totalWeight += parsedWeight;
       }
 
-      const parsedWeight = parseInt(sec.weight, 10);
-      if (isNaN(parsedWeight)) {
-        throw new Error(`O peso da seção "${sec.title}" é inválido. Deve ser um número.`);
+      if (totalWeight !== 100) {
+        throw new Error(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
       }
-      totalWeight += parsedWeight;
-    }
-
-    if (totalWeight !== 100) {
-      throw new Error(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
-    }
 
       // Prepara o payload
-    const payload: CreateDossierPayload = adaptDossierStateToPayload(
+      const payload: CreateDossierPayload = adaptDossierStateToPayload(
         dossierTitle,
         dossierDescription,
         evaluationConcept,
@@ -605,7 +598,7 @@ const DossierAppPage: React.FC = () => {
       // Só mostra o erro se não for um 400 (que já foi tratado acima)
       if (error.response?.status !== 400) {
         alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
-    }
+      }
     }
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
 

@@ -23,7 +23,6 @@ export interface GetClassroomResponse {
     institution?: string;
     dossier_id?: number;
     dossier_professor_id?: number;
-    // Adicione outros campos conforme necessário
 }
 
 //OBTER CLASSE
@@ -63,7 +62,6 @@ export const CreateClassroomWithCSV = async (formData: FormData): Promise<Create
 export const GetClassroom = async (id: number): Promise<GetClassroomResponse> => {
     try {
         const response = await api.get(`/classroom/${id}`);
-        // Espera-se: { msg: 'sucesso', data: [...] }
         if (
             response.data &&
             response.data.data &&
@@ -118,9 +116,16 @@ export const UpdateClassroom = async (id: number, data: {
 }
 
 // deletar uma turma
-export const DeleteClassroom = async (id: number): Promise<DeleteClassroomResponse> => {
-    const response = await api.delete(`/classroom/${id}`);
+export const DeleteClassroom = async (id: number, professorId: number): Promise<DeleteClassroomResponse> => {
+    try {
+        const response = await api.delete(`/classroom/${id}/delete`, {
+            data: { professor_id: professorId } // <<< ADICIONADO: Enviando o professor_id no corpo
+        });
         return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao deletar turma';
+        throw new Error(message);
+    }
 };
 
 // associar um dossiê a uma turma
