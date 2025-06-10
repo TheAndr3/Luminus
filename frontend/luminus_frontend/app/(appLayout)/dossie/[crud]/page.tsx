@@ -73,11 +73,33 @@ const DossierAppPage: React.FC = () => {
 
   // Estado para garantir que o código dependente do cliente só rode após a montagem no cliente
   const [isClient, setIsClient] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const mode = searchParams.get('mode');
   const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
+
+  useEffect(() => {
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        // Verifica se o usuário tem um ID, o que confirma que ele é válido
+        if (user && user.id) {
+          setIsAuthenticated(true); // Usuário é válido, permite a renderização da página
+        } else {
+          router.push('/login'); // Usuário inválido, redireciona para o login
+        }
+      } catch (e) {
+        router.push('/login'); // Erro no parse do JSON, redireciona
+      }
+    } else {
+      router.push('/login'); // Nenhum usuário encontrado, redireciona
+    }
+    
+    setIsClient(true);
+  }, [router]);
 
   // Carrega os dados do dossiê se estiver em modo de edição
   useEffect(() => {
@@ -525,6 +547,22 @@ const DossierAppPage: React.FC = () => {
     ignoreNextBlurRef.current = false;
 
     try {
+      const userDataString = localStorage.getItem('user');
+      if (!userDataString) {
+          // Este alerta agora serve como uma segurança extra caso a sessão expire
+          alert("Sua sessão expirou. Por favor, faça o login novamente.");
+          router.push('/login');
+          return;
+      }
+
+      const userData = JSON.parse(userDataString);
+      const professorId = userData.id;
+
+      if (!professorId) {
+          alert("ID do professor não encontrado na sessão. Por favor, faça o login novamente.");
+          router.push('/login');
+          return;
+    }
       // Validações
       if (!dossierTitle.trim()) {
         throw new Error("O título do Dossiê não pode ser vazio.");
@@ -571,36 +609,23 @@ const DossierAppPage: React.FC = () => {
         dossierDescription,
         evaluationConcept,
         sectionsData,
-        1 // TODO: Substituir pelo ID real do professor da sessão
+        professorId // TODO: Substituir pelo ID real do professor da sessão
       );
 
       // Salva ou atualiza o dossiê
       if (dossierId) {
-        await updateDossier(dossierId, payload);
-        alert("Dossiê atualizado com sucesso!");
-        router.push('/dossie');
-      } else {
-        try {
-          await createDossier(payload);
-          alert("Dossiê criado com sucesso!");
-          router.push('/dossie');
-        } catch (error: any) {
-          // Se o erro for 400, ainda consideramos como sucesso pois o dossiê foi criado
-          if (error.response?.status === 400) {
-            alert("Dossiê criado com sucesso!");
-            router.push('/dossie');
-            return;
-          }
-          throw error;
-        }
-      }
-    } catch (error: any) {
-      // Só mostra o erro se não for um 400 (que já foi tratado acima)
-      if (error.response?.status !== 400) {
-        alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
-      }
+      await updateDossier(dossierId, payload);
+      alert("Dossiê atualizado com sucesso!");
+    } else {
+      await createDossier(payload);
+      alert("Dossiê criado com sucesso!");
     }
-  }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
+    router.push('/dossie');
+
+  } catch (error: any) {
+    alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
+  }
+}, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
 
 
   // --- Lógica de UI derivada de estados (useMemo) ---
@@ -645,6 +670,11 @@ const DossierAppPage: React.FC = () => {
 
 
   // --- Renderização do Componente ---
+  if (!isClient || !isAuthenticated) {
+    return <div>Carregando e verificando autenticação...</div>;
+  }
+
+
   if (isLoading) {
     return <div>Carregando...</div>;
   }
