@@ -23,7 +23,7 @@ exports.Login = async (req, res) => {
         // Desencriptar a senha recebida
         const decryptedPassword = await decryptPassword(password);
         // Buscar o professor pelo email usando pgSelect
-        const rows = await db.pgSelect('Professor', { email: email_professor });
+        const rows = await db.pgSelect('costumUser', { email: email_professor });
 
         if (rows.length == 0) {
             return res.status(404).json({msg:'Usuário não encontrado'});
@@ -101,7 +101,7 @@ exports.Create = async (req, res) => {
 
             try {
 
-                const resp = await db.pgInsert('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString, status:0});
+                const resp = await db.pgInsert('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString(), status:0});
                 return res.status(200).json({msg:'email enviado', token:token});
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
@@ -136,7 +136,7 @@ exports.RecoverPassword = async (req, res) => {
 
     try{
         const data = new Date();
-        const professor = await db.pgSelect('professor', {email:email});
+        const professor = await db.pgSelect('costumUser', {email:email});
         const bd_code = await db.pgSelect('verifyCode', {code:code, id:professor[0].id, data_sol:data.toISOString()});
 
         if(bd_code[0].status == 0) {
@@ -169,7 +169,7 @@ exports.Home = async (req, res) => {
 exports.SendEmail = async (req, res) => {
     
     try {
-        const professor = db.pgSelect('professor', {email:req.params.id});
+        const professor = db.pgSelect('costumUser', {email:req.params.id});
         if(professor) {
             const data = new Date();
             var code = genRandomCode(0, 9999);
@@ -213,7 +213,7 @@ exports.NewPassword = async (req, res) => {
         const decryptedPassword = await decryptPassword(newPass);
         //fazer hash de senha
         const hashedPassword = await hashPassword(decryptedPassword);
-        const professor = await db.pgSelect('professor', {email:email});
+        const professor = await db.pgSelect('costumUser', {email:email});
 
         //verifica se o token passado eh valido
         try{
@@ -245,7 +245,7 @@ exports.NewPassword = async (req, res) => {
 
                     //insere na tabela o token ja utilizado
                     await db.pgInsert('tokencode', dataToDb);
-                    const resp = await db.pgUpdate('professor', {password:hashedPassword}, {id:professor[0].id});
+                    const resp = await db.pgUpdate('costumUser', {password:hashedPassword}, {id:professor[0].id});
                     return res.status(201).json({msg:'password trocado com sucesso', data:resp})
                 } else {
                     return res.status(403).json({msg:'token invalido'});
@@ -266,7 +266,7 @@ exports.NewPassword = async (req, res) => {
 exports.ConfirmEmail = async (req, res) => {
     const {email, token} = req.body;
     try {
-        const professor = await db.pgSelect('professor', {email:email});
+        const professor = await db.pgSelect('costumUser', {email:email});
         if (professor.length == 0) {
             return res.status(404).json({msg:'email nao encontrado'});
         }
@@ -284,7 +284,7 @@ exports.ConfirmEmail = async (req, res) => {
                 return res.status(403).json({msg:'token invalido'});
             } else {
                 const data = new Date();
-                const resp = await db.pgUpdate('professor', {
+                const resp = await db.pgUpdate('costumUser', {
                     email:email,
                     role:"professor",
                     }, {id:professor[0].id});
