@@ -3,32 +3,31 @@ const db = require('../bd.js');
 const { decryptPassword, hashPassword } = require("./passwordManagement");
 const bcrypt = require('bcrypt');
 
-exports.Create = async (req, res) =>{
-  const {email, password, name} = req.body;
-  try {
-    //desencriptar senha
-    const decryptedPassword = await decryptPassword(password);
+exports.Create = async (req, res) => {
+  const { email, password, name } = req.body;
 
-    //hash de senha
+  try {
+    const decryptedPassword = await decryptPassword(password);
     const hashedPassword = await hashPassword(decryptedPassword);
 
-    //verifica se há email existente cadastrado
-    const verification = await db.pgSelect('Institution', {instution_email: email});
+    const verification = await db.pgSelect('Institution', { institution_email: email });
 
-    if (verification.lenght === 0) {
-      await db.pgInsert('Institution', {
+    if (verification.length === 0) {
+      const resp = await db.pgInsert('Institution', {
         name: name,
         institution_email: email,
         password: hashedPassword
       });
 
-      res.status(201).json({message:'Instituição cadastrada com sucesso!'});
 
+      return res.status(201).json({ msg: 'Instituição cadastrada com sucesso!', data:resp});
     } else {
-      res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+      return res.status(400).json({ msg: 'Esse e-mail já possui um cadastro' });
     }
   } catch (err) {
-    res.status(409).json({message:'Esse e-mail já possui um cadastro'});
+    console.error(err);
+    return res.status(500).json({ msg: 'Erro ao cadastrar instituição' });
+
   }
 }
 
@@ -36,45 +35,38 @@ exports.Login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-      // Desencriptar a senha recebida
-      const decryptedPassword = await decryptPassword(password);
+    const decryptedPassword = await decryptPassword(password);
+    if (!decryptedPassword) return res.status(400).json({msg:'falha ao desencripitar password'});
 
-      if (!decryptedPassword) {
-          return res.status(400).send('Erro ao desencriptar a senha');
+    const rows = await db.pgSelect('Institution', { institution_email: email });
+
+    if (rows.length === 0) {
+      return res.status(404).json({msg:'usuario não encontrado'});
+    }
+
+    const institution = rows[0];
+    const passwordMatch = await bcrypt.compare(decryptedPassword, institution.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({msg:"senha incorreta"});
+    }
+
+    return res.status(200).json({
+      msg: 'Login realizado com sucesso',
+      data: {
+        id: institution.id,
+        nome: institution.name,
+        email: institution.institution_email
       }
+    });
 
-      // Buscar o professor pelo email usando pgSelect
-      const rows = await db.pgSelect('Institution', { email_institution: email });
-
-      if (rows.length === 0) {
-          return res.status(404).send('Usuário não encontrado');
-      }
-
-      const institution = rows[0];
-
-      // Comparar a senha desencriptada com o hash salvo
-      const passwordMatch = await bcrypt.compare(decryptedPassword, institution.password);
-
-      if (!passwordMatch) {
-          return res.status(401).send('Senha incorreta');
-      }
-
-      // Retornar o status 200 e o professor logado
-      res.status(200).json({
-          message: 'Login realizado com sucesso',
-          instituicao: {
-              id: institution.id,
-              nome: institution.nome,
-              email: institution.email_institution
-          }
-      });
-
-      // Caso dê erro, retornar o status 500 e a mensagem de erro
   } catch (err) {
-      console.error(err);
-      res.status(500).send('Erro ao realizar login');
+    console.error(err);
+    return res.status(500).send('Erro ao realizar login');
   }
 };
+
+//daqui para baixo não foi feito até o dia da refatoração
 
 exports.Delete = async (req, res) => {
   const id = req.params.id;

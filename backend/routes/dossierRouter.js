@@ -6,7 +6,7 @@ const dossierController = require('../controller/dossierController.js');
 routerDossier.post('/dossier/create', dossierController.Create);
 
 //Listar todos os dossiês
-routerDossier.get('/dossier/list', dossierController.List);
+routerDossier.get('/dossier/list/:professorid', dossierController.List);
 
 //Obter dossiê específico
 routerDossier.get('/dossier/:id', dossierController.Get);

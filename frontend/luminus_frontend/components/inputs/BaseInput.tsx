@@ -1,171 +1,181 @@
+// -*- coding: utf-8 -*-
+/**
+ * @file BaseInput.tsx
+ * @description Este arquivo define o componente BaseInput, um input de formulário genérico e reutilizável.
+ * @version 1.0
+ * @date 02-05-2025
+ * @author Pedro
+ */
+
+// Diretiva específica do Next.js/React Server Components para indicar que este é um Componente de Cliente.
+// Necessário para usar hooks como useId e para interatividade no navegador.
 'use client';
 
-import React from 'react';
+import React, { useId } from 'react';
 
 /**
  * @interface BaseInputProps
  * @description Define as propriedades aceitas pelo componente BaseInput.
- * Estende as propriedades padrão do input HTML, omitindo 'onChange' para definir um tipo mais específico.
+ * Herda a maioria dos atributos de um <input> HTML padrão, mas omite alguns
+ * para controle interno ou gerenciamento pelo componente pai.
  */
-export interface BaseInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
-  /** Texto do label acima do input. */
-  label: string;
-  /**
-   * (Opcional) Adiciona '*' ao label e atributo `required` no input.
-   * @default false
-   */
+export interface BaseInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>,
+  // Omitimos 'onChange' para fornecer uma tipagem mais específica abaixo.
+  'onChange' |
+  // Omitimos 'aria-describedby' pois ele é gerenciado explicitamente pela prop `ariaDescribedby`.
+  'aria-describedby'
+> {
+  /** Texto a ser exibido como label acima do campo de input. Opcional. */
+  label?: string;
+
+  /** Indica se o campo é obrigatório. Adiciona um asterisco visual ao label e o atributo `required` ao input. Padrão: false. */
   required?: boolean;
-  /**
-   * (Opcional) Mensagem de erro a ser exibida. Aplica estilo de erro.
-   * @default null
-   */
-  error?: string | null;
-  /**
-   * (Opcional) Classes CSS adicionais para o container principal (div externo).
-   * Útil para layout (largura, margens externas).
-   * @default ''
-   */
+
+  /** Indica se o input deve ser estilizado como inválido (ex: borda vermelha) e define `aria-invalid="true"`. Padrão: false. */
+  isInvalid?: boolean;
+
+  /** ID do elemento externo (geralmente uma mensagem de erro) que descreve este input. Essencial para acessibilidade (liga via `aria-describedby`). */
+  ariaDescribedby?: string;
+
+  /** Classes CSS adicionais para aplicar ao container `div` principal do componente. */
   containerClassName?: string;
-  /**
-   * (Opcional) Classes CSS (ex: Tailwind) a serem adicionadas ao elemento `<label>`.
-   * @default ''
-   */
+
+  /** Classes CSS adicionais para aplicar ao elemento `label`. */
   labelClassName?: string;
-  /**
-   * (Opcional) Classes CSS (ex: Tailwind) a serem adicionadas ao elemento `<input>`.
-   * @default ''
-   */
+
+  /** Classes CSS adicionais para aplicar ao elemento `input`. */
   inputClassName?: string;
-  /**
-   * (Opcional) Elemento React a ser renderizado no final do input (ex: ícone, botão).
-   * Deve ser um elemento que aceite a prop `className`.
-   * @default null
-   */
+
+  /** Um elemento React (como um ícone) a ser exibido no final (à direita) dentro do campo de input. */
   endAdornment?: React.ReactNode;
-  /**
-   * Callback chamado na mudança do input.
-   * Recebe o evento original do React.
-   */
+
+  /** Função callback chamada quando o valor do input é alterado. Recebe o evento `ChangeEvent` do React. */
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+
+  /** ID explícito para o elemento `input`. Se não fornecido, um ID único será gerado automaticamente usando `useId`. Importante para o `label[for]` e `aria-describedby`. */
+  id?: string;
+
+  // Nota: Todas as outras props padrão de <input> como `name`, `value`, `placeholder`, `type`, `disabled`, etc.,
+  // são aceitas através do operador `...rest`.
 }
 
 /**
  * @component BaseInput
- * @description
- * Componente de input genérico e reutilizável para formulários.
- * Suporta label, required, error, customização de classes CSS,
- * adornments no final do input, e todas as props padrão de um input HTML.
- * É um componente controlado, onde o valor é gerenciado pelo componente pai.
+ * @description Um componente de input genérico e estilizado.
  *
- * @usage
- * Use este componente como base para criar inputs customizados.
- * Passe as props necessárias para controlar o estado e a aparência.
+ * Este componente fornece a estrutura básica de um campo de input com label,
+ * indicação de obrigatoriedade, estado de erro visual (`isInvalid`), e suporte
+ * para um adorno no final (ex: ícone).
  *
- * @example
- * <BaseInput
- *   label="Nome"
- *   value={nome}
- *   onChange={(e) => setNome(e.target.value)}
- *   required
- * />
+ * **Importante:** Este componente *não* renderiza mensagens de erro. Ele apenas
+ * aplica estilos de erro (via `isInvalid`) e permite a ligação com uma mensagem
+ * de erro externa através da prop `ariaDescribedby` para acessibilidade.
+ * A lógica de validação e exibição da mensagem de erro deve ser gerenciada
+ * pelo componente pai ou por um componente wrapper (ex: `FormField`).
+ *
+ * Utiliza `React.forwardRef` para permitir que componentes pais obtenham uma
+ * referência direta ao elemento `<input>` interno.
  */
 export const BaseInput = React.forwardRef<HTMLInputElement, BaseInputProps>(
   (
     {
+      // Desestruturação das props com valores padrão
       label,
       required = false,
-      error = null,
+      isInvalid = false,
+      ariaDescribedby,
       containerClassName = '',
       labelClassName = '',
       inputClassName = '',
       endAdornment = null,
-      type = 'text',
+      type = 'text', // Valor padrão para o tipo de input
       disabled = false,
-      value,
-      onChange,
-      placeholder,
-      minLength,
-      maxLength,
-      inputMode,
-      id,
-      name,
-      ...restInputProps
+      id, // ID explícito vindo das props
+      // `...rest` captura todas as outras props não desestruturadas (ex: value, placeholder, name, onBlur, etc.)
+      ...rest
     },
+    // `ref` é o segundo argumento fornecido pelo `React.forwardRef`
     ref
   ) => {
-    // Gera um ID único para o input, usado para associar o label
-    const uniqueId = React.useId();
-    const inputId = id || `input-${uniqueId}`;
+    // Gera um ID único usando o hook `useId`. Usado como fallback se nenhum `id` for passado via props.
+    // Garante que sempre haverá um ID para associar o label ao input (`htmlFor`).
+    const uniqueInputId = useId();
+    // Prioriza o ID fornecido via props, caso contrário, usa o ID gerado.
+    const inputId = id || `input-${uniqueInputId}`;
 
-    // Verifica se há um adornment no final
-    const hasEndAdornment = endAdornment !== null;
-
-    // Ajusta o padding direito do input para acomodar o adornment
+    // Verifica se o adorno final foi fornecido e é um elemento React válido.
+    const hasEndAdornment = endAdornment !== null && React.isValidElement(endAdornment);
+    // Define a classe de padding direito do input com base na presença do adorno.
+    // 'pr-10' (padding right 40px) se houver adorno, 'pr-2.5' (padding right 10px) se não houver.
     const paddingRightClass = hasEndAdornment ? 'pr-10' : 'pr-2.5';
 
     return (
-      <div className={`mb-2 ${containerClassName}`}>
-        {/* Label com indicação visual de campo obrigatório */}
-        <label
-          htmlFor={inputId}
-          className={`block text-gray-800 text-sm font-semibold mb-1 ${labelClassName}`}
-        >
-          {label}
-          {required && <span className="text-red-500"> *</span>}
-        </label>
+      // Container principal do componente. Aplica classes CSS customizadas se fornecidas.
+      <div className={`${containerClassName}`}>
+        {/* Renderiza o label apenas se a prop `label` for fornecida. */}
+        {label && (
+          <label
+            htmlFor={inputId} // Associa o label ao input usando o ID. Essencial para acessibilidade.
+            className={`block text-gray-800 text-sm font-semibold mb-1 ${labelClassName}`}
+          >
+            {label}
+            {/* Adiciona um asterisco vermelho se o campo for obrigatório. */}
+            {required && <span className="text-red-500"> *</span>}
+          </label>
+        )}
 
-        {/* Container relativo para posicionar o adornment */}
+        {/* Container relativo para posicionar o adorno final, se existir. */}
         <div className="relative">
-          {/* Elemento input com props dinâmicas */}
+          {/* O elemento input real. */}
           <input
-            ref={ref}
-            id={inputId}
-            name={name}
-            type={type}
-            placeholder={placeholder}
-            value={value}
-            onChange={onChange}
-            required={required}
-            disabled={disabled}
-            minLength={minLength}
-            maxLength={maxLength}
-            inputMode={inputMode}
+            ref={ref} // Encaminha a ref para o elemento input DOM.
+            id={inputId} // Define o ID do input.
+            type={type} // Define o tipo do input (text, password, email, etc.).
+            required={required} // Adiciona o atributo HTML `required`.
+            disabled={disabled} // Adiciona o atributo HTML `disabled`.
             className={`
-              w-full p-2.5 ${paddingRightClass} text-sm
-              border ${error ? 'border-red-500' : 'border-gray-300'}
-              rounded-md focus:ring-2 focus:ring-green-500
-              focus:border-transparent transition
-              text-gray-900 font-medium
-              ${disabled ? 'bg-gray-100 text-gray-700 cursor-not-allowed' : 'bg-white'}
-              ${inputClassName}
+              w-full p-2.5 ${paddingRightClass} text-sm outline-none  /* Estilos base e padding direito ajustado */
+              border ${isInvalid ? 'border-red-500' : 'border-gray-300'} /* Borda vermelha se inválido, cinza caso contrário */
+              rounded-full focus:ring-2 focus:ring-green-500 /* Arredondamento e anel de foco verde */
+              focus:border-transparent transition                  /* Transição suave e borda transparente no foco */
+              text-gray-900 font-medium                          /* Cor e peso da fonte do texto digitado */
+              py-2
+              px-4
+              ${disabled ? 'bg-gray-100 text-gray-700 cursor-not-allowed' : 'bg-white'} /* Estilos para estado desabilitado */
+              ${inputClassName}                                  /* Aplica classes CSS customizadas ao input */
             `}
-            {...restInputProps} // Passa quaisquer outras props HTML para o input
+            // Atributos de acessibilidade:
+            aria-invalid={isInvalid} // Indica a leitores de tela se o campo é inválido.
+            aria-describedby={ariaDescribedby} // Associa o input à sua descrição (mensagem de erro externa).
+            // Espalha todas as outras props restantes (value, onChange, placeholder, name, onBlur, etc.) no input.
+            {...rest}
           />
 
-          {/* Adornment no final, se fornecido */}
-          {hasEndAdornment && React.isValidElement(endAdornment) && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              {React.cloneElement(
-                endAdornment as React.ReactElement<{ className?: string }>,
-                {
-                  className: `${
-                    (endAdornment.props as { className?: string }).className || ''
-                  } pointer-events-auto`.trim(),
-                }
-              )}
-            </div>
+          {/* Renderiza o adorno final se ele existir. */}
+          {hasEndAdornment && (
+             // Container para posicionar o adorno dentro do input, à direita.
+             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+               {/* Clona o elemento React do adorno. Isso é feito para potencialmente adicionar/modificar props.
+                   Aqui, garantimos que o adorno permita eventos de clique/mouse ('pointer-events-auto')
+                   enquanto o container (`div` acima) os bloqueia ('pointer-events-none') para não interferir
+                   com o clique no input. Preserva classes existentes no adorno. */}
+               {React.cloneElement(
+                   // Tipagem para garantir que é um ReactElement com props que podem incluir className.
+                   endAdornment as React.ReactElement<{ className?: string }>,
+                   // Novas props para o elemento clonado:
+                   {
+                     // Concatena a classe 'pointer-events-auto' com quaisquer classes que o adorno já possua.
+                     className: `${(endAdornment.props as { className?: string }).className || ''} pointer-events-auto`.trim()
+                   }
+               )}
+             </div>
           )}
         </div>
-
-        {/* Mensagem de erro, exibida apenas se 'error' for fornecido */}
-        {error && (
-          <div className="mt-0.5">
-            <p className="text-red-500 text-xs">{error}</p>
-          </div>
-        )}
+        {/* Nota: A mensagem de erro NÃO é renderizada aqui. Deve ser gerenciada pelo componente pai. */}
       </div>
     );
   }
 );
 
+// Define um nome de exibição para o componente. Útil para depuração com as React DevTools.
 BaseInput.displayName = 'BaseInput';

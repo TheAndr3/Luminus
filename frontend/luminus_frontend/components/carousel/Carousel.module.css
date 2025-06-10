@@ -1,0 +1,62 @@
+/* components/Carousel/Carousel.module.css */
+
+.carouselContainer {
+    overflow: hidden; /* Esconde as partes dos slides que saem para fora */
+    position: relative; /* Necessário para posicionar os botões/indicadores absolutos */
+    border-radius: 8px; /* Opcional: para arredondar os cantos do carrossel */
+    height: 100%; /* Faz o carrossel tentar ocupar a altura do seu container pai */
+    width: 100%; /* Faz o carrossel tentar ocupar a largura do seu container pai */
+  }
+  
+  .slidesWrapper {
+    display: flex; /* Coloca os slides lado a lado */
+    transition: transform 0.5s ease-out; /* Animação suave ao trocar de slide */
+    height: 100%; /* Garante que o wrapper tenha altura */
+  }
+  
+  /* Wrapper individual para cada slide */
+  .slide {
+    position: relative; /* Importante se usar next/image com layout='fill' */
+    width: 100%; /* Cada slide ocupa 100% da largura do container */
+    flex-shrink: 0; /* Impede que os slides encolham */
+    height: 100%; /* Cada slide ocupa 100% da altura */
+    overflow: hidden; /* Garante que conteúdo interno não vaze (ex: imagem fill) */
+  }
+  
+  
+  /* --- Indicadores (Bolinhas) --- */
+  .indicatorsContainer {
+    position: absolute;
+    bottom: 1rem; /* Distância da borda inferior */
+    left: 0;
+    right: 0;
+    z-index: 1; /* Acima dos slides */
+  }
+  
+  .indicatorsWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza as bolinhas horizontalmente */
+    gap: 0.5rem; /* Espaço entre as bolinhas */
+  }
+  
+  .indicatorDot {
+    display: block;
+    width: 0.75rem; /* Tamanho da bolinha (12px) */
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: white; /* Cor base da bolinha */
+    cursor: pointer;
+    padding: 0; /* Remove padding padrão de botão */
+    border: none; /* Remove borda padrão de botão */
+    transition: opacity 0.2s ease, transform 0.2s ease; /* Animação suave */
+  }
+  
+  .indicatorDotActive {
+    opacity: 1; /* Bolinha ativa é totalmente opaca */
+    transform: scale(1.1); /* Opcional: deixa a bolinha ativa um pouco maior */
+  }
+  
+  .indicatorDotInactive {
+    opacity: 0.5; /* Bolinha inativa é semi-transparente */
+  }
