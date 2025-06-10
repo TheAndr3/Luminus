@@ -101,7 +101,7 @@ exports.Create = async (req, res) => {
 
             try {
 
-                const resp = await db.pgInsert('verifyCode', {code:code, id:professor[0].id, data_sol:data.toISOString, status:0});
+                const resp = await db.pgInsert('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString, status:0});
                 return res.status(200).json({msg:'email enviado', token:token});
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
@@ -109,6 +109,7 @@ exports.Create = async (req, res) => {
             }
 
         } else {
+            console.log('o email é igual')
             return res.status(409).json({ msg: 'Esse e-mail já possui um cadastro' });
         }
     } catch (err) {
