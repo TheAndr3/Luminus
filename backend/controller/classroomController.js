@@ -18,7 +18,7 @@ exports.List = async (req, res) => {
   }
 
   try{
-    const classData = await db.pgSelect('Classroom', {professor_id:professor_id});
+    const classData = await db.pgSelect('Classroom', {costumUser_id:professor_id});
     console.log('Dados brutos das turmas:', classData);
     
     const endIndex = start + size;
@@ -57,7 +57,7 @@ exports.Create = async (req, res) => {
     
     if (Object.values(professor).length > 0) {
       const payload = {
-        professor_id: req.body.professor_id,
+        costumUser_id: req.body.professor_id,
         name: req.body.name,
         description: req.body.description,
         season: req.body.season,
@@ -92,7 +92,7 @@ exports.Update = async (req, res) => {
 
       const resp = await db.pgUpdate('classroom', payload, { 
         id: req.params.id,
-        professor_id: req.body.professor_id 
+        costumUser_id: req.body.professor_id 
       });
 
       return res.status(200).json({ msg: 'turma atualizada com sucesso', data:resp});
@@ -109,10 +109,10 @@ exports.Delete = async (req, res) => {
     try {
     const payload = {
       classroom_id: req.params.id,
-      professor_id: req.body.professor_id
+      costumUser_id: req.body.professor_id
     };
 
-    await db.pgDelete('classroom', { id: payload.classroom_id, professor_id: payload.professor_id });
+    await db.pgDelete('classroom', { id: payload.classroom_id, costumUser_id: payload.professor_id });
 
     return res.status(200).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
@@ -140,7 +140,7 @@ exports.AssociateDossier = async (req, res) => {
     // Atualiza a classe com os dois campos exigidos pela FK composta
     const updateData = {
       dossier_id: dossier[0].id,
-      dossier_professor_id: dossier[0].professor_id
+      dossier_professor_id: dossier[0].costumUser_id
     };
 
     await db.pgUpdate('Classroom', updateData, { id: classId });
@@ -169,7 +169,7 @@ exports.CreateWithCsv = async (req, res) => {
     try {
         // 1. Criar a Turma (Classroom)
         const classroomPayload = {
-            professor_id: classProfessorId,
+            costumUser_id: classProfessorId,
             name: name,
             description: description, // No frontend, 'inputDisc' é usado como descrição
             season: season,
@@ -234,7 +234,7 @@ exports.CreateWithCsv = async (req, res) => {
                     const classroomStudentPayload = {
                         classroom_id: newClassroomId,
                         student_id: studentData.matricula,
-                        professor_id: classProfessorId // O professor_id da turma
+                        costumUser_id: classProfessorId // O professor_id da turma
                     };
                     
                     // Evitar duplicatas em ClassroomStudent
