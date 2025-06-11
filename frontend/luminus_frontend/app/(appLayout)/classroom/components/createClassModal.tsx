@@ -6,7 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { use, useState, useRef } from "react"; // Importa hooks do React
 import { toast } from 'react-hot-toast';
 
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { CreateClassroom} from "@/services/classroomServices";
@@ -94,8 +94,8 @@ export default function DialogPage() {
             if (csvFileToUpload) {
                 // Cria a turma com o arquivo CSV
                 const formData = new FormData();
-                formData.append('file', csvFileToUpload);
-                formData.append('professor_Id', professorId);
+                formData.append('csvfile', csvFileToUpload);
+                formData.append('professor_id', professorId);
                 formData.append('name', titulo);
                 formData.append('description', inputDisc);
                 formData.append('season', inputPer);
@@ -115,7 +115,7 @@ export default function DialogPage() {
 
                 // Cria a turma sem o arquivo CSV
                 const newClassData = {
-                    professor_Id: Number(professorId),
+                    professor_id: Number(professorId),
                     name: titulo,
                     description: inputDisc,
                     season: inputPer,
@@ -148,7 +148,8 @@ export default function DialogPage() {
             }}>
                 <DialogTrigger asChild>
                     <div className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
-                        Adicionar turma&nbsp;&nbsp;+
+                        <Plus size={16} className="mr-1" />
+                        Adicionar turma
                     </div>
                 </DialogTrigger>
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}

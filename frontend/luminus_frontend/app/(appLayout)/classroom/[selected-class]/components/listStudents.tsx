@@ -14,15 +14,19 @@ import { Check, X, User as UserIcon } from 'lucide-react'; // Importa ícones de
 // Componente de imagem otimizada do Next.js
 import Image from "next/image";
 // Painel de ações que aparece quando studentss são selecionadas
-import ActionPanel from "@/app/(appLayout)/classroom/components/actionPanel";
+import ActionPanel from "@/app/(appLayout)/classroom/[selected-class]/components/ActionPanel";
 // Hooks do React para efeitos colaterais e estado
 import { useEffect, useState } from "react";
 // Componente com ações disponíveis para cada students
 import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomActions";
 import { Classroom } from "../../components/types";
+import AssociarDossie from "./associarDossie";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
+  mainColor?: string;
+  hoverColor: string;
+
   students: Students[];                        // Lista de alunos visíveis (paginadas)
 
   toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
@@ -44,10 +48,15 @@ interface ListStudentsProps {
   handleCancelInlineAdd: () => void;           // Função para cancelar a adição
   inlineAddStudentError: string | null;        // Erro da adição inline
   isLoading: boolean;                          // Estado de loading global
+
+  onCsvFileSelected: (file: File) => void;
 };
 
 // Componente principal que renderiza a lista de studentss
 export default function ListStudents({
+  mainColor,
+  hoverColor,
+
   students,
 
   toggleSelectAll,
@@ -69,6 +78,8 @@ export default function ListStudents({
   handleCancelInlineAdd,
   inlineAddStudentError,
   isLoading,
+
+  onCsvFileSelected,
 }: ListStudentsProps) {
 
   // Estado local para verificar se algum item está selecionado
@@ -119,6 +130,7 @@ export default function ListStudents({
 
   return (
     <div className="w-full">
+      
       {/* Cabeçalho da tabela */}
       <table className="table-fixed w-full text-left border-separate border-spacing-y-2 rounded-md">
         <thead className="bg-gray-100">
@@ -131,13 +143,13 @@ export default function ListStudents({
                 className="w-5 h-5 accent-blue-600"
               />
             </th>
-            <th className="w-10 px-4 py-3"></th> {/* Ícone */}
+            <th className="w-10 px-4 py-3"></th> 
             <th className="px-4 py-3 text-left">Matrícula</th>
             <th className="px-4 py-3 text-left">Aluno</th>
-            <th className="w-14 px-2"></th> {/* Ações */}
+            <th className="w-14 px-2"></th> 
           </tr>
         </thead>
-
+        
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
@@ -280,6 +292,18 @@ export default function ListStudents({
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
       />
+      </div>
+
+      {/* Painel de ações que aparece quando há turmas selecionadas */}
+      <div className="mt-10">
+        {hasSelected && (
+          <ActionPanel
+            mainColor={mainColor}
+            hoverColor={hoverColor}
+            onDeleted={onDeleteStudents}
+            onCsvFileSelected={onCsvFileSelected}
+          />
+        )}
       </div>
     </div>
   );

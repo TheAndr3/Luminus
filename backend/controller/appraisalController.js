@@ -19,7 +19,7 @@ exports.List = async (req, res) => {
 
         if (Object.values(dataStudent).length > 0) {
 
-            return res.status(200).json({msg:"sucess", data:dataStudent.slice(start, start+size-1), ammount:dataStudent.length});
+            return res.status(200).json({msg:"sucess", data:dataStudent, ammount:dataStudent.length});
         } else {
             return res.status(403).json({msg:'nao ha estudantes nessa turma'});
         }
@@ -83,7 +83,7 @@ exports.Create = async (req, res) => {
         
 
         payload = {
-            professor_id:req.body.professor_id,
+            costumUser_id:req.body.professor_id,
             student_id: student_id,
             classroom_id:class_id,
             points:0.0,

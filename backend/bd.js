@@ -39,9 +39,23 @@ async function pgSelect(table, data) {
 
     const client = await connect();
     const res = await client.query(sqlString, values);
+
     client.release()
     return res.rows;
 
+}
+
+async function pgSelectStudentsInClassroom(classroom_id) {
+    const query = `
+        SELECT cs.student_id, s.name, s.id AS matricula
+        FROM ClassroomStudent cs
+        JOIN student s ON cs.student_id = s.id
+        WHERE cs.classroom_id = $1
+    `;
+    const client = await connect();
+    const res = await client.query(query, [classroom_id]);
+    client.release();
+    return res.rows;
 }
 
 async function pgInsert(table, data) {
@@ -56,6 +70,7 @@ async function pgInsert(table, data) {
     const result = await client.query(query, values);
     client.release();
     return result
+
 }
 
 async function pgDelete(table, data) {
@@ -72,56 +87,79 @@ async function pgDelete(table, data) {
 
 async function pgUpdate(table, data, keys) {
     const keysNewObject = Object.keys(data);
-    const values = Object.values(data);
-    const placeHolderToWhere = keys.map((_,i) => `${_} = $${i+1}`).join(' AND ');
-    const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1}`).join(', ');
+    const valuesNewObject = Object.values(data);
+    const keysWhere = Object.keys(keys);
+    const valuesWhere = Object.values(keys);
+    
+    const placeHolderToWhere = keysWhere.map((_,i) => `${_} = $${i+1}`).join(' AND ');
+    const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1+valuesWhere.length}`).join(', ');
     const query = `UPDATE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
 
     const client = await connect();
     const result = await client.query(query, values);
     client.release();
     return result
+
 }
 
 //corrigir isso auqi, não funciona mais dessa forma
 async function pgDossieSelect(id) {
+    // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
     const query = `
+    WITH dossier_data AS (
+        SELECT d.id, d.name, d.description, d.evaluation_method
+        FROM dossier d
+        WHERE d.id = $1
+    )
     SELECT 
-    json_build_object(
-        'id', d.id,
-        'name', d.name,
-        'description', d.description,
-        'evaluation_method', d.evaluation_method,
-        'sections', json_agg(
-        DISTINCT jsonb_build_object(
-            'id', s.id,
-            'name', s.name,
-            'description', s.description,
-            'weigth', s.weigth,
-            'questions', (
-            SELECT COALESCE(json_agg(
-                jsonb_build_object(
-                'id', q.id,
-                'description', q.description
-                )
-            ), '[]'::json)
-            FROM question q
-            WHERE q.section_id = s.id AND q.dossier_id = d.id
+        json_build_object(
+            'id', d.id,
+            'name', d.name,
+            'description', d.description,
+            'evaluation_method', d.evaluation_method,
+            'sections', COALESCE(
+                json_agg(
+                    jsonb_build_object(
+                        'id', s.id,
+                        'name', s.name,
+                        'description', s.description,
+                        'weigth', s.weigth,
+                        'questions', (
+                            SELECT COALESCE(
+                                json_agg(
+                                    jsonb_build_object(
+                                        'id', q.id,
+                                        'description', q.description
+                                    )
+                                ),
+                                '[]'::json
+                            )
+                            FROM question q
+                            WHERE q.section_id = s.id AND q.dossier_id = d.id
+                        )
+                    )
+                ) FILTER (WHERE s.id IS NOT NULL),
+                '[]'::json
             )
-        )
-        )
-    ) AS dossier
-    FROM dossier d
+        ) AS dossier
+    FROM dossier_data d
     LEFT JOIN section s ON s.dossier_id = d.id
-    WHERE d.id = $1
-    GROUP BY d.id, d.name;
+    GROUP BY d.id, d.name, d.description, d.evaluation_method;
 `;
 
     const client = await connect();
-
     const data = await client.query(query, [id]);
     client.release();
-    return data.rows;
+
+    
+    // Retorna null se nenhum dossiê for encontrado
+    if (!data.rows || data.rows.length === 0) {
+        return null;
+    }
+    
+    // Retorna o objeto dossiê diretamente
+    return data.rows[0].dossier;
+
 }
 
 async function pgDossieUpdate(data) {
@@ -234,4 +272,4 @@ async function pgAppraisalGetPoints(classId) {
     }
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints};
+module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints, pgSelectStudentsInClassroom};

@@ -1,9 +1,8 @@
 // services/institution.ts
 
-import { api } from './api'; // seu axios configurado
-import { encryptWithPublicKey } from '../utils/crypto'; // sua função de encriptação
+import { api } from './api'; 
+import { encryptWithPublicKey } from '../utils/crypto'; 
 
-// Tipagens internas
 interface InstitutionLoginPayload {
   email: string;
   password: string;

@@ -4,7 +4,7 @@
 // Componentes e tipos
 import ListStudents from "./components/listStudents";
 import { Students } from "./components/types"; // Corrigido o caminho se 'types.ts' estiver na mesma pasta de componentes
-import React, { useState, useEffect, useRef } from 'react'; // Adicionado useRef
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // Adicionado useRef
 import { Button } from "@/components/ui/button";
 import { darkenHexColor } from '@/utils/colorHover';
 // import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
@@ -14,6 +14,9 @@ import { FileText } from "lucide-react"; // Manteve FileText
 import styles from './selected-classroom.module.css';
 import { toast } from 'react-hot-toast'; 
 import { api } from "@/services/api";
+import { GetClassroom } from '@/services/classroomServices';
+import { ListStudents as ListStudentsService } from '@/services/studentService';
+
 // Removido CreateStudent pois a importação em massa usará um endpoint diferente
 // import { CreateStudent } from "@/services/studentService"; 
 import { usePathname } from 'next/navigation';
@@ -32,6 +35,13 @@ type ParsedStudent = {
   matricula: string;
   nome: string;
 };
+
+interface ExpectedCreateResponse {
+  success: boolean;
+  message?: string; // Mensagem opcional, geralmente presente em caso de erro
+  // Adicione outras propriedades aqui se a API retornar dados do aluno criado no sucesso,
+  // por exemplo: student?: Students;
+}
 
 export default function VisualizacaoAlunos() {
   const pathname = usePathname();
@@ -58,12 +68,23 @@ export default function VisualizacaoAlunos() {
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
   const [showCsvConfirmation, setShowCsvConfirmation] = useState(false);
   const [csvError, setCsvError] = useState<string | null>(null);
-  const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null); // << NOVO ESTADO
   const fileInputRef = useRef<HTMLInputElement | null>(null); // << NOVO REF
 
   const [currentTurmaId, setCurrentTurmaId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingStudents, setIsFetchingStudents] = useState(false); // Loading específico para fetchStudents
+
+  // Estados para o modal de adicionar aluno (mantido para referência, mas não usado para a nova funcionalidade)
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [newStudentMatricula, setNewStudentMatricula] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [addStudentError, setAddStudentError] = useState<string | null>(null);
+
+  // Novos estados para a linha de adição direta
+  const [showInlineAddStudent, setShowInlineAddStudent] = useState(false);
+  const [inlineNewStudentMatricula, setInlineNewStudentMatricula] = useState('');
+  const [inlineNewStudentName, setInlineNewStudentName] = useState('');
+  const [inlineAddStudentError, setInlineAddStudentError] = useState<string | null>(null);
 
 
   // Função para buscar alunos da API
@@ -72,25 +93,22 @@ export default function VisualizacaoAlunos() {
     setIsFetchingStudents(true);
     try {
       const response = await api.get(`/student/${turmaId}/list`);
-      // ATENÇÃO: O backend `/student/${turmaId}/list` PRECISA retornar student_id e name.
-      // Se ele retorna { student_id: 1, name: "Aluno X" }, o map abaixo funciona.
-      // Se ele retorna SÓ { student_id: 1 }, você NÃO TERÁ O NOME e precisará ajustar o backend.
+      // Mapeamento aqui:
       const studentsFromApi = response.data.map((student: any) => ({
-        matricula: student.student_id || student.matricula || student.id, // Tente diferentes chaves comuns
-        nome: student.name || student.nome || "Nome não disponível", // Fallback se nome não vier
+        matricula: student.matricula || student.student_id || student.id,
+        nome: student.name || student.nome || "Nome não disponível",
         selected: false,
       }));
-      
-      // Filtrar alunos que não puderam ser mapeados corretamente (sem matricula ou nome)
+
+      // Filtro para garantir que só alunos válidos sejam exibidos
       const validStudents = studentsFromApi.filter(
-          (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
+        (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
       );
 
       if (validStudents.length !== studentsFromApi.length && studentsFromApi.length > 0) {
-          console.warn("Alguns alunos da API não tinham ID ou nome e foram filtrados.", studentsFromApi);
-          toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
+        toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
       }
-      
+
       setClassi(validStudents);
     } catch (error: any) {
       console.error("Erro ao buscar alunos:", error);
@@ -102,17 +120,58 @@ export default function VisualizacaoAlunos() {
     }
   };
 
+  // Busca o nome da turma pelo ID e define no título da página
+  const fetchClassDetails = async (turmaId: number) => {
+    try {
+      const response = await api.get(`/classroom/${turmaId}`);
+      // O nome da turma deve vir do backend no campo 'name' (ou 'titulo' se for esse o nome)
+      setClassTitle(response.data.name || response.data.titulo || "Turma sem nome");
+    } catch (error) {
+      setClassTitle("Turma não encontrada");
+    }
+  };
+
+  // Função única para buscar detalhes da turma e alunos em paralelo
+  const fetchPageData = useCallback(async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Busca detalhes da turma e lista de alunos em paralelo
+      const [classDetails, studentsFromService] = await Promise.all([
+        GetClassroom(id), // Serviço que já trata o retorno corretamente
+        ListStudentsService(id)
+      ]);
+
+      // Ajuste conforme o retorno real do seu backend:
+      // Se vier { data: [{ name: ... }] }, use:
+      // setClassTitle(classDetails.data?.[0]?.name || `Turma ${id}`);
+      // Se vier { name: ... }, use:
+      setClassTitle(classDetails.name || `Turma ${id}`);
+
+      // Mapeia e define o estado dos alunos
+      const formattedStudents = studentsFromService.map(student => ({
+        matricula: student.id,
+        nome: student.name,
+        selected: false,
+      }));
+      setClassi(formattedStudents);
+
+    } catch (error: any) {
+      console.error("Erro ao carregar dados da turma:", error);
+      setClassTitle("Turma não encontrada");
+      toast.error(error.message || "Falha ao carregar a página da turma.");
+      setClassi([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const turmaId = getTurmaIdFromPath();
     setCurrentTurmaId(turmaId);
     if (turmaId !== null) {
-      // TODO: Chamar API para carregar detalhes da turma para `classTitle`
-      // Ex: fetchClassDetails(turmaId).then(data => setClassTitle(data.name));
-      console.log("ID da Turma para carregar alunos:", turmaId);
-      fetchStudents(turmaId);
+      fetchPageData(turmaId);
     }
-  }, [pathname]); // Removido getTurmaIdFromPath das dependências se ela for estável ou definida fora.
-                  // Se getTurmaIdFromPath depender de 'pathname' e for definida dentro, pode ficar como está.
+  }, [pathname, fetchPageData]);
 
   const totalPages = Math.ceil(classi.length / alunosPorPagina);
   const startIndex = (currentPage - 1) * alunosPorPagina;
@@ -178,7 +237,6 @@ export default function VisualizacaoAlunos() {
     const reader = new FileReader();
     setCsvError(null);
     setParsedStudentsFromCSV([]);
-    setCsvFileToUpload(null); // Limpa o arquivo anterior
 
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -211,7 +269,6 @@ export default function VisualizacaoAlunos() {
         setCsvError("Nenhum aluno válido encontrado no CSV.");
       }
       setParsedStudentsFromCSV(students);
-      setCsvFileToUpload(file); // << GUARDA O ARQUIVO
       setShowCsvConfirmation(true);
       // ... (catch para erros de parse) ...
     };
@@ -223,7 +280,6 @@ export default function VisualizacaoAlunos() {
     setShowCsvConfirmation(false);
     setParsedStudentsFromCSV([]);
     setCsvError(null);
-    setCsvFileToUpload(null); // << LIMPA O ARQUIVO
     if (fileInputRef.current) {
         fileInputRef.current.value = ""; 
     }
@@ -236,18 +292,20 @@ export default function VisualizacaoAlunos() {
       setIsLoading(false);
       return;
     }
-    if (!csvFileToUpload) {
-      toast.error("Nenhum arquivo CSV selecionado para importar.");
+    if (!parsedStudentsFromCSV || parsedStudentsFromCSV.length === 0) {
+      toast.error("Nenhum aluno válido para importar.");
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-    const formData = new FormData();
-    formData.append('csvfile', csvFileToUpload); 
 
     try {
-      const response = await api.post(`/student/${currentTurmaId}/importcsv`, formData);
+      // Agora enviando como JSON!
+      const response = await api.post(
+        `/student/${currentTurmaId}/importcsv`,
+        { alunos: parsedStudentsFromCSV }
+      );
 
       if (response.status === 201 || response.status === 207) {
         toast.success(response.data.msg || "Importação de alunos processada!");
@@ -273,6 +331,99 @@ export default function VisualizacaoAlunos() {
     }
   };
 
+  const handleInlineAddStudent = async () => {
+    setInlineAddStudentError(null);
+
+    if (!inlineNewStudentName.trim()) {
+      setInlineAddStudentError("O nome do aluno não pode ser vazio.");
+      return;
+    }
+    if (!inlineNewStudentMatricula.trim()) {
+      setInlineAddStudentError("A matrícula do aluno não pode ser vazia.");
+      return;
+    }
+
+    const matriculaNum = parseInt(inlineNewStudentMatricula, 10);
+    if (isNaN(matriculaNum)) {
+      setInlineAddStudentError("A matrícula deve ser um número válido.");
+      return;
+    }
+
+    if (classi.some(s => s.matricula === matriculaNum)) {
+      setInlineAddStudentError("Já existe um aluno com esta matrícula.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        if (!currentTurmaId) {
+          toast.error("ID da turma não encontrado. Não é possível adicionar o aluno.");
+          setIsLoading(false);
+          return;
+        }
+
+        // --- NOVO: Definir o professor_id ---
+        // OPÇÃO 1: Hardcoded (apenas para teste inicial, não recomendado para produção)
+        const professorId = 1; // Substitua por um ID de professor real ou logicamente obtido.
+                              // Se o professor_id vem do contexto do usuário logado, você precisará buscá-lo.
+                              // Por exemplo, de um hook de autenticação, um localStorage, ou um Context API.
+
+        // Constrói o corpo da requisição com os dados do novo aluno
+        const studentData = {
+          id: matriculaNum, // O backend espera 'id' para a matrícula
+          name: inlineNewStudentName.trim(), // O backend espera 'name' para o nome
+          professor_id: professorId, // Adiciona o professor_id necessário para a tabela ClassroomStudent
+        };
+
+        // --- NOVO: Chamada real à API ---
+        // Ajuste o endpoint conforme a sua rota no Node.js (ex: /student/:classid/create)
+        const response = await api.post(`/student/${currentTurmaId}/create`, studentData); // OU `api.post('/student/create', studentData)` se classid for no corpo.
+
+        // Verifica a resposta da API
+        if (response.status === 201) { // 201 Created é o status de sucesso do seu backend
+          const newStudent: Students = {
+            matricula: matriculaNum, // Usamos a matrícula que o usuário inseriu, pois o backend usa o 'id' fornecido
+            nome: inlineNewStudentName.trim(),
+            selected: false,
+          };
+          
+          // Adiciona o aluno à lista localmente APÓS a confirmação do backend
+          setClassi(prevClassi => [...prevClassi, newStudent]);
+          toast.success(response.data.msg); // Usa a mensagem de sucesso do backend: "estudante inserido com sucesso"
+          setInlineNewStudentMatricula('');
+          setInlineNewStudentName('');
+          setShowInlineAddStudent(false);
+
+          // É fundamental recarregar a lista de alunos para garantir que a UI reflita o estado real do backend
+          fetchStudents(currentTurmaId);
+
+        } else {
+          // Se a API retornar um status de erro (ex: 400 Bad Request, 500 Internal Server Error)
+          // O backend retorna 'msg' em caso de erro
+          setInlineAddStudentError(response.data.msg || "Erro desconhecido ao adicionar aluno.");
+          toast.error(response.data.msg || "Erro desconhecido ao adicionar aluno.");
+        }
+
+      } catch (error: any) {
+        console.error("Erro ao adicionar aluno:", error);
+        // Captura erros de rede ou respostas de erro da API
+        setInlineAddStudentError(error.response?.data?.msg || "Erro ao conectar com o servidor ou adicionar aluno.");
+        toast.error(error.response?.data?.msg || "Erro ao conectar com o servidor ou adicionar aluno.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+  // Função para cancelar a adição inline e limpar os campos
+  const handleCancelInlineAdd = () => {
+    setInlineNewStudentMatricula('');
+    setInlineNewStudentName('');
+    setInlineAddStudentError(null);
+    setShowInlineAddStudent(false);
+  };
+
+
   return (
     <div className={styles.pageContainer}>
       <div className="flex-1 bg-white px-1"> {/* Ajustado para px-1 como no código original */}
@@ -283,7 +434,7 @@ export default function VisualizacaoAlunos() {
           onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
-          onAddStudentClick={() => { /* TODO: modal para adicionar aluno individual */ }}
+          onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
         />
 
         {/* Modal de Confirmação de CSV */}
@@ -363,6 +514,8 @@ export default function VisualizacaoAlunos() {
 
         <div className="px-10 flex items-center justify-center mt-10 ml-auto"> {/*px-10 no original*/}
           <ListStudents
+            mainColor={color}
+            hoverColor={hoverColor}
             students={alunosVisiveis}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
@@ -371,15 +524,16 @@ export default function VisualizacaoAlunos() {
             currentPage={currentPage}
             totalPages={totalPagesFiltradas}
             setCurrentPage={setCurrentPage}
-            showInlineAddStudent={false}
-            inlineNewStudentMatricula={""}
-            setInlineNewStudentMatricula={() => {}}
-            inlineNewStudentName={""}
-            setInlineNewStudentName={() => {}}
-            inlineAddStudentError={null}
-            handleInlineAddStudent={async () => {}}
-            handleCancelInlineAdd={() => {}}
+            showInlineAddStudent={showInlineAddStudent}
+            inlineNewStudentMatricula={inlineNewStudentMatricula}
+            setInlineNewStudentMatricula={setInlineNewStudentMatricula}
+            inlineNewStudentName={inlineNewStudentName}
+            setInlineNewStudentName={setInlineNewStudentName}
+            handleInlineAddStudent={handleInlineAddStudent}
+            handleCancelInlineAdd={handleCancelInlineAdd}
+            inlineAddStudentError={inlineAddStudentError}
             isLoading={isLoading}
+            onCsvFileSelected={handleProcessCsvFile}
           />
         </div>
       </div>

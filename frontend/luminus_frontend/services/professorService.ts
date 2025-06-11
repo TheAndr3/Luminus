@@ -64,7 +64,6 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
       password: encryptedPassword
     });
 
-    // Certifique-se de que response.data.data existe e tem a estrutura esperada
     if (!response.data || !response.data.data) {
         throw new Error("Resposta de login inesperada do servidor.");
     }
@@ -73,8 +72,8 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
     return response.data.data;
 
   } catch (error: any) {
-    // Mantenha o tratamento de erro aqui, como já está (ou ajuste a mensagem)
-    const message = error.response?.data?.msg || 'Erro ao fazer login'; // Se o backend retorna msg
+
+    const message = error.response?.data?.msg || 'Erro ao fazer login'; 
     throw new Error(message);
   }
 }
@@ -82,6 +81,7 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
 //Cadastrar
 export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
   try {
+    console.log('entrou aqui')
     //pegar chave pública
     const publicKey = await getPublicKey();
 
