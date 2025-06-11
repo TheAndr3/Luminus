@@ -39,7 +39,8 @@ async function pgSelect(table, data) {
 
     const client = await connect();
     const res = await client.query(sqlString, values);
-    client.release();
+
+    client.release()
     return res.rows;
 
 }
@@ -66,9 +67,10 @@ async function pgInsert(table, data) {
 
 
     const client = await connect();
-    const resp = await client.query(query, values);
+    const result = await client.query(query, values);
     client.release();
-    return resp;
+    return result
+
 }
 
 async function pgDelete(table, data) {
@@ -78,9 +80,9 @@ async function pgDelete(table, data) {
     const query = `DELETE FROM ${table} WHERE ${placeHolder}`;
 
     const client = await connect();
-    const resp = await client.query(query, values);
+    const result = await client.query(query, values);
     client.release();
-    return resp;
+    return result
 }
 
 async function pgUpdate(table, data, keys) {
@@ -94,11 +96,13 @@ async function pgUpdate(table, data, keys) {
     const query = `UPDATE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
 
     const client = await connect();
-    const resp = await client.query(query, [...valuesWhere, ...valuesNewObject]);
+    const result = await client.query(query, values);
     client.release();
-    return resp;
+    return result
+
 }
 
+//corrigir isso auqi, não funciona mais dessa forma
 async function pgDossieSelect(id) {
     // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
     const query = `
@@ -146,6 +150,7 @@ async function pgDossieSelect(id) {
     const client = await connect();
     const data = await client.query(query, [id]);
     client.release();
+
     
     // Retorna null se nenhum dossiê for encontrado
     if (!data.rows || data.rows.length === 0) {
@@ -154,6 +159,7 @@ async function pgDossieSelect(id) {
     
     // Retorna o objeto dossiê diretamente
     return data.rows[0].dossier;
+
 }
 
 async function pgDossieUpdate(data) {
@@ -184,22 +190,51 @@ async function pgDossieUpdate(data) {
     
 }
 
+//coisa que eu preciso
+
+
 async function pgAppraisalSelect(id) {
-    const query = 'SELECT * FROM Evaluation WHERE appraisal_id == $1';
+    const query = 'SELECT (e.id, e.student_id, e.costumUser, e.classroom_id, e.dossie_id, e.section_id, e.evaluation_method, e.question_id, e.appraisal_id, e.question_option, a.points, a.filling_date, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value) FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisal_id = a.id JOIN Question AS q ON e.question_id = q.id JOIN Section AS s ON q.section_id = s.id JOIN Dossier AS d ON s.dossier_id = d.id JOIN EvaluationMethod as em ON e.evaluation_method = em.id JOIN EvaluationType as et ON em.id = et.evaluation_method WHERE a.appraisal_id == $1';
 
     const client = await connect();
 
     const response = await client.query(query, [id]);
     client.release();
     const data = response.rows;
-    var result = {id:data[0].appraisal_id, sections:[], dossier_id:data[0].dossier_id, student_id:data[0].student_id, professor_id:data[0].professor_id,};
+    var result = {
+        sections:[],
+        appraisal_id:data[0].appraisal_id,
+        points:data[0].points,
+        filling_date:data[0].filling_date,
+        student_id:data[0].student_id,
+        professor_id:data[0].costumUser,
+        classroom_id:data[0].classroom_id,
+        dossie_id:data[0].dossie_id,
+        dossie_name:data[0].dossierName,
+        dossie_description:data[0].dossierDescription,
+        evaluation_method:data[0].evaluation_method,
+        evaluation_method_name:data[0].evaluationMethodName
+    };
     for(let i=0; i < data.length; i++){
         var row = data[i];
 
         if(!Object.keys(result.sections).find(row.section_id)) {
-            result.sections[row.section_id] = []
+            result.sections[row.section_id] = {
+                questions:[],
+                section_id:row.section_id,
+                section_name:row.sectionName,
+                section_description:row.sectionDescription,
+                section_weigth:row.weigth
+            }
         }
-        result.sections[row.section_id].push({question:row.question_id, option: row.question_option, evaluation:row.id})
+        result.sections[row.section_id].questions.push({
+            question:row.question_id,
+            question_name:row.questionName,
+            question_option:row.question_option,
+            evaluation_id:row.id,
+            evaluation_type_name:row.evaluationTypeName,
+            option: row.value
+        })
         
     }
     return result;

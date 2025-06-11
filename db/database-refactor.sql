@@ -60,7 +60,6 @@ CREATE TABLE Question(
     dossier_id INT,
     evaluation_method int,
     name VARCHAR(255) NOT NULL,
-    evaluation INT,
 
     CONSTRAINT fk_Question_Evaluation FOREIGN KEY(evaluation_method, costumUser_id) REFERENCES EvaluationMethod(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_Question_Section FOREIGN KEY(section_id, dossier_id, costumUser_id) REFERENCES Section(id, dossier_id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
