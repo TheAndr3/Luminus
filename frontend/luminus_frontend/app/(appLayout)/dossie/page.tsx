@@ -10,7 +10,9 @@ import { ArchiveConfirmation } from "./components/archiveConfirmation";
 import { ErroMessageDialog } from "./components/erroMessageDialog";
 import { ExportConfirmDialog } from './components/exportConfirmDialog';
 import ExportDownloadDialog from './components/exportDownloadDialog';
+import TypeOfCreationModal from './components/typeOfCreationModal';
 import { listDossiers, deleteDossier } from '@/services/dossierServices';
+
 
 export default function GerenciarDossies() {
   // ============ ESTADOS ============
@@ -31,6 +33,8 @@ export default function GerenciarDossies() {
   const [idsToExport, setIdsToExport] = useState<number[]>([]);
   const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
   const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
+
+  const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
 
   let typeOfData = "Dossie";
 
@@ -116,7 +120,7 @@ export default function GerenciarDossies() {
   };
 
   const handleCreateDossie = () => {
-    // TODO: Implementar criação de dossiê
+    setOpenTypeOfCreation(true);
     console.log("Criando dossiê");
   };
 
@@ -130,16 +134,34 @@ export default function GerenciarDossies() {
   const confirmDeletion = async () => {
     try {
       setIsLoading(true);
+      const failedDeletions: number[] = [];
+      
       // Deletar cada dossiê selecionado
       for (const id of idsToDelete) {
-        await deleteDossier(id);
+        try {
+          await deleteDossier(id);
+        } catch (error) {
+          console.error(`Erro ao deletar dossiê ${id}:`, error);
+          failedDeletions.push(id);
+        }
+      }
+
+      // Se houver falhas, mostra mensagem de erro
+      if (failedDeletions.length > 0) {
+        setMessageErro(`Não foi possível excluir ${failedDeletions.length} dossiê(s). Por favor, tente novamente.`);
+        setMissingDialog(true);
+        return;
       }
 
       // Atualização otimista do estado
       setDossies(prev => prev.filter(dossie => !idsToDelete.includes(dossie.id)));
 
-      if (currentPage > Math.ceil((dossies.length - idsToDelete.length) / dossiesPorPagina)) {
-        setCurrentPage(1);
+      // Ajusta a página atual se necessário
+      const remainingDossiers = dossies.length - idsToDelete.length;
+      const newTotalPages = Math.ceil(remainingDossiers / dossiesPorPagina);
+      
+      if (currentPage > newTotalPages) {
+        setCurrentPage(Math.max(1, newTotalPages));
       }
     } catch (error: any) {
       console.error("Erro ao excluir dossiês:", error);
@@ -148,6 +170,7 @@ export default function GerenciarDossies() {
     } finally {
       setIsLoading(false);
       setConfirmOpen(false);
+      setIdsToDelete([]); // Limpa os IDs após a operação
     }
   };
 
@@ -296,6 +319,12 @@ export default function GerenciarDossies() {
         onClose={()=>setOpenDownloadDialog(false)}
         description={"Dossiê exportado"}
         typeOfData={typeOfData}
+      />
+
+      {/* Modal de criação de dossiê */}
+      <TypeOfCreationModal
+        open={openTypeOfCreation}
+        onClose={() => setOpenTypeOfCreation(false)}
       />
     </div>
   );

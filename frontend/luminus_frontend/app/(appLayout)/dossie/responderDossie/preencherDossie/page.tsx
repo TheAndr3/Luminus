@@ -5,37 +5,38 @@ import React, { useState, useCallback } from 'react';
 import Head from 'next/head';
 import styles from './preencherDossie.module.css';
 import { DossierFillData, DossierSection, DossierItem, HandleItemChange, HandleSectionChange, HandleDossierChange } from '..//preencherDossieTypes/dossiePreenchimento';
+import {} from '@/services/appraisalService'
 
 // --- Mock de Dados Iniciais (Simulando um modelo de dossiê carregado) ---
 const initialDossierData: DossierFillData = {
-  id: 'dossie-modelo-123',
+  id: 1,
   title: 'Avaliação de Desempenho Trimestral - Q1 2025',
   description: 'Este dossiê visa coletar informações sobre o desempenho no primeiro trimestre.',
   studentName: 'Maria Silva', // Exemplo de campo adicional
   sections: [
     {
-      id: 'section-1',
+      id: 1,
       title: 'Objetivos e Metas',
       guidance: 'Descreva o progresso em relação aos objetivos definidos para este trimestre.',
       items: [
-        { id: 'item-1-1', description: 'Meta 1: Concluir o relatório XYZ.', answer: '' },
-        { id: 'item-1-2', description: 'Meta 2: Apresentar resultados da pesquisa ABC.', answer: '' },
+        { id: 1, description: 'Meta 1: Concluir o relatório XYZ.', answer: '' },
+        { id: 2, description: 'Meta 2: Apresentar resultados da pesquisa ABC.', answer: '' },
       ],
     },
     {
-      id: 'section-2',
+      id: 2,
       title: 'Desenvolvimento de Habilidades',
       guidance: 'Quais habilidades foram desenvolvidas ou aprimoradas?',
       items: [
-        { id: 'item-2-1', description: 'Habilidade em Comunicação Interpessoal:', answer: '' },
-        { id: 'item-2-2', description: 'Habilidade em Análise de Dados:', answer: '' },
+        { id: 3, description: 'Habilidade em Comunicação Interpessoal:', answer: '' },
+        { id: 4, description: 'Habilidade em Análise de Dados:', answer: '' },
       ],
     },
     {
-      id: 'section-3',
+      id: 3,
       title: 'Feedback e Comentários Adicionais',
       items: [
-        { id: 'item-3-1', description: 'Comentários gerais sobre o período:', answer: '' },
+        { id: 5, description: 'Comentários gerais sobre o período:', answer: '' },
       ],
     },
   ],
@@ -109,16 +110,6 @@ const PreencherDossiePage: React.FC = () => {
   const handleDossierFieldChange: HandleDossierChange = useCallback((field, value) => {
     setDossierData(prev => ({ ...prev, [field]: value }));
   }, []);
-  
-  // Neste exemplo, o título e descrição da seção não são editáveis, apenas as respostas dos itens.
-  // const handleSectionFieldChange: HandleSectionChange = useCallback((sectionId, field, value) => {
-  //   setDossierData(prev => ({
-  //     ...prev,
-  //     sections: prev.sections.map(sec =>
-  //       sec.id === sectionId ? { ...sec, [field]: value } : sec
-  //     ),
-  //   }));
-  // }, []);
 
   const handleItemFieldChange: HandleItemChange = useCallback((sectionId, itemId, field, value) => {
     setDossierData(prev => ({
@@ -144,7 +135,6 @@ const PreencherDossiePage: React.FC = () => {
     console.log("Dossiê a ser salvo:", dossierData);
     // Aqui você faria a chamada para a API para salvar os dados
     alert("Dossiê salvo no console! (Simulação)");
-    setIsEditing(false); // Sai do modo de edição após salvar
   };
 
   return (
@@ -156,9 +146,6 @@ const PreencherDossiePage: React.FC = () => {
         <header className={styles.pageHeader}>
           <h1>{isEditing ? "Preenchendo Dossiê" : "Visualizando Dossiê"}</h1>
           <div className={styles.headerActions}>
-            <button onClick={handleToggleEditMode} className={styles.toggleButton}>
-              {isEditing ? 'Modo Visualização' : 'Modo Edição'}
-            </button>
             {isEditing && (
               <button onClick={handleSaveDossier} className={styles.saveButton}>
                 Salvar Dossiê
