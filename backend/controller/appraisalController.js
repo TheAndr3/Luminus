@@ -83,7 +83,7 @@ exports.Create = async (req, res) => {
         
 
         payload = {
-            professor_id:req.body.professor_id,
+            costumUser_id:req.body.professor_id,
             student_id: student_id,
             classroom_id:class_id,
             points:0.0,

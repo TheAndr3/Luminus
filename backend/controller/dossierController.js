@@ -64,7 +64,7 @@ exports.List = async(req, res) => {
   }
   
   try {
-    const payload = {professor_id:professor_id};
+    const payload = {costumUser_id:professor_id};
     const result = await db.pgSelect('dossier', payload);
 
     return res.status(200).json({msg:'sucesso', data:result, ammount:result.length});
