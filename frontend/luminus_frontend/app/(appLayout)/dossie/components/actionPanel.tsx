@@ -22,11 +22,7 @@ export default function ActionPanel( {onDeleted, toArchive,toExport} : ActionPan
                     onClick={toExport}
                 />
             </button>
-            <button className="hover:bg-[#123a4f] p-2 rounded-xl">
-                <Archive className="w-6 h-6 text-white" 
-                    onClick={toArchive}
-                />
-            </button>
+            
             </div>
         );
     }
