@@ -16,6 +16,7 @@ import { toast } from 'react-hot-toast';
 import { api } from "@/services/api";
 import { GetClassroom } from '@/services/classroomServices';
 import { ListStudents as ListStudentsService } from '@/services/studentService';
+import { DeleteStudent } from '@/services/studentService'; // Make sure to import this
 
 // Removido CreateStudent pois a importação em massa usará um endpoint diferente
 // import { CreateStudent } from "@/services/studentService"; 
@@ -85,6 +86,16 @@ export default function VisualizacaoAlunos() {
   const [inlineNewStudentMatricula, setInlineNewStudentMatricula] = useState('');
   const [inlineNewStudentName, setInlineNewStudentName] = useState('');
   const [inlineAddStudentError, setInlineAddStudentError] = useState<string | null>(null);
+
+  const totalPages = Math.ceil(classi.length / alunosPorPagina);
+  const startIndex = (currentPage - 1) * alunosPorPagina;
+  // Aplicar filtro de busca ANTES da paginação para que a paginação reflita o total filtrado
+  const alunosFiltradosParaCalculo = classi.filter((aluno) =>
+    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPagesFiltradas = Math.ceil(alunosFiltradosParaCalculo.length / alunosPorPagina);
+  const alunosVisiveis = alunosFiltradosParaCalculo.slice(startIndex, startIndex + alunosPorPagina);
+  const isAllSelected = alunosVisiveis.length > 0 && alunosVisiveis.every((t) => t.selected);
 
 
   // Função para buscar alunos da API
@@ -173,16 +184,6 @@ export default function VisualizacaoAlunos() {
     }
   }, [pathname, fetchPageData]);
 
-  const totalPages = Math.ceil(classi.length / alunosPorPagina);
-  const startIndex = (currentPage - 1) * alunosPorPagina;
-  // Aplicar filtro de busca ANTES da paginação para que a paginação reflita o total filtrado
-  const alunosFiltradosParaCalculo = classi.filter((aluno) =>
-    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const totalPagesFiltradas = Math.ceil(alunosFiltradosParaCalculo.length / alunosPorPagina);
-  const alunosVisiveis = alunosFiltradosParaCalculo.slice(startIndex, startIndex + alunosPorPagina);
-  const isAllSelected = alunosVisiveis.length > 0 && alunosVisiveis.every((t) => t.selected);
-
 
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
@@ -210,28 +211,51 @@ export default function VisualizacaoAlunos() {
     setIdsToDelete(selecionadas);
     setConfirmDeleteOpen(true);
   };
-  
-  const confirmDeletion = async () => {
+
+// ... inside your component where confirmDeletion is defined ...
+
+const confirmDeletion = async () => {
     if (!currentTurmaId || idsToDelete.length === 0) return;
     setIsLoading(true);
-    try {
-      // TODO: Iterar e chamar a API de deleção para cada ID em idsToDelete
-      // Ex: await Promise.all(idsToDelete.map(id => api.delete(`/student/${currentTurmaId}/delete/${id}`)));
-      console.log("Simulando exclusão de alunos com IDs:", idsToDelete, "da turma", currentTurmaId);
-      await new Promise(r => setTimeout(r, 500)); // Simulação de delay
 
-      toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso (simulação).`);
-      fetchStudents(currentTurmaId); // Recarrega a lista
+    // Retrieve professorId from localStorage as a string
+    const professorIdString = localStorage.getItem('professorId');
+
+    // Convert professorId to a number (integer)
+    let professorId: number | null = null;
+    if (professorIdString) {
+        professorId = parseInt(professorIdString, 10);
+        if (isNaN(professorId)) {
+            console.error("Error: professorId retrieved from localStorage is not a valid number.");
+            toast.error("Erro: ID do professor inválido.");
+            setIsLoading(false);
+            setConfirmDeleteOpen(false);
+            return;
+        }
+    } else {
+        console.error("Error: professorId not found in localStorage.");
+        toast.error("Erro: ID do professor não encontrado.");
+        setIsLoading(false);
+        setConfirmDeleteOpen(false);
+        return;
+    }
+
+    try {
+        // Iterate and call the DeleteStudent API for each ID in idsToDelete
+        await Promise.all(idsToDelete.map(id => DeleteStudent(currentTurmaId, id, professorId!)));
+
+        toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso.`);
+        fetchStudents(currentTurmaId); // Reload the student list
 
     } catch (error: any) {
-      console.error("Erro ao excluir alunos:", error);
-      toast.error(error.response?.data?.msg || "Erro ao excluir alunos.");
+        console.error("Erro ao excluir alunos:", error);
+        toast.error(error.message || "Erro ao excluir alunos.");
     } finally {
-      setConfirmDeleteOpen(false);
-      setIdsToDelete([]);
-      setIsLoading(false);
+        setConfirmDeleteOpen(false);
+        setIdsToDelete([]);
+        setIsLoading(false);
     }
-  };
+};
 
   const handleProcessCsvFile = (file: File) => {
     const reader = new FileReader();
@@ -332,6 +356,7 @@ export default function VisualizacaoAlunos() {
   };
 
   const handleInlineAddStudent = async () => {
+
     setInlineAddStudentError(null);
 
     if (!inlineNewStudentName.trim()) {
@@ -356,18 +381,33 @@ export default function VisualizacaoAlunos() {
 
     setIsLoading(true);
 
+    const professorIdString = localStorage.getItem('professorId');
+
+    // Convert professorId to a number (integer)
+    let professorId: number | null = null;
+    if (professorIdString) {
+        professorId = parseInt(professorIdString, 10);
+        if (isNaN(professorId)) {
+            console.error("Error: professorId retrieved from localStorage is not a valid number.");
+            toast.error("Erro: ID do professor inválido.");
+            setIsLoading(false);
+            setConfirmDeleteOpen(false);
+            return;
+        }
+    } else {
+        console.error("Error: professorId not found in localStorage.");
+        toast.error("Erro: ID do professor não encontrado.");
+        setIsLoading(false);
+        setConfirmDeleteOpen(false);
+        return;
+    }
+
     try {
         if (!currentTurmaId) {
           toast.error("ID da turma não encontrado. Não é possível adicionar o aluno.");
           setIsLoading(false);
           return;
         }
-
-        // --- NOVO: Definir o professor_id ---
-        // OPÇÃO 1: Hardcoded (apenas para teste inicial, não recomendado para produção)
-        const professorId = 1; // Substitua por um ID de professor real ou logicamente obtido.
-                              // Se o professor_id vem do contexto do usuário logado, você precisará buscá-lo.
-                              // Por exemplo, de um hook de autenticação, um localStorage, ou um Context API.
 
         // Constrói o corpo da requisição com os dados do novo aluno
         const studentData = {
