@@ -81,7 +81,8 @@ exports.Create = async (req, res) => {
             student_id: req.body.id,
             costumUser_id: req.body.professor_id,
             points: 0,
-            filling_date: new Date()
+            filling_date: new Date(),
+            dossier_id: classStudent[0].dossier_id
           }
           await db.pgInsert('Appraisal', payload);
         }
@@ -221,6 +222,7 @@ exports.ImportCsv = async (req, res) => {
             student_id: aluno.matricula,
             costumUser_id: professorId,
             points: 0,
+            dossier_id: turma.dossier_id,
             filling_date: new Date()
           });
         }
