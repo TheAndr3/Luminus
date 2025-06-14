@@ -27,7 +27,7 @@ import { PasswordInput } from '@/components/inputs/PasswordInput'; // <<< Usa o 
 import Carousel from '@/components/carousel/Carousel';
 
 // --- Importação do Serviço da API ---
-import { newPassoword } from '@/services/api'; // <<< Corrigido nome da função (newPassword)
+import { UpdatePassword } from '@/services/professorService';
 
 // --- Tipos ---
 /**
@@ -185,31 +185,23 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // --- Tentativa de Envio para a API ---
     setIsLoading(true);
-    console.log('Validação OK. Enviando nova senha para o email:', email);
 
     try {
-        // Chama o serviço da API importado
-        const response = await newPassoword(email, formData.newPassword, token); // Usa email e token da URL
+      await UpdatePassword({
+        newPass: formData.newPassword,
+        email: email
+      }, token);
 
-        // Verifica a resposta da API (ajuste conforme a resposta real da sua API)
-        if (response && (response.msg === "password trocado com sucesso" || response.status === 200)) { // Exemplo de verificação
-            console.log('Senha alterada com sucesso pela API!');
-            alert('Senha alterada com sucesso!'); // Pode substituir por um toast/snackbar
-            router.push('/login'); // Redireciona para o login
-            // Não precisa setar isLoading false aqui, pois o componente será desmontado
-        } else {
-            // Trata outros casos de resposta da API como erro
-            throw new Error(response?.msg || "Resposta inesperada da API.");
-        }
+      // Se chegou aqui, a senha foi atualizada com sucesso
+      alert('Senha atualizada com sucesso!');
+      router.push('/login');
     } catch (error: any) {
-      console.error("Erro ao redefinir senha:", error);
-      // Define um erro geral para ser exibido no formulário
-      setFormErrors({ general: `Falha ao atualizar a senha: ${error.message || 'Tente novamente mais tarde.'}` });
-      setIsLoading(false); // Para o loading em caso de erro
+      console.error("Erro ao atualizar senha:", error);
+      setFormErrors({ general: error.message || 'Erro ao atualizar senha. Tente novamente mais tarde.' });
+    } finally {
+      setIsLoading(false);
     }
-    // Não precisa de finally para setIsLoading(false) se o sucesso leva ao redirect.
   };
 
   // --- IDs para Acessibilidade ---
