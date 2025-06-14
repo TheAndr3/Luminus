@@ -9,7 +9,6 @@ import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
-import {ArchiveConfirmation} from "./components/archiveConfirmation"
 import { ErroMessageDialog } from "./components/erroMessageDialog";
 import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
 import DialogPage from "./components/createClassModal";
@@ -163,25 +162,7 @@ export default function VizualizationClass() {
     }
   };
 
-  // Prepara turmas para arquivamento
-  const archiveHandle = async () => {
-    const selecionadas = classi.filter(turma => turma.selected).map(turma => turma.id);
-    if (selecionadas.length === 0) return;
 
-    if (selecionadas.length === 1) {
-      const turmaSelecionada = classi.find(turma => turma.id === selecionadas[0]);
-      setTitleClass(turmaSelecionada?.disciplina);
-      setCodeClass(turmaSelecionada?.codigo);
-      setClassDescription("Tem certeza que deseja arquivar a turma: ");
-    } else {
-      setTitleClass(undefined);
-      setCodeClass(undefined);
-      setClassDescription("Tem certeza que deseja arquivar as turmas selecionadas?"); 
-    }
-
-    setIdsToArchive(selecionadas);
-    setarchiveConfirmation(true);
-  }
 
   // Function to handle class export
   const handleExportClass = () => {
@@ -281,7 +262,6 @@ export default function VizualizationClass() {
               visualization={visualization}
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
-              toArchiveClass={archiveHandle}
               toExportClass={handleExportClass}
             />
           </div>
@@ -298,7 +278,6 @@ export default function VizualizationClass() {
               visualization={visualization}
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
-              toArchiveClass={archiveHandle}
               toExportClass={handleExportClass}
             />
           </div>
@@ -311,16 +290,6 @@ export default function VizualizationClass() {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={confirmDeletion}
         total={idsToDelete.length}
-      />
-
-      <ArchiveConfirmation
-        open={archiveConfirmation}
-        onCancel={() => setarchiveConfirmation(false)}
-        onConfirm={archiveHandle} // Deveria chamar confirmArchive
-        total={idsToArchive.length}
-        title={titleClass}
-        code={codeClass}
-        description={classDescription}
       />
 
       <ErroMessageDialog

@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 // Modal para editar uma turma
 import EditClassModal from "./editClassModal";
 // Ícones para as ações de editar, excluir, arquivar e download
-import { Archive, Download, Pencil, Trash } from "lucide-react";
+import { Download, Pencil, Trash } from "lucide-react";
 
 import { useRouter } from "next/navigation"; 
 
@@ -35,7 +35,6 @@ type ListclassroomsProps = {
   visualization: string;  // Tipo de visualização atual: "grid" ou "list"
   setVisualization: (set: "grid" | "list") => void;  // Função para alterar o tipo de visualização
   onDeleteClass: () => void;  // Função para deletar as turmas selecionadas
-  toArchiveClass: () => void;  // Função para arquivar as turmas selecionadas
   toExportClass: () => void;
 };
 
@@ -51,7 +50,6 @@ export default function ListClass({
   visualization,
   setVisualization,
   onDeleteClass,
-  toArchiveClass,
   toExportClass
 }: ListclassroomsProps) {
   // Estado que indica se há pelo menos uma turma selecionada
@@ -195,16 +193,6 @@ export default function ListClass({
                       <Trash></Trash>
                     </button>
 
-                    <button
-                      className="hover:text-yellow-400"
-                      onClick={()=> {
-                        classroom.selected = true;
-                        toArchiveClass();
-                        classroom.selected = false;
-                      }}
-                    >
-                      <Archive></Archive>
-                    </button>
 
                     <button
                       className="hover:text-yellow-400"
@@ -251,7 +239,6 @@ export default function ListClass({
         {hasSelected && (
           <ActionPanel
             onDeleted={onDeleteClass}
-            toArchive={toArchiveClass}
             toExport={toExportClass}
           />
         )}

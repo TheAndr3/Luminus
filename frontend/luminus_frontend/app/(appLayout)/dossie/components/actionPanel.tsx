@@ -2,11 +2,10 @@ import { Trash2, Download, Archive, BarChart2 } from "lucide-react";
 
 interface ActionPanelProps{
     onDeleted: () => void
-    toArchive: () => void
     toExport: () => void
 }
 
-export default function ActionPanel( {onDeleted, toArchive,toExport} : ActionPanelProps) {
+export default function ActionPanel( {onDeleted,toExport} : ActionPanelProps) {
 
     
         return (
