@@ -121,11 +121,11 @@ async function pgDossieSelect(id) {
         return null;
     } else {
         var result = {
-            dossierId: data.rows[0].dossierId,
-            professorId: data.rows[0].professorId,
-            dossierName: data.rows[0].dossierName,
-            dossierDescription: data.rows[0].dossierDescription,
-            dossierEvaluationMethod: {
+            d: data.rows[0].dossierId,
+            costumUser_id: data.rows[0].professorId,
+            name: data.rows[0].dossierName,
+            description: data.rows[0].dossierDescription,
+            evaluation_method: {
                 id: data.rows[0].dossierEvaluationMethod,
                 name: method[0].name,
                 evaluationType: {}
@@ -134,7 +134,7 @@ async function pgDossieSelect(id) {
         };
 
         for (let i = 0;i < methodType.length; i++){
-            result.dossierEvaluationMethod.evaluationType[methodType[i].id] = {
+            result.evaluation_method.evaluationType[methodType[i].id] = {
                 id: methodType[i].id,
                 name: methodType[i].name,
                 value: methodType[i].value
@@ -145,16 +145,16 @@ async function pgDossieSelect(id) {
             if (!result.sections[data.rows[i].sectionId]) {
                 result.sections[data.rows[i].sectionId] = {
                     
-                    sectionId: data.rows[i].sectionId,
-                    sectionName: data.rows[i].sectionName,
-                    sectionDescription: data.rows[i].sectionDescription,
-                    sectionWeigth: data.rows[i].sectionWeigth,
+                    id: data.rows[i].sectionId,
+                    name: data.rows[i].sectionName,
+                    description: data.rows[i].sectionDescription,
+                    weigth: data.rows[i].sectionWeigth,
                     questions: []
                 };
             } 
             result.sections[data.rows[i].sectionId].questions.push({
-                questionId: data.rows[i].questionId,
-                questionName: data.rows[i].questionName
+                id: data.rows[i].questionId,
+                name: data.rows[i].questionName
             });
             
         }
@@ -210,7 +210,7 @@ async function pgAppraisalSelect(id) {
         points:data[0].points,
         filling_date:data[0].filling_date,
         student_id:data[0].student_id,
-        professor_id:data[0].costumUser,
+        costumUser_id:data[0].costumUser,
         classroom_id:data[0].classroom_id,
         dossie_id:data[0].dossie_id,
         dossie_name:data[0].dossierName,
