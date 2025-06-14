@@ -48,7 +48,7 @@ exports.Create = async (req, res) => {
         console.log('Backend: student inserido com sucesso:', studentresp);
 
         payload = {
-            professor_id:req.body.professor_id,
+            customUser_id:req.body.professor_id,
             student_id: req.body.id,
             classroom_id:req.params.classid
         };
@@ -102,7 +102,7 @@ exports.Update = async (req, res) => {
       const classroomStudentPayload = {
         classroom_id: req.params.classid,
         student_id: req.params.id,
-        professor_id: req.body.professor_id
+        customUser_id: req.body.professor_id
       };
 
       await db.pgDelete('ClassroomStudent', classroomStudentPayload);
@@ -175,13 +175,13 @@ exports.ImportCsv = async (req, res) => {
       const existsInClass = await db.pgSelect('ClassroomStudent', {
         classroom_id: classId,
         student_id: aluno.matricula,
-        professor_id: professorId
+        customUser_id: professorId
       });
       if (existsInClass.length === 0) {
         await db.pgInsert('ClassroomStudent', {
           classroom_id: classId,
           student_id: aluno.matricula,
-          professor_id: professorId
+          customUser_id: professorId
         });
         imported.push(aluno);
       } else {
