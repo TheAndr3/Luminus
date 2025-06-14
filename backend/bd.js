@@ -90,17 +90,19 @@ async function pgUpdate(table, data, keys) {
     const valuesNewObject = Object.values(data);
     const keysWhere = Object.keys(keys);
     const valuesWhere = Object.values(keys);
-    
+
     const placeHolderToWhere = keysWhere.map((_,i) => `${_} = $${i+1}`).join(' AND ');
     const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1+valuesWhere.length}`).join(', ');
     const query = `UPDATE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
 
+    const values = [...valuesNewObject, ...valuesWhere];
+
     const client = await connect();
     const result = await client.query(query, values);
     client.release();
-    return result
-
+    return result;
 }
+
 
 
 async function pgDossieSelect(id) {
