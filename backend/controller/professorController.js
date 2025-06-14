@@ -149,7 +149,7 @@ exports.RecoverPassword = async (req, res) => {
     try{
         const data = new Date();
         const professor = await db.pgSelect('costumUser', {email:email});
-        const bd_code = await db.pgSelect('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString()});
+        const bd_code = await db.pgSelect('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data});
 
         if(bd_code[0].status == 0) {
             bd_code[0].status = 1;
@@ -160,7 +160,7 @@ exports.RecoverPassword = async (req, res) => {
             const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
             
             //atualiza que o codigo ja foi utilizado
-            await db.pgUpdate('verifyCode', {status:bd_code.status}, {costumUser_id:professor[0].id, code:code, data_sol:data.toISOString()});
+            await db.pgUpdate('verifyCode', {status:bd_code.status}, {costumUser_id:professor[0].id, code:code, data_sol:data});
 
             return res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
@@ -179,7 +179,6 @@ exports.Home = async (req, res) => {
 }
 
 exports.SendEmail = async (req, res) => {
-
 
     try {
         const professor = await db.pgSelect('costumUser', {email:req.params.id});
@@ -223,7 +222,7 @@ exports.NewPassword = async (req, res) => {
 
     try {
         
-         //desencriptar senha 
+        //desencriptar senha 
         const decryptedPassword = await decryptPassword(newPass);
         //fazer hash de senha
         const hashedPassword = await hashPassword(decryptedPassword);

@@ -95,7 +95,7 @@ async function pgUpdate(table, data, keys) {
     const placeHolderToUpdate = keysNewObject.map((_,i) => `${_} = $${i+1+valuesWhere.length}`).join(', ');
     const query = `UPDATE ${table} SET ${placeHolderToUpdate} WHERE ${placeHolderToWhere}`;
 
-    const values = [...valuesNewObject, ...valuesWhere];
+    const values = [...valuesWhere, ...valuesNewObject];
 
     const client = await connect();
     const result = await client.query(query, values);
