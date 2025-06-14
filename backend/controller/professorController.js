@@ -264,32 +264,54 @@ exports.NewPassword = async (req, res) => {
 }
 
 exports.ConfirmEmail = async (req, res) => {
-    const {email, token} = req.body;
+    const {email, code, token} = req.body;
     try {
         const professor = await db.pgSelect('costumUser', {email:email});
         if (professor.length == 0) {
             return res.status(404).json({msg:'email nao encontrado'});
         }
-        const bd_code = await db.pgSelect('verifyCode', {code:code, id:professor[0].id, data_sol:data.toISOString()});
+
+        // Verifica o token primeiro
+        try {
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            if (decoded.email !== email) {
+                return res.status(403).json({msg:'token invalido'});
+            }
+        } catch (err) {
+            console.log('Token verification error:', err);
+            return res.status(403).json({msg:'token invalido'});
+        }
+
+        // Busca o código de verificação
+        const data = new Date();
+        const bd_code = await db.pgSelect('verifyCode', {
+            code: code, 
+            costumUser_id: professor[0].id, 
+            data_sol: data.toISOString()
+        });
+
+        if (!bd_code || bd_code.length === 0) {
+            return res.status(400).json({msg:'codigo invalido'});
+        }
 
         if(bd_code[0].status == 0) {
-            bd_code[0].status = 1;
-
-
-            await db.pgUpdate('verifyCode', {status:bd_code.status}, {id:professor[0].id, code:code, data_sol:data.toISOString()});
-            const decode =  jwt.verify(token, process.env.SECRET_KEY);
-            const result = await db.pgSelect('tokencode', {token:token, id:professor[0].id});
-            await db.pgUpdate('verifyCode', {status:bd_code.status}, {id:professor[0].id, code:code, data_sol:data.toISOString()});
-            if (result.length == 0) {
-                return res.status(403).json({msg:'token invalido'});
-            } else {
-                const data = new Date();
-                const resp = await db.pgUpdate('costumUser', {
-                    email:email,
-                    role:"professor",
-                    }, {id:professor[0].id});
+            // Marca o código como utilizado
+            await db.pgUpdate('verifyCode', 
+                {status: 1}, 
+                {
+                    costumUser_id: professor[0].id, 
+                    code: code, 
+                    data_sol: data.toISOString()
                 }
-                return res.status(201).json({msg:'email confirmado com sucesso'})
+            );
+
+            // Atualiza o role do usuário para professor
+            await db.pgUpdate('costumUser', 
+                {role: "professor"}, 
+                {id: professor[0].id}
+            );
+
+            return res.status(200).json({msg:'email confirmado com sucesso'});
         } else {
             return res.status(400).json({msg:'codigo ja utilizado'});
         }
