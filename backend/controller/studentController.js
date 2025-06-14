@@ -4,11 +4,21 @@ const db = require('../bd');
 //Controller de studen
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
+    let start;
+    let size;
+
+    try{
+      start = parseInt(req.query.start) == NaN ? 0 : parseInt(req.query.start)
+      size = parseInt(req.query.size) ==  NaN ? 6 : parseInt(req.query.size);
+      
+    } catch (error) {
+      console.log('Erro ao analisar parâmetros de paginação:', error);
+    }
     try {
         const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
         // Sempre retorna 200, mesmo se não houver alunos
-        res.status(200).json(dataStudent);
+        res.status(200).json({msg:"sucesso",data:dataStudent.slice(start, start + size),ammount:dataStudent.length});
     } catch (error) {
         console.log(error);
         res.status(400).json({msg:'falha ao atender a solicitacao'});
