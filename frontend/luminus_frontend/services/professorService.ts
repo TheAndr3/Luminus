@@ -21,7 +21,8 @@ export interface CreatePayLoad {
 }
 
 interface CreateResponse {
-  message: string
+  msg: string;
+  token: string;
 }
 
 // RECUPERAR SENHA
@@ -42,6 +43,17 @@ interface NewPasswordPayLoad {
 }
 
 interface NewPasswordResponse {
+  msg: string;
+}
+
+// CONFIRMAR EMAIL
+interface ConfirmEmailPayload {
+  email: string;
+  code: string;
+  token: string;
+}
+
+interface ConfirmEmailResponse {
   msg: string;
 }
 
@@ -150,6 +162,17 @@ export const UpdatePassword = async (payload: NewPasswordPayLoad, token: string)
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao trocar a senha';
+    throw new Error(message);
+  }
+}
+
+//Confirmar email
+export const ConfirmEmail = async (payload: ConfirmEmailPayload): Promise<ConfirmEmailResponse> => {
+  try {
+    const response = await api.post('/professor/confirm-email', payload);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao confirmar email';
     throw new Error(message);
   }
 }
