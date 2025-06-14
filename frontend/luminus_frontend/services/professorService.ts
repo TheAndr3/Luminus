@@ -1,4 +1,3 @@
-
 import { api } from './api';
 import { encryptWithPublicKey } from '../utils/crypto';
 
@@ -8,11 +7,10 @@ interface LoginPayLoad {
   password: string
 }
 
-// Interface que reflete EXATAMENTE o objeto 'data' do backend
-interface LoginResponseData { // Renomeei para ser mais claro
+interface LoginResponseData { 
   id: number;
   nome: string;
-  email: string; // O backend envia 'email', não 'email_professor'
+  email: string;
 }
 
 // CADASTRO
@@ -23,7 +21,8 @@ export interface CreatePayLoad {
 }
 
 interface CreateResponse {
-  message: string
+  msg: string;
+  token: string;
 }
 
 // RECUPERAR SENHA
@@ -44,6 +43,17 @@ interface NewPasswordPayLoad {
 }
 
 interface NewPasswordResponse {
+  msg: string;
+}
+
+// CONFIRMAR EMAIL
+interface ConfirmEmailPayload {
+  email: string;
+  code: string;
+  token: string;
+}
+
+interface ConfirmEmailResponse {
   msg: string;
 }
 
@@ -134,13 +144,35 @@ export const SendRecoveryEmail = async (email: string): Promise<string> => {
   }
 }
 
-//atualizar senha
+//Ativar recuperação de senha
+export const ActivatePasswordRecovery = async (email: string): Promise<string> => {
+  try {
+    const response = await api.post(`/professor/send-recovery-email`, { email });
+    return response.data.msg;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao enviar o e-mail de recuperação';
+    throw new Error(message);
+  }
+}
+
+//Atualizar senha
 export const UpdatePassword = async (payload: NewPasswordPayLoad, token: string): Promise<NewPasswordResponse> => {
   try {
     const response = await api.post(`/professor/new-password/${token}`, payload);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao trocar a senha';
+    throw new Error(message);
+  }
+}
+
+//Confirmar email
+export const ConfirmEmail = async (payload: ConfirmEmailPayload): Promise<ConfirmEmailResponse> => {
+  try {
+    const response = await api.post('/professor/confirm-email', payload);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao confirmar email';
     throw new Error(message);
   }
 }

@@ -103,9 +103,11 @@ CREATE TABLE Appraisal(
     student_id INT,
     costumUser_id INT,
     classroom_id INT,
+    dossier_id INT,
     points REAL,
     filling_date date NOT NULL,
 
+    CONSTRAINT fk_Appraisal_Dossier FOREIGN KEY(dossier_id, costumUser_id) REFERENCES Dossier(id, costumUser_id) ON DELETE CASCADE  ON UPDATE CASCADE,
     CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id, student_id, costumUser_id) REFERENCES ClassroomStudent(classroom_id, student_id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
     
     PRIMARY KEY(id, student_id, costumUser_id, classroom_id)
@@ -125,8 +127,10 @@ CREATE TABLE Evaluation(
 
     question_option INT,
 
-    CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, costumUser_id, classroom_id) REFERENCES Appraisal(id, student_id, costumUser_id, classroom_id),
-    CONSTRAINT fk_Evaluation_question FOREIGN KEY(question_option, evaluation_method, costumUser_id) REFERENCES EvaluationType(id, evaluation_method, costumUser_id),
+    CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, costumUser_id, classroom_id) REFERENCES Appraisal(id, student_id, costumUser_id, classroom_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Evaluation_question FOREIGN KEY(question_option, section_id, dossier_id, costumUser_id) REFERENCES Question(id, section_id, dossier_id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Evaluation_EvType FOREIGN KEY(evaluation_method, question_option, costumUser_id) REFERENCES EvaluationType(evaluation_method, id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+
 
     PRIMARY KEY(id, appraisal_id)
 );

@@ -10,8 +10,8 @@ exports.List = async (req, res) => {
   console.log('Listando turmas para o professor:', professor_id);
 
   try {
-    start = parseInt(req.query.start) || 0;
-    size = parseInt(req.query.size) || 6;
+    start = parseInt(req.query.start) == NaN ? 0 : parseInt(req.query.start)
+    size = parseInt(req.query.size) ==  NaN ? 6 : parseInt(req.query.size);
     console.log('Parâmetros de paginação - início:', start, 'tamanho:', size);
   } catch (error) {
     console.log('Erro ao analisar parâmetros de paginação:', error);
@@ -22,7 +22,7 @@ exports.List = async (req, res) => {
     console.log('Dados brutos das turmas:', classData);
     
     const endIndex = start + size;
-    const slicedData = classData;
+    const slicedData = classData.slice(start, endIndex);
     console.log('Dados fatiados:', slicedData);
     
     return res.status(200).json({

@@ -23,6 +23,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation'; // Hook para ler parâmetros da URL no App Router
 import styles from './confirmEmail.module.css'; // Estilos CSS Modules específicos
+import { useRouter } from 'next/navigation'; // Importa useRouter para redirecionar
+import { ConfirmEmail } from '@/services/professorService';
 
 // --- Importações de Componentes ---
 import { PinInput } from '@/components/inputs/PinInput'; // Componente reutilizável para entrada de PIN
@@ -71,6 +73,7 @@ const confirmEmailSlides = [
 function ConfirmEmailContent() {
   // Hook para acessar os parâmetros de busca da URL atual.
   const searchParams = useSearchParams();
+  const router = useRouter(); // Importa useRouter para redirecionar
 
   // --- Estados do Componente ---
   // Estado para os dados do formulário (o PIN digitado).
@@ -81,26 +84,25 @@ function ConfirmEmailContent() {
   const [isLoading, setIsLoading] = useState(false);
   // Estado para armazenar o email lido da URL. Inicia como null.
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   // --- Constantes ---
   const PIN_LENGTH = 4; // Define o comprimento esperado do PIN.
   const pinErrorId = useId(); // Gera um ID único para associar o input de PIN ao seu erro (acessibilidade).
 
-  // --- Efeito para Ler o Email da URL ---
-  // Executa após a montagem do componente e sempre que `searchParams` mudar.
+  // --- Efeito para Ler o Email e Token da URL ---
   useEffect(() => {
-    // Tenta obter o valor do parâmetro 'email' da URL.
     const emailFromUrl = searchParams.get('email');
-    if (emailFromUrl) {
-      // Se encontrou o email, atualiza o estado `userEmail`.
-      setUserEmail(emailFromUrl);
+    const tokenFromUrl = searchParams.get('token');
+    
+    if (emailFromUrl && tokenFromUrl) {
+      setUserEmail(decodeURIComponent(emailFromUrl));
+      setToken(decodeURIComponent(tokenFromUrl));
     } else {
-      // Se o parâmetro 'email' não foi encontrado na URL.
-      console.warn("Parâmetro 'email' não encontrado na URL.");
-      // Ações possíveis: redirecionar, mostrar mensagem de erro, setar um valor padrão.
-      // Exemplo: setUserEmail("Email não fornecido na URL.");
+      console.warn("Parâmetros 'email' ou 'token' não encontrados na URL.");
+      router.push('/register');
     }
-  }, [searchParams]); // A dependência `searchParams` garante que o efeito re-execute se a URL mudar.
+  }, [searchParams, router]);
 
   // --- Manipuladores de Eventos ---
 
@@ -142,27 +144,27 @@ function ConfirmEmailContent() {
       return; // Interrompe a submissão.
     }
 
-    // Se a validação passou...
-    setIsLoading(true); // Ativa o estado de carregamento.
-    // Loga os dados que seriam enviados para verificação (incluindo o email lido da URL).
-    console.log('PIN para verificação:', formData.userPin, 'para o email:', userEmail);
+    if (!userEmail || !token) {
+      setFormErrors({ userPin: 'Dados de verificação inválidos. Por favor, tente novamente.' });
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-        // Simula uma chamada assíncrona para a API de verificação do PIN.
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simula delay de rede.
+      const response = await ConfirmEmail({
+        email: userEmail,
+        code: formData.userPin,
+        token: token
+      });
 
-        // Simulação de sucesso (substituir por lógica real de verificação da API).
-        alert(`PIN verificado com sucesso para ${userEmail}! (simulado)`);
-        setFormData({ userPin: '' }); // Limpa o campo PIN após sucesso.
+      // Se chegou aqui, a confirmação foi bem-sucedida
+      alert('Email confirmado com sucesso!');
+      router.push('/login'); // Redireciona para o login após confirmação
 
-        // Ação pós-sucesso: Idealmente, redirecionar o usuário para o login ou dashboard.
-        // Ex: router.push('/login'); // Requer import e uso de `useRouter`.
-
-    } catch (error) {
-        // Tratamento de erro caso a verificação do PIN falhe.
-        console.error("Erro na verificação do PIN (simulado):", error);
-        // Define uma mensagem de erro genérica para o campo PIN.
-        setFormErrors({ userPin: 'PIN inválido ou expirado. Tente novamente.' });
+    } catch (error: any) {
+      console.error("Erro na verificação do PIN:", error);
+      setFormErrors({ userPin: error.message || 'PIN inválido ou expirado. Tente novamente.' });
     } finally {
         // Garante que o estado de carregamento seja desativado, independentemente de sucesso ou falha.
         setIsLoading(false);

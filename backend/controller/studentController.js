@@ -4,11 +4,21 @@ const db = require('../bd');
 //Controller de studen
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
+    let start;
+    let size;
+
+    try{
+      start = parseInt(req.query.start) == NaN ? 0 : parseInt(req.query.start)
+      size = parseInt(req.query.size) ==  NaN ? 6 : parseInt(req.query.size);
+      
+    } catch (error) {
+      console.log('Erro ao analisar parâmetros de paginação:', error);
+    }
     try {
         const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
         // Sempre retorna 200, mesmo se não houver alunos
-        res.status(200).json(dataStudent);
+        res.status(200).json({msg:"sucesso",data:dataStudent.slice(start, start + size),ammount:dataStudent.length});
     } catch (error) {
         console.log(error);
         res.status(400).json({msg:'falha ao atender a solicitacao'});
@@ -44,20 +54,42 @@ exports.Create = async (req, res) => {
             name: req.body.name
         };
         console.log('Backend: Tentando inserir em student com payload:', payload); // Novo log
-        const studentresp = await db.pgInsert('student', payload);
+        const student = await db.pgSelect('student', {id:req.body.id});
+        if(student[0].length <= 0) {
+          const studentresp = await db.pgInsert('student', payload);
+        }
+        
         console.log('Backend: student inserido com sucesso:', studentresp);
 
         payload = {
-            professor_id:req.body.professor_id,
+            customUser_id:req.body.professor_id,
             student_id: req.body.id,
             classroom_id:req.params.classid
         };
 
-        const studentclassresp = await db.pgInsert('ClassroomStudent', payload);
+        const classStudent = await db.pgSelect('Classroom', {id:class_id});
 
-        res.status(201).json({msg:'estudante inserido com sucesso'});
+        if(classStudent[0].length > 0) {
+          const studentclassresp = await db.pgInsert('ClassroomStudent', payload);
+        } else {
+          return res.status(403).json({msg:'turma nao existe'})
+        }
+
+        if (classStudent[0].dossier_id) {
+          payload = {
+            classroom_id: classStudent[0].id,
+            student_id: req.body.id,
+            costumUser_id: req.body.professor_id,
+            points: 0,
+            filling_date: new Date(),
+            dossier_id: classStudent[0].dossier_id
+          }
+          await db.pgInsert('Appraisal', payload);
+        }
+
+        return res.status(201).json({msg:'estudante inserido com sucesso'});
     } catch (error) {
-        res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
+        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
     }
 
 }
@@ -90,9 +122,9 @@ exports.Update = async (req, res) => {
 
       await db.pgUpdate('student', studentPayload, { id: req.params.id });
   
-      res.status(200).json({ msg: 'estudante atualizado com sucesso' });
+      return res.status(200).json({ msg: 'estudante atualizado com sucesso' });
     } catch (error) {
-      res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
+      return res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
     }
   };
   
@@ -102,7 +134,7 @@ exports.Update = async (req, res) => {
       const classroomStudentPayload = {
         classroom_id: req.params.classid,
         student_id: req.params.id,
-        professor_id: req.body.professor_id
+        customUser_id: req.body.professor_id
       };
 
       await db.pgDelete('ClassroomStudent', classroomStudentPayload);
@@ -120,9 +152,9 @@ exports.Update = async (req, res) => {
       
       await db.pgDelete('student', studentPayload);
   
-      res.status(200).json({ msg: 'estudante removido com sucesso' });
+      return res.status(200).json({ msg: 'estudante removido com sucesso' });
     } catch (error) {
-      res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+      return res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
     }
   };
   
@@ -175,15 +207,25 @@ exports.ImportCsv = async (req, res) => {
       const existsInClass = await db.pgSelect('ClassroomStudent', {
         classroom_id: classId,
         student_id: aluno.matricula,
-        professor_id: professorId
+        customUser_id: professorId
       });
       if (existsInClass.length === 0) {
         await db.pgInsert('ClassroomStudent', {
           classroom_id: classId,
           student_id: aluno.matricula,
-          professor_id: professorId
+          customUser_id: professorId
         });
         imported.push(aluno);
+        if (turma.dossier_id) {
+          await db.pgInsert('Appraisal', {
+            classroom_id: classId,
+            student_id: aluno.matricula,
+            costumUser_id: professorId,
+            points: 0,
+            dossier_id: turma.dossier_id,
+            filling_date: new Date()
+          });
+        }
       } else {
         failures.push({ aluno, error: 'Aluno já está associado à turma.' });
       }

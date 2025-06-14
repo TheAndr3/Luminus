@@ -102,64 +102,67 @@ async function pgUpdate(table, data, keys) {
 
 }
 
-//corrigir isso auqi, não funciona mais dessa forma
+
 async function pgDossieSelect(id) {
     // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
     const query = `
-    WITH dossier_data AS (
-        SELECT d.id, d.name, d.description, d.evaluation_method
-        FROM dossier d
-        WHERE d.id = $1
-    )
-    SELECT 
-        json_build_object(
-            'id', d.id,
-            'name', d.name,
-            'description', d.description,
-            'evaluation_method', d.evaluation_method,
-            'sections', COALESCE(
-                json_agg(
-                    jsonb_build_object(
-                        'id', s.id,
-                        'name', s.name,
-                        'description', s.description,
-                        'weigth', s.weigth,
-                        'questions', (
-                            SELECT COALESCE(
-                                json_agg(
-                                    jsonb_build_object(
-                                        'id', q.id,
-                                        'description', q.description
-                                    )
-                                ),
-                                '[]'::json
-                            )
-                            FROM question q
-                            WHERE q.section_id = s.id AND q.dossier_id = d.id
-                        )
-                    )
-                ) FILTER (WHERE s.id IS NOT NULL),
-                '[]'::json
-            )
-        ) AS dossier
-    FROM dossier_data d
-    LEFT JOIN section s ON s.dossier_id = d.id
-    GROUP BY d.id, d.name, d.description, d.evaluation_method;
-`;
+    SELECT (d.id as dossierId, d.costumUser_id as professorId, d.name as dossierName, d.description as dossierDescription, d.evaluation_method as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName) FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossier_id JOIN Question as q ON s.id = q.section_id WHERE d.id = $1;
+    `;
 
     const client = await connect();
     const data = await client.query(query, [id]);
     client.release();
 
+    const methodType = await pgSelect('EvaluationType', {id:data.rows[0].dossierEvaluationMethod});
+    const method = await pgSelect('EvaluationMethod', {id:data.rows[0].dossierEvaluationMethod});
     
     // Retorna null se nenhum dossiê for encontrado
     if (!data.rows || data.rows.length === 0) {
         return null;
-    }
-    
-    // Retorna o objeto dossiê diretamente
-    return data.rows[0].dossier;
+    } else {
+        var result = {
+            d: data.rows[0].dossierId,
+            costumUser_id: data.rows[0].professorId,
+            name: data.rows[0].dossierName,
+            description: data.rows[0].dossierDescription,
+            evaluation_method: {
+                id: data.rows[0].dossierEvaluationMethod,
+                name: method[0].name,
+                evaluationType: {}
+            },
+            sections: {}
+        };
 
+        for (let i = 0;i < methodType.length; i++){
+            result.evaluation_method.evaluationType[methodType[i].id] = {
+                id: methodType[i].id,
+                name: methodType[i].name,
+                value: methodType[i].value
+            }
+        }
+        //talvez não funcione 
+        for (let i = 0; i < data.rows.length; i++) {
+            if (!result.sections[data.rows[i].sectionId]) {
+                result.sections[data.rows[i].sectionId] = {
+                    
+                    id: data.rows[i].sectionId,
+                    name: data.rows[i].sectionName,
+                    description: data.rows[i].sectionDescription,
+                    weigth: data.rows[i].sectionWeigth,
+                    questions: []
+                };
+            } 
+            result.sections[data.rows[i].sectionId].questions.push({
+                id: data.rows[i].questionId,
+                name: data.rows[i].questionName
+            });
+            
+        }
+        
+        // Retorna o objeto dossiê diretamente
+        return result;
+
+    }
 }
 
 async function pgDossieUpdate(data) {
@@ -202,12 +205,12 @@ async function pgAppraisalSelect(id) {
     client.release();
     const data = response.rows;
     var result = {
-        sections:[],
+        sections:{},
         appraisal_id:data[0].appraisal_id,
         points:data[0].points,
         filling_date:data[0].filling_date,
         student_id:data[0].student_id,
-        professor_id:data[0].costumUser,
+        costumUser_id:data[0].costumUser,
         classroom_id:data[0].classroom_id,
         dossie_id:data[0].dossie_id,
         dossie_name:data[0].dossierName,

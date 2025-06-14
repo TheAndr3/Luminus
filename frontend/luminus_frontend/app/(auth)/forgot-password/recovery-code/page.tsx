@@ -15,6 +15,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation'; // <<< Adicionado useSearchParams
 import styles from './recoveryCode.module.css'; // <<< Assume que este CSS existe
+import { RecoverPassword } from '@/services/professorService';
 
 // --- Importações de Componentes Customizados ---
 import { PinInput } from '@/components/inputs/PinInput'; // <<< USA PinInput
@@ -67,27 +68,35 @@ export default function RecoveryCodePage() {
   };
 
   // --- Submissão do Formulário ---
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    console.log('Tentando verificar PIN (simulação básica):', pin);
-    console.log('Email recebido da URL:', email); // Log para verificar se o email foi pego
 
-    // --- Lógica de validação e API será adicionada depois ---
-    // Simulação rápida:
-    setTimeout(() => {
-      if (pin === '1234') { // Exemplo de PIN correto (substitua pela lógica real)
-        console.log('PIN correto! (Simulado)');
-        // <<< MODIFICADO: Adiciona o email como query parameter na URL de destino
-        const targetUrl = `/forgot-password/reset-password?email=${encodeURIComponent(email || '')}`;
-        router.push(targetUrl); // Redireciona com o email
+    if (!email) {
+      alert('Email não encontrado. Por favor, tente novamente.');
+      router.push('/forgot-password/enter-email');
+      return;
+    }
+
+    try {
+      const response = await RecoverPassword({
+        email: email,
+        code: parseInt(pin)
+      });
+
+      // Se chegou aqui, a verificação foi bem-sucedida
+      if (response.token) {
+        // Redireciona para a página de reset de senha com o token
+        router.push(`/forgot-password/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(response.token)}`);
       } else {
-        console.log('PIN incorreto! (Simulado)');
-        alert('Código PIN inválido (Simulação)'); // Feedback simples por enquanto
-        setIsLoading(false);
+        throw new Error('Token não recebido do servidor');
       }
-      // setIsLoading(false); // Já tratado nos branches acima
-    }, 1000);
+    } catch (error: any) {
+      console.error("Erro na verificação do PIN:", error);
+      alert(error.message || 'PIN inválido ou expirado. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // --- Lógica para Desabilitar Botão ---

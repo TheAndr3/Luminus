@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // <<< --- 1. IMPORTAR useRouter ---
 // --- IMPORTANTE: Importa o NOVO CSS Module específico ---
 import styles from './enterEmail.module.css';
+import { SendRecoveryEmail } from '@/services/professorService';
 
 // --- Importações de Componentes Customizados ---
 import { EmailInput } from '@/components/inputs/EmailInput';
@@ -109,30 +110,16 @@ export default function EnterEmailPage() {
       return;
     }
 
-    // --- Tentativa de Envio (Simulação) ---
-    console.log('Validação OK. Enviando solicitação para:', formData.email);
     try {
-        // Simula chamada de API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const sucessoEnvio = true;
-
-        if (sucessoEnvio) {
-            alert(`Sucesso (simulado)! Redirecionando para a página de código de recuperação.`);
-            // alert(`Sucesso (simulado)! Se o email ${formData.email} estiver cadastrado, você receberá um PIN de confirmação.`); // << REMOVIDO ALERT
-            setFormErrors({});
-
-            // <<< --- 3. NAVEGAR PARA A ROTA DE CÓDIGO DE RECUPERAÇÃO --- >>>
-						const encodedEmail = encodeURIComponent(formData.email);
-						router.push(`/forgot-password/recovery-code?email=${encodedEmail}`);
-            //router.push('/forgot-password/recovery-code');
-            // <<< --- FIM DA ALTERAÇÃO --- >>>
-
-        } else {
-            throw new Error("Email não encontrado ou falha ao enviar.");
-        }
+      // Chama a API para enviar o email de recuperação
+      await SendRecoveryEmail(formData.email);
+      
+      // Se chegou aqui, o email foi enviado com sucesso
+      const encodedEmail = encodeURIComponent(formData.email);
+      router.push(`/forgot-password/recovery-code?email=${encodedEmail}`);
     } catch (error: any) {
-      console.error("Erro durante a solicitação (simulado):", error);
-      setFormErrors({ general: `Falha na solicitação: ${error.message || 'Tente novamente mais tarde.'}` });
+      console.error("Erro ao enviar email de recuperação:", error);
+      setFormErrors({ general: error.message || 'Erro ao enviar email de recuperação. Tente novamente mais tarde.' });
     } finally {
       // Importante: Não desativar o loading aqui se o redirecionamento ocorrer,
       // pois o componente será desmontado. Mas se o envio falhar, precisa desativar.
