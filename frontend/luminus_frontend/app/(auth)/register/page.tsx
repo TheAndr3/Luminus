@@ -167,8 +167,8 @@ export default function RegisterPage() {
     try {
       // Chamada real à API de registro
       const response = await RegisterProfessor(payload);
-      console.log('Registro via API bem-sucedido:', response.message);
-      router.push('/confirm-email');
+      console.log('Registro via API bem-sucedido:', response.msg);
+      router.push(`/confirm-email?email=${encodeURIComponent(formData.email)}&token=${encodeURIComponent(response.token)}`);
 
     } catch (error: any) { // Captura o erro lançado pelo serviço RegisterProfessor
       console.error("Erro no registro via API:", error);
