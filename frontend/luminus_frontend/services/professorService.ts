@@ -22,7 +22,7 @@ export interface CreatePayLoad {
 
 interface CreateResponse {
   msg: string;
-  token: string;
+  token: number;
 }
 
 // RECUPERAR SENHA
@@ -34,7 +34,7 @@ interface RecoverPasswordPayLoad {
 interface RecoverPasswordResponse {
   msg: string;
   pb_k?: string;
-  token?: string;
+  token?: number;
 }
 
 interface NewPasswordPayLoad {
@@ -49,8 +49,8 @@ interface NewPasswordResponse {
 // CONFIRMAR EMAIL
 interface ConfirmEmailPayload {
   email: string;
-  code: string;
-  token: string;
+  code: number;
+  token: number;
 }
 
 interface ConfirmEmailResponse {
@@ -60,7 +60,7 @@ interface ConfirmEmailResponse {
 // FUNÇÕES
 
 //Login
-export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponseData> => { // Altere o tipo de retorno aqui
+export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginResponseData> => { 
   try {
     //pegar chave pública
     const publicKey = await getPublicKey();
@@ -91,7 +91,6 @@ export const LoginProfessor = async (payLoad: LoginPayLoad): Promise<LoginRespon
 //Cadastrar
 export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateResponse> => {
   try {
-    console.log('entrou aqui')
     //pegar chave pública
     const publicKey = await getPublicKey();
 
@@ -158,13 +157,26 @@ export const ActivatePasswordRecovery = async (email: string): Promise<string> =
 //Atualizar senha
 export const UpdatePassword = async (payload: NewPasswordPayLoad, token: string): Promise<NewPasswordResponse> => {
   try {
-    const response = await api.post(`/professor/new-password/${token}`, payload);
+    // Buscar a chave pública
+    const publicKey = await getPublicKey();
+
+    // Criptografar a nova senha
+    const encryptedPassword = await encryptWithPublicKey(publicKey, payload.newPass);
+
+    // Enviar nova senha criptografada
+    const response = await api.post(`/professor/new-password/${token}`, {
+      ...payload,
+      newPass: encryptedPassword,
+    });
+
     return response.data;
+
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao trocar a senha';
     throw new Error(message);
   }
 }
+
 
 //Confirmar email
 export const ConfirmEmail = async (payload: ConfirmEmailPayload): Promise<ConfirmEmailResponse> => {
