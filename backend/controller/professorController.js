@@ -247,7 +247,7 @@ exports.NewPassword = async (req, res) => {
 
             //caso o token ja tenha sido utilizado
             if(oldTokens[0].verifyStatus == 1) {
-                return res.status(403).json({msg:'token invalido'});
+                return res.status(403).json({msg:'token invalido 1'});
             } else {
                 //token valido e pertence aquele professor
                 if (result.id == professor[0].id && result.email == email) {
@@ -261,13 +261,13 @@ exports.NewPassword = async (req, res) => {
                     const resp = await db.pgUpdate('costumUser', {password:hashedPassword}, {id:professor[0].id});
                     return res.status(201).json({msg:'password trocado com sucesso', data:resp})
                 } else {
-                    return res.status(403).json({msg:'token invalido'});
+                    return res.status(403).json({msg:'token invalido 2'});
                 }
             }
 
             
         } catch (err) {
-            return res.status(403).json({msg:'token invalido'});
+            return res.status(403).json({msg:'token invalido 3'});
         }
 
     } catch (err) {
