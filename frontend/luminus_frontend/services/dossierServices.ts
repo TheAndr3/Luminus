@@ -95,7 +95,7 @@ export const updateDossier = async (id: number, payload: UpdateDossierPayload): 
 // Deletar dossiê
 export const deleteDossier = async (id: number): Promise<DossierResponse> => {
   try {
-    const response = await api.delete(`/dossier/${id}`);
+    const response = await api.delete(`/dossier/${id}/delete`);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao deletar dossiê';
