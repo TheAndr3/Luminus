@@ -1,0 +1,254 @@
+/*
+ * @file confirmEmail.module.css
+ * @description Folha de estilos CSS Modules específica para a página de confirmação de email via PIN (confirm-email.tsx).
+ *              Define o layout de dois painéis, a aparência dos elementos do formulário (logo, prompt, PIN input, botões)
+ *              e as regras de responsividade.
+ */
+
+/* --- Estrutura Principal da Página --- */
+
+/* Container geral que engloba toda a página. */
+.pageContainer {
+	display: flex; /* Habilita Flexbox para layout em colunas (painéis). */
+	min-height: 100vh; /* Garante que a página ocupe no mínimo toda a altura da viewport. */
+	background-color: #f0f2f5; /* Cor de fundo cinza claro padrão. */
+    overflow: hidden; /* Impede rolagem no container principal; rolagem interna nos painéis se necessário. */
+    font-family: inherit; /* Usa a fonte definida no elemento pai (ex: body). */
+}
+
+/* Painel ESQUERDO (Fundo Branco - onde fica o formulário). */
+.leftPanel {
+	width: 35%; /* Largura do painel esquerdo (ajustável conforme design). */
+	background-color: white; /* Fundo branco. */
+	/* Espaçamento interno: Topo (4.5rem), Laterais (2.5rem), Base (4.5rem). */
+	padding: 4.5rem 2.5rem;
+	display: flex; /* Usa Flexbox para organizar seus filhos diretos (logo, contentWrapper). */
+	flex-direction: column; /* Empilha os filhos verticalmente. */
+	align-items: center; /* Centraliza os filhos horizontalmente. */
+    justify-content: flex-start; /* <<< ALTERADO no código original: Alinha os filhos diretos (logo, contentWrapper) no TOPO do painel, em vez de centralizar verticalmente. */
+	box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra sutil à direita para separação visual. */
+	z-index: 1; /* Garante que fique acima de outros elementos com z-index menor. */
+	overflow-y: auto; /* Permite rolagem vertical APENAS neste painel se o conteúdo exceder a altura. */
+    max-height: 100vh; /* Garante que a altura do painel não exceda a da viewport, forçando o overflow-y. */
+}
+
+/* Painel DIREITO (Fundo Azul - onde fica o Carrossel). */
+.rightPanel {
+	width: 65%; /* Largura do painel direito (complementar ao leftPanel). */
+	background-color: #1a3a6d; /* Fundo azul escuro institucional. */
+	color: white; /* Cor do texto padrão (caso haja). */
+	position: relative; /* Necessário para posicionar filhos absolutos (como .NexusLogoContainer). */
+	overflow: hidden; /* Esconde qualquer conteúdo (imagem do carrossel) que transborde. */
+	padding: 0; /* Sem padding interno. */
+}
+
+/* --- Logos --- */
+
+/* Container do Logo Principal (Luminus - no painel ESQUERDO). */
+.logoContainer {
+	margin-bottom: 30%; /* Espaço vertical considerável abaixo do logo (percentual da largura do container!). */
+    /* align-self: center; é redundante pois .leftPanel já tem align-items: center. */
+    flex-shrink: 0; /* Impede que o container do logo encolha se faltar espaço vertical. */
+    transform: scale(1.5); /* Aumenta o tamanho do logo em 50%. */
+    width: 100%; /* Faz o container ocupar a largura disponível para centralizar a imagem. */
+    display: flex; /* Necessário para usar justify-content. */
+    justify-content: center; /* Centraliza a imagem (elemento filho) horizontalmente dentro deste container. */
+}
+
+/* Container do Logo Secundário (Nexus - flutuando no painel DIREITO). */
+.NexusLogoContainer {
+	position: absolute; /* Posicionamento absoluto em relação ao .rightPanel. */
+	top: 1.5rem; /* Distância do topo. */
+	left: 2rem; /* Distância da esquerda. */
+    z-index: 2; /* Garante que fique sobre o conteúdo do carrossel. */
+    transform: scale(1.5); /* Aumenta o tamanho do logo Nexus. */
+}
+
+/* --- Conteúdo Centralizado (Abaixo do Logo Luminus) --- */
+
+/* Wrapper para o conteúdo principal no painel esquerdo (prompt, formulário). */
+.contentWrapper {
+    width: 100%; /* Ocupa a largura total disponível no .leftPanel. */
+    max-width: 400px; /* Limita a largura máxima do conteúdo para melhor legibilidade. */
+    display: flex; /* Usa Flexbox para organizar seus filhos (prompt, form). */
+    flex-direction: column; /* Empilha os filhos verticalmente. */
+    align-items: center; /* Centraliza horizontalmente os filhos (prompt, form). */
+    /* Nota: Sem justify-content ou flex-grow, o conteúdo ficará alinhado ao topo (devido ao justify-content: flex-start do .leftPanel). */
+    padding-bottom: 1rem; /* Adiciona um espaço no final do conteúdo antes do fim da área de rolagem. */
+}
+
+/* --- Elementos do Formulário --- */
+
+/* Estilo para o texto de instrução ("Insira o pin recebido em..."). */
+.pinPromptLabel {
+    font-size: 1rem; /* Tamanho da fonte (16px). */
+    color: #333; /* Cor do texto cinza escuro. */
+    text-align: center; /* Centraliza o texto. */
+    margin-bottom: 1.5rem; /* Espaço abaixo do texto, antes do campo PIN. */
+    line-height: 1.5; /* Espaçamento entre linhas para melhor leitura (caso haja quebra). */
+    flex-shrink: 0; /* Impede que encolha se o espaço for limitado. */
+}
+/* Estilo para a parte em negrito (o email) dentro do prompt. */
+.pinPromptLabel strong {
+    font-weight: 600; /* Peso da fonte semi-bold. */
+    color: #1a3a6d; /* Cor azul institucional para destacar o email. */
+    word-break: break-all; /* Permite que emails longos quebrem em qualquer caractere para evitar overflow. */
+}
+
+/* Container do Formulário (<form>). */
+.form {
+	width: 100%; /* Ocupa a largura total do .contentWrapper. */
+	display: flex; /* Usa Flexbox para organizar os filhos (div do PinInput, .buttonGroup). */
+	flex-direction: column; /* Empilha os filhos verticalmente. */
+    align-items: center; /* Centraliza os filhos horizontalmente. */
+	gap: 0.5rem; /* Espaço vertical entre os filhos diretos (bloco do PIN e bloco dos botões). */
+    flex-shrink: 0; /* Impede que o formulário encolha. */
+}
+
+/* --- Estrutura de Erro --- */
+
+/* Slot (espaço reservado) abaixo do PinInput para a mensagem de erro. */
+.errorSlot {
+  min-height: 1.25rem; /* Reserva altura mínima (~20px) para evitar saltos no layout. */
+  width: 100%; /* Ocupa a largura total. */
+  margin-top: 0.5rem; /* Espaço ACIMA da mensagem de erro (entre o PinInput e o erro). */
+  overflow: hidden; /* Esconde texto que exceder a altura. */
+  text-align: center; /* Centraliza o texto da mensagem de erro. */
+}
+/* Estilo padrão para o texto da mensagem de erro. */
+.errorText {
+  color: #e74c3c; /* Cor vermelha. */
+  font-size: 0.8rem; /* Tamanho de fonte pequeno (~13px). */
+  line-height: 1rem; /* Altura da linha (16px). */
+  display: block; /* Garante ocupação da linha. */
+}
+
+/* --- Botões --- */
+
+/* Container para agrupar os botões ("Confirmar PIN" e "Voltar"). */
+.buttonGroup {
+    display: flex; /* Usa Flexbox para organizar os botões. */
+    flex-direction: column; /* Empilha os botões verticalmente. */
+    align-items: center; /* Centraliza os botões horizontalmente. */
+    gap: 0.85rem; /* Espaço vertical entre os botões. */
+    width: 100%; /* Ocupa a largura total disponível no formulário. */
+    max-width: 280px; /* Limita a largura máxima dos botões. */
+    margin-top: 1.5rem; /* Espaço ACIMA do grupo de botões (após o erro ou PinInput). */
+}
+
+/* Botão principal de confirmação. */
+.submitButton {
+	padding: 0.7rem 1.5rem; /* Espaçamento interno (vertical, horizontal). */
+	background-color: #34495e; /* Cor de fundo cinza azulado escuro. */
+	color: white; /* Cor do texto branca. */
+	border: none; /* Sem borda. */
+	border-radius: 25px; /* Bordas arredondadas (formato de pílula). */
+	cursor: pointer; /* Cursor de mãozinha. */
+	font-size: 0.95rem; /* Tamanho da fonte. */
+	font-weight: bold; /* Texto em negrito. */
+	transition: background-color 0.2s ease; /* Transição suave da cor no hover. */
+    width: 100%; /* Ocupa toda a largura do .buttonGroup. */
+    flex-shrink: 0; /* Impede que encolha. */
+    text-align: center; /* Centraliza o texto do botão. */
+}
+/* Efeito hover no botão de confirmação (quando não desabilitado). */
+.submitButton:hover:not(:disabled) {
+	background-color: #2c3e50; /* Cor de fundo levemente mais escura. */
+}
+/* Estilo do botão de confirmação quando desabilitado. */
+.submitButton:disabled {
+	background-color: #95a5a6; /* Cor de fundo cinza claro/dessaturado. */
+	cursor: not-allowed; /* Cursor indicando ação não permitida. */
+}
+
+/* Botão secundário "Voltar" (estilizado como link/outline). */
+.backButton {
+    display: inline-block; /* Permite definir largura e padding. */
+    padding: 0.6rem 1.5rem; /* Espaçamento interno. */
+	background-color: transparent; /* Fundo transparente. */
+	color: #34495e; /* Cor do texto igual ao fundo do botão principal. */
+	border: 2px solid #34495e; /* Borda sólida na mesma cor. */
+	border-radius: 25px; /* Mesmo arredondamento do botão principal. */
+	cursor: pointer; /* Cursor de mãozinha. */
+	font-size: 0.95rem; /* Mesmo tamanho de fonte. */
+	font-weight: bold; /* Mesmo peso da fonte. */
+    text-align: center; /* Centraliza o texto. */
+	/* Transições suaves para cor de fundo, cor do texto e cor da borda no hover. */
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    width: 100%; /* Ocupa toda a largura do .buttonGroup. */
+    text-decoration: none; /* Remove sublinhado padrão de link (<a>). */
+    flex-shrink: 0; /* Impede que encolha. */
+    box-sizing: border-box; /* Garante que padding e border não aumentem a largura total. */
+}
+/* Efeito hover no botão "Voltar". */
+.backButton:hover {
+	background-color: #eef2f7; /* Fundo levemente acinzentado/azulado claro. */
+    color: #2c3e50; /* Cor do texto escurece ligeiramente. */
+    border-color: #2c3e50; /* Cor da borda escurece ligeiramente. */
+}
+
+/* --- Ajustes Responsivos --- */
+
+/* Media Query para telas com largura máxima de 1024px (tablets maiores, laptops pequenos). */
+@media (max-width: 1024px) {
+    /* Ajusta a proporção dos painéis. */
+    .leftPanel { width: 45%; padding: 2.5rem; } /* Painel esquerdo um pouco maior, padding reduzido. */
+    .rightPanel { width: 55%; } /* Painel direito um pouco menor. */
+    /* Reseta a escala dos logos para o tamanho original. */
+    .logoContainer, .NexusLogoContainer { transform: scale(1); }
+}
+
+/* Media Query para telas com largura máxima de 768px (tablets, celulares maiores). */
+@media (max-width: 768px) {
+	/* Muda layout geral para coluna única. */
+    .pageContainer { flex-direction: column; }
+	/* Painel direito (Carrossel) ocupa largura total, altura mínima, vem primeiro. */
+    .rightPanel { width: 100%; min-height: 30vh; order: 1; }
+	/* Painel esquerdo (Formulário) ocupa largura total, vem depois, altura mínima. */
+    .leftPanel {
+        width: 100%;
+        padding: 2rem 1.5rem; /* Padding ajustado para mobile. */
+        order: 2; /* Coloca abaixo do carrossel. */
+        min-height: 70vh; /* Altura mínima para o conteúdo do formulário. */
+        justify-content: flex-start; /* Mantém alinhamento ao topo. */
+        box-shadow: none; /* Remove sombra. */
+        max-height: none; /* Remove restrição de altura máxima. */
+    }
+    /* Ajusta o wrapper de conteúdo no mobile. */
+    .contentWrapper { max-width: 100%; margin-top: 0; } /* Largura total, sem margem superior extra. */
+	/* Ajusta posição e tamanho do logo Nexus no mobile. */
+    .NexusLogoContainer { top: 1rem; left: 1.5rem; transform: scale(1); } /* Reseta escala. */
+    /* Ajusta logo Luminus no mobile. */
+    .logoContainer {
+        margin-bottom: 2rem; /* Espaço abaixo do logo. */
+        margin-top: 1rem; /* Espaço acima do logo. */
+        transform: scale(1); /* Reseta escala. */
+        padding: 0; /* Remove padding se houver. */
+     }
+    /* Ajusta tamanho da fonte do prompt. */
+    .pinPromptLabel { font-size: 0.9rem; margin-bottom: 1.2rem; }
+	/* Ajusta formulário. */
+    .form { max-width: 100%; gap: 0.5rem; /* Mantém gap. */ }
+    /* Ajusta grupo de botões. */
+    .buttonGroup { gap: 0.9rem; margin-top: 1.5rem; max-width: 300px; }
+    /* Ajusta tamanho e padding dos botões. */
+    .submitButton, .backButton { font-size: 0.9rem; padding: 0.8rem 1.3rem; }
+}
+
+/* Media Query para telas com largura máxima de 480px (celulares menores). */
+@media (max-width: 480px) {
+    /* Reduz padding do painel esquerdo. */
+    .leftPanel { padding: 1.5rem 1rem; }
+    /* Reduz tamanho da fonte do prompt. */
+    .pinPromptLabel { font-size: 0.85rem; }
+    /* Reduz padding dos botões. */
+    .submitButton, .backButton { padding: 0.7rem 1.2rem; }
+    /* Ajusta posição e tamanho do logo Nexus. */
+    .NexusLogoContainer { top: 0.8rem; left: 1rem; transform: scale(0.9); }
+    /* Ajusta espaço e escala do logo Luminus. */
+    .logoContainer { margin-bottom: 1.5rem; transform: scale(1); } /* Reseta escala (mantido original). */
+    /* Ajusta largura máxima do grupo de botões. */
+    .buttonGroup { max-width: 90%; }
+    /* Reduz espaço acima do slot de erro. */
+    .errorSlot { margin-top: 0.3rem; }
+}

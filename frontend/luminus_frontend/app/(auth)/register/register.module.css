@@ -1,0 +1,224 @@
+/*
+ * @file register.module.css
+ * @description Folha de estilos CSS Modules específica para a página de cadastro (RegisterPage.tsx).
+ *              Define o layout, aparência e responsividade dos elementos da página.
+ */
+
+/* --- Estrutura Principal da Página --- */
+
+/* Container Principal da Página (o elemento raiz da página) */
+.pageContainer {
+  display: flex; /* Usa Flexbox para layout em colunas (left/right panels) */
+  height: 100vh; /* Ocupa toda a altura da viewport */
+  overflow: hidden; /* Impede a rolagem da página inteira (rolagem interna nos painéis se necessário) */
+  background-color: #f0f2f5; /* Cor de fundo cinza claro para a página */
+  font-family: inherit; /* Garante que a fonte definida no body ou pai seja usada */
+}
+
+/* Coluna Esquerda (Painel do Formulário) */
+.leftPanel {
+  width: 35%; /* Define a largura do painel esquerdo */
+  background-color: white; /* Fundo branco */
+  padding: 4.5rem 2.5rem; /* Espaçamento interno generoso (topo/baixo, laterais) */
+  display: flex; /* Usa Flexbox para organizar o conteúdo interno */
+  flex-direction: column; /* Organiza o conteúdo (logo, título, form, link) em coluna */
+  align-items: center; /* Centraliza o conteúdo horizontalmente */
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra sutil à direita para dar profundidade */
+  z-index: 1; /* Garante que fique acima do painel direito se houver sobreposição */
+}
+
+/* Coluna Direita (Painel do Carrossel) */
+.rightPanel {
+  width: 65%; /* Define a largura do painel direito */
+  background-color: #1a3a6d; /* Fundo azul escuro institucional */
+  color: white; /* Cor do texto padrão para branco (útil se houver texto sobreposto) */
+  position: relative; /* Necessário para posicionar elementos filhos absolutamente (como o logo Nexus) */
+  overflow: hidden; /* Esconde qualquer conteúdo que transborde (importante para o carrossel/imagem) */
+  padding: 0; /* Remove padding padrão que poderia interferir no layout do carrossel */
+}
+
+/* --- Logos --- */
+
+/* Container do Logo Principal (Luminus - no painel esquerdo) */
+.logoContainer {
+  margin-bottom: 2.5rem; /* Espaço abaixo do logo */
+  flex-shrink: 0; /* Impede que o logo encolha se houver pouco espaço vertical */
+  transform: scale(1.5); /* Aumenta o tamanho do logo em 50% */
+}
+
+/* Container do Logo Secundário (Nexus - no painel direito) */
+.NexusLogoContainer {
+  position: absolute; /* Posicionamento absoluto em relação ao .rightPanel */
+  top: 1.5rem; /* Distância do topo do painel direito */
+  left: 2rem; /* Distância da esquerda do painel direito */
+  z-index: 2; /* Garante que fique acima do conteúdo do carrossel */
+  transform: scale(1.5); /* Aumenta o tamanho do logo em 50% */
+}
+
+/* --- Conteúdo do Painel Esquerdo --- */
+
+/* Título "CADASTRO" */
+.title {
+  text-align: center; /* Centraliza o texto */
+  margin-bottom: 0.5rem; /* Espaço pequeno abaixo do título */
+  color: #333; /* Cor do texto cinza escuro */
+  font-weight: bold; /* Texto em negrito */
+  font-size: 1.5rem; /* Tamanho da fonte (24px) */
+  flex-shrink: 0; /* Impede que o título encolha */
+}
+
+/* Contêiner do Formulário (<form>) */
+.form {
+  width: 100%; /* Ocupa toda a largura disponível no painel esquerdo */
+  max-width: 400px; /* Limita a largura máxima para melhor legibilidade em telas largas */
+  display: flex; /* Usa Flexbox para os elementos filhos (os .inputWrapper) */
+  flex-direction: column; /* Organiza os .inputWrapper um abaixo do outro */
+  /* 'gap' foi removido ou zerado pois o espaçamento vertical é agora controlado pelo .inputWrapper */
+  gap: 0; /* Garante que não haja gap direto entre os wrappers; o espaço vem do wrapper */
+  flex-shrink: 0; /* Impede que o formulário encolha */
+}
+
+/* --- Estrutura Input + Erro (NOVO PADRÃO) --- */
+
+/* Wrapper para agrupar cada Componente de Input com seu respectivo Slot de Erro */
+.inputWrapper {
+  display: flex; /* Organiza o Input (renderizado pelo componente) e o .errorSlot */
+  flex-direction: column; /* Input acima do slot de erro */
+  width: 100%; /* Garante que o wrapper ocupe a largura total disponível no formulário */
+  /* Adicione/ajuste margin-bottom aqui para controlar o espaço VERTICAL entre os campos do formulário */
+  /* Exemplo: margin-bottom: 0.5rem; */
+  /* Como não há margin/gap definido, os wrappers ficarão colados verticalmente.
+     O espaço virá do padding interno dos componentes de Input e do min-height do errorSlot. */
+}
+
+/* Slot Reservado Abaixo do Input para Exibir a Mensagem de Erro */
+.errorSlot {
+  /* Reserva uma altura mínima fixa para evitar que o layout "salte"
+     quando uma mensagem de erro aparece ou desaparece. */
+  /* Ajuste este valor conforme o tamanho da fonte (font-size) e
+     altura da linha (line-height) definidos em .errorText. */
+  min-height: 1.25rem; /* ~20px, calculada para caber text-xs com leading-4 (Tailwind) */
+  /* Alternativa: usar 'height' para uma altura estritamente fixa, mas pode cortar texto
+     se a fonte/linha for maior que o esperado. */
+  /* height: 1.25rem; */
+  width: 100%; /* Ocupa a largura total */
+  overflow: hidden; /* Garante que texto de erro muito longo não expanda o slot verticalmente */
+  /* margin-top: 2px; */ /* Espaço opcional entre o input e o texto de erro, se desejado */
+}
+
+/* Estilo do Texto da Mensagem de Erro (dentro do .errorSlot) */
+.errorText {
+  color: #e74c3c; /* Cor vermelha padrão para indicar erro */
+  font-size: 0.75rem; /* Tamanho de fonte pequeno (12px) */
+  line-height: 1rem; /* Altura da linha (16px), deve caber no min-height do .errorSlot */
+  display: block; /* Garante que o span (ou p) use a altura da linha e ocupe a largura disponível */
+  /* As propriedades abaixo são opcionais se quiser forçar o erro a caber em uma
+     única linha e mostrar "..." se for muito longo. */
+  /* white-space: nowrap; */      /* Impede quebra de linha */
+  /* text-overflow: ellipsis; */ /* Adiciona "..." no final se o texto exceder a largura */
+  /* overflow: hidden; */       /* Necessário para text-overflow funcionar (já está no .errorSlot) */
+}
+
+/* --- FIM DAS NOVAS CLASSES --- */
+
+
+/* Botão de Cadastro/Submissão */
+.submitButton {
+  padding: 0.6rem 1.2rem; /* Espaçamento interno (vertical, horizontal) */
+  background-color: #34495e; /* Cor de fundo padrão (cinza azulado escuro) */
+  color: white; /* Cor do texto */
+  border: none; /* Sem borda */
+  border-radius: 25px; /* Bordas bem arredondadas para formato de pílula */
+  cursor: pointer; /* Cursor de mãozinha para indicar clicabilidade */
+  font-size: 0.9rem; /* Tamanho da fonte */
+  font-weight: bold; /* Texto em negrito */
+  /* O espaço acima do botão é controlado pelo margin-top */
+  margin-top: 1rem; /* Espaço acima do botão (aumentado para compensar falta de gap/margin nos wrappers) */
+  transition: background-color 0.2s ease; /* Transição suave da cor de fundo no hover */
+}
+
+/* Efeito hover para o botão (aplicado apenas quando NÃO está desabilitado) */
+.submitButton:hover:not(:disabled) {
+  background-color: #2c3e50; /* Cor de fundo um pouco mais escura no hover */
+}
+
+/* Estilo do botão quando está desabilitado */
+.submitButton:disabled {
+  background-color: #95a5a6; /* Cor de fundo cinza claro/dessaturado */
+  cursor: not-allowed; /* Cursor indicando que a ação não é permitida */
+}
+
+/* Texto e Link para a página de Login (abaixo do formulário) */
+.loginLink {
+  margin-top: 0.7rem; /* Espaço acima do texto */
+  margin-bottom: 0.3rem; /* Espaço abaixo do texto */
+  text-align: center; /* Centraliza o texto */
+  font-size: 0.8rem; /* Tamanho de fonte pequeno */
+  color: #555; /* Cor cinza para o texto base */
+  flex-shrink: 0; /* Impede que encolha se o painel ficar muito pequeno */
+}
+
+/* Estilo específico para o link (<a>) dentro de .loginLink */
+.loginLink a {
+  color: #e74c3c; /* Cor vermelha/laranja destacada para o link "Entrar" */
+  font-weight: bold; /* Negrito para dar ênfase */
+  text-decoration: none; /* Remove o sublinhado padrão do link */
+}
+
+/* Efeito hover para o link "Entrar" */
+.loginLink a:hover {
+  text-decoration: underline; /* Adiciona sublinhado ao passar o mouse */
+}
+
+
+
+/* --- Ajustes para Telas Menores (Responsividade) --- */
+@media (max-width: 768px) { /* Aplica estas regras quando a largura da tela for 768px ou menor */
+
+  /* Muda o layout principal para coluna única em telas menores */
+  .pageContainer {
+      flex-direction: column; /* Empilha os painéis verticalmente */
+      height: auto; /* Altura deixa de ser fixa em 100vh */
+      min-height: 100vh; /* Garante que ocupe pelo menos a altura da tela */
+      overflow: visible; /* Permite rolagem da página inteira se o conteúdo for maior que a tela */
+  }
+
+  /* Painéis agora ocupam 100% da largura e têm altura automática */
+  .leftPanel,
+  .rightPanel {
+      width: 100%; /* Largura total */
+      min-height: auto; /* Altura mínima baseada no conteúdo */
+      overflow-y: visible; /* Remove a rolagem interna específica dos painéis */
+      scrollbar-gutter: auto; /* Deixa o navegador gerenciar a calha de rolagem */
+      padding: 1.5rem; /* Reduz o padding interno em telas menores */
+  }
+
+  /* Garante uma altura mínima para o painel direito (carrossel) para não ficar muito pequeno */
+   .rightPanel {
+      min-height: 50vh; /* Ocupa pelo menos metade da altura da tela */
+  }
+
+  /* Ajustes no formulário em telas menores */
+  .form {
+      max-width: 100%; /* Permite que o formulário ocupe toda a largura disponível */
+      gap: 0; /* Mantém o gap zerado */
+  }
+
+  /* Ajuste opcional para espaçamento entre campos em telas menores, se necessário */
+  /* .inputWrapper { margin-bottom: 0.8rem; } */
+
+  /* Ajuste opcional para inputs se a classe .inputGroup antiga ainda for usada */
+  /* .inputGroup input { padding: 0.8rem 0.9rem; } */
+
+   /* Ajustes no botão de submit em telas menores */
+   .submitButton {
+      padding: 0.8rem 1.3rem; /* Aumenta um pouco o padding */
+      margin-top: 1.2rem; /* Ajusta o espaço acima */
+   }
+
+   /* Ajustes no link de login em telas menores */
+  .loginLink {
+      margin-top: 1.2rem; /* Aumenta o espaço acima */
+      margin-bottom: 0; /* Remove espaço abaixo (geralmente o último elemento visível) */
+  }
+}

@@ -1,0 +1,509 @@
+/* src/pages/DossierCRUDPage.module.css */
+
+/* --- Globals (Referência) --- */
+/* Se você tiver um globals.css, adicione 'body { overflow: hidden; }' lá.
+   Caso contrário, o overflow:hidden no appContainer e mainContent tentará o mesmo efeito. */
+/*
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #E5E7EB;
+  color: #1F2937;
+  overflow: hidden; /* IDEALMENTE AQUI, PARA IMPEDIR SCROLL DA PÁGINA */
+/*}
+* { box-sizing: border-box; }
+*/
+
+/* Custom Scrollbar (Opcional, mas melhora a estética) */
+/* ... (mantenha seus estilos de scrollbar se desejar) ... */
+
+
+/* --- DossierAppPage Layout --- */
+.appContainer {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.mainContent {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 30px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scrollableArea {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative; /* Necessário para posicionar a sidebar absolutamente dentro */
+  padding-right: 85px; /* Espaço para scrollbar Y e ActionSidebar */
+  /* O padding-bottom foi movido para .sectionListContainer para melhor controle */
+}
+
+
+.footerActions {
+  position: absolute;
+  bottom: 20px;
+  right: 30px;
+  z-index: 20;
+}
+
+.saveButton {
+  background-color: #000000;
+  color: white;
+  padding: 10px 25px;
+  border: none;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: background-color 0.2s;
+}
+.saveButton:hover {
+  background-color: #333;
+}
+
+/* --- PageHeader --- */
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 5px 0;
+  flex-shrink: 0;
+}
+/* ... (restante dos estilos do PageHeader) ... */
+.pageHeader_backButton {
+  background: #000000;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+.pageHeader_backButton:hover {
+  opacity: 0.8;
+}
+.pageHeader_backIcon {
+  stroke: white;
+  width: 20px;
+  height: 20px;
+}
+.pageHeader_toggleButtonBase {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.pageHeader_toggleButtonViewing {
+  background-color: #60A5FA;
+  color: white;
+  border-color: #60A5FA;
+}
+.pageHeader_toggleButtonViewing:hover {
+  background-color: #3B82F6;
+}
+.pageHeader_toggleButtonEditing {
+  background-color: #9CA3AF;
+  color: white;
+  border-color: #9CA3AF;
+}
+.pageHeader_toggleButtonEditing:hover {
+  background-color: #6B7280;
+}
+
+
+/* --- DossierHeader --- */
+.dossierHeaderContainer {
+  background-color: #7E85C7;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  color: white;
+  flex-shrink: 0;
+}
+/* ... (restante dos estilos do DossierHeader, Section, SectionItem, EditableField) ... */
+
+.dossierHeader_titleText {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  word-break: break-word;
+}
+.dossierHeader_titleInput {
+  font-size: 1.6rem;
+  font-weight: bold;
+  padding: 8px;
+  border: 1px solid #A0A0C0;
+  border-radius: 4px;
+  width: 100%;
+  background-color: white;
+  color: #333;
+  margin-bottom: 10px;
+}
+.dossierHeader_titleInput::placeholder {
+  color: #9CA3AF;
+}
+
+/* Novo layout para a linha do Conceito de Avaliação + Settings */
+.dossierHeader_evaluationAndSettings {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+/* Ajusta o container de avaliação para ocupar o espaço disponível dentro do flex */
+.dossierHeader_evaluationConceptContainer {
+  margin-top: 0;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.dossierHeader_settingsButton {
+  composes: pageHeader_backButton;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: transparent;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+}
+.dossierHeader_settingsButton:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+/* Ajustar tamanho do ícone dentro do botão menor */
+.dossierHeader_settingsButton > svg {
+  width: 16px;
+  height: 16px;
+}
+
+
+.dossierHeader_evaluationConceptLabelText {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: white;
+}
+.dossierHeader_evaluationRadioGroup {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.dossierHeader_evaluationRadioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: white;
+  cursor: pointer;
+}
+.dossierHeader_evaluationRadioInput {
+  cursor: pointer;
+}
+.dossierHeader_evaluationConceptDisplay {
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin: 0;
+  color: white;
+}
+.dossierHeader_divider {
+  border: none;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.5);
+  margin: 15px 0;
+}
+.dossierHeader_descriptionLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 5px;
+}
+.dossierHeader_descriptionTextDisplay {
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 10px;
+  min-height: 40px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: white; /* Cor do texto da descrição do header */
+}
+.dossierHeader_descriptionTextDisplay:empty {
+  min-height: 20px;
+}
+.dossierHeader_descriptionTextarea {
+  font-size: 1rem;
+  padding: 10px;
+  border: 1px solid #A0A0C0;
+  border-radius: 6px;
+  width: 100%;
+  background-color: white;
+  color: #333;
+  min-height: 60px;
+  resize: vertical;
+}
+.dossierHeader_descriptionTextarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* --- SectionList --- */
+.sectionListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 20px;
+}
+
+/* --- Section --- */
+.section_outerContainer {
+  background-color: #7E85C7;
+  padding: 15px;
+  border-radius: 8px;
+  position: relative;
+}
+.section_contentWrapper {
+  position: relative;
+}
+.section_selectedStyling > .section_contentWrapper::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background-color: hotpink;
+  border-radius: 3px 0 0 3px;
+  z-index: 1;
+}
+.section_outerContainer > .section_contentWrapper::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background-color: #A5B4FC;
+  border-radius: 3px 0 0 3px;
+  z-index: 0;
+}
+.section_titleAndWeightContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px; /* Espaço antes da descrição ou lista de itens */
+  color: white;
+}
+.section_titleContainer {
+  flex-grow: 1;
+}
+.section_titleText {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 6px 2px;
+  word-break: break-word;
+  display: block;
+}
+.section_titleInput {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 6px 8px;
+  border: 1px solid #A0A0C0;
+  border-radius: 4px;
+  width: 100%;
+  background-color: white;
+  color: #333;
+}
+.section_titleInput::placeholder {
+  color: #9CA3AF;
+}
+.section_weightFieldContainer {
+  min-width: 90px;
+  flex-shrink: 0;
+}
+.section_weightInput {
+  composes: editableField_inputBase;
+  background-color: white;
+  color: #333;
+  font-size: 0.9rem;
+  padding: 5px 8px;
+  text-align: right;
+}
+.section_weightInput::placeholder {
+  text-align: left;
+  color: #9CA3AF;
+}
+.section_weightText {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: white;
+  padding: 5px 8px;
+  text-align: right;
+  min-width: 90px;
+  box-sizing: border-box;
+}
+
+/* --- NOVAS CLASSES PARA DESCRIÇÃO DA SEÇÃO --- */
+.section_descriptionContainer {
+    margin-bottom: 15px; /* Espaço entre a descrição e a lista de itens */
+}
+.section_descriptionText {
+   composes: editableField_textDisplay;
+   color: rgba(255, 255, 255, 0.9); /* Cor clara para o texto da descrição da seção */
+   font-size: 0.95rem;
+   font-style: italic;
+   padding: 0 2px; /* Ajustar padding para visualização */
+}
+.section_descriptionTextarea {
+   composes: editableField_inputBase;
+   background-color: rgba(255, 255, 255, 0.9);
+   color: #333;
+   font-size: 0.95rem;
+   padding: 8px 10px;
+   min-height: 50px; /* Altura mínima para o textarea */
+   resize: vertical;
+}
+.section_descriptionTextarea::placeholder {
+    color: #9CA3AF;
+}
+/* --- FIM NOVAS CLASSES PARA DESCRIÇÃO DA SEÇÃO --- */
+
+
+.section_itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- SectionItem --- */
+.sectionItem_container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: white;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  cursor: default; /* Cursor default para não confundir, o clique para seleção agora é na div, mas a sidebar é pelo foco do input */
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.sectionItem_containerEditable {
+  cursor: pointer; /* Cursor pointer na área do item editável para indicar que pode ser clicado para selecionar */
+}
+.sectionItem_containerEditable:hover {
+   border-color: #60A5FA;
+}
+.sectionItem_selected {
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+.sectionItem_descriptionFieldWrapper {
+  flex-grow: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+/* --- EditableField --- */
+.editableField_textDisplay {
+  display: block;
+  padding: 6px 2px;
+  min-height: 1.5em; /* Garante altura mínima para spans vazios */
+  white-space: pre-wrap; /* Preserva quebras de linha e espaços */
+  word-break: break-word; /* Quebra palavras longas */
+  color: #374151;
+  /* overflow: hidden; REMOVIDO para não cortar conteúdo, o word-break já ajuda */
+  /* text-overflow: ellipsis; REMOVIDO junto com overflow */
+  width: 100%;
+  /* Adicionado cursor pointer para indicar que pode ser clicado para editar (em modo edição) */
+  cursor: text;
+}
+.editableField_textDisplayItem {
+  composes: editableField_textDisplay;
+}
+.editableField_inputBase {
+  padding: 6px 8px;
+  border: 1px solid #D1D5DB;
+  border-radius: 4px;
+  font-size: inherit;
+  font-family: inherit;
+  width: 100%;
+  background-color: #F9FAFB;
+  color: #1F2937;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.editableField_inputBase:focus {
+  border-color: #3B82F6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.editableField_inputBase::placeholder {
+  color: #9CA3AF;
+}
+.editableField_inputItem {
+  composes: editableField_inputBase;
+  background-color: white;
+}
+
+/* --- ActionSidebar Global --- */
+.actionSidebarVisualBase {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background-color: #DFE1E6;
+  border-radius: 22px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  width: auto;
+  position: absolute; /* Posicionado absolutamente dentro de .scrollableArea */
+  right: 25px; /* Distância da direita */
+  z-index: 15;
+}
+.actionSidebarButtonVisualBase {
+  background-color: #F4F5F7;
+  border: 1px solid #DCDFE4;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #172B4D;
+  padding: 0;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.actionSidebarButtonVisualBase:hover:not(:disabled) {
+  background-color: #EBECF0;
+  border-color: #C1C7D0;
+}
+.actionSidebarButtonDisabledVisualBase {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #F4F5F7 !important; /* Garante que o fundo não mude no hover */
+  border-color: #DCDFE4 !important; /* Garante que a borda não mude no hover */
+}
+/*.actionSidebarIconVisualBase {
+  /* Estilos específicos para ícones se necessário */
+/*}*/

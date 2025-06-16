@@ -1,130 +1,181 @@
-create table Instituicao(
-	id_instituicao SERIAL PRIMARY KEY,
-	nome VARCHAR(100) NOT NULL,
-	login VARCHAR(50) UNIQUE NOT NULL,
-	senha VARCHAR(255) NOT NULL,
-	email_instituicao VARCHAR(255) NOT NULL UNIQUE
+create table Institution(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(100) NOT NULL,
+	password VARCHAR(255) NOT NULL,
+	institution_email VARCHAR(255) NOT NULL UNIQUE
 );
 
 create table Professor(
-	id_professor SERIAL PRIMARY KEY,
-	nome VARCHAR(100) NOT NULL,
-	login VARCHAR(50) UNIQUE NOT NULL,
-	senha VARCHAR(255) NOT NULL,
-	id_instituicao INT ,
-	email_professor VARCHAR(255) UNIQUE NOT NULL,
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(100) NOT NULL,
+	password VARCHAR(255) NOT NULL,
+	institution_id INT ,
+	professor_email VARCHAR(255) UNIQUE NOT NULL,
 
-	FOREIGN KEY (id_instituicao) REFERENCES Instituicao(id_instituicao)
+	FOREIGN KEY (institution_id) REFERENCES Institution(id) ON UPDATE CASCADE
 );
 
-create table Dossie(
-	id_dossie SERIAL,
-	id_professor INTEGER, 
-	nome VARCHAR(255) UNIQUE NOT NULL,
-	met_avaliacao VARCHAR(50),
-	FOREIGN KEY(id_professor) REFERENCES Professor(id_professor),
-	PRIMARY KEY(id_dossie, id_professor)
+create table Dossier(
+	id SERIAL,
+	professor_id INTEGER, 
+	name VARCHAR(255) UNIQUE NOT NULL,
+	description TEXT, 
+	evaluation_method VARCHAR(50),
+	FOREIGN KEY(professor_id) REFERENCES Professor(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(id, professor_id)
 );
 
-create table Sessao(
-	id_dossie INT,
-	id_professor INT,
-	id_sessao SERIAL, 
-	nome VARCHAR(255) NOT NULL,
-	descricao VARCHAR(255) NOT NULL,
-	peso REAL,
-	CONSTRAINT fk_Sessao_Dossie FOREIGN KEY(id_dossie, id_professor) REFERENCES Dossie(id_dossie,id_professor),
+create table Section(
 	
-	PRIMARY KEY(id_sessao, id_dossie)
+	id SERIAL,
+	dossier_id INT,
+	professor_id INT,
+	name VARCHAR(255) NOT NULL,
+	description VARCHAR(255) NOT NULL,
+	weigth REAL,
+	CONSTRAINT fk_Section_Dossier FOREIGN KEY(dossier_id, professor_id) REFERENCES Dossier(id, professor_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	
+	PRIMARY KEY(id, dossier_id)
 );
 
-create table Questao(
-	id_questao SERIAL,
-	id_professor INT,
-	id_dossie INT,
-	id_sessao INT,
-	descricao TEXT NOT NULL,
+create table Question(
+	id SERIAL,
+	professor_id INT,
+	dossier_id INT,
+	section_id INT,
+	description TEXT NOT NULL,
 
-	CONSTRAINT fk_Questao_Sessao FOREIGN KEY(id_sessao, id_dossie) REFERENCES Sessao(id_sessao, id_dossie),
-	PRIMARY KEY(id_questao, id_sessao)
+	CONSTRAINT fk_Question_Section FOREIGN KEY(section_id, dossier_id) REFERENCES Section(id, dossier_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+	PRIMARY KEY(id, section_id, dossier_id)
 );
 
-create table Aluno(
-	id_aluno INT PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
+create table Student(
+	id INT PRIMARY KEY,
+	name VARCHAR(255) NOT NULL
 );
 
-create table Avaliacao(
-	id_avaliacao SERIAL,
-	id_aluno INT,
-	id_professor INT,
-	NOTa REAL,
-	data_prenchimento date NOT NULL,
+create table Classroom(
+	id SERIAL,
+	professor_id INT,
+	name VARCHAR(255) NOT NULL,
+	description TEXT,
+	season VARCHAR(50) NOT NULL,
+	institution VARCHAR(255) NOT NULL,
+	dossier_id INT,
+	dossier_professor_id INT,
 
-	CONSTRAINT fk_Avaliacao_Aluno FOREIGN KEY(id_aluno) REFERENCES Aluno(id_aluno),
-	CONSTRAINT fk_Avaliacao_Professor FOREIGN KEY(id_professor) REFERENCES Professor(id_professor),
-
-	PRIMARY KEY(id_avaliacao, id_aluno, id_professor)
+	CONSTRAINT fk_Classroom_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_Classroom_Dossier FOREIGN KEY(dossier_id, dossier_professor_id) REFERENCES Dossier(id, professor_id) ON UPDATE CASCADE,
+	PRIMARY KEY(id, professor_id)
 );
 
-create table Turma(
-	id_turma SERIAL,
-	id_professor INT,
-	nome VARCHAR(255) NOT NULL,
-	descricao TEXT,
-	periodo VARCHAR(50) NOT NULL,
-	instituicao VARCHAR(255) NOT NULL,
-	id_dossie INT,
-	id_professor_dossie INT,
+create table ClassroomStudent(
+	classroom_id INT,
+	student_id INT,
+	professor_id INT,
 
-	CONSTRAINT fk_Turma_Professor FOREIGN KEY(id_professor) REFERENCES Professor(id_professor),
-	CONSTRAINT fk_Turma_dossie FOREIGN KEY(id_dossie, id_professor_dossie) REFERENCES Dossie(id_dossie, id_professor),
-	PRIMARY KEY(id_turma, id_professor)
-);
+	CONSTRAINT fk_ClassroomStudent_Classroom FOREIGN KEY(classroom_id, professor_id) REFERENCES Classroom(id, professor_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_ClassroomStudent_Student FOREIGN KEY(student_id) REFERENCES Student(id) ON DELETE CASCADE ON UPDATE CASCADE,
 
-create table TurmaAluno(
-	id_turma INT,
-	id_aluno INT,
-	id_professor INT,
-
-	CONSTRAINT fk_TurmaAluno_Turma FOREIGN KEY(id_turma, id_professor) REFERENCES Turma(id_turma, id_professor),
-	CONSTRAINT fk_TurmaAluno_Aluno FOREIGN KEY(id_turma) REFERENCES Aluno(id_aluno),
-
-	PRIMARY KEY(id_turma, id_aluno)
+	PRIMARY KEY(classroom_id, student_id, professor_id)
 
 );
 
-create table DossieInstituicao(
-	id_dossie SERIAL,
-	id_instituicao INT,
-	nome VARCHAR(255) UNIQUE NOT NULL,
-	met_avaliacao VARCHAR(50),
 
-	FOREIGN KEY(id_instituicao) REFERENCES Instituicao(id_instituicao),
-	PRIMARY KEY(id_dossie, id_instituicao)
+create table Appraisal(
+	id SERIAL,
+	student_id INT,
+	professor_id INT,
+	classroom_id INT,
+	points REAL,
+	filling_date date NOT NULL,
+
+	CONSTRAINT fk_Appraisal_Student FOREIGN KEY(student_id) REFERENCES Student(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id, professor_id) REFERENCES Classroom(id, professor_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(id, student_id, professor_id, classroom_id)
 );
 
-create table SessaoInstituicao(
-	id_sessao SERIAL,
-	id_instituicao INT,
-	id_dossie INT,
+create table Evaluation(
+	id SERIAL,
+	student_id INT,
+	professor_id INT,
+	classroom_id INT,
+	dossier_id INT,
+	section_id INT,
+	question_id INT,
+	appraisal_id INT,
 
-	nome VARCHAR(255) NOT NULL,
-	descricao VARCHAR(255) NOT NULL,
-	peso REAL,
+	question_option INT,
 
-	CONSTRAINT fk_SessaoInstituicao_DossieInstituicao FOREIGN KEY(id_dossie, id_instituicao) REFERENCES DossieInstituicao(id_dossie, id_instituicao),
-	PRIMARY KEY (id_sessao, id_dossie)
+	CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, professor_id, classroom_id) REFERENCES Appraisal(id, student_id, professor_id, classroom_id),
+	CONSTRAINT fk_Evauation_Question FOREIGN KEY(question_id, section_id, dossier_id) REFERENCES Question(id, section_id, dossier_id),
+
+	PRIMARY KEY(id, appraisal_id, question_id, section_id, dossier_id)
+
 );
 
-create table QuestaoInstituicao(
-	id_questao SERIAL,
-	id_instituicao INT,
-	id_dossie INT,
-	id_sessao INT,
-	descricao TEXT NOT NULL,
+create table InstitutionalDossier(
+	id SERIAL,
+	institution_id INT,
+	name VARCHAR(255) UNIQUE NOT NULL,
+	description TEXT,
+	evaluation_method VARCHAR(50),
 
-	CONSTRAINT fk_QuestaoInstituicao_SessaoInstituicao FOREIGN KEY(id_sessao, id_dossie) REFERENCES SessaoInstituicao(id_sessao, id_dossie),
-	CONSTRAINT fk_QuestaoInstituicao_Instituicao FOREIGN KEY(id_instituicao) REFERENCES Instituicao(id_instituicao),
-	PRIMARY KEY(id_questao, id_sessao)
+	FOREIGN KEY(institution_id) REFERENCES Institution(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(id, institution_id)
+);
+
+create table InstitutionalSection(
+	id SERIAL,
+	institution_id INT,
+	dossier_id INT,
+
+	name VARCHAR(255) NOT NULL,
+	description TEXT NOT NULL,
+	weigth REAL,
+
+	CONSTRAINT fk_InstitutionalSection_InstitutionalDossier FOREIGN KEY(dossier_id, institution_id) REFERENCES InstitutionalDossier(id, institution_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY (id, dossier_id)
+);
+
+create table InstitutionalQuestion(
+	id SERIAL,
+	institution_id INT,
+	dossier_id INT,
+	section_id INT,
+	description TEXT NOT NULL,
+
+	CONSTRAINT fk_InstitutionalQuestion_InstitutionalSection FOREIGN KEY(section_id, dossier_id) REFERENCES InstitutionalSection(id, dossier_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_InstitutionalQuestion_Institution FOREIGN KEY(institution_id) REFERENCES Institution(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(id, section_id, dossier_id)
+);
+
+create table Notification(
+	id SERIAL,
+	professor_id INT,
+	institution_id INT,
+	status INT,
+
+	CONSTRAINT fk_Notification_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_Notification_Institution FOREIGN KEY(institution_id) REFERENCES Institution(id) ON DELETE CASCADE ON UPDATE CASCADE,
+
+	PRIMARY KEY(id, professor_id, institution_id)
+);
+
+create table VerifyCode(
+	code INT UNIQUE NOT NULL,
+	professor_id INT,
+	data_sol date,
+	status INT,
+
+	CONSTRAINT fk_VerifyCode_Professor FOREIGN KEY(professor_id) REFERENCES Professor(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(code, professor_id, data_sol)
+);
+
+create table TokenCode(
+	token VARCHAR(255),
+	professor_id INT,
+
+	CONSTRAINT fk_Token_Profesor FOREIGN KEY(professor_id) REFERENCES Professor(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(token, professor_id)
 );
