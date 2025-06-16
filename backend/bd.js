@@ -123,7 +123,7 @@ async function pgDossieSelect(id) {
 
     // Depois encontra as questões para cada seção
     const questionsQuery = `
-        SELECT q.*
+        SELECT q.*, s.id as section_id
         FROM Question q
         JOIN Section s ON q.section_id = s.id
         WHERE s.dossier_id = $1;
@@ -149,7 +149,14 @@ async function pgDossieSelect(id) {
         // Organiza as questões por seção
         const sectionsWithQuestions = sections.map(section => ({
             ...section,
-            questions: questions.filter(q => q.section_id === section.id)
+            questions: questions.filter(q => q.section_id === section.id).map(q => ({
+                id: q.id,
+                description: q.description || q.name,
+                name: q.name,
+                section_id: q.section_id,
+                dossier_id: q.dossier_id,
+                evaluation_method: q.evaluation_method
+            }))
         }));
 
         // Combina tudo

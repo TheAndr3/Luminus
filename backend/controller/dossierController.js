@@ -1,10 +1,8 @@
 const db = require('../bd');
 
 exports.Create = async (req, res) => {
-
   try{
     const {name, costumUser_id, description, evaluation_method, sections} = req.body;
-
 
     if (!name || !costumUser_id || !description || !evaluation_method || !sections) {
       console.error('Campos obrigatórios faltando:', { 
@@ -17,87 +15,81 @@ exports.Create = async (req, res) => {
       return res.status(400).json({msg:'Campos obrigatórios faltando'});
     }
 
-    try {
-      var payload = {
-        name:evaluation_method[0].name,
-        costumUser_id:costumUser_id,
-      };
+    var payload = {
+      name:evaluation_method[0].name,
+      costumUser_id:costumUser_id,
+    };
 
+    //insere o metodo de avaliação no banco de dados
+    await db.pgInsert('EvaluationMethod', payload);
+    const evMethod = await db.pgSelect('EvaluationMethod', {costumUser_id:costumUser_id, name:evaluation_method[0].name});
 
-      //insere o metodo de avaliação no banco de dados
-      await db.pgInsert('EvaluationMethod', payload);
-      const evMethod = await db.pgSelect('EvaluationMethod', {costumUser_id:costumUser_id, name:evaluation_method[0].name});
-
-      if (!evMethod || evMethod.length === 0) {
-        return res.status(400).json({msg:'Erro ao criar método de avaliação'});
-      }
-
-      //insere os campos de avaliação
-      for (let i = 0; i < evaluation_method.length; i++) {
-        var type = evaluation_method[i];
-        payload = {
-          name:type.name,
-          value:type.value,
-          evaluation_method:evMethod[0].id,
-          costumUser_id:costumUser_id
-        }
-        await db.pgInsert('EvaluationType', payload);
-      } 
-
-      payload = {
-        name:name, 
-        costumUser_id:costumUser_id,
-        description:description,
-        evaluation_method:evMethod[0].id,
-      }
-      
-      //insere no banco de dados o novo dossie
-      const dossie = await db.pgInsert('dossier', payload);
-      const lastDossie = await db.pgSelect('dossier', {costumUser_id:costumUser_id, name:name});
-
-      if (!lastDossie || lastDossie.length === 0) {
-        return res.status(400).json({msg:'Erro ao criar dossiê'});
-      }
-
-      //pra cada sessao existente insere no banco de dados as sessoes pertencentes a esse dossie
-      for (let i = 0; i < sections.length; i++) {
-        var section = sections[i];
-        const questions = section.questions;
-        payload = {
-          dossier_id:lastDossie[0].id,
-          costumUser_id:costumUser_id,
-          name:section.name,
-          description:section.description,
-          weigth:section.weigth
-        }
-
-
-        //atualiza o objeto sessao para conter agora tambem seu Id
-        await db.pgInsert('Section', payload);
-        var lastSection = await db.pgSelect('Section', {costumUser_id:costumUser_id, name:section.name, dossier_id:lastDossie[0].id});
-
-        if (!lastSection || lastSection.length === 0) {
-          return res.status(400).json({msg:'Erro ao criar seção'});
-        }
-
-        //para cada questao dentro desta sessao, cria uma nova entrada no banco de dados
-        for (let j = 0; j < questions.length; j++) {
-          var question = questions[j];
-          payload = {
-            costumUser_id:costumUser_id,
-            dossier_id:lastDossie[0].id,
-            section_id:lastSection[0].id,
-            evaluation_method:evMethod[0].id,
-            name: question.description
-          }
-          await db.pgInsert('question', payload);
-        }
-      }
-
-      return res.status(201).json({msg:'dossie criado com sucesso', data:dossie});
-    } catch (dbError) {
-      return res.status(400).json({msg:'Erro no banco de dados: ' + dbError.message});
+    if (!evMethod || evMethod.length === 0) {
+      return res.status(400).json({msg:'Erro ao criar método de avaliação'});
     }
+
+    //insere os campos de avaliação
+    for (let i = 0; i < evaluation_method.length; i++) {
+      var type = evaluation_method[i];
+      payload = {
+        name:type.name,
+        value:type.value,
+        evaluation_method:evMethod[0].id,
+        costumUser_id:costumUser_id
+      }
+      await db.pgInsert('EvaluationType', payload);
+    } 
+
+    payload = {
+      name:name, 
+      costumUser_id:costumUser_id,
+      description:description,
+      evaluation_method:evMethod[0].id,
+    }
+    
+    //insere no banco de dados o novo dossie
+    const dossie = await db.pgInsert('dossier', payload);
+    const lastDossie = await db.pgSelect('dossier', {costumUser_id:costumUser_id, name:name});
+
+    if (!lastDossie || lastDossie.length === 0) {
+      return res.status(400).json({msg:'Erro ao criar dossiê'});
+    }
+
+    //pra cada sessao existente insere no banco de dados as sessoes pertencentes a esse dossie
+    for (let i = 0; i < sections.length; i++) {
+      var section = sections[i];
+      const questions = section.questions;
+      payload = {
+        dossier_id:lastDossie[0].id,
+        costumUser_id:costumUser_id,
+        name:section.name,
+        description:section.description,
+        weigth:section.weigth
+      }
+
+      //atualiza o objeto sessao para conter agora tambem seu Id
+      await db.pgInsert('Section', payload);
+      var lastSection = await db.pgSelect('Section', {costumUser_id:costumUser_id, name:section.name, dossier_id:lastDossie[0].id});
+
+      if (!lastSection || lastSection.length === 0) {
+        return res.status(400).json({msg:'Erro ao criar seção'});
+      }
+
+      //para cada questao dentro desta sessao, cria uma nova entrada no banco de dados
+      for (let j = 0; j < questions.length; j++) {
+        var question = questions[j];
+        payload = {
+          costumUser_id:costumUser_id,
+          dossier_id:lastDossie[0].id,
+          section_id:lastSection[0].id,
+          evaluation_method:evMethod[0].id,
+          name: question.description
+        }
+        await db.pgInsert('question', payload);
+      }
+    }
+
+    return res.status(201).json({msg:'dossie criado com sucesso', data:dossie});
   } catch (err) {
     console.error('Erro ao criar dossiê:', err);
     console.error('Error stack:', err.stack);

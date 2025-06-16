@@ -36,12 +36,12 @@ interface DossierSection {
 // Seção vazia padrão para garantir que sempre haja pelo menos uma seção
 const DEFAULT_SECTION: SectionData = {
   id: `section-${Date.now()}`,
-  title: "Nova Seção",
+  title: "",
   description: "",
   weight: "100",
   items: [{
     id: `item-${Date.now()}`,
-    description: "Novo item",
+    description: "",
     value: "N/A"
   }]
 };
@@ -369,7 +369,7 @@ const DossierAppPage: React.FC = () => {
     // Em um sistema real, o backend pode gerar e retornar IDs após a criação, ou o frontend pode usar UUIDs mais robustos
     const newSectionId = `section-${Date.now()}`;
     const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
-    const newSectionData: SectionData = { id: newSectionId, title: `Nova Seção (${newSectionId.slice(-4)})`, description: ``, weight: '0', items: [{ id: newItemId, description: 'Novo item', value: 'N/A' }]};
+    const newSectionData: SectionData = { id: newSectionId, title: ``, description: ``, weight: '0', items: [{ id: newItemId, description: '', value: 'N/A' }]};
 
     let newSectionsList = [...sectionsData];
     let targetSectionIndex = -1;
