@@ -18,7 +18,7 @@ export default function GerenciarDossies() {
   // ============ ESTADOS ============
   const [dossies, setDossies] = useState<Dossie[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const dossiesPorPagina = 6;
+  const dossiersPerPage = 6;
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
@@ -29,6 +29,7 @@ export default function GerenciarDossies() {
   const [missingDialog, setMissingDialog] = useState(false);
   const [messageErro, setMessageErro] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [totalItems, setTotalItems] = useState(0); // Total de itens para paginação
 
   const [idsToExport, setIdsToExport] = useState<number[]>([]);
   const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
@@ -39,15 +40,8 @@ export default function GerenciarDossies() {
   let typeOfData = "Dossie";
 
   // ============ CÁLCULOS DERIVADOS ============
-  const totalPages = Math.ceil(dossies.length / dossiesPorPagina);
-  const startIndex = (currentPage - 1) * dossiesPorPagina;
-  const dossiesVisiveis = dossies.slice(startIndex, startIndex + dossiesPorPagina);
-  const isAllSelected = dossiesVisiveis.every((d) => d.selected);
-  const filteredDossies = dossiesVisiveis.filter((dossie) =>
-    dossie.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    dossie.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dossie.evaluation_method.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalPages = Math.ceil(totalItems / dossiersPerPage);
+  const isAllSelected = dossies?.every((d) => d.selected) || false;
 
   // ============ CHAMADAS À API ============
   useEffect(() => {
@@ -59,7 +53,8 @@ export default function GerenciarDossies() {
           throw new Error('ID do professor não encontrado');
         }
 
-        const response = await listDossiers(Number(professorId));
+        const start = (currentPage - 1) * dossiersPerPage;
+        const response = await listDossiers(Number(professorId), start, dossiersPerPage, searchTerm);
         console.log('Resposta da API:', response); // Debug log
 
         if (!response.data) {
@@ -68,6 +63,7 @@ export default function GerenciarDossies() {
           return;
         }
 
+        setTotalItems(response.ammount);
         const dossiesFormatados = response.data.map((dossie) => ({
           id: dossie.id,
           name: dossie.name,
@@ -92,17 +88,20 @@ export default function GerenciarDossies() {
     };
 
     fetchDossies();
-  }, []);
+  }, [currentPage, dossiersPerPage, searchTerm]); // Adiciona currentPage, dossiersPerPage e searchTerm como dependências
+  // Adiciona o debounce para evitar múltiplas chamadas à API
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reseta a página para 1 quando o usuário digita algo
+  };
 
   // ============ FUNÇÕES ============
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
-    const novaLista = dossies.map((dossie, index) => {
-      if (index >= startIndex && index < startIndex + dossiesPorPagina) {
-        return { ...dossie, selected: newSelected };
-      }
-      return dossie;
-    });
+    const novaLista = dossies.map((dossie) => ({
+      ...dossie,
+      selected: newSelected
+    }));
     setDossies(novaLista);
   };
 
@@ -158,7 +157,7 @@ export default function GerenciarDossies() {
 
       // Ajusta a página atual se necessário
       const remainingDossiers = dossies.length - idsToDelete.length;
-      const newTotalPages = Math.ceil(remainingDossiers / dossiesPorPagina);
+      const newTotalPages = Math.ceil(remainingDossiers / dossiersPerPage);
       
       if (currentPage > newTotalPages) {
         setCurrentPage(Math.max(1, newTotalPages));
@@ -215,7 +214,7 @@ export default function GerenciarDossies() {
           type="text"
           placeholder="Procure pelo dossiê"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
         />
       </div>
@@ -258,14 +257,14 @@ export default function GerenciarDossies() {
           <div className="flex justify-center items-center h-40">
             <p>Carregando dossiês...</p>
           </div>
-        ) : filteredDossies.length === 0 ? (
+        ) : dossies.length === 0 ? (
           <div className="flex justify-center items-center h-40">
             <p>Nenhum dossiê encontrado. Crie um novo dossiê para começar!</p>
           </div>
         ) : (
           <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
             <ListDossie
-              dossies={filteredDossies}
+              dossies={dossies}
               toggleSelectAll={toggleSelectAll}
               toggleOne={toggleOne}
               isAllSelected={isAllSelected}

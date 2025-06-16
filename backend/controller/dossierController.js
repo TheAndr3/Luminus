@@ -109,6 +109,7 @@ exports.List = async(req, res) => {
   const costumUser_id = req.params.professorid;
   let start;
   let size;
+  let search = req.query.search || '';
 
   try{
     start = (parseInt(req.query.start)==NaN) ? 0:parseInt(req.query.start);
@@ -121,7 +122,18 @@ exports.List = async(req, res) => {
     const payload = {costumUser_id:costumUser_id};
     const result = await db.pgSelect('dossier', payload);
 
-    return res.status(200).json({msg:'sucesso', data:result.slice(start, start+size), ammount:result.length});
+    // Filtra os resultados com base no termo de busca
+    const filteredResults = result.filter(dossier => 
+      dossier.name.toLowerCase().includes(search.toLowerCase()) ||
+      dossier.description.toLowerCase().includes(search.toLowerCase()) ||
+      String(dossier.evaluation_method).toLowerCase().includes(search.toLowerCase())
+    );
+
+    return res.status(200).json({
+      msg:'sucesso', 
+      data:filteredResults.slice(start, start+size), 
+      ammount:filteredResults.length
+    });
   } catch (error) {
     console.log(error);
     return res.status(400).json({msg:'falha ao atender sua solicitacao'});

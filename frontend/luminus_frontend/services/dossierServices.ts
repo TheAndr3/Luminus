@@ -60,9 +60,9 @@ export const createDossier = async (payload: CreateDossierPayload): Promise<Doss
 };
 
 // Listar dossiês
-export const listDossiers = async (professorId: number, start = 0, size = 6): Promise<DossierListResponse> => {
+export const listDossiers = async (professorId: number, start = 0, size = 6, search = ''): Promise<DossierListResponse> => {
   try {
-    const response = await api.get(`/dossier/list/${professorId}?start=${start}&size=${size}`);
+    const response = await api.get(`/dossier/list/${professorId}?start=${start}&size=${size}&search=${encodeURIComponent(search)}`);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao listar dossiês';
