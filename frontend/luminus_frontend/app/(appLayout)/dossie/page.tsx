@@ -44,49 +44,41 @@ export default function GerenciarDossies() {
   const isAllSelected = dossies?.every((d) => d.selected) || false;
 
   // ============ CHAMADAS À API ============
-  useEffect(() => {
-    const fetchDossies = async () => {
-      try {
-        setIsLoading(true);
-        const professorId = localStorage.getItem('professorId');
-        if (!professorId) {
-          throw new Error('ID do professor não encontrado');
-        }
-
-        const start = (currentPage - 1) * dossiersPerPage;
-        const response = await listDossiers(Number(professorId), start, dossiersPerPage, searchTerm);
-        console.log('Resposta da API:', response); // Debug log
-
-        if (!response.data) {
-          console.error('Sem dados na resposta:', response);
-          setDossies([]);
-          return;
-        }
-
-        setTotalItems(response.ammount);
-        const dossiesFormatados = response.data.map((dossie) => ({
-          id: dossie.id,
-          name: dossie.name,
-          description: dossie.description,
-          evaluation_method: dossie.evaluation_method,
-          professor_id: dossie.costumUser_id,
-          selected: false
-        }));
-        console.log('Dossiês formatados:', dossiesFormatados); // Debug log
-        setDossies(dossiesFormatados);
-      } catch (error: any) {
-        // Only show error dialog for non-404 errors
-        if (error.message !== "Nenhum dossiê encontrado") {
-          console.error("Erro ao carregar dossiês:", error);
-          setMessageErro(error.message || "Erro ao carregar dossiês");
-          setMissingDialog(true);
-        }
-        setDossies([]);
-      } finally {
-        setIsLoading(false);
+  const fetchDossies = async () => {
+    try {
+      setIsLoading(true);
+      const professorId = localStorage.getItem('professorId');
+      if (!professorId) {
+        throw new Error('ID do professor não encontrado');
       }
-    };
+      const start = (currentPage - 1) * dossiersPerPage;
+      const response = await listDossiers(Number(professorId), start, dossiersPerPage, searchTerm);
+      if (!response.data) {
+        setDossies([]);
+        return;
+      }
+      setTotalItems(response.ammount);
+      const dossiesFormatados = response.data.map((dossie) => ({
+        id: dossie.id,
+        name: dossie.name,
+        description: dossie.description,
+        evaluation_method: dossie.evaluation_method,
+        professor_id: dossie.costumUser_id,
+        selected: false
+      }));
+      setDossies(dossiesFormatados);
+    } catch (error: any) {
+      if (error.message !== "Nenhum dossiê encontrado") {
+        setMessageErro(error.message || "Erro ao carregar dossiês");
+        setMissingDialog(true);
+      }
+      setDossies([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDossies();
   }, [currentPage, dossiersPerPage, searchTerm]); // Adiciona currentPage, dossiersPerPage e searchTerm como dependências
   // Adiciona o debounce para evitar múltiplas chamadas à API
@@ -151,14 +143,10 @@ export default function GerenciarDossies() {
         setMissingDialog(true);
         return;
       }
-
-      // Atualização otimista do estado
-      setDossies(prev => prev.filter(dossie => !idsToDelete.includes(dossie.id)));
-
+      await fetchDossies(); // Atualiza a lista de dossiês
       // Ajusta a página atual se necessário
       const remainingDossiers = dossies.length - idsToDelete.length;
       const newTotalPages = Math.ceil(remainingDossiers / dossiersPerPage);
-      
       if (currentPage > newTotalPages) {
         setCurrentPage(Math.max(1, newTotalPages));
       }
