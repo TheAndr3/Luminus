@@ -148,6 +148,7 @@ create table VerifyCode(
 create table TokenCode(
 	token VARCHAR(255),
 	costumUser_id INT,
+    verifyStatus INT,
 
 	CONSTRAINT fk_Token_costumUser FOREIGN KEY(costumUser_id) REFERENCES costumUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	PRIMARY KEY(token, costumUser_id)

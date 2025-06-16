@@ -161,7 +161,7 @@ exports.RecoverPassword = async (req, res) => {
             
             //atualiza que o codigo ja foi utilizado
             await db.pgUpdate('verifyCode', {status:bd_code.status}, {costumUser_id:professor[0].id, code:code, data_sol:data});
-            await db.pgInsert('tokencode', {token:token, costumUser_id:professor[0].id});
+            await db.pgInsert('tokencode', {token:token, costumUser_id:professor[0].id, verifyStatus:0});
 
             return res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
@@ -246,19 +246,18 @@ exports.NewPassword = async (req, res) => {
             const oldTokens = await db.pgSelect('tokencode', {token:token, costumUser_id:professor[0].id});
 
             //caso o token ja tenha sido utilizado
-            if(oldTokens.length > 0) {
+            if(oldTokens[0].verifyStatus == 1) {
                 return res.status(403).json({msg:'token invalido'});
             } else {
                 //token valido e pertence aquele professor
                 if (result.id == professor[0].id && result.email == email) {
 
                     const dataToDb = {
-                        token:token,
-                        id:professor[0].id
+                        verifyStatus:1
                     }
 
                     //insere na tabela o token ja utilizado
-                    await db.pgInsert('tokencode', dataToDb);
+                    await db.pgUpdate('tokencode', dataToDb, {token:token});
                     const resp = await db.pgUpdate('costumUser', {password:hashedPassword}, {id:professor[0].id});
                     return res.status(201).json({msg:'password trocado com sucesso', data:resp})
                 } else {
