@@ -14,9 +14,9 @@ export interface Section {
 
 export interface CreateDossierPayload {
   name: string;
-  professor_id: number;
+  costumUser_id: number;
   description: string;
-  evaluation_method: string;
+  evaluation_method: { name: string; value: string; }[];
   sections: Section[];
 }
 
@@ -30,7 +30,7 @@ export interface Dossier {
   name: string;
   description: string;
   evaluation_method: string;
-  professor_id: number;
+  costumUser_id: number;
 }
 
 export interface DossierListResponse {
@@ -42,7 +42,7 @@ export interface DossierListResponse {
 export interface UpdateDossierPayload {
   name?: string;
   description?: string;
-  evaluation_method?: string;
+  evaluation_method?: { name: string; value: string; }[];
   sections?: Section[];
 }
 
@@ -51,7 +51,7 @@ export interface UpdateDossierPayload {
 // Criar dossiê
 export const createDossier = async (payload: CreateDossierPayload): Promise<DossierResponse> => {
   try {
-    const response = await api.post('/dossier', payload);
+    const response = await api.post('/dossier/create', payload);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao criar dossiê';
