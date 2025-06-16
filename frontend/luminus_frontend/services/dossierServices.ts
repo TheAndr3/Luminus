@@ -40,10 +40,11 @@ export interface DossierListResponse {
 }
 
 export interface UpdateDossierPayload {
-  name?: string;
-  description?: string;
-  evaluation_method?: { name: string; value: string; }[];
-  sections?: Section[];
+  name: string;
+  costumUser_id: number;
+  description: string;
+  evaluation_method: { name: string; value: string; }[];
+  sections: Section[];
 }
 
 // FUNÇÕES
@@ -84,7 +85,7 @@ export const getDossierById = async (id: number): Promise<DossierResponse> => {
 // Atualizar dossiê
 export const updateDossier = async (id: number, payload: UpdateDossierPayload): Promise<DossierResponse> => {
   try {
-    const response = await api.put(`/dossier/${id}`, payload);
+    const response = await api.put(`/dossier/${id}/edit`, payload);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao atualizar dossiê';
