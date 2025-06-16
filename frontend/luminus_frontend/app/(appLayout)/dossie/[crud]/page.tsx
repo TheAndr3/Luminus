@@ -16,7 +16,7 @@ import ActionSidebar from '../../../../components/dossier/ActionSidebar';
 import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload } from '../../../../types/dossier';
 // IMPORTANTE PARA O BACKEND: Esta importação (createDossier) é um exemplo de como um serviço de API pode ser chamado.
 // O backend definirá a assinatura e o comportamento real desta função.
-import { createDossier, updateDossier, getDossier, CreateDossierPayload, Dossier } from '../../../../services/dossierServices';
+import { createDossier, updateDossier, getDossierById, CreateDossierPayload, Dossier, UpdateDossierPayload } from '../../../../services/dossierServices';
 
 // Importação de estilos CSS Modules para este componente
 import styles from './DossierCRUDPage.module.css';
@@ -81,21 +81,11 @@ const DossierAppPage: React.FC = () => {
   const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
 
   useEffect(() => {
-    const userString = localStorage.getItem('user');
-    if (userString) {
-      try {
-        const user = JSON.parse(userString);
-        // Verifica se o usuário tem um ID, o que confirma que ele é válido
-        if (user && user.id) {
-          setIsAuthenticated(true); // Usuário é válido, permite a renderização da página
-        } else {
-          router.push('/login'); // Usuário inválido, redireciona para o login
-        }
-      } catch (e) {
-        router.push('/login'); // Erro no parse do JSON, redireciona
-      }
+    const professorId = localStorage.getItem('professorId');
+    if (professorId) {
+      setIsAuthenticated(true); // Id do professor encontrado, permite a renderização da página
     } else {
-      router.push('/login'); // Nenhum usuário encontrado, redireciona
+      router.push('/login'); // Não foi encontrado o id do professor, redireciona para o login
     }
     
     setIsClient(true);
@@ -112,7 +102,7 @@ const DossierAppPage: React.FC = () => {
       }
 
       try {
-        const response = await getDossier(dossierId);
+        const response = await getDossierById(dossierId);
         const dossier = response.data;
         
         setDossierTitle(dossier.name);
@@ -161,20 +151,14 @@ const DossierAppPage: React.FC = () => {
   // Função para limpar o timeout de blur e sinalizar para ignorar o próximo evento de blur
   const clearBlurTimeoutAndSignalIgnore = useCallback(() => {
     if (blurTimeoutRef.current) {
-      // MOCK: Log de depuração. Pode ser removido em produção.
-      console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore CHAMADO - Limpando timeout', 'color: orange; font-weight:bold;');
       clearTimeout(blurTimeoutRef.current);
       blurTimeoutRef.current = null;
     }
-    // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore - Definindo ignoreNextBlurRef como true', 'color: orange; font-weight:bold;');
     ignoreNextBlurRef.current = true;
   }, []);
 
   // Manipulador de foco para campos editáveis (título, descrição, itens)
   const handleFieldFocus = useCallback((element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => {
-    // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: handleFieldFocus CHAMADO', 'color: blue;', { elementId: element.id, context, isEditingMode });
     if (!isEditingMode) return; // Só processa o foco se estiver em modo de edição
 
     if (blurTimeoutRef.current) {
@@ -206,18 +190,12 @@ const DossierAppPage: React.FC = () => {
 
   // Manipulador de "blur" (perda de foco) para campos editáveis
   const handleFieldBlur = useCallback(() => {
-    // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: handleFieldBlur CHAMADO para elemento:', 'color: red;', focusedElementRef.current?.id);
 
     blurTimeoutRef.current = setTimeout(() => {
       if (ignoreNextBlurRef.current) {
-        // MOCK: Log de depuração. Pode ser removido em produção.
-        console.log('%cDEBUG: handleFieldBlur TIMEOUT - IGNORANDO BLUR devido a ignoreNextBlurRef=true', 'color: red; font-weight: bold;');
         ignoreNextBlurRef.current = false;
         return;
       }
-      // MOCK: Log de depuração. Pode ser removido em produção.
-      console.log('%cDEBUG: handleFieldBlur TIMEOUT EXECUTADO - Limpando foco e seleções', 'color: red; font-weight: bold;');
       focusedElementRef.current = null;
       setSelectedItemIdGlobal(null);
       setSelectedSectionIdForStyling(null);
@@ -547,29 +525,20 @@ const DossierAppPage: React.FC = () => {
     ignoreNextBlurRef.current = false;
 
     try {
-      const userDataString = localStorage.getItem('user');
-      if (!userDataString) {
-          // Este alerta agora serve como uma segurança extra caso a sessão expire
+      const professorId = localStorage.getItem('professorId');
+      if (!professorId) {
           alert("Sua sessão expirou. Por favor, faça o login novamente.");
           router.push('/login');
           return;
       }
 
-      const userData = JSON.parse(userDataString);
-      const professorId = userData.id;
-
-      if (!professorId) {
-          alert("ID do professor não encontrado na sessão. Por favor, faça o login novamente.");
-          router.push('/login');
-          return;
-    }
       // Validações
       if (!dossierTitle.trim()) {
         throw new Error("O título do Dossiê não pode ser vazio.");
       }
 
       if (!evaluationConcept) {
-        throw new Error("Um Conceito de Avaliação deve ser selecionado.");
+        throw new Error("O método de avaliação não pode ser vazio.");
       }
 
       const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
@@ -604,29 +573,33 @@ const DossierAppPage: React.FC = () => {
       }
 
       // Prepara o payload
-      const payload: CreateDossierPayload = adaptDossierStateToPayload(
+      const payload = adaptDossierStateToPayload(
         dossierTitle,
         dossierDescription,
         evaluationConcept,
         sectionsData,
-        professorId // TODO: Substituir pelo ID real do professor da sessão
+        Number(professorId) // Convertendo para número
       );
 
       // Salva ou atualiza o dossiê
       if (dossierId) {
-      await updateDossier(dossierId, payload);
-      alert("Dossiê atualizado com sucesso!");
-    } else {
-      await createDossier(payload);
-      alert("Dossiê criado com sucesso!");
+        const updatePayload: UpdateDossierPayload = {
+          name: payload.name,
+          description: payload.description,
+          evaluation_method: payload.evaluation_method,
+          sections: payload.sections
+        };
+        await updateDossier(dossierId, updatePayload);
+        alert("Dossiê atualizado com sucesso!");
+      } else {
+        await createDossier(payload);
+        alert("Dossiê criado com sucesso!");
+      }
+      router.push('/dossie');
+    } catch (error: any) {
+      alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
     }
-    router.push('/dossie');
-
-  } catch (error: any) {
-    alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
-  }
-}, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
-
+  }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
 
   // --- Lógica de UI derivada de estados (useMemo) ---
   // Determina se o botão de deletar item deve estar habilitado
