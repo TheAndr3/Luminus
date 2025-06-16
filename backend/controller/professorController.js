@@ -233,7 +233,6 @@ exports.NewPassword = async (req, res) => {
         try{
             const result = jwt.verify(token, process.env.TOKEN_KEY, (err, decode) => {
                 if(err) {
-                    
                     console.log('deu ruim: ', err);
                     throw err;
                 } else {
@@ -251,7 +250,6 @@ exports.NewPassword = async (req, res) => {
             } else {
                 //token valido e pertence aquele professor
                 if (result.id == professor[0].id && result.email == email) {
-
                     const dataToDb = {
                         verifyStatus:1
                     }
@@ -264,7 +262,6 @@ exports.NewPassword = async (req, res) => {
                     return res.status(403).json({msg:'token invalido 2'});
                 }
             }
-
             
         } catch (err) {
             return res.status(403).json({msg:'token invalido 3'});
