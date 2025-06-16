@@ -161,6 +161,7 @@ exports.RecoverPassword = async (req, res) => {
             
             //atualiza que o codigo ja foi utilizado
             await db.pgUpdate('verifyCode', {status:bd_code.status}, {costumUser_id:professor[0].id, code:code, data_sol:data});
+            await db.pgInsert('tokencode', {token:token, costumUser_id:professor[0].id});
 
             return res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
@@ -242,7 +243,7 @@ exports.NewPassword = async (req, res) => {
             })
             const data = new Date();
 
-            const oldTokens = await db.pgSelect('tokencode', {token:token, id:professor[0].id});
+            const oldTokens = await db.pgSelect('tokencode', {token:token, costumUser_id:professor[0].id});
 
             //caso o token ja tenha sido utilizado
             if(oldTokens.length > 0) {
