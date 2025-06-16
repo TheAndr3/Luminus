@@ -106,64 +106,59 @@ async function pgUpdate(table, data, keys) {
 
 
 async function pgDossieSelect(id) {
-    // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
-    const query = `
-    SELECT (d.id as dossierId, d.costumUser_id as professorId, d.name as dossierName, d.description as dossierDescription, d.evaluation_method as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName) FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossier_id JOIN Question as q ON s.id = q.section_id WHERE d.id = $1;
+    // Primeiro enontra o dossiê
+    const dossierQuery = `
+        SELECT d.*, et.name as evaluation_method_name, et.value as evaluation_method_value
+        FROM Dossier d
+        LEFT JOIN EvaluationType et ON d.evaluation_method = et.id
+        WHERE d.id = $1;
+    `;
+
+    // Depois encontra as seções
+    const sectionsQuery = `
+        SELECT s.*
+        FROM Section s
+        WHERE s.dossier_id = $1;
+    `;
+
+    // Depois encontra as questões para cada seção
+    const questionsQuery = `
+        SELECT q.*
+        FROM Question q
+        JOIN Section s ON q.section_id = s.id
+        WHERE s.dossier_id = $1;
     `;
 
     const client = await connect();
-    const data = await client.query(query, [id]);
-    client.release();
+    try {
+        // Encontra o dossiê
+        const dossierResult = await client.query(dossierQuery, [id]);
+        if (dossierResult.rows.length === 0) {
+            return null;
+        }
+        const dossier = dossierResult.rows[0];
 
-    const methodType = await pgSelect('EvaluationType', {id:data.rows[0].dossierEvaluationMethod});
-    const method = await pgSelect('EvaluationMethod', {id:data.rows[0].dossierEvaluationMethod});
-    
-    // Retorna null se nenhum dossiê for encontrado
-    if (!data.rows || data.rows.length === 0) {
-        return null;
-    } else {
-        var result = {
-            d: data.rows[0].dossierId,
-            costumUser_id: data.rows[0].professorId,
-            name: data.rows[0].dossierName,
-            description: data.rows[0].dossierDescription,
-            evaluation_method: {
-                id: data.rows[0].dossierEvaluationMethod,
-                name: method[0].name,
-                evaluationType: {}
-            },
-            sections: {}
+        // Encontra as seções
+        const sectionsResult = await client.query(sectionsQuery, [id]);
+        const sections = sectionsResult.rows;
+
+        // Encontra as questões para cada seção
+        const questionsResult = await client.query(questionsQuery, [id]);
+        const questions = questionsResult.rows;
+
+        // Organiza as questões por seção
+        const sectionsWithQuestions = sections.map(section => ({
+            ...section,
+            questions: questions.filter(q => q.section_id === section.id)
+        }));
+
+        // Combina tudo
+        return {
+            ...dossier,
+            sections: sectionsWithQuestions
         };
-
-        for (let i = 0;i < methodType.length; i++){
-            result.evaluation_method.evaluationType[methodType[i].id] = {
-                id: methodType[i].id,
-                name: methodType[i].name,
-                value: methodType[i].value
-            }
-        }
-        //talvez não funcione 
-        for (let i = 0; i < data.rows.length; i++) {
-            if (!result.sections[data.rows[i].sectionId]) {
-                result.sections[data.rows[i].sectionId] = {
-                    
-                    id: data.rows[i].sectionId,
-                    name: data.rows[i].sectionName,
-                    description: data.rows[i].sectionDescription,
-                    weigth: data.rows[i].sectionWeigth,
-                    questions: []
-                };
-            } 
-            result.sections[data.rows[i].sectionId].questions.push({
-                id: data.rows[i].questionId,
-                name: data.rows[i].questionName
-            });
-            
-        }
-        
-        // Retorna o objeto dossiê diretamente
-        return result;
-
+    } finally {
+        client.release();
     }
 }
 

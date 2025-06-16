@@ -73,7 +73,7 @@ export default function GerenciarDossies() {
           name: dossie.name,
           description: dossie.description,
           evaluation_method: dossie.evaluation_method,
-          professor_id: dossie.professor_id,
+          professor_id: dossie.costumUser_id,
           selected: false
         }));
         console.log('Dossiês formatados:', dossiesFormatados); // Debug log
