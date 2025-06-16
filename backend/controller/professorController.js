@@ -249,7 +249,7 @@ exports.NewPassword = async (req, res) => {
                 return res.status(403).json({msg:'token invalido 1'});
             } else {
                 //token valido e pertence aquele professor
-                if (result.id == professor[0].id && result.email == email) {
+                if (result.userId == professor[0].id && result.email == email) {
                     const dataToDb = {
                         verifyStatus:1
                     }
@@ -275,6 +275,8 @@ exports.NewPassword = async (req, res) => {
 
 exports.ConfirmEmail = async (req, res) => {
     const {email, code, token} = req.body;
+    console.log(email)
+    console.log(code)
     try {
         const professor = await db.pgSelect('costumUser', {email:email});
         if (professor.length == 0) {
