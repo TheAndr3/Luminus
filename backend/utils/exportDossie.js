@@ -10,6 +10,7 @@ exports.ExportToCsv = async(req, res) => {
         //    Estou usando a sua função `pgDossieSelect` que já busca o dossiê com suas seções e questões.
         const dossier = await db.pgDossieSelect(dossierId);
 
+
         if (!dossier) {
             return res.status(404).json({ msg: 'Dossiê não encontrado' });
         }
