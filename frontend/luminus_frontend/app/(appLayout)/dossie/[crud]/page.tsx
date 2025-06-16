@@ -521,9 +521,6 @@ const DossierAppPage: React.FC = () => {
   // É aqui que a lógica para enviar os dados do dossiê para a API do backend será implementada
   // ==========================================================================================
   const handleSave = useCallback(async () => {
-    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-    ignoreNextBlurRef.current = false;
-
     try {
       const professorId = localStorage.getItem('professorId');
       if (!professorId) {
@@ -578,26 +575,26 @@ const DossierAppPage: React.FC = () => {
         dossierDescription,
         evaluationConcept,
         sectionsData,
-        Number(professorId) // Convertendo para número
+        parseInt(professorId)
       );
 
-      // Salva ou atualiza o dossiê
       if (dossierId) {
-        const updatePayload: UpdateDossierPayload = {
-          name: payload.name,
-          description: payload.description,
-          evaluation_method: payload.evaluation_method,
-          sections: payload.sections
-        };
-        await updateDossier(dossierId, updatePayload);
-        alert("Dossiê atualizado com sucesso!");
+        // Atualizar dossiê existente
+        await updateDossier(dossierId, {
+          ...payload,
+          costumUser_id: parseInt(professorId)
+        });
       } else {
-        await createDossier(payload);
-        alert("Dossiê criado com sucesso!");
+        // Criar novo dossiê
+        await createDossier({
+          ...payload,
+          costumUser_id: parseInt(professorId)
+        });
       }
+
       router.push('/dossie');
     } catch (error: any) {
-      alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
+      setError(error.message || 'Falha ao salvar dossiê');
     }
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
 

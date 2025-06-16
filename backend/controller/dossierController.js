@@ -148,22 +148,67 @@ exports.Get = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-  const id = req.params.id;
-  const body = req.body;
+    const id = req.params.id;
+    const body = req.body;
+    try {
+        const haveAssociationInAnyClass = await db.pgSelect('appraisal', {
+            dossier_id: id,
+            costumUser_id: body.costumUser_id
+        });
+        
+        if (haveAssociationInAnyClass.length > 0) {
+            return res.status(403).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'});
+        } else {
+            const { name, costumUser_id, description, evaluation_method, sections } = body;
 
-  try {
-    const haveAssociationInAnyClass = await db.pgSelect('appraisal', {dossier_id:id})
+            if (!id || !name || !costumUser_id || !description || !evaluation_method || !sections) {
+                return res.status(400).json({msg:'Campos obrigatórios faltando'});
+            }
 
-    if (haveAssociationInAnyClass.length > 0) {
-      return res.status(403).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'})
-    } else {
-      const response = await db.pgDossieUpdate(body)
-      return res.status(202).json({msg:'sucess', data:response});
+            // Primeiro atualiza o método de avaliação
+            const evMethodPayload = {
+                name: evaluation_method[0].name,
+                costumUser_id: costumUser_id
+            };
+
+            await db.pgInsert('EvaluationMethod', evMethodPayload);
+            const evMethod = await db.pgSelect('EvaluationMethod', {
+                costumUser_id: costumUser_id,
+                name: evaluation_method[0].name
+            });
+
+            if (!evMethod || evMethod.length === 0) {
+                return res.status(400).json({msg:'Erro ao atualizar método de avaliação'});
+            }
+
+            // Atualiza os tipos de avaliação
+            for (let i = 0; i < evaluation_method.length; i++) {
+                const type = evaluation_method[i];
+                const typePayload = {
+                    name: type.name,
+                    value: type.value,
+                    evaluation_method: evMethod[0].id,
+                    costumUser_id: costumUser_id
+                };
+                await db.pgInsert('EvaluationType', typePayload);
+            }
+
+            // Atualiza o dossiê
+            const result = await db.pgDossieUpdate({
+                id,
+                costumUser_id,
+                name,
+                description,
+                evaluation_method: evMethod[0].id,
+                sections
+            });
+
+            return res.status(200).json(result);
+        }
+    } catch (err) {
+        console.error('Erro ao atualizar dossiê:', err);
+        return res.status(400).json({msg:'erro no envio das informações'});
     }
-  } catch (error) {
-    console.log(error)
-    return res.status(400).json({msg:'erro no envio das informações'})
-  }
 }
 
 exports.Delete = async (req, res) => {
