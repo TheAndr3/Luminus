@@ -24,7 +24,6 @@ interface ListDossieProps {
   onImportDossie: () => void;
   onCreateDossie: () => void;
   onDeleteClass: () => void;
-  toArchiveClass: () => void;
 
   toExportDossie: () => void;
 }
@@ -40,7 +39,6 @@ export default function ListDossie({
   onImportDossie,
   onCreateDossie,
   onDeleteClass,
-  toArchiveClass,
   toExportDossie
 }: ListDossieProps) {
   const [hasSelected, setHasSelected] = useState(false);
@@ -174,16 +172,6 @@ export default function ListDossie({
                       <Trash />
                     </button>
 
-                    <button
-                      className="hover:text-yellow-400"
-                      onClick={() => {
-                        dossie.selected = true;
-                        toArchiveClass();
-                        dossie.selected = false;
-                      }}
-                    >
-                      <Archive />
-                    </button>
 
                     <button
                       className="hover:text-yellow-400"
@@ -220,7 +208,6 @@ export default function ListDossie({
         {hasSelected && (
           <ActionPanel
             onDeleted={onDeleteClass}
-            toArchive={toArchiveClass}
             toExport={toExportDossie}
           />
         )}

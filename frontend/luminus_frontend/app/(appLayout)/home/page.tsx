@@ -54,16 +54,6 @@ export default function Home() {
               Aberto recentemente
             </button>
             <button
-              onClick={() => setSelectedTab(selectedTab === "archived" ? null : "archived")}
-              className={`px-4 py-2 rounded-full border transition-all ${
-                selectedTab === "archived"
-                  ? "bg-[#112C3F] text-white"
-                  : "bg-white text-[#1E1E1E] hover:bg-gray-100"
-              }`}
-            >
-              Arquivados
-            </button>
-            <button
               className="px-4 py-2 rounded-full border bg-white text-[#1E1E1E] hover:bg-gray-100 transition-all"
             >
               <Plus className="h-4 w-4" />

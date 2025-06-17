@@ -174,22 +174,7 @@ export default function GerenciarDossies() {
     }
   };
 
-  const archiveHandle = async () => {
-    const selecionados = dossies.filter(dossie => dossie.selected).map(dossie => dossie.id);
-    if (selecionados.length === 0) return;
 
-    if (selecionados.length === 1) {
-      const dossieSelecionado = dossies.find(dossie => dossie.id === selecionados[0]);
-      setTitleDossie(dossieSelecionado?.name);
-      setDossieDescription("Tem certeza que deseja arquivar o dossiê: ");
-    } else {
-      setTitleDossie(undefined);
-      setDossieDescription("Tem certeza que deseja arquivar os dossiês selecionados?"); 
-    }
-
-    setIdsToArchive(selecionados);
-    setArchiveConfirmation(true);
-  };
 
   const exportHandle = async () => {
     const selecionados = dossies
@@ -275,7 +260,6 @@ export default function GerenciarDossies() {
               onImportDossie={handleImportDossie}
               onCreateDossie={handleCreateDossie}
               onDeleteClass={handleDeleteClass}
-              toArchiveClass={archiveHandle}
               toExportDossie={exportHandle}
             />
           </div>
@@ -288,16 +272,6 @@ export default function GerenciarDossies() {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={confirmDeletion}
         total={idsToDelete.length}
-      />
-
-      <ArchiveConfirmation
-        open={archiveConfirmation}
-        onCancel={() => setArchiveConfirmation(false)}
-        onConfirm={archiveHandle}
-        total={idsToArchive.length}
-        title={titleDossie}
-        code={undefined}
-        description={dossieDescription}
       />
 
       <ErroMessageDialog

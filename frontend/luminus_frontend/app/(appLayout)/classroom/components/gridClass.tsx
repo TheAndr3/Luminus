@@ -7,7 +7,7 @@ import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
 import ActionPanel from './actionPanel';
-import { Archive, Download, Pencil, Trash } from 'lucide-react';
+import { Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
 import { useRouter } from 'next/navigation';
 
@@ -23,7 +23,6 @@ type GridclassroomsProps = {
   setVisualization: (set: 'grid' | 'list') => void;
 
   onDeleteClass: () => void;
-  toArchiveClass: () => void;
   toExportClass: () => void;
 };
 
@@ -38,7 +37,6 @@ export default function Gridclassrooms({
   visualization,
   setVisualization,
   onDeleteClass,
-  toArchiveClass,
   toExportClass
 
 }: GridclassroomsProps) {
@@ -151,16 +149,7 @@ export default function Gridclassrooms({
                       
                       </button>
 
-                      <button
-                        className="hover:text-yellow-400"
-                        onClick={()=> {
-                          classroom.selected = true;
-                          toArchiveClass();
-                          classroom.selected = false;
-                        }}
-                        >
-                          <Archive size={18}></Archive>
-                        </button>
+                  
                       
                         <button
                           className="hover:text-yellow-400"
@@ -215,7 +204,7 @@ export default function Gridclassrooms({
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
         {hasSelected && (
           <div className="absolute bottom-1 left">
-            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} toExport={toExportClass}/>
+            <ActionPanel onDeleted={onDeleteClass} toExport={toExportClass}/>
           </div>
         )}
       </div>
