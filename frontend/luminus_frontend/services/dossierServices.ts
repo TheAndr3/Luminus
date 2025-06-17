@@ -1,6 +1,5 @@
 import { api } from './api';
 
-// INTERFACES
 export interface Question {
   description: string;
 }
@@ -14,76 +13,85 @@ export interface Section {
 
 export interface CreateDossierPayload {
   name: string;
-  costumUser_id: number;
+  professor_id: number;
   description: string;
-  evaluation_method: { name: string; value: string; }[];
+  evaluation_method: string;
   sections: Section[];
 }
 
-export interface DossierResponse {
+export interface CreateDossierResponse {
   msg: string;
   data?: any;
 }
 
 export interface Dossier {
   id: number;
+  professor_id: number;
   name: string;
   description: string;
   evaluation_method: string;
-  costumUser_id: number;
+  sections: {
+    id: number;
+    name: string;
+    description: string;
+    weigth: number;
+    questions: {
+      id: number;
+      description: string;
+    }[];
+  }[];
 }
 
-export interface DossierListResponse {
+export interface ListDossierResponse {
   msg: string;
   data: Dossier[];
-  ammount: number;
+  ammount?: number;
 }
 
-export interface UpdateDossierPayload {
-  name: string;
-  costumUser_id: number;
-  description: string;
-  evaluation_method: { name: string; value: string; }[];
-  sections: Section[];
-}
-
-// FUNÇÕES
-
-// Criar dossiê
-export const createDossier = async (payload: CreateDossierPayload): Promise<DossierResponse> => {
+export const createDossier = async (payload: CreateDossierPayload): Promise<CreateDossierResponse> => {
   try {
     const response = await api.post('/dossier/create', payload);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.msg || 'Erro ao criar dossiê';
-    throw new Error(message);
+    throw error;
   }
 };
 
-// Listar dossiês
-export const listDossiers = async (professorId: number, start = 0, size = 6, search = ''): Promise<DossierListResponse> => {
+export const listDossiers = async (
+  professorId: number,
+  start?: number,
+  size?: number
+): Promise<ListDossierResponse> => {
   try {
-    const response = await api.get(`/dossier/list/${professorId}?start=${start}&size=${size}&search=${encodeURIComponent(search)}`);
+    const params: any = {};
+    if (start !== undefined) params.start = start;
+    if (size !== undefined) params.size = size;
+
+    const response = await api.get(`/dossier/list/${professorId}`, { params });
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 404) {
+      return {
+        msg: "Nenhum dossiê encontrado",
+        data: []
+      };
+    }
     const message = error.response?.data?.msg || 'Erro ao listar dossiês';
     throw new Error(message);
   }
 };
 
-// Obter dossiê por ID
-export const getDossierById = async (id: number): Promise<DossierResponse> => {
+export const getDossier = async (id: number): Promise<{ msg: string; data: Dossier }> => {
   try {
     const response = await api.get(`/dossier/${id}`);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.msg || 'Erro ao buscar dossiê';
+    const message = error.response?.data?.msg || 'Erro ao obter dossiê';
     throw new Error(message);
   }
 };
 
-// Atualizar dossiê
-export const updateDossier = async (id: number, payload: UpdateDossierPayload): Promise<DossierResponse> => {
+export const updateDossier = async (id: number, payload: Partial<CreateDossierPayload>) => {
   try {
     const response = await api.put(`/dossier/${id}/edit`, payload);
     return response.data;
@@ -93,13 +101,12 @@ export const updateDossier = async (id: number, payload: UpdateDossierPayload): 
   }
 };
 
-// Deletar dossiê
-export const deleteDossier = async (id: number): Promise<DossierResponse> => {
+export const deleteDossier = async (id: number) => {
   try {
     const response = await api.delete(`/dossier/${id}/delete`);
     return response.data;
   } catch (error: any) {
-    const message = error.response?.data?.msg || 'Erro ao deletar dossiê';
+    const message = error.response?.data?.msg || 'Erro ao excluir dossiê';
     throw new Error(message);
   }
 };

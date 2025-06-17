@@ -1,3 +1,4 @@
+
 import { 
     Question, 
     Section, 
@@ -41,9 +42,7 @@ export const adaptDossierStateToPayload = (
 ): CreateDossierPayload => {
 
     // Mapeia o conceito de avaliação para o formato esperado pelo backend
-    const evaluationMethod = evaluationConcept === 'numerical' 
-        ? [{ name: 'numerical', value: '1' }] 
-        : [{ name: 'letter', value: 'A' }];
+    const evaluationMethod = evaluationConcept === 'numerical' ? 'numerical' : 'letter'; // Exemplo de mapeamento simples
 
     // Adapta a lista de seções
     const backendSections: Section[] = sections.map(sectionData => {
@@ -70,7 +69,7 @@ export const adaptDossierStateToPayload = (
     // Cria o payload final para o backend
     const payload: CreateDossierPayload = {
         name: dossierTitle,
-        costumUser_id: professorId,
+        professor_id: professorId,
         description: dossierDescription,
         evaluation_method: evaluationMethod,
         sections: backendSections,
