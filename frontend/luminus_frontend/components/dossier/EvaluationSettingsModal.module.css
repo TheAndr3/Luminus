@@ -1,0 +1,186 @@
+/* src/components/dossier/EvaluationSettingsModal.module.css */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Alto z-index para ficar sobre outros elementos */
+}
+
+.modalContent {
+  background-color: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 80vh; /* Para permitir scroll interno se muito conteúdo */
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #888;
+  padding: 0 5px;
+  line-height: 1;
+}
+.modalCloseButton:hover {
+  color: #333;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto; /* Permite scroll se a lista de conceitos for grande */
+  padding-right: 10px; /* Espaço para a scrollbar */
+}
+
+.modalError {
+  color: red;
+  background-color: #ffe0e0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.modalList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalListItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+
+.modalListItemName,
+.modalListItemValue {
+  flex-grow: 1;
+}
+
+/* Estilos para EditableField dentro do modal */
+.editableFieldInput { /* Classe para o input/textarea do EditableField */
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+.editableFieldInput:focus {
+  border-color: #7E85C7;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(126, 133, 199, 0.2);
+}
+.editableFieldTextDisplay { /* Classe para o span de display do EditableField (não usado aqui) */
+  /* Estilos se você fosse usar o modo de exibição */
+}
+
+
+.modalListItemDeleteBtn {
+  background: none;
+  border: 1px solid transparent;
+  color: #cc0000;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+.modalListItemDeleteBtn:hover {
+  background-color: #ffeeee;
+  color: #aa0000;
+}
+.modalListItemDeleteBtn svg {
+  width: 16px; /* Ajuste o tamanho do ícone se necessário */
+  height: 16px;
+}
+
+.modalAddButton {
+  background-color: #e0e7ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  align-self: flex-start;
+}
+.modalAddButton:hover {
+  background-color: #c7d2fe;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.modalCancelButton,
+.modalSaveButton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-size: 0.95rem;
+}
+
+.modalCancelButton {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+.modalCancelButton:hover {
+  background-color: #e5e7eb;
+}
+
+.modalSaveButton {
+  background-color: #000000; /* Mesmo estilo do botão de salvar principal */
+  color: white;
+  border: 1px solid #000000;
+}
+.modalSaveButton:hover {
+  background-color: #333;
+}

@@ -504,6 +504,209 @@ body {
   background-color: #F4F5F7 !important; /* Garante que o fundo não mude no hover */
   border-color: #DCDFE4 !important; /* Garante que a borda não mude no hover */
 }
+
+/* --- Estilos para EvaluationSettingsModal (passados via props) --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65); /* Um pouco mais escuro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050; /* Mais alto que a action sidebar */
+}
+
+.modalContent {
+  background-color: white;
+  padding: 20px 25px; /* Ajuste padding */
+  border-radius: 10px; /* Borda mais suave */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 550px; /* Um pouco menor */
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Espaçamento interno */
+  max-height: calc(100vh - 40px); /* Garante que não ultrapasse a tela */
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0; /* Cor de borda suave */
+  padding-bottom: 12px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.3rem; /* Tamanho de título ajustado */
+  font-weight: 600;
+  color: #1a202c; /* Cor de texto escura */
+}
+
+.modalCloseButton {
+  background: none;
+  border: none;
+  font-size: 1.7rem;
+  cursor: pointer;
+  color: #a0aec0; /* Cor suave para o X */
+  padding: 0;
+  line-height: 1;
+}
+.modalCloseButton:hover {
+  color: #4a5568; /* Cor mais escura no hover */
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto; 
+  padding: 5px; /* Pequeno padding interno */
+  margin-right: -5px; /* Compensar padding para scrollbar */
+}
+
+.modalError { /* Estilo para mensagem de erro no modal */
+  color: #c53030; /* Vermelho escuro */
+  background-color: #fed7d7; /* Fundo vermelho claro */
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border: 1px solid #f56565; /* Borda vermelha */
+}
+
+.modalList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Espaço entre itens da lista */
+}
+
+.modalListItem {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Espaço entre nome, valor e botão de delete */
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #f7fafc; /* Fundo muito claro para itens */
+}
+
+.modalListItemName,
+.modalListItemValue {
+  flex-grow: 1;
+}
+
+/* Estilos para EditableField especificamente no contexto do Modal (passados via page.tsx) */
+.modalEditableFieldInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0; /* Borda padrão */
+  border-radius: 5px;
+  font-size: 0.95rem;
+  color: #2d3748;
+  box-sizing: border-box;
+}
+.modalEditableFieldInput:focus {
+  border-color: #7E85C7; /* Cor de foco do tema */
+  outline: none;
+  box-shadow: 0 0 0 2.5px rgba(126, 133, 199, 0.25);
+}
+.modalEditableFieldTextDisplay {
+  /* Se fosse usado, estilos para o modo de exibição */
+}
+
+
+.modalListItemDeleteBtn {
+  background: transparent;
+  border: none;
+  color: #e53e3e; /* Vermelho para deletar */
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modalListItemDeleteBtn:hover {
+  background-color: #fed7d7; /* Fundo vermelho claro no hover */
+  color: #9b2c2c; /* Vermelho mais escuro no hover */
+}
+.modalListItemDeleteBtn svg {
+  width: 17px; 
+  height: 17px;
+}
+
+.modalAddButton {
+  background-color: #edf2f7; /* Cinza claro */
+  color: #4a5568; /* Cinza escuro */
+  border: 1px dashed #cbd5e0; /* Borda tracejada */
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: center; /* Centralizar texto */
+}
+.modalAddButton:hover {
+  background-color: #e2e8f0;
+  border-color: #a0aec0;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 15px;
+  margin-top: 5px;
+}
+
+.modalCancelButton,
+.modalSaveButton {
+  padding: 9px 18px; /* Ajuste padding */
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.9rem; /* Fonte um pouco menor */
+}
+
+.modalCancelButton {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+.modalCancelButton:hover {
+  background-color: #edf2f7;
+}
+
+.modalSaveButton {
+  background-color: #2d3748; /* Cor escura para salvar, contraste */
+  color: white;
+  border: 1px solid #2d3748;
+}
+.modalSaveButton:hover {
+  background-color: #1a202c;
+}
+
+
+/* Mensagens de Carregamento / Erro da Página Principal */
+.loadingMessage, .errorMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #4A5568;
+}
+.errorMessage {
+  color: #C53030;
+}
+
 /*.actionSidebarIconVisualBase {
   /* Estilos específicos para ícones se necessário */
 /*}*/

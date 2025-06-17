@@ -1,154 +1,199 @@
 // src/pages/DossierAppPage.tsx
-"use client" // Diretiva do Next.js para indicar que este é um Componente do Cliente
+"use client" 
 
-// Importações de bibliotecas React e Next.js
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import Head from 'next/head'; // Componente para manipular o <head> do HTML da página
-import { useRouter, useParams } from 'next/navigation'; // Importa o hook de navegação do Next.js
+import Head from 'next/head'; 
+import { useRouter, useParams } from 'next/navigation'; 
 
-// Importações de componentes customizados da aplicação
 import PageHeader from '../../../../components/dossier/PageHeader';
 import DossierHeader from '../../../../components/dossier/DossierHeader';
 import SectionList from '../../../../components/dossier/SectionList';
 import ActionSidebar from '../../../../components/dossier/ActionSidebar';
+import EvaluationSettingsModal from '../../../../components/dossier/EvaluationSettingsModal'; 
 
-// Importações de tipos e funções de utilidade específicas do dossiê
-import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload } from '../../../../types/dossier';
-// IMPORTANTE PARA O BACKEND: Esta importação (createDossier) é um exemplo de como um serviço de API pode ser chamado.
-// O backend definirá a assinatura e o comportamento real desta função.
+import { SectionData, ItemData, EvaluationConcept, EvaluationMethodItem, adaptDossierStateToPayload } from '../../../../types/dossier'; 
 import { createDossier, updateDossier, getDossierById, CreateDossierPayload, Dossier, UpdateDossierPayload } from '../../../../services/dossierServices';
 
-// Importação de estilos CSS Modules para este componente
 import styles from './DossierCRUDPage.module.css';
 
-// Interface para a estrutura completa de dados do dossiê retornada pelo backend
-interface DossierSection {
+interface DossierSectionFromAPI { 
   id: number;
   name: string;
   description: string;
-  weigth: number;
+  weigth: number; 
   questions: {
     id: number;
     description: string;
   }[];
 }
 
-// Seção vazia padrão para garantir que sempre haja pelo menos uma seção
-const DEFAULT_SECTION: SectionData = {
-  id: `section-${Date.now()}`,
+// Ensure these defaults always produce unique IDs if multiple defaults are instantiated quickly
+const createDefaultSection = (): SectionData => ({
+  id: `section-default-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
   title: "Nova Seção",
   description: "",
   weight: "100",
   items: [{
-    id: `item-${Date.now()}`,
+    id: `item-default-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     description: "Novo item",
     value: "N/A"
   }]
-};
+});
 
-// --- Componente Principal da Página ---
+const createDefaultEvaluationMethodDetails = (): EvaluationMethodItem[] => [
+  { id: `eval-default-S-${Date.now()}`, name: 'S', value: '10' },
+  { id: `eval-default-A-${Date.now()}`, name: 'A', value: '8' },
+  { id: `eval-default-B-${Date.now()}`, name: 'B', value: '6' },
+  { id: `eval-default-C-${Date.now()}`, name: 'C', value: '4' },
+];
+
+
 const DossierAppPage: React.FC = () => {
-  // --- Estados do Componente ---
   const [dossierTitle, setDossierTitle] = useState("");
   const [dossierDescription, setDossierDescription] = useState("");
   const [evaluationConcept, setEvaluationConcept] = useState<EvaluationConcept>('numerical');
-  const [sectionsData, setSectionsData] = useState<SectionData[]>([]);
+  const [evaluationMethodDetails, setEvaluationMethodDetails] = useState<EvaluationMethodItem[]>(() => createDefaultEvaluationMethodDetails());
+  const [sectionsData, setSectionsData] = useState<SectionData[]>(() => [createDefaultSection()]);
   const [isEditingMode, setIsEditingMode] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start true for initial load check
   const [error, setError] = useState<string | null>(null);
 
-  // Estados para controlar a seleção visual e o foco
   const [selectedSectionIdForStyling, setSelectedSectionIdForStyling] = useState<string | null>(null);
   const [selectedItemIdGlobal, setSelectedItemIdGlobal] = useState<string | null>(null);
 
-  // Refs para manipulação de DOM e controle de comportamento
   const focusedElementRef = useRef<HTMLElement | null>(null);
   const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const ignoreNextBlurRef = useRef(false);
 
-  // Estados e Refs para o posicionamento da ActionSidebar
   const [sidebarTargetTop, setSidebarTargetTop] = useState<number | null>(null);
   const scrollableAreaRef = useRef<HTMLDivElement>(null);
-  const sidebarHeightEstimate = 240;
+  const sidebarHeightEstimate = 240; 
 
-  // Estado para garantir que o código dependente do cliente só rode após a montagem no cliente
   const [isClient, setIsClient] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const mode = searchParams.get('mode');
-  const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
+  const searchParams = useMemo(() => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()), []);
+  const mode = useMemo(() => searchParams.get('mode'), [searchParams]);
+  const dossierId = useMemo(() => (params?.crud !== 'create' ? parseInt(params.crud as string, 10) : null), [params]);
+
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   useEffect(() => {
     const professorId = localStorage.getItem('professorId');
     if (professorId) {
-      setIsAuthenticated(true); // Id do professor encontrado, permite a renderização da página
+      setIsAuthenticated(true); 
     } else {
-      router.push('/login'); // Não foi encontrado o id do professor, redireciona para o login
+      router.push('/login'); 
     }
-    
     setIsClient(true);
   }, [router]);
 
-  // Carrega os dados do dossiê se estiver em modo de edição
   useEffect(() => {
     const loadDossier = async () => {
-      if (!dossierId) {
-        // Se estiver criando novo dossiê, inicializa com seção padrão
-        setSectionsData([DEFAULT_SECTION]);
+      setIsLoading(true); // Set loading true at the beginning of load attempt
+      setError(null); // Clear previous errors
+
+      if (!dossierId) { // This is CREATE mode
+        setSectionsData([createDefaultSection()]);
+        setEvaluationConcept('numerical'); 
+        setEvaluationMethodDetails(createDefaultEvaluationMethodDetails()); 
+        setIsEditingMode(true); // Ensure editing mode for create
         setIsLoading(false);
         return;
       }
 
+      // This is EDIT or VIEW mode
       try {
         const response = await getDossierById(dossierId);
-        const dossier = response.data;
+        const dossierFromApi = response.data as Dossier & { 
+            evaluation_method: string | Array<{ name: string; value: string; }>; // Expect string or array of specific shape
+            sections: DossierSectionFromAPI[] 
+        };
         
-        setDossierTitle(dossier.name);
-        setDossierDescription(dossier.description);
-        setEvaluationConcept(dossier.evaluation_method as EvaluationConcept);
+        setDossierTitle(dossierFromApi.name || ""); // Fallback for name
+        setDossierDescription(dossierFromApi.description || ""); // Fallback for description
         
-        // Adapta as seções do backend para o formato da UI
-        const adaptedSections: SectionData[] = dossier.sections.map((section: DossierSection) => ({
-          id: section.id.toString(),
-          title: section.name,
-          description: section.description,
-          weight: section.weigth.toString(),
-          items: section.questions.map((question: { id: number; description: string }) => ({
-            id: question.id.toString(),
-            description: question.description,
-            value: 'N/A'
-          }))
-        }));
+        const backendEvalMethod = dossierFromApi.evaluation_method;
 
-        // Garante que haja pelo menos uma seção
+        if (Array.isArray(backendEvalMethod)) { // If backend sends an array (preferred for 'letter')
+             setEvaluationConcept('letter');
+             setEvaluationMethodDetails(backendEvalMethod.map((m: {name: string; value: string}, index: number) => ({
+                 name: m.name,
+                 value: m.value,
+                 id: `loaded-method-arr-${dossierId}-${index}-${Date.now()}`
+             })));
+        } else if (typeof backendEvalMethod === 'string') {
+            if (backendEvalMethod.toLowerCase() === 'numerical') {
+                setEvaluationConcept('numerical');
+                setEvaluationMethodDetails([]); 
+            } else { // String might be JSON for 'letter' or just "letter"
+                setEvaluationConcept('letter');
+                try {
+                    const parsedMethods: Array<{name: string, value: string}> = JSON.parse(backendEvalMethod);
+                    // Check if parsedMethods is an array and its elements have the right shape
+                    if (Array.isArray(parsedMethods) && parsedMethods.every(m => typeof m.name === 'string' && typeof m.value === 'string')) {
+                        setEvaluationMethodDetails(parsedMethods.map((m: {name: string; value: string}, index: number) => ({ 
+                            ...m, 
+                            id: `loaded-method-json-${dossierId}-${index}-${Date.now()}` 
+                        })));
+                    } else { // Parsed but not the expected array structure
+                        console.warn("Parsed evaluation_method string was not an array of expected objects. Using defaults for 'letter'. Parsed:", parsedMethods);
+                        setEvaluationMethodDetails(createDefaultEvaluationMethodDetails());
+                    }
+                } catch (e) { // JSON.parse failed
+                    console.warn("Evaluation_method string from backend is not 'numerical' and not valid JSON. Using defaults for 'letter'. Received:", backendEvalMethod);
+                    setEvaluationMethodDetails(createDefaultEvaluationMethodDetails());
+                }
+            }
+        } else { // Unexpected type or undefined
+            console.warn("Unexpected or undefined evaluation_method from backend. Defaulting to numerical.", backendEvalMethod);
+            setEvaluationConcept('numerical');
+            setEvaluationMethodDetails(createDefaultEvaluationMethodDetails()); // Use fresh defaults
+        }
+        
+        const adaptedSections: SectionData[] = Array.isArray(dossierFromApi.sections) ? dossierFromApi.sections.map((section: DossierSectionFromAPI, sIdx: number) => ({
+          id: section.id?.toString() || `api-section-${sIdx}-${Date.now()}`,
+          title: section.name || "Seção Sem Título",
+          description: section.description || "",
+          weight: section.weigth?.toString() || "0",
+          items: Array.isArray(section.questions) ? section.questions.map((question: { id: number; description: string }, qIdx: number) => ({
+            id: question.id?.toString() || `api-question-${sIdx}-${qIdx}-${Date.now()}`,
+            description: question.description || "Item Sem Descrição",
+            value: 'N/A' 
+          })) : []
+        })) : [];
+
         if (adaptedSections.length === 0) {
-          adaptedSections.push(DEFAULT_SECTION);
+          adaptedSections.push(createDefaultSection());
         }
         
         setSectionsData(adaptedSections);
-        // Define o modo de edição inicial com base no parâmetro da URL
         setIsEditingMode(mode !== 'view');
-      } catch (error: any) {
-        setError(error.message || 'Erro ao carregar dossiê');
+      } catch (err: any) {
+        console.error("Error loading dossier:", err);
+        setError(err.message || 'Erro ao carregar dossiê');
+        // Fallback to safe defaults on error to prevent UI crash
+        setSectionsData([createDefaultSection()]);
+        setEvaluationMethodDetails(createDefaultEvaluationMethodDetails());
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (isClient) {
-      loadDossier();
+    if (isClient && isAuthenticated) { 
+        if (dossierId !== undefined) { // dossierId can be null (create) or a number (edit/view)
+             loadDossier();
+        }
+    } else if (!isAuthenticated && isClient) {
+        // If not authenticated but client is ready, it means the auth useEffect already redirected.
+        // No further action needed here, or set loading to false if it's still true.
+        setIsLoading(false);
     }
-  }, [dossierId, isClient, mode]);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  }, [dossierId, isClient, mode, isAuthenticated]); // Removed router from deps as it's stable
 
-  // --- Funções de Callback e Manipuladores de Evento (memoizados com useCallback) ---
 
-  // Função para limpar o timeout de blur e sinalizar para ignorar o próximo evento de blur
   const clearBlurTimeoutAndSignalIgnore = useCallback(() => {
     if (blurTimeoutRef.current) {
       clearTimeout(blurTimeoutRef.current);
@@ -157,53 +202,42 @@ const DossierAppPage: React.FC = () => {
     ignoreNextBlurRef.current = true;
   }, []);
 
-  // Manipulador de foco para campos editáveis (título, descrição, itens)
   const handleFieldFocus = useCallback((element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => {
-    if (!isEditingMode) return; // Só processa o foco se estiver em modo de edição
+    if (!isEditingMode) return; 
 
     if (blurTimeoutRef.current) {
         clearTimeout(blurTimeoutRef.current);
         blurTimeoutRef.current = null;
     }
 
-    focusedElementRef.current = element; // Armazena o elemento focado
+    focusedElementRef.current = element; 
 
-    // Atualiza os IDs selecionados com base no contexto do foco
     if (context.type === 'item') {
       setSelectedItemIdGlobal(context.id);
       const sectionOfItem = sectionsData.find((s: SectionData) =>
         Array.isArray(s.items) && s.items.some((item: ItemData) => item.id === context.id)
       );
-      if (sectionOfItem) {
-        setSelectedSectionIdForStyling(sectionOfItem.id);
-      } else {
-        setSelectedSectionIdForStyling(null);
-      }
+      setSelectedSectionIdForStyling(sectionOfItem ? sectionOfItem.id : null);
     } else if (context.type === 'section') {
       setSelectedSectionIdForStyling(context.id);
-      setSelectedItemIdGlobal(null);
-    } else {
-        setSelectedItemIdGlobal(null);
-        setSelectedSectionIdForStyling(null);
+      setSelectedItemIdGlobal(null); 
     }
-  }, [isEditingMode, sectionsData]);
+  }, [isEditingMode, sectionsData]); // Removed redundant else for setSelectedItemIdGlobal(null) etc.
 
-  // Manipulador de "blur" (perda de foco) para campos editáveis
   const handleFieldBlur = useCallback(() => {
-
     blurTimeoutRef.current = setTimeout(() => {
       if (ignoreNextBlurRef.current) {
         ignoreNextBlurRef.current = false;
         return;
       }
       focusedElementRef.current = null;
+      // Only deselect if focus is not moving to another editable field or sidebar immediately
       setSelectedItemIdGlobal(null);
       setSelectedSectionIdForStyling(null);
-      setSidebarTargetTop(null); // Esconde a ActionSidebar
-    }, 100); // Pequeno delay para permitir que outras interações ocorram
+      setSidebarTargetTop(null); 
+    }, 100); 
   }, []);
 
-  // Manipulador para seleção de um item (clique em um SectionItem)
   const handleItemSelect = useCallback((itemId: string) => {
      if (!isEditingMode) return;
      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
@@ -211,359 +245,439 @@ const DossierAppPage: React.FC = () => {
 
      if (selectedItemIdGlobal === itemId) {
          setSelectedItemIdGlobal(null);
-         setSelectedSectionIdForStyling(null);
-          focusedElementRef.current = null;
-          setSidebarTargetTop(null);
+         // Keep section selected if an item within it was deselected by clicking itself
+         // setSelectedSectionIdForStyling(null); 
+         focusedElementRef.current = null; // Clear focus if item is deselected
+         setSidebarTargetTop(null);
      } else {
          setSelectedItemIdGlobal(itemId);
           const sectionOfItem = sectionsData.find((sec: SectionData) =>
             Array.isArray(sec.items) && sec.items.some((item: ItemData) => item.id === itemId)
           );
-          if (sectionOfItem) {
-              setSelectedSectionIdForStyling(sectionOfItem.id);
-          } else {
-              setSelectedSectionIdForStyling(null);
-          }
-          focusedElementRef.current = null;
-          setSidebarTargetTop(null);
+          setSelectedSectionIdForStyling(sectionOfItem ? sectionOfItem.id : null);
      }
   }, [isEditingMode, sectionsData, selectedItemIdGlobal]);
 
-  // Manipulador para clique na área de uma seção (não em um item ou campo editável)
   const handleSectionAreaClick = useCallback((sectionId: string) => {
      if (!isEditingMode) return;
      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
      ignoreNextBlurRef.current = false;
 
-      if (selectedSectionIdForStyling === sectionId) {
+      if (selectedSectionIdForStyling === sectionId && !selectedItemIdGlobal) { 
           setSelectedSectionIdForStyling(null);
       } else {
           setSelectedSectionIdForStyling(sectionId);
       }
-     setSelectedItemIdGlobal(null);
+     setSelectedItemIdGlobal(null); 
      focusedElementRef.current = null;
      setSidebarTargetTop(null);
-  }, [isEditingMode, selectedSectionIdForStyling]);
+  }, [isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
 
-  // useEffect para posicionamento da ActionSidebar quando um campo de item está focado
-  // Também lida com o reposicionamento da sidebar durante o scroll
   useEffect(() => {
-    if (!isClient || typeof window === 'undefined' || !scrollableAreaRef.current) {
-        if (sidebarTargetTop !== null) setSidebarTargetTop(null);
+    const scrollableAreaElem = scrollableAreaRef.current;
+    if (!isClient || typeof window === 'undefined' || !scrollableAreaElem) {
+        setSidebarTargetTop(null);
         return;
     }
-    const focusedElement = focusedElementRef.current;
-    const scrollableAreaElement = scrollableAreaRef.current;
-    const isItemFieldFocused = focusedElement instanceof HTMLElement &&
-                               focusedElement.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
-    if (!isEditingMode || !isItemFieldFocused) {
-      if (sidebarTargetTop !== null) {
-        setSidebarTargetTop(null);
-      }
+
+    const focusedElem = focusedElementRef.current;
+    const isItemFieldFocusedCurrently = focusedElem instanceof HTMLElement &&
+                                       focusedElem.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
+    
+    if (!isEditingMode || !isItemFieldFocusedCurrently || !focusedElem) {
+      setSidebarTargetTop(null);
       return;
     }
-    const parentItemElement = focusedElement.closest(`[id^="dossier-item-"]`) as HTMLElement;
+
+    const parentItemElement = focusedElem.closest(`[id^="dossier-item-"]`) as HTMLElement;
     if (!parentItemElement) {
-        if (sidebarTargetTop !== null) setSidebarTargetTop(null);
+        setSidebarTargetTop(null);
         return;
     }
-    const parentItemRect = parentItemElement.getBoundingClientRect();
-    const scrollAreaRect = scrollableAreaElement.getBoundingClientRect();
-    const itemTopRelativeToScrollAreaViewport = parentItemRect.top - scrollAreaRect.top;
-    const itemTopRelativeToScrollAreaContent = itemTopRelativeToScrollAreaViewport + scrollableAreaElement.scrollTop;
-    let finalSidebarTop = itemTopRelativeToScrollAreaContent + (parentItemRect.height / 2) - (sidebarHeightEstimate / 2);
-    const minTop = 5;
-    const maxTop = scrollableAreaElement.scrollHeight > sidebarHeightEstimate + 5
-                   ? scrollableAreaElement.scrollHeight - sidebarHeightEstimate - 5
-                   : minTop;
-    finalSidebarTop = Math.max(minTop, Math.min(finalSidebarTop, maxTop));
-    if (finalSidebarTop !== sidebarTargetTop) {
-        setSidebarTargetTop(finalSidebarTop);
-    }
-    const handleScroll = () => {
-       if (!isClient) return;
-       const currentTargetElement = focusedElementRef.current;
-       const currentScrollableAreaElement = scrollableAreaRef.current;
-       const isCurrentItemFieldFocused = currentTargetElement instanceof HTMLElement &&
-                                         currentTargetElement.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
-        if (!isEditingMode || !currentScrollableAreaElement || !isCurrentItemFieldFocused) {
-             currentScrollableAreaElement?.removeEventListener('scroll', handleScroll);
-             if (sidebarTargetTop !== null) setSidebarTargetTop(null);
-             return;
-       }
-        const currentParentItemElement = currentTargetElement.closest(`[id^="dossier-item-"]`) as HTMLElement;
-        if (currentParentItemElement) {
-            const currentParentItemRect = currentParentItemElement.getBoundingClientRect();
-            const currentScrollAreaRect = currentScrollableAreaElement.getBoundingClientRect();
-            const currentItemTopRelativeToScrollAreaViewport = currentParentItemRect.top - currentScrollAreaRect.top;
-            const currentItemTopRelativeToScrollAreaContent = currentItemTopRelativeToScrollAreaViewport + currentScrollableAreaElement.scrollTop;
-            let currentTargetTop = currentItemTopRelativeToScrollAreaContent + (currentParentItemRect.height / 2) - (sidebarHeightEstimate / 2);
-            currentTargetTop = Math.max(minTop, Math.min(currentTargetTop, maxTop));
-            if (currentTargetTop !== sidebarTargetTop) setSidebarTargetTop(currentTargetTop);
-       } else {
-            if (sidebarTargetTop !== null) setSidebarTargetTop(null);
-       }
-    };
-    scrollableAreaElement.addEventListener('scroll', handleScroll);
-    return () => {
-        scrollableAreaElement.removeEventListener('scroll', handleScroll);
-    };
-  }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, sectionsData, sidebarTargetTop, isClient]);
+    
+    const calculateAndSetPosition = (targetItemElement: HTMLElement, areaElement: HTMLDivElement) => {
+        const parentRect = targetItemElement.getBoundingClientRect();
+        const areaRect = areaElement.getBoundingClientRect();
 
-  // --- Manipuladores de Ações da UI (PageHeader, DossierHeader) ---
-  // Função para voltar à página de dossiês
+        if (parentRect.bottom < areaRect.top || parentRect.top > areaRect.bottom) {
+            setSidebarTargetTop(null);
+            return;
+        }
+
+        const topRelativeToViewport = parentRect.top - areaRect.top;
+        const topRelativeToContent = topRelativeToViewport + areaElement.scrollTop;
+        let finalTop = topRelativeToContent + (parentRect.height / 2) - (sidebarHeightEstimate / 2);
+
+        const minTop = 5;
+        const maxScroll = areaElement.scrollHeight;
+        const maxPossibleTop = maxScroll > sidebarHeightEstimate + 5 ? maxScroll - sidebarHeightEstimate - 5 : minTop;
+        
+        finalTop = Math.max(minTop, Math.min(finalTop, maxPossibleTop));
+        setSidebarTargetTop(current => current !== finalTop ? finalTop : current);
+    };
+
+    calculateAndSetPosition(parentItemElement, scrollableAreaElem);
+
+    const handleScroll = () => {
+        const currentFocused = focusedElementRef.current;
+        const currentScrollArea = scrollableAreaRef.current;
+        // Check if component is still mounted and conditions are met
+        if (!currentFocused || !currentScrollArea || !isEditingMode || !(currentFocused.closest(`[id^="dossier-item-"]`))) {
+            setSidebarTargetTop(null);
+            currentScrollArea?.removeEventListener('scroll', handleScroll); // Clean up listener if conditions no longer met
+            return;
+        }
+        const currentParentItem = currentFocused.closest(`[id^="dossier-item-"]`) as HTMLElement;
+        if (currentParentItem) {
+            calculateAndSetPosition(currentParentItem, currentScrollArea);
+        } else {
+            setSidebarTargetTop(null);
+        }
+    };
+
+    scrollableAreaElem.addEventListener('scroll', handleScroll);
+    return () => {
+        scrollableAreaElem.removeEventListener('scroll', handleScroll);
+    };
+  }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, isClient]);
+
+
   const handleBackClick = useCallback(() => {
-    router.push('/dossie'); // Redireciona para a página de dossiês
+    router.push('/dossie'); 
   }, [router]);
 
   const handleToggleEditMode = useCallback(() => {
     setIsEditingMode(prev => {
-      if (prev) { // Se estava saindo do modo de edição
+      if (prev) { 
         if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
         ignoreNextBlurRef.current = false;
         focusedElementRef.current = null;
         setSelectedItemIdGlobal(null);
         setSelectedSectionIdForStyling(null);
-        setSidebarTargetTop(null); // Esconde a sidebar
+        setSidebarTargetTop(null); 
       }
-      return !prev; // Alterna o modo de edição
+      return !prev; 
     });
   }, []);
 
-  // Manipuladores para alterações nos campos do DossierHeader
   const handleDossierTitleChange = useCallback((newTitle: string) => { setDossierTitle(newTitle); }, []);
   const handleDossierDescriptionChange = useCallback((newDescription: string) => { setDossierDescription(newDescription); }, []);
-  const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => { setEvaluationConcept(concept); }, []);
+  
+  const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => {
+    setEvaluationConcept(concept);
+    if (concept === 'letter' && (!evaluationMethodDetails || evaluationMethodDetails.length === 0)) {
+      setEvaluationMethodDetails(createDefaultEvaluationMethodDetails());
+    }
+  }, [evaluationMethodDetails]); 
 
-  // Manipuladores para alterações nos campos das Seções
   const handleSectionDescriptionChange = useCallback((sectionId: string, newDescription: string) => {
-    setSectionsData(prev => prev.map((sec: SectionData) => (sec.id === sectionId ? { ...sec, description: newDescription } : sec)));
+    setSectionsData(prev => prev.map((sec) => (sec.id === sectionId ? { ...sec, description: newDescription } : sec)));
   }, []);
   const handleSectionTitleChange = useCallback((sectionId: string, newTitle: string) => {
-    setSectionsData(prev => prev.map((sec: SectionData) => (sec.id === sectionId ? { ...sec, title: newTitle } : sec)));
+    setSectionsData(prev => prev.map((sec) => (sec.id === sectionId ? { ...sec, title: newTitle } : sec)));
   }, []);
   const handleSectionWeightChange = useCallback((sectionId: string, newWeight: string) => {
-    setSectionsData(prev => prev.map((sec: SectionData) => (sec.id === sectionId ? { ...sec, weight: newWeight } : sec)));
+    setSectionsData(prev => prev.map((sec) => (sec.id === sectionId ? { ...sec, weight: newWeight } : sec)));
   }, []);
 
-  // Manipulador para alterações nos campos dos Itens
   const handleItemChange = useCallback(
     (sectionId: string, itemId: string, field: 'description' | 'value', newValue: string) => {
       setSectionsData(prev =>
-        prev.map((sec: SectionData) =>
+        prev.map((sec) =>
           sec.id === sectionId
-            ? { ...sec, items: Array.isArray(sec.items) ? sec.items.map((item: ItemData) => item.id === itemId ? { ...item, [field]: newValue } : item) : [] }
+            ? { ...sec, items: Array.isArray(sec.items) ? sec.items.map((item) => item.id === itemId ? { ...item, [field]: newValue } : item) : [] }
             : sec
         )
       );
     }, []);
 
-  // --- Manipuladores de Ações da ActionSidebar ---
-  // Adiciona uma nova seção
   const handleAddNewSectionForSidebar = useCallback(() => {
-    // MOCK: Log de depuração
-    console.log('%cAÇÃO: handleAddNewSectionForSidebar: INÍCIO', 'color: #2E8B57; font-weight: bold;', { selectedItemIdGlobal, selectedSectionIdForStyling });
     if (!isEditingMode) return;
+    const newSectionId = `section-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substring(2, 7)}`;
+    const newSectionData: SectionData = { id: newSectionId, title: `Nova Seção`, description: ``, weight: '0', items: [{ id: newItemId, description: 'Novo item', value: 'N/A' }]};
 
-    // MOCK: IDs gerados no frontend com Date.now() e Math.random()
-    // Em um sistema real, o backend pode gerar e retornar IDs após a criação, ou o frontend pode usar UUIDs mais robustos
-    const newSectionId = `section-${Date.now()}`;
-    const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
-    const newSectionData: SectionData = { id: newSectionId, title: `Nova Seção (${newSectionId.slice(-4)})`, description: ``, weight: '0', items: [{ id: newItemId, description: 'Novo item', value: 'N/A' }]};
+    setSectionsData(prevSections => {
+        let newSectionsList = [...prevSections];
+        let targetSectionIndex = -1;
+        let currentTargetIdForNewSection = selectedSectionIdForStyling;
 
-    let newSectionsList = [...sectionsData];
-    let targetSectionIndex = -1;
-    let currentTargetIdForNewSection = selectedSectionIdForStyling;
+        if (!currentTargetIdForNewSection && selectedItemIdGlobal) {
+           const sectionOfSelectedItem = prevSections.find(s => Array.isArray(s.items) && s.items.some(item => item.id === selectedItemIdGlobal));
+           if(sectionOfSelectedItem) currentTargetIdForNewSection = sectionOfSelectedItem.id;
+        }
 
-    if (!currentTargetIdForNewSection && selectedItemIdGlobal) {
-       const sectionOfSelectedItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(item => item.id === selectedItemIdGlobal));
-       if(sectionOfSelectedItem) currentTargetIdForNewSection = sectionOfSelectedItem.id;
-    }
+        if (currentTargetIdForNewSection) {
+            targetSectionIndex = prevSections.findIndex(sec => sec.id === currentTargetIdForNewSection);
+        }
 
-    if (currentTargetIdForNewSection) {
-        targetSectionIndex = sectionsData.findIndex(sec => sec.id === currentTargetIdForNewSection);
-    }
-
-    if (targetSectionIndex !== -1) {
-      newSectionsList.splice(targetSectionIndex + 1, 0, newSectionData);
-    } else {
-      newSectionsList.push(newSectionData);
-    }
-
-    setSectionsData(newSectionsList);
+        if (targetSectionIndex !== -1) {
+          newSectionsList.splice(targetSectionIndex + 1, 0, newSectionData);
+        } else {
+          newSectionsList.push(newSectionData);
+        }
+        return newSectionsList;
+    });
+    
     setSelectedItemIdGlobal(null);
     setSelectedSectionIdForStyling(newSectionId);
 
      requestAnimationFrame(() => {
-         if (typeof document === 'undefined') return;
+         if (typeof window === 'undefined' || typeof document === 'undefined') return;
          const titleInputOfNewSection = document.querySelector(`#dossier-section-${newSectionId} input[aria-label*="Título da seção"]`) as HTMLInputElement | null;
          if (titleInputOfNewSection) {
             titleInputOfNewSection.focus();
+            handleFieldFocus(titleInputOfNewSection, {type: 'section', id: newSectionId});
          } else {
              const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
              if (newItemElement) {
                  const editableField = newItemElement.querySelector('input, textarea') as HTMLElement | null;
-                 if (editableField) editableField.focus();
+                 if (editableField) {
+                    editableField.focus();
+                    handleFieldFocus(editableField, {type: 'item', id: newItemId});
+                 }
              }
          }
      });
-  }, [sectionsData, isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
+  }, [isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal, handleFieldFocus]); // removed sectionsData, setSectionsData handles prev state
 
-  // Adiciona um novo item à seção
   const handleAddItemForSidebar = useCallback(() => {
-    // MOCK: Log de depuração
-    console.log('%cAÇÃO: handleAddItemForSidebar: INÍCIO', 'color: #2E8B57; font-weight: bold;', { selectedItemIdGlobal, selectedSectionIdForStyling });
     if (!isEditingMode) return;
-
-    let targetSectionId = selectedSectionIdForStyling;
-    if (!targetSectionId && selectedItemIdGlobal) {
-        const sectionOfItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(it => it.id === selectedItemIdGlobal));
-        if (sectionOfItem) targetSectionId = sectionOfItem.id;
+    
+    let targetSectionIdResolved = selectedSectionIdForStyling;
+    if (!targetSectionIdResolved && selectedItemIdGlobal) {
+        const currentSectionOfItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(it => it.id === selectedItemIdGlobal));
+        if (currentSectionOfItem) targetSectionIdResolved = currentSectionOfItem.id;
     }
 
-    if (!targetSectionId) {
-      // MOCK: Log de aviso
-      console.warn("handleAddItemForSidebar: Nenhuma seção alvo identificada.");
-      return;
+    if (!targetSectionIdResolved) {
+      if (sectionsData.length > 0) {
+        targetSectionIdResolved = sectionsData[sectionsData.length -1].id;
+      } else { // No sections exist, create one first
+        const newSection = createDefaultSection();
+        setSectionsData([newSection]);
+        targetSectionIdResolved = newSection.id;
+        // setSelectedSectionIdForStyling(newSection.id); // Set by upcoming logic
+      }
     }
-
-    // MOCK: IDs gerados no frontend
-    const newItemId = `item-${targetSectionId}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    
+    const newItemId = `item-${targetSectionIdResolved}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     setSectionsData(prev => prev.map(sec =>
-        sec.id === targetSectionId
+        sec.id === targetSectionIdResolved
           ? { ...sec, items: [...(Array.isArray(sec.items) ? sec.items : []), { id: newItemId, description: 'Novo Item', value: 'N/A' }] }
           : sec
     ));
 
-    setSelectedSectionIdForStyling(targetSectionId);
-    setSelectedItemIdGlobal(newItemId);
+    setSelectedSectionIdForStyling(targetSectionIdResolved); 
+    setSelectedItemIdGlobal(newItemId); 
 
      requestAnimationFrame(() => {
-         if (typeof document === 'undefined') return;
+         if (typeof window === 'undefined' || typeof document === 'undefined') return;
          const newItemElement = document.getElementById(`dossier-item-${newItemId}`);
          if (newItemElement) {
              const editableField = newItemElement.querySelector('input, textarea') as HTMLElement | null;
-             if (editableField) editableField.focus();
+             if (editableField) {
+                editableField.focus();
+                handleFieldFocus(editableField, {type: 'item', id: newItemId});
+             }
          }
      });
-  }, [sectionsData, isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
+  }, [isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal, handleFieldFocus, sectionsData]);
 
-  // Deleta o item atualmente selecionado
   const handleDeleteItemForSidebar = useCallback(() => {
-    // MOCK: Log de depuração
-    console.log('%cAÇÃO: handleDeleteItemForSidebar: INÍCIO', 'color: #DC143C; font-weight: bold;', { selectedItemIdGlobal });
     if (!isEditingMode || !selectedItemIdGlobal) return;
 
     const currentSelectedItemId = selectedItemIdGlobal;
-    const sectionOfItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(i => i.id === currentSelectedItemId));
-    if (!sectionOfItem) return;
+    let nextSelectedItemId: string | null = null;
+    let nextSelectedSectionId: string | null = null;
+    let focusType: 'item' | 'section' | null = null;
 
-    const currentSelectedSectionId = sectionOfItem.id;
-    let finalSections: SectionData[] = [];
+    setSectionsData(prevSections => {
+        const sectionContainingItemIndex = prevSections.findIndex(s => s.items.some(i => i.id === currentSelectedItemId));
+        if (sectionContainingItemIndex === -1) return prevSections;
 
-    setSectionsData(prev => {
-      const sectionsWithItemRemoved = prev.map(sec =>
-        sec.id === currentSelectedSectionId
-          ? { ...sec, items: Array.isArray(sec.items) ? sec.items.filter(item => item.id !== currentSelectedItemId) : [] }
-          : sec
-      );
-      const sectionAfterItemDelete = sectionsWithItemRemoved.find(sec => sec.id === currentSelectedSectionId);
-      const sectionIsEmpty = sectionAfterItemDelete && Array.isArray(sectionAfterItemDelete.items) && sectionAfterItemDelete.items.length === 0;
-      if (sectionIsEmpty && sectionsWithItemRemoved.length > 1) {
-        finalSections = sectionsWithItemRemoved.filter(sec => sec.id !== currentSelectedSectionId);
-      } else {
-        finalSections = sectionsWithItemRemoved;
+        const sectionContainingItem = prevSections[sectionContainingItemIndex];
+        const itemIndexInItsSection = sectionContainingItem.items.findIndex(i => i.id === currentSelectedItemId);
+
+        let updatedSections = prevSections.map(s => {
+            if (s.id === sectionContainingItem.id) {
+                return { ...s, items: s.items.filter(i => i.id !== currentSelectedItemId) };
+            }
+            return s;
+        });
+
+        const sectionAfterItemRemoved = updatedSections[sectionContainingItemIndex];
+
+        if (sectionAfterItemRemoved.items.length > 0) {
+            nextSelectedSectionId = sectionAfterItemRemoved.id;
+            nextSelectedItemId = sectionAfterItemRemoved.items[Math.min(itemIndexInItsSection, sectionAfterItemRemoved.items.length - 1)].id;
+            focusType = 'item';
+        } else { // Section became empty
+            if (updatedSections.length === 1) { // It was the only section
+                const newDefaultSection = createDefaultSection();
+                newDefaultSection.title = sectionAfterItemRemoved.title; // Preserve title if possible
+                updatedSections = [newDefaultSection];
+                nextSelectedSectionId = newDefaultSection.id;
+                nextSelectedItemId = newDefaultSection.items[0].id;
+                focusType = 'item';
+            } else { // More than one section, remove the empty one
+                updatedSections = updatedSections.filter(s => s.id !== sectionAfterItemRemoved.id);
+                if (updatedSections.length > 0) {
+                    const focusSectionIdx = Math.max(0, sectionContainingItemIndex - (sectionContainingItemIndex >= updatedSections.length ? 1 : 0) );
+                    nextSelectedSectionId = updatedSections[focusSectionIdx].id;
+                    focusType = 'section';
+                }
+            }
+        }
+        return updatedSections;
+    });
+    
+    // Update selection state after sectionsData has been set
+    // This needs to be outside setSectionsData to use the new state values for nextSelected...
+    // However, the values for nextSelectedItemId/Id were determined from prevSections logic.
+    // So, we need to pass these determined IDs directly.
+    setSelectedItemIdGlobal(nextSelectedItemId);
+    setSelectedSectionIdForStyling(nextSelectedSectionId);
+
+    focusedElementRef.current = null; 
+    setSidebarTargetTop(null);
+
+    requestAnimationFrame(() => {
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+      if (focusType === 'item' && nextSelectedItemId) {
+        const itemElement = document.getElementById(`dossier-item-${nextSelectedItemId}`);
+        const editableField = itemElement?.querySelector('input, textarea') as HTMLElement | null;
+        if (editableField) {
+            editableField.focus();
+            handleFieldFocus(editableField, { type: 'item', id: nextSelectedItemId });
+        }
+      } else if (focusType === 'section' && nextSelectedSectionId) {
+        const sectionTitleInput = document.querySelector(`#dossier-section-${nextSelectedSectionId} input[aria-label*="Título da seção"]`) as HTMLInputElement | null;
+        if (sectionTitleInput) {
+            sectionTitleInput.focus();
+            handleFieldFocus(sectionTitleInput, { type: 'section', id: nextSelectedSectionId });
+        }
       }
-      return finalSections;
     });
 
-    setSelectedItemIdGlobal(null);
-    const sectionStillExists = finalSections.some(s => s.id === currentSelectedSectionId);
-    if (!sectionStillExists) setSelectedSectionIdForStyling(null);
+  }, [isEditingMode, selectedItemIdGlobal, handleFieldFocus, sectionsData]); // sectionsData dependency
 
-    focusedElementRef.current = null;
-    setSidebarTargetTop(null);
-  }, [sectionsData, isEditingMode, selectedItemIdGlobal]);
-
-  // Deleta a seção atualmente selecionada/focada
   const handleDeleteSectionForSidebar = useCallback(() => {
     let targetSectionIdToDelete = selectedSectionIdForStyling;
     if(!targetSectionIdToDelete && selectedItemIdGlobal) {
-        const sectionOfItem = sectionsData.find(s => Array.isArray(s.items) && s.items.some(it => it.id === selectedItemIdGlobal));
+        const sectionOfItem = sectionsData.find(s => s.items.some(it => it.id === selectedItemIdGlobal));
         if(sectionOfItem) targetSectionIdToDelete = sectionOfItem.id;
     }
 
     if (!isEditingMode || !targetSectionIdToDelete || sectionsData.length <= 1) return;
 
-    const originalSectionOfSelectedItem = selectedItemIdGlobal ? sectionsData.find(s => Array.isArray(s.items) && s.items.some(it => it.id === selectedItemIdGlobal)) : undefined;
+    let nextSelectedSectionIdAfterDelete: string | null = null;
 
-    setSectionsData(prev => prev.filter(sec => sec.id !== targetSectionIdToDelete));
-
-    if (originalSectionOfSelectedItem && originalSectionOfSelectedItem.id === targetSectionIdToDelete) {
-        setSelectedItemIdGlobal(null);
+    setSectionsData(prevSections => {
+        const deletedSectionIndex = prevSections.findIndex(s => s.id === targetSectionIdToDelete);
+        const newList = prevSections.filter(sec => sec.id !== targetSectionIdToDelete);
+        
+        if (newList.length > 0) {
+            const focusIndex = Math.min(Math.max(0, deletedSectionIndex), newList.length - 1);
+            nextSelectedSectionIdAfterDelete = newList[focusIndex].id;
+        }
+        return newList;
+    });
+    
+    // Update selection state. nextSelectedSectionIdAfterDelete contains the ID.
+    setSelectedSectionIdForStyling(nextSelectedSectionIdAfterDelete);
+    if (selectedItemIdGlobal && sectionsData.find(s => s.id === targetSectionIdToDelete)?.items.some(i => i.id === selectedItemIdGlobal)) {
+        setSelectedItemIdGlobal(null); 
     }
-    setSelectedSectionIdForStyling(null);
+    
     focusedElementRef.current = null;
     setSidebarTargetTop(null);
-  }, [sectionsData, isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal]);
 
-  // Manipulador para clique no botão de configurações do dossiê (no DossierHeader)
+    requestAnimationFrame(() => {
+        if (typeof window === 'undefined' || typeof document === 'undefined') return; 
+        if (nextSelectedSectionIdAfterDelete) { 
+          const sectionTitleInput = document.querySelector(`#dossier-section-${nextSelectedSectionIdAfterDelete} input[aria-label*="Título da seção"]`) as HTMLInputElement | null;
+          if (sectionTitleInput) {
+              sectionTitleInput.focus();
+              handleFieldFocus(sectionTitleInput, {type: 'section', id: nextSelectedSectionIdAfterDelete});
+          }
+        }
+      });
+
+  }, [isEditingMode, selectedSectionIdForStyling, selectedItemIdGlobal, handleFieldFocus, sectionsData]); // sectionsData dependency
+
   const handleDossierSettingsClick = useCallback(() => {
+    if (!isEditingMode) return;
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-    ignoreNextBlurRef.current = false;
-    // MOCK: Log de ação. Em um cenário real, poderia abrir um modal de configurações
-    console.log('Configurações do Dossiê (clicado via botão no header)');
+    setIsSettingsModalOpen(true);
+  }, [isEditingMode]);
+
+  const handleSaveEvaluationSettings = useCallback((newMethods: EvaluationMethodItem[]) => {
+    setEvaluationMethodDetails(newMethods);
+    setIsSettingsModalOpen(false);
   }, []);
 
-  // ==========================================================================================
-  // == IMPORTANTE PARA O BACKEND: PONTO PRINCIPAL DE INTERAÇÃO PARA SALVAR DADOS ==
-  // Esta função `handleSave` é chamada pelo botão "Salvar Alterações"
-  // É aqui que a lógica para enviar os dados do dossiê para a API do backend será implementada
-  // ==========================================================================================
+
   const handleSave = useCallback(async () => {
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-    ignoreNextBlurRef.current = false;
 
     try {
-      const professorId = localStorage.getItem('professorId');
-      if (!professorId) {
+      const professorIdStr = localStorage.getItem('professorId');
+      if (!professorIdStr) {
           alert("Sua sessão expirou. Por favor, faça o login novamente.");
           router.push('/login');
           return;
       }
+      const professorId = Number(professorIdStr);
 
-      // Validações
       if (!dossierTitle.trim()) {
         throw new Error("O título do Dossiê não pode ser vazio.");
       }
-
       if (!evaluationConcept) {
         throw new Error("O método de avaliação não pode ser vazio.");
       }
-
-      const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
-      if (!hasSectionWithQuestion) {
-        throw new Error("O Dossiê deve conter pelo menos uma seção com um item/questão.");
+      
+      if (evaluationConcept === 'letter') {
+        if (!evaluationMethodDetails || evaluationMethodDetails.length === 0) {
+            throw new Error("Para o método de avaliação por Conceito, defina os conceitos e seus valores nas configurações.");
+        }
+        for (const detail of evaluationMethodDetails) {
+            if (!detail.name.trim() || !detail.value.trim()) {
+                throw new Error("Todos os conceitos definidos devem ter nome e valor preenchidos.");
+            }
+        }
       }
 
-      // Validações por seção
+      const hasValidSection = sectionsData.some(sec => 
+        sec.title.trim() !== "" &&
+        Array.isArray(sec.items) && 
+        sec.items.length > 0 && 
+        sec.items.some(item => item.description.trim() !== "")
+      );
+      if (!hasValidSection) {
+        throw new Error("O Dossiê deve conter pelo menos uma seção com título e um item com descrição preenchidos.");
+      }
+
       let totalWeight = 0;
       for (const sec of sectionsData) {
         if (!sec.title.trim()) {
-          throw new Error(`A seção com ID "${sec.id}" não pode ter um título vazio.`);
+          throw new Error(`Toda seção deve ter um título.`);
         }
-
-        if (Array.isArray(sec.items)) {
-          for (const item of sec.items) {
-            if (!item.description.trim()) {
-              throw new Error(`O item com ID "${item.id}" na seção "${sec.title}" não pode ter a descrição vazia.`);
+        if (!Array.isArray(sec.items) || sec.items.length === 0 || sec.items.every(item => !item.description.trim())) {
+             throw new Error(`A seção "${sec.title}" deve conter pelo menos um item com descrição preenchida.`);
+        }
+        // Check for empty item descriptions only if items array is not empty
+        if (Array.isArray(sec.items) && sec.items.length > 0) {
+            for (const item of sec.items) {
+                if (!item.description.trim()) {
+                  throw new Error(`Todo item na seção "${sec.title}" deve ter uma descrição.`);
+                }
             }
-          }
         }
 
         const parsedWeight = parseInt(sec.weight, 10);
-        if (isNaN(parsedWeight)) {
-          throw new Error(`O peso da seção "${sec.title}" é inválido. Deve ser um número.`);
+        if (isNaN(parsedWeight) || parsedWeight < 0 || parsedWeight > 100) { // Weight should be between 0 and 100
+          throw new Error(`O peso da seção "${sec.title}" é inválido. Deve ser um número entre 0 e 100.`);
         }
         totalWeight += parsedWeight;
       }
@@ -572,16 +686,16 @@ const DossierAppPage: React.FC = () => {
         throw new Error(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
       }
 
-      // Prepara o payload
       const payload = adaptDossierStateToPayload(
         dossierTitle,
         dossierDescription,
         evaluationConcept,
         sectionsData,
-        Number(professorId) // Convertendo para número
+        professorId, 
+        evaluationMethodDetails 
       );
 
-      // Salva ou atualiza o dossiê
+      setIsLoading(true); 
       if (dossierId) {
         const updatePayload: UpdateDossierPayload = {
           name: payload.name,
@@ -592,108 +706,85 @@ const DossierAppPage: React.FC = () => {
         await updateDossier(dossierId, updatePayload);
         alert("Dossiê atualizado com sucesso!");
       } else {
-        await createDossier(payload);
+        await createDossier(payload); 
         alert("Dossiê criado com sucesso!");
       }
       router.push('/dossie');
     } catch (error: any) {
       alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
+    } finally {
+        setIsLoading(false);
     }
-  }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
+  }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router, evaluationMethodDetails]); 
 
-  // --- Lógica de UI derivada de estados (useMemo) ---
-  // Determina se o botão de deletar item deve estar habilitado
   const canDeleteItem = useMemo(() => {
-    if (!selectedItemIdGlobal) {
-      return false;
-    }
-    const sectionOfSelectedItem = sectionsData.find(s =>
-      Array.isArray(s.items) && s.items.some(item => item.id === selectedItemIdGlobal)
+    if (!selectedItemIdGlobal || !sectionsData.length) return false;    
+    const sectionOfSelectedItem = sectionsData.find(s => 
+        Array.isArray(s.items) && s.items.some(item => item.id === selectedItemIdGlobal)
     );
-    if (!sectionOfSelectedItem) {
-      return true;
-    }
-    const isLastItemInSection = sectionOfSelectedItem.items.length === 1 && sectionOfSelectedItem.items[0].id === selectedItemIdGlobal;
-    const isOnlySection = sectionsData.length === 1;
-    return !(isLastItemInSection && isOnlySection);
+    if (!sectionOfSelectedItem) return false; 
+    
+    return !(sectionsData.length === 1 && sectionOfSelectedItem.items.length === 1);
   }, [selectedItemIdGlobal, sectionsData]);
 
-  // Determina se o botão de deletar seção deve estar habilitado
   const canDeleteSection = useMemo(() => {
     const hasSelection = !!selectedSectionIdForStyling || !!selectedItemIdGlobal;
-    const isMoreThanOneSection = sectionsData.length > 1;
-    return hasSelection && isMoreThanOneSection;
+    return hasSelection && sectionsData.length > 1;
   }, [selectedSectionIdForStyling, selectedItemIdGlobal, sectionsData.length]);
 
-
-  // Determina se o elemento focado é um campo de item, para mostrar a ActionSidebar
-  const isFocusedElementAnItemField = isClient &&
-                                     focusedElementRef.current instanceof HTMLElement &&
-                                     focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
-  // Determina se a ActionSidebar deve ser mostrada
-  const showActionSidebar = isClient && isEditingMode && isFocusedElementAnItemField;
-
-  // useEffect para logs de depuração relacionados à visibilidade da ActionSidebar (opcional)
-  useEffect(() => {
-    if(isClient){
-        // MOCK: Log de depuração comentado. Pode ser removido
-        // console.log('%cDEBUG: showActionSidebar check:', 'color: #8A2BE2;', { /* ... logs ... */ });
-    }
-  }, [isEditingMode, focusedElementRef.current, isFocusedElementAnItemField, sidebarTargetTop, showActionSidebar, isClient]);
+  const isFocusedElementAnItemField = useMemo(() => {
+    if (!isClient) return false;
+    const currentFocusedElement = focusedElementRef.current;
+    return currentFocusedElement instanceof HTMLElement &&
+           currentFocusedElement.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
+  }, [isClient, focusedElementRef.current]); 
+  
+  const showActionSidebar = useMemo(() => 
+      isClient && isEditingMode && isFocusedElementAnItemField && sidebarTargetTop !== null, 
+      [isClient, isEditingMode, isFocusedElementAnItemField, sidebarTargetTop]
+  );
 
 
-  // --- Renderização do Componente ---
   if (!isClient || !isAuthenticated) {
-    return <div>Carregando e verificando autenticação...</div>;
+    return <div className={styles.loadingMessage}>Carregando e verificando autenticação...</div>;
   }
-
-
-  if (isLoading) {
-    return <div>Carregando...</div>;
+  if (isLoading && dossierId !== null && !isSettingsModalOpen) { 
+    return <div className={styles.loadingMessage}>Carregando dados do dossiê...</div>;
   }
-
-  if (error) {
-    return <div>Erro: {error}</div>;
+  if (error && !isSettingsModalOpen) { 
+    return <div className={styles.errorMessage}>Erro: {error} <button onClick={() => setError(null)}>Tentar Novamente</button></div>;
   }
 
   return (
     <>
-      {/* Define o título da aba do navegador */}
       <Head>
-        <title>{dossierId ? 'Editar Dossiê' : 'Novo Dossiê'}</title>
+        <title>{dossierId ? (isEditingMode? 'Editar Dossiê' : 'Visualizar Dossiê') : 'Novo Dossiê'}</title>
       </Head>
-      {/* Contêiner principal da aplicação */}
       <div className={styles.appContainer}>
-        {/* Conteúdo principal */}
         <main className={styles.mainContent}>
-          {/* Cabeçalho da Página */}
           <PageHeader
             isEditing={isEditingMode}
-            onBackClick={handleBackClick} // MOCK: Ação de voltar
+            onBackClick={handleBackClick} 
             onToggleEditMode={handleToggleEditMode}
             className={styles.pageHeader}
             backButtonClassName={styles.pageHeader_backButton}
             backButtonIconClassName={styles.pageHeader_backIcon}
             toggleButtonClassName={`${styles.pageHeader_toggleButtonBase} ${isEditingMode ? styles.pageHeader_toggleButtonEditing : styles.pageHeader_toggleButtonViewing}`}
-            onFieldFocus={handleFieldFocus} // Passa o manipulador de foco
-            onFieldBlur={handleFieldBlur}   // Passa o manipulador de blur
+            onFieldFocus={handleFieldFocus} 
+            onFieldBlur={handleFieldBlur}   
           />
-          {/* Área rolável principal que contém o DossierHeader e SectionList */}
           <div ref={scrollableAreaRef} className={styles.scrollableArea}>
-            {/* Cabeçalho do Dossiê */}
             <DossierHeader
-              title={dossierTitle} // MOCK: Usa estado inicial mockado
-              description={dossierDescription} // MOCK: Usa estado inicial mockado
+              title={dossierTitle} 
+              description={dossierDescription} 
               isEditing={isEditingMode}
-              evaluationConcept={evaluationConcept} // MOCK: Usa estado inicial mockado
+              evaluationConcept={evaluationConcept} 
               onTitleChange={handleDossierTitleChange}
               onDescriptionChange={handleDossierDescriptionChange}
               onEvaluationConceptChange={handleEvaluationConceptChange}
-              onSettingsClick={handleDossierSettingsClick} // MOCK: Ação de configurações
-              showSettingsButton={isEditingMode && evaluationConcept !== 'numerical'}
+              onSettingsClick={handleDossierSettingsClick} 
               onFieldFocus={handleFieldFocus}
               onFieldBlur={handleFieldBlur}
-              // Classes de estilização
               className={styles.dossierHeaderContainer}
               titleTextClassName={styles.dossierHeader_titleText}
               titleInputClassName={styles.dossierHeader_titleInput}
@@ -709,49 +800,48 @@ const DossierAppPage: React.FC = () => {
               descriptionTextareaClassName={styles.dossierHeader_descriptionTextarea}
               evaluationAndSettingsClassName={styles.dossierHeader_evaluationAndSettings}
               settingsButtonClassName={styles.dossierHeader_settingsButton}
-              settingsButtonIconClassName={styles.pageHeader_backIcon} // Reutiliza ícone
+              settingsButtonIconClassName={styles.pageHeader_backIcon} 
             />
-            {/* Lista de Seções */}
-            <SectionList
-              sections={sectionsData} // MOCK: Usa estado inicial mockado
-              isEditing={isEditingMode}
-              selectedSectionIdForStyling={selectedSectionIdForStyling}
-              selectedItemId={selectedItemIdGlobal}
-              onSectionAreaClick={handleSectionAreaClick}
-              onSectionTitleChange={handleSectionTitleChange}
-              onSectionDescriptionChange={handleSectionDescriptionChange}
-              onSectionWeightChange={handleSectionWeightChange}
-              onItemChange={handleItemChange}
-              onItemSelect={handleItemSelect}
-              onFieldFocus={handleFieldFocus}
-              onFieldBlur={handleFieldBlur}
-              // Classes de estilização
-              className={styles.sectionListContainer}
-              sectionComponentClassName={styles.section_outerContainer}
-              sectionComponentContentWrapperClassName={styles.section_contentWrapper}
-              sectionComponentSelectedStylingClassName={styles.section_selectedStyling}
-              sectionComponentTitleAndWeightContainerClassName={styles.section_titleAndWeightContainer}
-              sectionComponentTitleContainerClassName={styles.section_titleContainer}
-              sectionComponentTitleEditableFieldClassName={styles.editableField_inputBase}
-              sectionComponentTitleTextClassName={styles.section_titleText}
-              sectionComponentTitleInputClassName={styles.section_titleInput}
-              sectionComponentDescriptionContainerClassName={styles.section_descriptionContainer}
-              sectionComponentDescriptionEditableFieldClassName={styles.editableField_inputBase}
-              sectionComponentDescriptionTextClassName={styles.section_descriptionText}
-              sectionComponentDescriptionTextareaClassName={styles.section_descriptionTextarea}
-              sectionComponentWeightFieldContainerClassName={styles.section_weightFieldContainer}
-              sectionComponentWeightEditableFieldClassName={styles.editableField_inputBase}
-              sectionComponentWeightTextClassName={styles.section_weightText}
-              sectionComponentWeightInputClassName={styles.section_weightInput}
-              sectionComponentItemsListClassName={styles.section_itemsList}
-              sectionItemClassName={`${styles.sectionItem_container} ${isEditingMode ? styles.sectionItem_containerEditable : ''}`}
-              sectionItemSelectedClassName={styles.sectionItem_selected}
-              sectionItemDescriptionFieldContainerClassName={styles.sectionItem_descriptionFieldWrapper}
-              sectionItemDescriptionTextDisplayClassName={styles.editableField_textDisplayItem}
-              sectionItemDescriptionInputClassName={styles.editableField_inputItem}
-            />
-            {/* ActionSidebar (barra lateral de ações) - renderizada condicionalmente */}
-            {isClient && showActionSidebar && (
+            {(!isLoading || dossierId === null) && sectionsData.length > 0 && ( // Render SectionList only if not loading (for edit) or if create mode and sectionsData is populated
+                <SectionList
+                sections={sectionsData} 
+                isEditing={isEditingMode}
+                selectedSectionIdForStyling={selectedSectionIdForStyling}
+                selectedItemId={selectedItemIdGlobal}
+                onSectionAreaClick={handleSectionAreaClick}
+                onSectionTitleChange={handleSectionTitleChange}
+                onSectionDescriptionChange={handleSectionDescriptionChange}
+                onSectionWeightChange={handleSectionWeightChange}
+                onItemChange={handleItemChange}
+                onItemSelect={handleItemSelect}
+                onFieldFocus={handleFieldFocus}
+                onFieldBlur={handleFieldBlur}
+                className={styles.sectionListContainer}
+                sectionComponentClassName={styles.section_outerContainer}
+                sectionComponentContentWrapperClassName={styles.section_contentWrapper}
+                sectionComponentSelectedStylingClassName={styles.section_selectedStyling}
+                sectionComponentTitleAndWeightContainerClassName={styles.section_titleAndWeightContainer}
+                sectionComponentTitleContainerClassName={styles.section_titleContainer}
+                sectionComponentTitleEditableFieldClassName={styles.editableField_inputBase}
+                sectionComponentTitleTextClassName={styles.section_titleText}
+                sectionComponentTitleInputClassName={styles.section_titleInput}
+                sectionComponentDescriptionContainerClassName={styles.section_descriptionContainer}
+                sectionComponentDescriptionEditableFieldClassName={styles.editableField_inputBase}
+                sectionComponentDescriptionTextClassName={styles.section_descriptionText}
+                sectionComponentDescriptionTextareaClassName={styles.section_descriptionTextarea}
+                sectionComponentWeightFieldContainerClassName={styles.section_weightFieldContainer}
+                sectionComponentWeightEditableFieldClassName={styles.editableField_inputBase}
+                sectionComponentWeightTextClassName={styles.section_weightText}
+                sectionComponentWeightInputClassName={styles.section_weightInput}
+                sectionComponentItemsListClassName={styles.section_itemsList}
+                sectionItemClassName={`${styles.sectionItem_container} ${isEditingMode ? styles.sectionItem_containerEditable : ''}`}
+                sectionItemSelectedClassName={styles.sectionItem_selected}
+                sectionItemDescriptionFieldContainerClassName={styles.sectionItem_descriptionFieldWrapper}
+                sectionItemDescriptionTextDisplayClassName={styles.editableField_textDisplayItem}
+                sectionItemDescriptionInputClassName={styles.editableField_inputItem}
+                />
+            )}
+            {isClient && showActionSidebar && ( 
               <ActionSidebar
                 targetTopPosition={sidebarTargetTop}
                 onAddItemToSection={handleAddItemForSidebar}
@@ -761,7 +851,6 @@ const DossierAppPage: React.FC = () => {
                 canDeleteItem={canDeleteItem}
                 canDeleteSection={canDeleteSection}
                 onClearBlurTimeout={clearBlurTimeoutAndSignalIgnore}
-                // Classes de estilização
                 containerClassNameFromPage={styles.actionSidebarVisualBase}
                 buttonClassNameFromPage={styles.actionSidebarButtonVisualBase}
                 disabledButtonClassNameFromPage={styles.actionSidebarButtonDisabledVisualBase}
@@ -769,18 +858,42 @@ const DossierAppPage: React.FC = () => {
               />
             )}
           </div>
-          {/* Ações no rodapé (ex: botão Salvar) - visível apenas em modo de edição */}
-          {/* IMPORTANTE PARA O BACKEND: O botão abaixo dispara a função handleSave(), que é o ponto principal de interação com a API para salvar */}
           {isEditingMode && (
             <div className={styles.footerActions}>
-              <button onClick={handleSave} className={styles.saveButton}>Salvar Alterações</button>
+              <button onClick={handleSave} className={styles.saveButton} disabled={isLoading}>
+                {isLoading ? "Salvando..." : "Salvar Alterações"}
+              </button>
             </div>
           )}
         </main>
       </div>
+      {isClient && (
+          <EvaluationSettingsModal
+            isOpen={isSettingsModalOpen}
+            onClose={() => setIsSettingsModalOpen(false)}
+            initialMethods={evaluationMethodDetails} // This should always be an array
+            onSave={handleSaveEvaluationSettings}
+            modalOverlayClassName={styles.modalOverlay}
+            modalContentClassName={styles.modalContent}
+            modalHeaderClassName={styles.modalHeader}
+            modalTitleClassName={styles.modalTitle}
+            modalCloseButtonClassName={styles.modalCloseButton}
+            modalBodyClassName={styles.modalBody}
+            modalListClassName={styles.modalList}
+            modalListItemClassName={styles.modalListItem}
+            modalListItemNameClassName={styles.modalListItemName}
+            modalListItemValueClassName={styles.modalListItemValue}
+            modalListItemDeleteBtnClassName={styles.modalListItemDeleteBtn}
+            modalActionsClassName={styles.modalActions}
+            modalAddButtonClassName={styles.modalAddButton}
+            modalSaveButtonClassName={styles.modalSaveButton}
+            modalCancelButtonClassName={styles.modalCancelButton}
+            editableFieldForModalInputClassName={styles.modalEditableFieldInput} 
+            editableFieldForModalTextDisplayClassName={styles.modalEditableFieldTextDisplay} 
+          />
+      )}
     </>
   );
 };
 
-// Exporta o componente da página
 export default DossierAppPage;
