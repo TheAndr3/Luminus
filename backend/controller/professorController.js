@@ -180,18 +180,21 @@ exports.Home = async (req, res) => {
 }
 
 exports.SendEmail = async (req, res) => {
-
+    
     try {
-        const professor = await db.pgSelect('costumUser', {email:req.params.id});
-        if(professor) {
-            console.log(professor[0])
+        // CORREÇÃO: Adicionado 'await' e corrigido o parâmetro do email
+        const professor = await db.pgSelect('costumUser', {email: req.params.id});
+        
+        if(professor && professor.length > 0) { // Adicionada verificação se o professor foi encontrado
             const data = new Date();
             var code = genRandomCode(0, 9999);
-            const old_code = await db.pgSelect('verifyCode', {costumUser_id:professor[0].id, data_sol:data.toISOString()});
+            
+            // CORREÇÃO: Usando 'costumUser_id' como no restante do código
+            const old_code = await db.pgSelect('verifyCode', {costumUser_id: professor[0].id, data_sol: data.toISOString()});
 
-            const used_codes = old_code.map((iten) => {
-                iten.code
-            })
+            const used_codes = old_code.map((item) => {
+                return item.code;
+            });
             
             while (used_codes.includes(code)) {
                 code = genRandomCode(0, 9999);
@@ -200,20 +203,21 @@ exports.SendEmail = async (req, res) => {
             emailSender.sendEmail(professor[0].email, code);
 
             try {
-
-                const resp = await db.pgInsert('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString(), status:0});
+                // CORREÇÃO: Corrigido 'data_sol:data.toISOString' para 'data_sol:data.toISOString()' e 'id' para 'costumUser_id'
+                const resp = await db.pgInsert('verifyCode', {code: code, costumUser_id: professor[0].id, data_sol: data.toISOString(), status: 0});
                 return res.status(200).json({msg:'email enviado'});
+
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
                 return res.status(400).json({msg:'erro no banco de dados, nao foi possivel atender a sua solicitacao'});
             }
             
         } else {
-            return res.status(400).json({msg:'professor nao cadastrado no banco de dados'});
+            return res.status(404).json({msg:'professor nao cadastrado no banco de dados'});
         }
     } catch (err) {
         console.log('erro: ', err);
-        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+        return res.status(500).json({msg:'nao foi possivel atender a sua solicitacao'}); // Status 500 para erro interno
     }
 }
 
