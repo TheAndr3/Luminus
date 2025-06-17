@@ -16,7 +16,7 @@ function sendEmail(destination, code) {
     const mailOption = {
         from: 'nexus.service.luminus@gmail.com',
         to: `${destination}`,
-        subject: 'Codigo de recuperacao LUMINUS APP',
+        subject: 'Codigo de verificação LUMINUS APP',
         text: `Codigo de recuperacao solicitado, insira: ${code}`
     }
 
