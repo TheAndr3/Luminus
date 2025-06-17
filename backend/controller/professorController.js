@@ -149,18 +149,18 @@ exports.RecoverPassword = async (req, res) => {
     try{
         const data = new Date();
         const professor = await db.pgSelect('costumUser', {email:email});
-        const bd_code = await db.pgSelect('verifyCode', {code:code, id:professor[0].id, data_sol:data.toISOString()});
+        const bd_code = await db.pgSelect('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data});
 
         if(bd_code[0].status == 0) {
             bd_code[0].status = 1;
 
-            const payload = {userId: professor[0].id, email:professor[0].email, code:code, data:data}
+            const payload = {userId: professor[0].id, email:professor[0].email, code:code, data_sol:data}
 
             //geracao do token a ser utilizado
             const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
             
             //atualiza que o codigo ja foi utilizado
-            await db.pgUpdate('verifyCode', {status:bd_code.status}, {id:professor[0].id, code:code, data_sol:data.toISOString()});
+            await db.pgUpdate('verifyCode', {status:bd_code.status}, {costumUser_id:professor[0].id, code:code, data_sol:data});
 
             return res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
@@ -179,13 +179,14 @@ exports.Home = async (req, res) => {
 }
 
 exports.SendEmail = async (req, res) => {
-    
+
     try {
-        const professor = db.pgSelect('costumUser', {email:req.params.id});
+        const professor = await db.pgSelect('costumUser', {email:req.params.id});
         if(professor) {
+            console.log(professor[0])
             const data = new Date();
             var code = genRandomCode(0, 9999);
-            const old_code = await db.pgSelect('verifyCode', {id:professor[0].id, data_sol:data.toISOString()});
+            const old_code = await db.pgSelect('verifyCode', {costumUser_id:professor[0].id, data_sol:data.toISOString()});
 
             const used_codes = old_code.map((iten) => {
                 iten.code
@@ -199,7 +200,7 @@ exports.SendEmail = async (req, res) => {
 
             try {
 
-                const resp = await db.pgInsert('verifyCode', {code:code, id:professor[0].id, data_sol:data.toISOString, status:0});
+                const resp = await db.pgInsert('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString(), status:0});
                 return res.status(200).json({msg:'email enviado'});
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
@@ -221,7 +222,7 @@ exports.NewPassword = async (req, res) => {
 
     try {
         
-         //desencriptar senha 
+        //desencriptar senha 
         const decryptedPassword = await decryptPassword(newPass);
         //fazer hash de senha
         const hashedPassword = await hashPassword(decryptedPassword);
@@ -244,7 +245,7 @@ exports.NewPassword = async (req, res) => {
             const oldTokens = await db.pgSelect('tokencode', {token:token, id:professor[0].id});
 
             //caso o token ja tenha sido utilizado
-            if(Object.values(oldTokens).length > 0) {
+            if(oldTokens.length > 0) {
                 return res.status(403).json({msg:'token invalido'});
             } else {
                 //token valido e pertence aquele professor
@@ -335,10 +336,7 @@ exports.ConfirmEmail = async (req, res) => {
 
 
 
-function genRandomCode(max, min) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-
+function genRandomCode(min = 0, max = 9999) {
+    const number = Math.floor(Math.random() * (max - min + 1)) + min;
+    return number.toString().padStart(4, '0');
 }
