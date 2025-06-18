@@ -2,9 +2,7 @@
 import {
     Question,
     Section,
-    CreateDossierPayload
-    // Não precisamos mais importar EvaluationMethodItem daqui para o adapter,
-    // pois ele será um tipo de entrada da UI.
+    CreateDossierPayload as ServiceCreateDossierPayload // Importar o tipo do serviço
 } from '../services/dossierServices'; // Ajuste o caminho conforme a localização dos seus tipos
 
 export interface ItemData {
@@ -24,48 +22,53 @@ export interface SectionData {
 export type EvaluationConcept = 'numerical' | 'letter';
 
 export interface EvaluationMethodItem {
-  id: string;
+  id: string; // ID para UI
   name: string;
   value: string;
 }
 
+// NÃO redefinimos CreateDossierPayload aqui.
+// A função adaptadora irá construir o tipo esperado pelo serviço.
+
 /**
  * Adapta os dados do estado da UI do Dossiê para o formato esperado pelo payload do backend.
- * @param dossierTitle O título do dossiê.
- * @param dossierDescription A descrição do dossiê.
- * @param evaluationConcept O conceito de avaliação ('numerical' ou 'letter').
- * @param sections Os dados das seções no formato da UI.
- * @param professorId O ID do professor.
- * @param customEvaluationMethods A lista de métodos de avaliação customizados (para conceito 'letter').
- * @returns O payload formatado para envio ao backend.
  */
 export const adaptDossierStateToPayload = (
     dossierTitle: string,
     dossierDescription: string,
-    evaluationConcept: EvaluationConcept,
+    evaluationConcept: EvaluationConcept, // 'numerical' ou 'letter'
     sections: SectionData[],
     professorId: number,
-    customEvaluationMethods: EvaluationMethodItem[] // Novo parâmetro
-): CreateDossierPayload => {
+    customEvaluationMethods: EvaluationMethodItem[] // Vem da UI
+): ServiceCreateDossierPayload => { // Retorna o tipo do SERVIÇO
 
     let evaluationMethodPayload: { name: string; value: string; }[];
 
     if (evaluationConcept === 'letter') {
-        // Usa os métodos customizados, removendo o 'id' que é apenas para a UI
-        evaluationMethodPayload = customEvaluationMethods.map(method => ({
-            name: method.name,
-            value: method.value,
-        }));
-        // Garante que não envie um array vazio se for 'letter' e nenhum método for definido (embora o modal deva ter validações)
-        if (evaluationMethodPayload.length === 0) {
-            // Poderia lançar um erro aqui ou usar um default, dependendo da regra de negócio.
-            // Por ora, para o backend, pode ser que um array vazio seja aceitável ou não.
-            // Vamos assumir que o modal impede isso. Caso contrário:
-            // evaluationMethodPayload = [{ name: "default", value: "default" }];
-            console.warn("Conceito 'letter' selecionado, mas nenhum método de avaliação customizado foi fornecido. O payload pode estar incompleto.");
+        if (customEvaluationMethods.length > 0) {
+            evaluationMethodPayload = customEvaluationMethods.map(method => ({
+                name: method.name,
+                value: method.value,
+            }));
+        } else {
+            // Se for 'letter' e não houver métodos, o backend espera um array.
+            // Poderíamos enviar um array vazio ou um default, dependendo da regra de negócio do backend.
+            // Para ser seguro, podemos enviar um default se nenhum for fornecido.
+            // Ou lançar um erro na UI antes de chegar aqui.
+            // Conforme a validação na page.tsx, este caso não deve ocorrer se houver métodos.
+            // Se a validação permitir array vazio, então: evaluationMethodPayload = [];
+            // Por ora, assumindo que a UI garante que customEvaluationMethods não é vazio para 'letter'.
+            // Se chegar aqui vazio, a validação na page.tsx falhou.
+            // Se o backend espera SEMPRE algo, mesmo que 'default', adicionaríamos aqui.
+            // Por segurança, vamos usar um placeholder se a validação da UI falhar em pegar.
+            console.warn("adaptDossierStateToPayload: 'letter' concept with no custom methods. Sending default placeholder.");
+            evaluationMethodPayload = [{ name: "Conceito Padrão", value: "P" }]; // Placeholder
         }
     } else { // 'numerical'
-        evaluationMethodPayload = [{ name: 'numerical', value: '0.0-10.0' }]; // Valor mais descritivo para numérico
+        // O backend espera um array para numerical também, ex: [{ name: 'numerical', value: '0.0-10.0' }]
+        // ou [{ name: 'numerical', value: '1' }] como no seu exemplo original.
+        // Vamos usar algo que indique o tipo.
+        evaluationMethodPayload = [{ name: evaluationConcept, value: '0.0-10.0' }]; // ou '1' se for o caso
     }
 
     const backendSections: Section[] = sections.map(sectionData => {
@@ -84,11 +87,11 @@ export const adaptDossierStateToPayload = (
         };
     });
 
-    const payload: CreateDossierPayload = {
+    const payload: ServiceCreateDossierPayload = {
         name: dossierTitle,
         costumUser_id: professorId,
         description: dossierDescription,
-        evaluation_method: evaluationMethodPayload,
+        evaluation_method: evaluationMethodPayload, // Agora está correto
         sections: backendSections,
     };
 
