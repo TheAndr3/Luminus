@@ -47,12 +47,12 @@ export default function GerenciarDossies() {
   const fetchDossies = async () => {
     try {
       setIsLoading(true);
-      const professorId = localStorage.getItem('professorId');
-      if (!professorId) {
+      const costumUserId = localStorage.getItem('professorId');
+      if (!costumUserId) {
         throw new Error('ID do professor não encontrado');
       }
       const start = (currentPage - 1) * dossiersPerPage;
-      const response = await listDossiers(Number(professorId), start, dossiersPerPage, searchTerm);
+      const response = await listDossiers(Number(costumUserId), start, dossiersPerPage, searchTerm);
       if (!response.data) {
         setDossies([]);
         return;
@@ -63,7 +63,7 @@ export default function GerenciarDossies() {
         name: dossie.name,
         description: dossie.description,
         evaluation_method: dossie.evaluation_method,
-        professor_id: dossie.costumUser_id,
+        costumUser_id: dossie.costumUser_id,
         selected: false
       }));
       setDossies(dossiesFormatados);

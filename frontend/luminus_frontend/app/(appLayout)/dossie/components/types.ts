@@ -3,7 +3,7 @@ export interface Dossie {
   name: string;
   description: string;
   evaluation_method: string;
-  professor_id: number;
+  costumUser_id: number;
   selected?: boolean;
 }
 

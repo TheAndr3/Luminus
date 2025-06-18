@@ -81,8 +81,8 @@ const DossierAppPage: React.FC = () => {
   const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
 
   useEffect(() => {
-    const professorId = localStorage.getItem('professorId');
-    if (professorId) {
+    const costumUserId = localStorage.getItem('professorId');
+    if (costumUserId) {
       setIsAuthenticated(true); // Id do professor encontrado, permite a renderização da página
     } else {
       router.push('/login'); // Não foi encontrado o id do professor, redireciona para o login
@@ -522,8 +522,8 @@ const DossierAppPage: React.FC = () => {
   // ==========================================================================================
   const handleSave = useCallback(async () => {
     try {
-      const professorId = localStorage.getItem('professorId');
-      if (!professorId) {
+      const costumUserId = localStorage.getItem('professorId');
+      if (!costumUserId) {
           alert("Sua sessão expirou. Por favor, faça o login novamente.");
           router.push('/login');
           return;
@@ -575,20 +575,20 @@ const DossierAppPage: React.FC = () => {
         dossierDescription,
         evaluationConcept,
         sectionsData,
-        parseInt(professorId)
+        parseInt(costumUserId)
       );
 
       if (dossierId) {
         // Atualizar dossiê existente
         await updateDossier(dossierId, {
           ...payload,
-          costumUser_id: parseInt(professorId)
+          costumUser_id: parseInt(costumUserId)
         });
       } else {
         // Criar novo dossiê
         await createDossier({
           ...payload,
-          costumUser_id: parseInt(professorId)
+          costumUser_id: parseInt(costumUserId)
         });
       }
 

@@ -29,7 +29,7 @@ export type EvaluationConcept = 'numerical' | 'letter';
  * @param dossierDescription A descrição do dossiê.
  * @param evaluationConcept O conceito de avaliação ('numerical' ou 'letter').
  * @param sections Os dados das seções no formato da UI.
- * @param professorId O ID do professor (necessário para o payload, assumindo que vem de outro lugar).
+ * @param costumUserId O ID do professor (necessário para o payload, assumindo que vem de outro lugar).
  * @returns O payload formatado para envio ao backend.
  */
 export const adaptDossierStateToPayload = (
@@ -37,7 +37,7 @@ export const adaptDossierStateToPayload = (
     dossierDescription: string,
     evaluationConcept: EvaluationConcept,
     sections: SectionData[],
-    professorId: number // Professor ID precisa ser fornecido, pois não está no estado local que você mostrou
+    costumUserId: number // Professor ID precisa ser fornecido, pois não está no estado local que você mostrou
 ): CreateDossierPayload => {
 
     // Mapeia o conceito de avaliação para o formato esperado pelo backend
@@ -70,7 +70,7 @@ export const adaptDossierStateToPayload = (
     // Cria o payload final para o backend
     const payload: CreateDossierPayload = {
         name: dossierTitle,
-        costumUser_id: professorId,
+        costumUser_id: costumUserId,
         description: dossierDescription,
         evaluation_method: evaluationMethod,
         sections: backendSections,
