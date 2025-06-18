@@ -121,7 +121,7 @@ async function pgDossieSelect(id) {
         return null;
     } else {
         var result = {
-            d: data.rows[0].dossierId,
+            id: data.rows[0].dossierId,
             costumUser_id: data.rows[0].professorId,
             name: data.rows[0].dossierName,
             description: data.rows[0].dossierDescription,
@@ -144,22 +144,21 @@ async function pgDossieSelect(id) {
         for (let i = 0; i < data.rows.length; i++) {
             if (!result.sections[data.rows[i].sectionId]) {
                 result.sections[data.rows[i].sectionId] = {
-                    
                     id: data.rows[i].sectionId,
                     name: data.rows[i].sectionName,
                     description: data.rows[i].sectionDescription,
                     weigth: data.rows[i].sectionWeigth,
-                    questions: []
+                    questions: {}
                 };
             } 
-            result.sections[data.rows[i].sectionId].questions.push({
+            result.sections[data.rows[i].sectionId].questions[data.rows[i].questionId] = {
                 id: data.rows[i].questionId,
                 name: data.rows[i].questionName
-            });
+            };
             
         }
         
-        // Retorna o objeto dossiê diretamente
+        // Retorna o objeto dossiê diretamente já no formato correto
         return result;
 
     }
@@ -196,16 +195,16 @@ async function pgDossieUpdate(data) {
 //coisa que eu preciso
 
 
-async function pgAppraisalSelect(id) {
-    const query = 'SELECT (e.id, e.student_id, e.costumUser, e.classroom_id, e.dossie_id, e.section_id, e.evaluation_method, e.question_id, e.appraisal_id, e.question_option, a.points, a.filling_date, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value) FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisal_id = a.id JOIN Question AS q ON e.question_id = q.id JOIN Section AS s ON q.section_id = s.id JOIN Dossier AS d ON s.dossier_id = d.id JOIN EvaluationMethod as em ON e.evaluation_method = em.id JOIN EvaluationType as et ON em.id = et.evaluation_method WHERE a.appraisal_id == $1';
+async function pgAppraisalSelect(id, idDossie, idClass) {
+    const query = 'SELECT (e.id, e.student_id, e.costumUser, e.classroom_id, e.dossie_id, e.section_id, e.evaluation_method, e.question_id, e.appraisal_id, e.question_option, a.points, a.filling_date, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value) FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisal_id = a.id JOIN Question AS q ON e.question_id = q.id JOIN Section AS s ON q.section_id = s.id JOIN Dossier AS d ON s.dossier_id = d.id JOIN EvaluationMethod as em ON e.evaluation_method = em.id JOIN EvaluationType as et ON em.id = et.evaluation_method WHERE a.appraisal_id == $1 AND d.id == $2 AND a.classroom_id == $3;';
 
     const client = await connect();
 
-    const response = await client.query(query, [id]);
+    const response = await client.query(query, [id, idDossie, idClass]);
     client.release();
-    const data = response.rows;
+    const data = await response.rows;
     var result = {
-        sections:{},
+        questions:{},
         appraisal_id:data[0].appraisal_id,
         points:data[0].points,
         filling_date:data[0].filling_date,
@@ -218,28 +217,25 @@ async function pgAppraisalSelect(id) {
         evaluation_method:data[0].evaluation_method,
         evaluation_method_name:data[0].evaluationMethodName
     };
+    
     for(let i=0; i < data.length; i++){
         var row = data[i];
-
-        if(!Object.keys(result.sections).find(row.section_id)) {
-            result.sections[row.section_id] = {
-                questions:[],
+        if(!Object.keys(result.questions).find(row.question_id)) {
+            result.questions[row.question_id] = {
+                question:row.question_id,
+                question_name:row.questionName,
                 section_id:row.section_id,
                 section_name:row.sectionName,
                 section_description:row.sectionDescription,
-                section_weigth:row.weigth
+                section_weigth:row.weigth,
+                question_option:row.question_option,
+                evaluation_type_name:row.evaluationTypeName,
+
             }
         }
-        result.sections[row.section_id].questions.push({
-            question:row.question_id,
-            question_name:row.questionName,
-            question_option:row.question_option,
-            evaluation_id:row.id,
-            evaluation_type_name:row.evaluationTypeName,
-            option: row.value
-        })
-        
     }
+
+    //retorna os dados da tabela de avaliação ja formatados
     return result;
 }
 

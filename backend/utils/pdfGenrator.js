@@ -85,7 +85,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         <p>${dossierData.description}</p>
   `;
     const sections = Object.values(dossierData.sections);
-    const methods = Object.values(dossierData.ev_method);
+    const methods = Object.values(dossierData.evaluation_method.evaluationType);
     //const question = Object.keys(dossierData.sections);
 
 
@@ -117,7 +117,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
             const indexAnswer = methods.findIndex(method => method.id == questionAppraisal.question_option);
             html += `<tr>`;
             html += `<div class="question-block">`;
-            html += `<td><p class="question">${question.description}</p></td>`;
+            html += `<td><p class="question">${question.name}</p></td>`;
             for(let i = 0; i < methods.length; i++){
                 html += `<td style="text-align: center;justify-itens:center;align-itens:center;font-size:28px;font-weight: bold;">${(indexAnswer == i ? 'x':'')}</td>`
             }
@@ -136,7 +136,8 @@ function dossierToHtml(dossierData, studentName, appraisal) {
 
 // Nova função para gerar o PDF
 exports.GeneratePdf = async(req, res) => {
-    const dossierId = req.params.id;
+    const classId = req.params.classId;
+    const dossierId = req.params.dossierId;
     const studentId = req.params.studentId; // Precisamos saber de qual aluno é o dossiê
 
     try {
@@ -156,138 +157,142 @@ exports.GeneratePdf = async(req, res) => {
 
         const page = await browser.newPage();
 
-        //mockup para testes
-        const dossierData = {
-            name: "Nome do Dossiê",
-            description: "Descrição do Dossiê",
-            sections: {
-                1:{
-                    id:1,
-                    name:'sessão 1',
-                    description:'descrição da sessão 1',
-                    weigth:50,
-                    questions:{
-                        1:{
-                            id:1,
-                            description:'pergunta 1',
-                        },
-                        2:{
-                            id:2,
-                            description:'pergunta 2',
-                        },
-                        3:{
-                            id:3,
-                            description:'pergunta 3',
-                        },
-                        4:{
-                            id:4,
-                            description:'pergunta 4',
-                        }
-                    }
-                },
-                2:{
-                    id:2,
-                    name:'sessão 2',
-                    description:'descrição da sessão 2',
-                    weigth:20,
-                    questions:{
-                        5:{
-                            id:5,
-                            description:'pergunta 5',
-                        },
-                        6:{
-                            id:6,
-                            description:'pergunta 6',
-                        },
-                        7:{
-                            id:7,
-                            description:'pergunta 7',
-                        }
-                    }
-                },
-                3:{
-                    id:3,
-                    name:'sessão 3',
-                    description:'descrição da sessão 3',
-                    weigth:30,
-                    questions:{
-                        8:{
-                            id:8,
-                            description:'pergunta 8',
-                        },
-                        9:{
-                            id:9,
-                            description:'pergunta 9',
-                        },
-                    }
-                }
-            },
-            ev_method:{
-                4:{
-                    id:4,
-                    name: 'F',
-                    value: 0
-                },
-                5:{
-                    id:5,
-                    name: 'C',
-                    value: 6
-                },
-                0:{
-                    id:0,
-                    name: 'B',
-                    value: 8
-                },
-                3:{
-                    id:3,
-                    name: 'A',
-                    value: 10
-                },
-                2:{
-                    id:2,
-                    name: 'D',
-                    value: 4
-                },
-                1:{
-                    id:1,
-                    name: 'E',
-                    value: 2
-                }
-            },
-        }
-        const appraisal = {
-            points: 9.75,
-            questions: {
-                1: {
-                    question_option: 0
-                },
-                2: {
-                    question_option: 1
-                },
-                3: {
-                    question_option: 2
-                },
-                4: {
-                    question_option: 3
-                },
+        const dossierData = await db.pgDossieSelect(dossierId);
+        const appraisal = await db.pgAppraisalSelect(studentId, dossierId, classId);
 
-                5: {
-                    question_option: 4
-                },
-                6: {
-                    question_option: 5
-                },
-                7: {
-                    question_option: 2
-                },
-                8: {
-                    question_option: 3
-                },
-                9: {
-                    question_option: 1
-                }
-            }
-        }
+
+        //mockup para testes
+        // const dossierData = {
+        //     name: "Nome do Dossiê",
+        //     description: "Descrição do Dossiê",
+        //     sections: {
+        //         1:{
+        //             id:1,
+        //             name:'sessão 1',
+        //             description:'descrição da sessão 1',
+        //             weigth:50,
+        //             questions:{
+        //                 1:{
+        //                     id:1,
+        //                     description:'pergunta 1',
+        //                 },
+        //                 2:{
+        //                     id:2,
+        //                     description:'pergunta 2',
+        //                 },
+        //                 3:{
+        //                     id:3,
+        //                     description:'pergunta 3',
+        //                 },
+        //                 4:{
+        //                     id:4,
+        //                     description:'pergunta 4',
+        //                 }
+        //             }
+        //         },
+        //         2:{
+        //             id:2,
+        //             name:'sessão 2',
+        //             description:'descrição da sessão 2',
+        //             weigth:20,
+        //             questions:{
+        //                 5:{
+        //                     id:5,
+        //                     description:'pergunta 5',
+        //                 },
+        //                 6:{
+        //                     id:6,
+        //                     description:'pergunta 6',
+        //                 },
+        //                 7:{
+        //                     id:7,
+        //                     description:'pergunta 7',
+        //                 }
+        //             }
+        //         },
+        //         3:{
+        //             id:3,
+        //             name:'sessão 3',
+        //             description:'descrição da sessão 3',
+        //             weigth:30,
+        //             questions:{
+        //                 8:{
+        //                     id:8,
+        //                     description:'pergunta 8',
+        //                 },
+        //                 9:{
+        //                     id:9,
+        //                     description:'pergunta 9',
+        //                 },
+        //             }
+        //         }
+        //     },
+        //     ev_method:{
+        //         4:{
+        //             id:4,
+        //             name: 'F',
+        //             value: 0
+        //         },
+        //         5:{
+        //             id:5,
+        //             name: 'C',
+        //             value: 6
+        //         },
+        //         0:{
+        //             id:0,
+        //             name: 'B',
+        //             value: 8
+        //         },
+        //         3:{
+        //             id:3,
+        //             name: 'A',
+        //             value: 10
+        //         },
+        //         2:{
+        //             id:2,
+        //             name: 'D',
+        //             value: 4
+        //         },
+        //         1:{
+        //             id:1,
+        //             name: 'E',
+        //             value: 2
+        //         }
+        //     },
+        // }
+        // const appraisal = {
+        //     points: 9.75,
+        //     questions: {
+        //         1: {
+        //             question_option: 0
+        //         },
+        //         2: {
+        //             question_option: 1
+        //         },
+        //         3: {
+        //             question_option: 2
+        //         },
+        //         4: {
+        //             question_option: 3
+        //         },
+
+        //         5: {
+        //             question_option: 4
+        //         },
+        //         6: {
+        //             question_option: 5
+        //         },
+        //         7: {
+        //             question_option: 2
+        //         },
+        //         8: {
+        //             question_option: 3
+        //         },
+        //         9: {
+        //             question_option: 1
+        //         }
+        //     }
+        // }
 
 
         const studentName = "Nome do Aluno Exemplo"; // Buscar nome do aluno do DB

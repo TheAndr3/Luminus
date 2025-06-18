@@ -9,7 +9,7 @@ routerAppraisal.get('/appraisal/:classid/list', appraisalController.List);
 routerAppraisal.get('/appraisal/:classid/:studentid', appraisalController.Get);
 
 //obter toda avaliação de um aluno
-routerAppraisal.get('/appraisal/:id', appraisalController.GetAppraisal);
+routerAppraisal.get('/appraisal/:classid/:dossierid/:id', appraisalController.GetAppraisal);
 
 //Criar novo avaliação
 routerAppraisal.post('/appraisal/:classid/create/:studentid', appraisalController.Create);
