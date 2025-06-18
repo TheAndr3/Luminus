@@ -52,9 +52,11 @@ exports.Get = async (req, res) => {
 
 exports.GetAppraisal = async (req, res) => {
   const id = req.params.id;
+  const class_id = req.params.classid;
+  const dossier_id = req.params.dossierid;
   
   try {
-    const studentAppraisal = await db.pgAppraisalSelect(id);
+    const studentAppraisal = await db.pgAppraisalSelect(id, dossier_id, class_id);
 
     return res.status(200).json({msg:"sucesso", data:studentAppraisal});
   } catch (error) {
