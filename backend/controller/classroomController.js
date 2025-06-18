@@ -9,12 +9,19 @@ exports.List = async (req, res) => {
 
   console.log('Listando turmas para o professor:', professor_id);
 
-  try {
-    start = parseInt(req.query.start) == NaN ? 0 : parseInt(req.query.start)
-    size = parseInt(req.query.size) ==  NaN ? 6 : parseInt(req.query.size);
-    console.log('Parâmetros de paginação - início:', start, 'tamanho:', size);
-  } catch (error) {
-    console.log('Erro ao analisar parâmetros de paginação:', error);
+  //para debug
+  if ('start' in req.query || 'size' in req.query) {
+    console.log('Parâmetros de paginação fornecidos')
+  }
+  else {
+    console.log('Nenhum parâmetro de paginação fornecido')
+  }
+
+  if ('start' in req.query) {
+    start = parseInt(req.query.start);
+  }
+  if ('size' in req.query) {
+    size = parseInt(req.query.size);
   }
 
   try{
@@ -41,7 +48,7 @@ exports.Get = async (req, res) => {
   const id = req.params.id;
 
   try{
-    const classData = await db.pgSelect('classroom',{id:id});
+    const classData = await db.pgSelect('classroom',{costumUser_id:id});
     return res.status(200).json({msg:'sucesso', data:classData});
   } catch(err) {
     return res.status(400).json({msg:'id invalido'});
@@ -52,7 +59,7 @@ exports.Create = async (req, res) => {
 
   try {
     console.log(req.body.professor_id)
-    const professor = await db.pgSelect('professor', {id: req.body.professor_id})
+    const professor = await db.pgSelect('costumUser', {id: req.body.professor_id})
     console.log(professor)
     
     if (Object.values(professor).length > 0) {
@@ -78,7 +85,7 @@ exports.Create = async (req, res) => {
 
 exports.Update = async (req, res) => {
   try {
-    const professor = await db.pgSelect('professor', { id: req.body.professor_id });
+    const professor = await db.pgSelect('costumUser', { id: req.body.professor_id });
 
     if (Object.values(professor).length > 0) {
       const payload = {};

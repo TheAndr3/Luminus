@@ -99,15 +99,23 @@ exports.Create = async (req, res) => {
 
 exports.List = async(req, res) => {
   const costumUser_id = req.params.professorid;
-  let start;
-  let size;
+  let start = 0;
+  let size = 6;
   let search = req.query.search || '';
 
-  try{
-    start = (parseInt(req.query.start)==NaN) ? 0:parseInt(req.query.start);
-    size = (parseInt(req.query.size)==NaN) ? 6:parseInt(req.query.size);
-  } catch (erro) {
-    console.log(erro);
+  //para debug
+  if ('start' in req.query || 'size' in req.query) {
+    console.log('Parâmetros de paginação fornecidos')
+  }
+  else {
+    console.log('Nenhum parâmetro de paginação fornecido')
+  }
+
+  if ('start' in req.query) {
+    start = parseInt(req.query.start);
+  }
+  if ('size' in req.query) {
+    size = parseInt(req.query.size);
   }
   
   try {

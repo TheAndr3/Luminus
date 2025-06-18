@@ -4,16 +4,23 @@ const db = require('../bd');
 //Controller de studen
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
-    let start;
-    let size;
+    let start = 0;
+    let size = 6;
 
-    try{
-      start = parseInt(req.query.start) == NaN ? 0 : parseInt(req.query.start)
-      size = parseInt(req.query.size) ==  NaN ? 6 : parseInt(req.query.size);
-      
-    } catch (error) {
-      console.log('Erro ao analisar parâmetros de paginação:', error);
-    }
+    //para debug
+  if ('start' in req.query || 'size' in req.query) {
+    console.log('Parâmetros de paginação fornecidos')
+  }
+  else {
+    console.log('Nenhum parâmetro de paginação fornecido')
+  }
+
+  if ('start' in req.query) {
+    start = parseInt(req.query.start);
+  }
+  if ('size' in req.query) {
+    size = parseInt(req.query.size);
+  }
     try {
         const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
@@ -141,7 +148,7 @@ exports.Update = async (req, res) => {
       
       const appraisalPayload = {
         student_id: req.params.id,
-        professor_id: req.body.professor_id
+        costumUser_id: req.body.professor_id
       };
 
       await db.pgDelete('Appraisal', appraisalPayload);
@@ -181,7 +188,7 @@ exports.ImportCsv = async (req, res) => {
     if (!turma || turma.length === 0) {
       return res.status(404).json({ msg: 'Turma não encontrada.' });
     }
-    professorId = turma[0].professor_id;
+    professorId = turma[0].costumUser_id;
     if (!professorId) {
       return res.status(500).json({ msg: 'professor_id não encontrado para a turma.' });
     }
