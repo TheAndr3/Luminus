@@ -106,7 +106,7 @@ async function pgUpdate(table, data, keys) {
 async function pgDossieSelect(id) {
     // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
     const query = `
-    SELECT (d.id as dossierId, d.costumUser_id as professorId, d.name as dossierName, d.description as dossierDescription, d.evaluation_method as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName) FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossier_id JOIN Question as q ON s.id = q.section_id WHERE d.id = $1;
+    SELECT d.id as dossierId, d.costumUser_id as professorId, d.name as dossierName, d.description as dossierDescription, d.evaluation_method as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossier_id JOIN Question as q ON s.id = q.section_id WHERE d.id = $1;
     `;
 
     const client = await connect();
@@ -196,7 +196,7 @@ async function pgDossieUpdate(data) {
 
 
 async function pgAppraisalSelect(id, idDossie, idClass) {
-    const query = 'SELECT (e.id, e.student_id, e.costumUser, e.classroom_id, e.dossie_id, e.section_id, e.evaluation_method, e.question_id, e.appraisal_id, e.question_option, a.points, a.filling_date, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value) FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisal_id = a.id JOIN Question AS q ON e.question_id = q.id JOIN Section AS s ON q.section_id = s.id JOIN Dossier AS d ON s.dossier_id = d.id JOIN EvaluationMethod as em ON e.evaluation_method = em.id JOIN EvaluationType as et ON em.id = et.evaluation_method WHERE a.student_id == $1 AND d.id == $2 AND a.classroom_id == $3;';
+    const query = 'SELECT e.id, e.student_id, e.costumUser, e.classroom_id, e.dossie_id, e.section_id, e.evaluation_method, e.question_id, e.appraisal_id, e.question_option, a.points, a.filling_date, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisal_id = a.id JOIN Question AS q ON e.question_id = q.id JOIN Section AS s ON q.section_id = s.id JOIN Dossier AS d ON s.dossier_id = d.id JOIN EvaluationMethod as em ON e.evaluation_method = em.id JOIN EvaluationType as et ON em.id = et.evaluation_method WHERE a.student_id == $1 AND d.id == $2 AND a.classroom_id == $3;';
 
     const client = await connect();
 
