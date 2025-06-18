@@ -1,10 +1,9 @@
 // src/components/dossier/EvaluationSettingsModal.tsx
 import React, { useState, useEffect } from 'react';
 import { EvaluationMethodItem } from '../../types/dossier';
-import EditableField from './EditableField'; // Reutilizando o componente
-import styles from './EvaluationSettingsModal.module.css'; // Criaremos este CSS
+import EditableField from './EditableField';
+import localStyles from './EvaluationSettingsModal.module.css'; // Renomeado de 'styles' para 'localStyles'
 
-// Ícone simples de Lixeira (SVG inline)
 const TrashIcon = ({ className }: { className?: string }) => (
   <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <path d="M6 19C6 20.1046 6.89543 21 8 21H16C17.1046 21 18 20.1046 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" />
@@ -16,13 +15,13 @@ interface EvaluationSettingsModalProps {
   onClose: () => void;
   initialMethods: EvaluationMethodItem[];
   onSave: (methods: EvaluationMethodItem[]) => void;
-  // Prop para passar classes CSS do page.tsx (DossierCRUDPage.module.css)
   modalOverlayClassName?: string;
   modalContentClassName?: string;
   modalHeaderClassName?: string;
   modalTitleClassName?: string;
   modalCloseButtonClassName?: string;
   modalBodyClassName?: string;
+  modalErrorClassName?: string; // NOVA PROP ADICIONADA
   modalListClassName?: string;
   modalListItemClassName?: string;
   modalListItemNameClassName?: string;
@@ -41,34 +40,33 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
   onClose,
   initialMethods,
   onSave,
-  modalOverlayClassName = styles.modalOverlay,
-  modalContentClassName = styles.modalContent,
-  modalHeaderClassName = styles.modalHeader,
-  modalTitleClassName = styles.modalTitle,
-  modalCloseButtonClassName = styles.modalCloseButton,
-  modalBodyClassName = styles.modalBody,
-  modalListClassName = styles.modalList,
-  modalListItemClassName = styles.modalListItem,
-  modalListItemNameClassName = styles.modalListItemName,
-  modalListItemValueClassName = styles.modalListItemValue,
-  modalListItemDeleteBtnClassName = styles.modalListItemDeleteBtn,
-  modalActionsClassName = styles.modalActions,
-  modalAddButtonClassName = styles.modalAddButton,
-  modalSaveButtonClassName = styles.modalSaveButton,
-  modalCancelButtonClassName = styles.modalCancelButton,
-  editableFieldForModalInputClassName = styles.editableFieldInput,
-  editableFieldForModalTextDisplayClassName = styles.editableFieldTextDisplay,
+  modalOverlayClassName = localStyles.modalOverlay,
+  modalContentClassName = localStyles.modalContent,
+  modalHeaderClassName = localStyles.modalHeader,
+  modalTitleClassName = localStyles.modalTitle,
+  modalCloseButtonClassName = localStyles.modalCloseButton,
+  modalBodyClassName = localStyles.modalBody,
+  modalErrorClassName = localStyles.modalError, // USA A NOVA PROP, COM PADRÃO localStyles
+  modalListClassName = localStyles.modalList,
+  modalListItemClassName = localStyles.modalListItem,
+  modalListItemNameClassName = localStyles.modalListItemName,
+  modalListItemValueClassName = localStyles.modalListItemValue,
+  modalListItemDeleteBtnClassName = localStyles.modalListItemDeleteBtn,
+  modalActionsClassName = localStyles.modalActions,
+  modalAddButtonClassName = localStyles.modalAddButton,
+  modalSaveButtonClassName = localStyles.modalSaveButton,
+  modalCancelButtonClassName = localStyles.modalCancelButton,
+  editableFieldForModalInputClassName = localStyles.editableFieldInput,
+  editableFieldForModalTextDisplayClassName = localStyles.editableFieldTextDisplay,
 }) => {
   const [methods, setMethods] = useState<EvaluationMethodItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Quando o modal abre ou initialMethods muda, reseta o estado interno
-    // Clona para evitar mutação direta e garante IDs únicos se vierem sem
     setMethods(
       initialMethods.map((m, index) => ({
         ...m,
-        id: m.id || `method-${Date.now()}-${index}`, // Garante ID para React keys
+        id: m.id || `method-${Date.now()}-${index}`,
       }))
     );
     setError(null);
@@ -118,11 +116,6 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
         setError(`O valor do conceito não pode ser vazio (item ID: ${method.id.slice(-4)}).`);
         return false;
       }
-      // Validação de valor numérico (opcional, mas bom ter)
-      // if (isNaN(parseFloat(method.value))) {
-      //   setError(`O valor do conceito '${method.name}' deve ser um número.`);
-      //   return false;
-      // }
     }
     const names = methods.map(m => m.name.trim().toLowerCase());
     if (new Set(names).size !== names.length) {
@@ -134,7 +127,7 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
 
   const handleSaveMethods = () => {
     if (validateMethods()) {
-      onSave(methods); // Envia os métodos com IDs da UI
+      onSave(methods);
       onClose();
     }
   };
@@ -149,7 +142,7 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
           </button>
         </div>
         <div className={modalBodyClassName}>
-          {error && <p className={styles.modalError}>{error}</p>}
+          {error && <p className={modalErrorClassName}>{error}</p>} {/* USA A PROP AQUI */}
           <ul className={modalListClassName}>
             {methods.map(method => (
               <li key={method.id} className={modalListItemClassName}>
@@ -162,7 +155,7 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
                     }
                     placeholder="Nome (Ex: A, Excelente)"
                     inputClassName={editableFieldForModalInputClassName}
-                    textDisplayClassName={editableFieldForModalTextDisplayClassName} // Não usado pois isEditing é true
+                    textDisplayClassName={editableFieldForModalTextDisplayClassName}
                     ariaLabel={`Nome do conceito ${method.id}`}
                   />
                 </div>
@@ -175,7 +168,7 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
                     }
                     placeholder="Valor (Ex: 10, Bom)"
                     inputClassName={editableFieldForModalInputClassName}
-                    textDisplayClassName={editableFieldForModalTextDisplayClassName} // Não usado
+                    textDisplayClassName={editableFieldForModalTextDisplayClassName}
                     ariaLabel={`Valor do conceito ${method.id}`}
                   />
                 </div>
