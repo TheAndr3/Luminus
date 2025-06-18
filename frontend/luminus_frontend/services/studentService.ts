@@ -46,6 +46,18 @@ export const GetStudent = async (studentID: number, classroomID: number): Promis
 export const ListStudents = async (classroomID: number): Promise<StudentListResponse[]> => {
     try {
         const response = await api.get(`/student/${classroomID}/list`);
+        // CORRECTED LINE: Access the 'data' property within response.data
+        return response.data.data; // O PROBLEMA ESTAVA AQUI, PORQUE A RESPOSTA VINDA DO BACKEND ERA DIFERENTE... ERA SÓ COLOCAR O response.data.data 
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao listar estudantes';
+        throw new Error(message);
+    }
+}
+
+/*
+export const ListStudents = async (classroomID: number): Promise<StudentListResponse[]> => {
+    try {
+        const response = await api.get(`/student/${classroomID}/list`);
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao listar estudantes';
@@ -53,7 +65,7 @@ export const ListStudents = async (classroomID: number): Promise<StudentListResp
         
     }
 }
-
+*/
 // Add this to your Luminus/frontend/luminus_frontend/services/studentService.ts file
 
 export const DeleteStudent = async (classroomId: number, studentId: number, professorId: number): Promise<void> => {

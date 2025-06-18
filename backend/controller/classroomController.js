@@ -45,6 +45,29 @@ exports.List = async (req, res) => {
 }
 
 exports.Get = async (req, res) => {
+  const classroomId = req.params.id; // Rename parameter for clarity, it's the classroom's ID
+
+  try{
+    // Corrected line: Search by the classroom's actual ID
+    const classData = await db.pgSelect('classroom',{id: classroomId});
+
+    // Ensure that if no classroom is found, an appropriate message is returned.
+    // The frontend expects `response.data.data` to be an array.
+    if (classData.length > 0) {
+      return res.status(200).json({msg:'sucesso', data:classData});
+    } else {
+      return res.status(404).json({msg:'Turma não encontrada.'}); // Specific error for not found
+    }
+  } catch(err) {
+    console.error("Erro ao buscar turma por ID:", err);
+    // Generic error for unexpected issues during the request
+    return res.status(500).json({msg:'Falha interna ao buscar turma.'});
+  }
+}
+
+
+/*
+exports.Get = async (req, res) => {
   const id = req.params.id;
 
   try{
@@ -54,7 +77,7 @@ exports.Get = async (req, res) => {
     return res.status(400).json({msg:'id invalido'});
   }
 }
-
+*/
 exports.Create = async (req, res) => {
 
   try {
