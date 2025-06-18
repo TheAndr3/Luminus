@@ -53,3 +53,15 @@ export const ListStudents = async (classroomID: number): Promise<StudentListResp
         
     }
 }
+
+// Add this to your Luminus/frontend/luminus_frontend/services/studentService.ts file
+
+export const DeleteStudent = async (classroomId: number, studentId: number, professorId: number): Promise<void> => {
+    try {
+        // The backend expects professor_id in the request body for deletion.
+        await api.delete(`/student/${classroomId}/delete/${studentId}`, { data: { professor_id: professorId } });
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao remover estudante';
+        throw new Error(message);
+    }
+}
