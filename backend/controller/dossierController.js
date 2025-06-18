@@ -1,19 +1,59 @@
 const db = require('../bd');
 
 exports.Create = async (req, res) => {
-
   try{
-    const {name, professor_id, description, evaluation_method, sections} = req.body;
+    const {name, costumUser_id, description, evaluation_method, sections} = req.body;
+
+    if (!name || !costumUser_id || !description || !evaluation_method || !sections) {
+      console.error('Campos obrigatórios faltando:', { 
+        hasName: !!name, 
+        hasCostumUser_id: !!costumUser_id, 
+        hasDescription: !!description, 
+        hasEvaluation_method: !!evaluation_method, 
+        hasSections: !!sections 
+      });
+      return res.status(400).json({msg:'Campos obrigatórios faltando'});
+    }
+
     var payload = {
+      name:evaluation_method[0].name,
+      costumUser_id:costumUser_id,
+    };
+
+    //insere o metodo de avaliação no banco de dados
+    await db.pgInsert('EvaluationMethod', payload);
+    const evMethod = await db.pgSelect('EvaluationMethod', {costumUser_id:costumUser_id, name:evaluation_method[0].name});
+
+    if (!evMethod || evMethod.length === 0) {
+      return res.status(400).json({msg:'Erro ao criar método de avaliação'});
+    }
+
+    //insere os campos de avaliação
+    for (let i = 0; i < evaluation_method.length; i++) {
+      var type = evaluation_method[i];
+      payload = {
+        name:type.name,
+        value:type.value,
+        evaluation_method:evMethod[0].id,
+        costumUser_id:costumUser_id
+      }
+      await db.pgInsert('EvaluationType', payload);
+    } 
+
+    payload = {
       name:name, 
-      professor_id:professor_id,
+      costumUser_id:costumUser_id,
       description:description,
-      evaluation_method:evaluation_method,
+      evaluation_method:evMethod[0].id,
     }
     
     //insere no banco de dados o novo dossie
     const dossie = await db.pgInsert('dossier', payload);
-    const lastDossie = await db.pgSelect('dossier', {professor_id:professor_id, name:name});
+    const lastDossie = await db.pgSelect('dossier', {costumUser_id:costumUser_id, name:name});
+
+    if (!lastDossie || lastDossie.length === 0) {
+      return res.status(400).json({msg:'Erro ao criar dossiê'});
+    }
 
     //pra cada sessao existente insere no banco de dados as sessoes pertencentes a esse dossie
     for (let i = 0; i < sections.length; i++) {
@@ -21,7 +61,7 @@ exports.Create = async (req, res) => {
       const questions = section.questions;
       payload = {
         dossier_id:lastDossie[0].id,
-        professor_id:professor_id,
+        costumUser_id:costumUser_id,
         name:section.name,
         description:section.description,
         weigth:section.weigth
@@ -29,45 +69,63 @@ exports.Create = async (req, res) => {
 
       //atualiza o objeto sessao para conter agora tambem seu Id
       await db.pgInsert('Section', payload);
-      var lastSection = await db.pgSelect('Section', {professor_id:professor_id, name:section.name, dossier_id:lastDossie[0].id});
+      var lastSection = await db.pgSelect('Section', {costumUser_id:costumUser_id, name:section.name, dossier_id:lastDossie[0].id});
+
+      if (!lastSection || lastSection.length === 0) {
+        return res.status(400).json({msg:'Erro ao criar seção'});
+      }
 
       //para cada questao dentro desta sessao, cria uma nova entrada no banco de dados
       for (let j = 0; j < questions.length; j++) {
         var question = questions[j];
         payload = {
-          professor_id:professor_id,
+          costumUser_id:costumUser_id,
           dossier_id:lastDossie[0].id,
           section_id:lastSection[0].id,
-          description:question.description
+          evaluation_method:evMethod[0].id,
+          name: question.description
         }
-        
         await db.pgInsert('question', payload);
       }
     }
+
     return res.status(201).json({msg:'dossie criado com sucesso', data:dossie});
   } catch (err) {
-    console.log(err);
+    console.error('Erro ao criar dossiê:', err);
+    console.error('Error stack:', err.stack);
     return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
   }
 }
 
 exports.List = async(req, res) => {
-  const professor_id = req.params.professorid;
-  let start = 0;
-  let size = 6;
+  const costumUser_id = req.params.professorid;
+  let start;
+  let size;
+  let search = req.query.search || '';
 
   try{
-    start = parseInt(req.query.start) || 0;
-    size = parseInt(req.query.size) || 6;
+    start = (parseInt(req.query.start)==NaN) ? 0:parseInt(req.query.start);
+    size = (parseInt(req.query.size)==NaN) ? 6:parseInt(req.query.size);
   } catch (erro) {
     console.log(erro);
   }
   
   try {
-    const payload = {professor_id:professor_id};
+    const payload = {costumUser_id:costumUser_id};
     const result = await db.pgSelect('dossier', payload);
 
-    return res.status(200).json({msg:'sucesso', data:result, ammount:result.length});
+    // Filtra os resultados com base no termo de busca
+    const filteredResults = result.filter(dossier => 
+      dossier.name.toLowerCase().includes(search.toLowerCase()) ||
+      dossier.description.toLowerCase().includes(search.toLowerCase()) ||
+      String(dossier.evaluation_method).toLowerCase().includes(search.toLowerCase())
+    );
+
+    return res.status(200).json({
+      msg:'sucesso', 
+      data:filteredResults.slice(start, start+size), 
+      ammount:filteredResults.length
+    });
   } catch (error) {
     console.log(error);
     return res.status(400).json({msg:'falha ao atender sua solicitacao'});
@@ -90,22 +148,67 @@ exports.Get = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-  const id = req.params.id;
-  const body = req.body;
+    const id = req.params.id;
+    const body = req.body;
+    try {
+        const haveAssociationInAnyClass = await db.pgSelect('appraisal', {
+            dossier_id: id,
+            costumUser_id: body.costumUser_id
+        });
+        
+        if (haveAssociationInAnyClass.length > 0) {
+            return res.status(403).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'});
+        } else {
+            const { name, costumUser_id, description, evaluation_method, sections } = body;
 
-  try {
-    const haveAssociationInAnyClass = await db.pgSelect('appraisal', {dossier_id:id})
+            if (!id || !name || !costumUser_id || !description || !evaluation_method || !sections) {
+                return res.status(400).json({msg:'Campos obrigatórios faltando'});
+            }
 
-    if (haveAssociationInAnyClass.length > 0) {
-      return res.status(400).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'})
-    } else {
-      const response = await db.pgDossieUpdate(body)
-      return res.status(202).json({msg:'sucess', data:response});
+            // Primeiro atualiza o método de avaliação
+            const evMethodPayload = {
+                name: evaluation_method[0].name,
+                costumUser_id: costumUser_id
+            };
+
+            await db.pgInsert('EvaluationMethod', evMethodPayload);
+            const evMethod = await db.pgSelect('EvaluationMethod', {
+                costumUser_id: costumUser_id,
+                name: evaluation_method[0].name
+            });
+
+            if (!evMethod || evMethod.length === 0) {
+                return res.status(400).json({msg:'Erro ao atualizar método de avaliação'});
+            }
+
+            // Atualiza os tipos de avaliação
+            for (let i = 0; i < evaluation_method.length; i++) {
+                const type = evaluation_method[i];
+                const typePayload = {
+                    name: type.name,
+                    value: type.value,
+                    evaluation_method: evMethod[0].id,
+                    costumUser_id: costumUser_id
+                };
+                await db.pgInsert('EvaluationType', typePayload);
+            }
+
+            // Atualiza o dossiê
+            const result = await db.pgDossieUpdate({
+                id,
+                costumUser_id,
+                name,
+                description,
+                evaluation_method: evMethod[0].id,
+                sections
+            });
+
+            return res.status(200).json(result);
+        }
+    } catch (err) {
+        console.error('Erro ao atualizar dossiê:', err);
+        return res.status(400).json({msg:'erro no envio das informações'});
     }
-  } catch (error) {
-    console.log(error)
-    return res.status(400).json({msg:'erro no envio das informações'})
-  }
 }
 
 exports.Delete = async (req, res) => {
@@ -117,12 +220,6 @@ exports.Delete = async (req, res) => {
     if (!dossier || dossier.length === 0) {
       return res.status(404).json({msg: "Dossiê não encontrado"});
     }
-
-    // Deleta as questões relacionadas
-    await db.pgDelete('question', {dossier_id: id});
-
-    // Deleta as seções relacionadas
-    await db.pgDelete('section', {dossier_id: id});
 
     // Deleta o dossiê
     const resp = await db.pgDelete('dossier', {id: id});

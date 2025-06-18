@@ -1,7 +1,7 @@
 import { api } from './api';
 
 // LISTAR estudantes de uma turma
-export const ListStudentsByClass = async (classId: string) => {
+export const ListStudentsByClass = async (classId: number) => {
   try {
     const response = await api.get(`/appraisal/list/${classId}`);
     return response.data;
@@ -12,7 +12,7 @@ export const ListStudentsByClass = async (classId: string) => {
 }
 
 // PEGAR avaliação de um estudante numa turma
-export const GetStudentAppraisal = async (classId: string, studentId: string) => {
+export const GetStudentAppraisal = async (classId: number, studentId: number) => {
   try {
     const response = await api.get(`/appraisal/get/${classId}/${studentId}`);
     return response.data;
@@ -23,7 +23,7 @@ export const GetStudentAppraisal = async (classId: string, studentId: string) =>
 }
 
 // PEGAR avaliação por ID
-export const GetAppraisalById = async (id: string) => {
+export const GetAppraisalById = async (id: number) => {
   try {
     const response = await api.get(`/appraisal/appraisal/${id}`);
     return response.data;
@@ -35,8 +35,8 @@ export const GetAppraisalById = async (id: string) => {
 
 // CRIAR avaliação para estudante e turma
 export const CreateAppraisal = async (
-  classId: string,
-  studentId: string,
+  classId: number,
+  studentId: number,
   professorId: number
 ) => {
   try {
@@ -51,7 +51,7 @@ export const CreateAppraisal = async (
 }
 
 // ATUALIZAR avaliação
-export const UpdateAppraisal = async (id: string, data: any) => {
+export const UpdateAppraisal = async (id: number, data: any) => {
   try {
     const response = await api.put(`/appraisal/update/${id}`, data);
     return response.data;
@@ -62,7 +62,7 @@ export const UpdateAppraisal = async (id: string, data: any) => {
 }
 
 // DELETAR avaliação
-export const DeleteAppraisal = async (id: string) => {
+export const DeleteAppraisal = async (id: number) => {
   try {
     const response = await api.delete(`/appraisal/delete/${id}`);
     return response.status === 204;

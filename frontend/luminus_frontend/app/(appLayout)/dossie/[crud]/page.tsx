@@ -16,7 +16,7 @@ import ActionSidebar from '../../../../components/dossier/ActionSidebar';
 import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload } from '../../../../types/dossier';
 // IMPORTANTE PARA O BACKEND: Esta importação (createDossier) é um exemplo de como um serviço de API pode ser chamado.
 // O backend definirá a assinatura e o comportamento real desta função.
-import { createDossier, updateDossier, getDossier, CreateDossierPayload, Dossier } from '../../../../services/dossierServices';
+import { createDossier, updateDossier, getDossierById, CreateDossierPayload, Dossier, UpdateDossierPayload } from '../../../../services/dossierServices';
 
 // Importação de estilos CSS Modules para este componente
 import styles from './DossierCRUDPage.module.css';
@@ -36,12 +36,12 @@ interface DossierSection {
 // Seção vazia padrão para garantir que sempre haja pelo menos uma seção
 const DEFAULT_SECTION: SectionData = {
   id: `section-${Date.now()}`,
-  title: "Nova Seção",
+  title: "",
   description: "",
   weight: "100",
   items: [{
     id: `item-${Date.now()}`,
-    description: "Novo item",
+    description: "",
     value: "N/A"
   }]
 };
@@ -73,11 +73,23 @@ const DossierAppPage: React.FC = () => {
 
   // Estado para garantir que o código dependente do cliente só rode após a montagem no cliente
   const [isClient, setIsClient] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const params = useParams();
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const mode = searchParams.get('mode');
   const dossierId = params?.crud !== 'create' ? parseInt(params.crud as string) : null;
+
+  useEffect(() => {
+    const professorId = localStorage.getItem('professorId');
+    if (professorId) {
+      setIsAuthenticated(true); // Id do professor encontrado, permite a renderização da página
+    } else {
+      router.push('/login'); // Não foi encontrado o id do professor, redireciona para o login
+    }
+    
+    setIsClient(true);
+  }, [router]);
 
   // Carrega os dados do dossiê se estiver em modo de edição
   useEffect(() => {
@@ -90,7 +102,7 @@ const DossierAppPage: React.FC = () => {
       }
 
       try {
-        const response = await getDossier(dossierId);
+        const response = await getDossierById(dossierId);
         const dossier = response.data;
         
         setDossierTitle(dossier.name);
@@ -139,20 +151,14 @@ const DossierAppPage: React.FC = () => {
   // Função para limpar o timeout de blur e sinalizar para ignorar o próximo evento de blur
   const clearBlurTimeoutAndSignalIgnore = useCallback(() => {
     if (blurTimeoutRef.current) {
-      // MOCK: Log de depuração. Pode ser removido em produção.
-      console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore CHAMADO - Limpando timeout', 'color: orange; font-weight:bold;');
       clearTimeout(blurTimeoutRef.current);
       blurTimeoutRef.current = null;
     }
-    // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: clearBlurTimeoutAndSignalIgnore - Definindo ignoreNextBlurRef como true', 'color: orange; font-weight:bold;');
     ignoreNextBlurRef.current = true;
   }, []);
 
   // Manipulador de foco para campos editáveis (título, descrição, itens)
   const handleFieldFocus = useCallback((element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => {
-    // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: handleFieldFocus CHAMADO', 'color: blue;', { elementId: element.id, context, isEditingMode });
     if (!isEditingMode) return; // Só processa o foco se estiver em modo de edição
 
     if (blurTimeoutRef.current) {
@@ -184,18 +190,12 @@ const DossierAppPage: React.FC = () => {
 
   // Manipulador de "blur" (perda de foco) para campos editáveis
   const handleFieldBlur = useCallback(() => {
-    // MOCK: Log de depuração. Pode ser removido em produção.
-    console.log('%cDEBUG: handleFieldBlur CHAMADO para elemento:', 'color: red;', focusedElementRef.current?.id);
 
     blurTimeoutRef.current = setTimeout(() => {
       if (ignoreNextBlurRef.current) {
-        // MOCK: Log de depuração. Pode ser removido em produção.
-        console.log('%cDEBUG: handleFieldBlur TIMEOUT - IGNORANDO BLUR devido a ignoreNextBlurRef=true', 'color: red; font-weight: bold;');
         ignoreNextBlurRef.current = false;
         return;
       }
-      // MOCK: Log de depuração. Pode ser removido em produção.
-      console.log('%cDEBUG: handleFieldBlur TIMEOUT EXECUTADO - Limpando foco e seleções', 'color: red; font-weight: bold;');
       focusedElementRef.current = null;
       setSelectedItemIdGlobal(null);
       setSelectedSectionIdForStyling(null);
@@ -369,7 +369,7 @@ const DossierAppPage: React.FC = () => {
     // Em um sistema real, o backend pode gerar e retornar IDs após a criação, ou o frontend pode usar UUIDs mais robustos
     const newSectionId = `section-${Date.now()}`;
     const newItemId = `item-${newSectionId}-init-${Math.random().toString(36).substr(2, 5)}`;
-    const newSectionData: SectionData = { id: newSectionId, title: `Nova Seção (${newSectionId.slice(-4)})`, description: ``, weight: '0', items: [{ id: newItemId, description: 'Novo item', value: 'N/A' }]};
+    const newSectionData: SectionData = { id: newSectionId, title: ``, description: ``, weight: '0', items: [{ id: newItemId, description: '', value: 'N/A' }]};
 
     let newSectionsList = [...sectionsData];
     let targetSectionIndex = -1;
@@ -521,17 +521,21 @@ const DossierAppPage: React.FC = () => {
   // É aqui que a lógica para enviar os dados do dossiê para a API do backend será implementada
   // ==========================================================================================
   const handleSave = useCallback(async () => {
-    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-    ignoreNextBlurRef.current = false;
-
     try {
+      const professorId = localStorage.getItem('professorId');
+      if (!professorId) {
+          alert("Sua sessão expirou. Por favor, faça o login novamente.");
+          router.push('/login');
+          return;
+      }
+
       // Validações
       if (!dossierTitle.trim()) {
         throw new Error("O título do Dossiê não pode ser vazio.");
       }
 
       if (!evaluationConcept) {
-        throw new Error("Um Conceito de Avaliação deve ser selecionado.");
+        throw new Error("O método de avaliação não pode ser vazio.");
       }
 
       const hasSectionWithQuestion = sectionsData.some(sec => Array.isArray(sec.items) && sec.items.length > 0);
@@ -566,42 +570,33 @@ const DossierAppPage: React.FC = () => {
       }
 
       // Prepara o payload
-      const payload: CreateDossierPayload = adaptDossierStateToPayload(
+      const payload = adaptDossierStateToPayload(
         dossierTitle,
         dossierDescription,
         evaluationConcept,
         sectionsData,
-        1 // TODO: Substituir pelo ID real do professor da sessão
+        parseInt(professorId)
       );
 
-      // Salva ou atualiza o dossiê
       if (dossierId) {
-        await updateDossier(dossierId, payload);
-        alert("Dossiê atualizado com sucesso!");
-        router.push('/dossie');
+        // Atualizar dossiê existente
+        await updateDossier(dossierId, {
+          ...payload,
+          costumUser_id: parseInt(professorId)
+        });
       } else {
-        try {
-          await createDossier(payload);
-          alert("Dossiê criado com sucesso!");
-          router.push('/dossie');
-        } catch (error: any) {
-          // Se o erro for 400, ainda consideramos como sucesso pois o dossiê foi criado
-          if (error.response?.status === 400) {
-            alert("Dossiê criado com sucesso!");
-            router.push('/dossie');
-            return;
-          }
-          throw error;
-        }
+        // Criar novo dossiê
+        await createDossier({
+          ...payload,
+          costumUser_id: parseInt(professorId)
+        });
       }
+
+      router.push('/dossie');
     } catch (error: any) {
-      // Só mostra o erro se não for um 400 (que já foi tratado acima)
-      if (error.response?.status !== 400) {
-        alert(`Falha ao salvar dossiê: ${error.response?.data?.msg || error.message}`);
-      }
+      setError(error.message || 'Falha ao salvar dossiê');
     }
   }, [dossierTitle, dossierDescription, evaluationConcept, sectionsData, dossierId, router]);
-
 
   // --- Lógica de UI derivada de estados (useMemo) ---
   // Determina se o botão de deletar item deve estar habilitado
@@ -645,6 +640,11 @@ const DossierAppPage: React.FC = () => {
 
 
   // --- Renderização do Componente ---
+  if (!isClient || !isAuthenticated) {
+    return <div>Carregando e verificando autenticação...</div>;
+  }
+
+
   if (isLoading) {
     return <div>Carregando...</div>;
   }
