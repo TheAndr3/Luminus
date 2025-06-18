@@ -61,7 +61,7 @@ export default function VizualizationClass() {
       try {
         setIsLoading(true);
         // Pegar o ID do professor do localStorage (definido durante o login)
-        const professorId = localStorage.getItem('professorId');
+        const professorId = localStorage.getItem('costumUserId');
         console.log('Professor ID from localStorage:', professorId);
         
         if (!professorId) {
@@ -130,7 +130,7 @@ export default function VizualizationClass() {
     try {
       setIsLoading(true);
       
-      const professorId = localStorage.getItem('professorId'); // Pega o ID do professor do localStorage
+      const professorId = localStorage.getItem('costumUserId'); // Pega o ID do professor do localStorage
       if (!professorId) {
         throw new Error('ID do professor não autenticado.');
       }

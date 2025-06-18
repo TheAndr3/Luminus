@@ -101,6 +101,9 @@ export default function DialogPage() {
                 formData.append('season', inputPer);
                 formData.append('institution', inputInst || '');
 
+                console.log("DADOS ENVIADOS (MANUAL):", formData);
+
+
                 const response = await CreateClassroomWithCSV(formData);
                 if (response.msg) {
                     setOpen(false);
@@ -121,6 +124,7 @@ export default function DialogPage() {
                     season: inputPer,
                     institution: inputInst || ''
                 }
+                console.log("DADOS ENVIADOS (CSV):", newClassData);
 
                 const response = await CreateClassroom(newClassData);
                 if (response.msg) {

@@ -18,7 +18,7 @@ exports.List = async (req, res) => {
   }
 
   try{
-    const classData = await db.pgSelect('Classroom', {costumUser_id:professor_id});
+    const classData = await db.pgSelect('classroom', {costumUser_id:professor_id});
     console.log('Dados brutos das turmas:', classData);
     
     const endIndex = start + size;
@@ -52,7 +52,7 @@ exports.Create = async (req, res) => {
 
   try {
     console.log(req.body.professor_id)
-    const professor = await db.pgSelect('professor', {id: req.body.professor_id})
+    const professor = await db.pgSelect('costumuser', {id: req.body.professor_id})
     console.log(professor)
     
     if (Object.values(professor).length > 0) {
@@ -78,7 +78,7 @@ exports.Create = async (req, res) => {
 
 exports.Update = async (req, res) => {
   try {
-    const professor = await db.pgSelect('professor', { id: req.body.professor_id });
+    const professor = await db.pgSelect('costumuser', { id: req.body.professor_id });
 
     if (Object.values(professor).length > 0) {
       const payload = {};
@@ -132,7 +132,7 @@ exports.AssociateDossier = async (req, res) => {
     }
 
     // Primeiro, verifica se a turma existe
-    const classroom = await db.pgSelect('Classroom', { id: classId });
+    const classroom = await db.pgSelect('classroom', { id: classId });
     if (!classroom || classroom.length === 0) {
       return res.status(404).json({ msg: 'Turma não encontrada' });
     }
@@ -143,7 +143,7 @@ exports.AssociateDossier = async (req, res) => {
       dossier_professor_id: dossier[0].costumUser_id
     };
 
-    await db.pgUpdate('Classroom', updateData, { id: classId });
+    await db.pgUpdate('classroom', updateData, { id: classId });
 
     return res.status(200).json({ msg: 'Dossiê associado com sucesso' });
   } catch (error) {

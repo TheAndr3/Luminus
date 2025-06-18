@@ -186,7 +186,7 @@ export default function LoginPage() {
 
       // Salvar o ID do professor no localStorage
       if (response.id) {
-        localStorage.setItem('professorId', response.id.toString());
+        localStorage.setItem('costumUserId', response.id.toString());
       }
 
       // Redirecionar para a página inicial
