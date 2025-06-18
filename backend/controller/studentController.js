@@ -148,7 +148,7 @@ exports.Update = async (req, res) => {
       
       const appraisalPayload = {
         student_id: req.params.id,
-        professor_id: req.body.professor_id
+        costumUser_id: req.body.professor_id
       };
 
       await db.pgDelete('Appraisal', appraisalPayload);
@@ -188,7 +188,7 @@ exports.ImportCsv = async (req, res) => {
     if (!turma || turma.length === 0) {
       return res.status(404).json({ msg: 'Turma não encontrada.' });
     }
-    professorId = turma[0].professor_id;
+    professorId = turma[0].costumUser_id;
     if (!professorId) {
       return res.status(500).json({ msg: 'professor_id não encontrado para a turma.' });
     }
