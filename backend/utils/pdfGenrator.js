@@ -18,11 +18,13 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
            .tabela-vertical {
-      width: 80%;
+      width: 100%;
       /* A propriedade MAIS IMPORTANTE: une as bordas das células em uma só */
       border-collapse: collapse; 
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       background-color: #ffffff;
+      justify-itens:center;
+      align-itens:center;
     }
 
     /* Estilo para TODAS as células (cabeçalho <th> e dados <td>) */
@@ -30,6 +32,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
     .tabela-vertical td {
       padding: 12px 15px; /* Espaçamento interno para o conteúdo não colar na borda */
       text-align: left;
+      
       
       /* AQUI ESTÁ A MÁGICA: Adiciona uma borda à esquerda de CADA célula */
       border-left: 1px solid #cccccc;
@@ -46,6 +49,8 @@ function dossierToHtml(dossierData, studentName, appraisal) {
       background-color: #007bff;
       color: #ffffff;
       font-weight: bold;
+      text-align:center;
+      
     }
 
     /* Estilo para as linhas do corpo da tabela */
@@ -58,7 +63,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
       background-color: #f9f9f9;
     }
           h1, h2 { color: #333; }
-          h1 { text-align: center; }
+          h1 { text-align: center; justify-itens: center; align-itens:center;}
           .section { margin-top: 40px; border-top: 2px solid #ccc; padding-top: 15px; padding-bottom: 5px;
            /* Sintaxe antiga e mais suportada por renderizadores de PDF */
             page-break-after: avoid; 
@@ -76,7 +81,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
       </head>
       <body>
         <h1>Dossiê Avaliativo de ${studentName}</h1>
-        <h2>${dossierData.name}    Pontuação total: ${appraisal.points}</h2>
+        <h2 style="text-align: center; justify-itens: center; align-itens:center;">${dossierData.name} </h2><h2 style="text-align: center; justify-itens: center; align-itens:center;"> Pontuação total: ${appraisal.points}</h2>
         <p>${dossierData.description}</p>
   `;
     const sections = Object.values(dossierData.sections);
@@ -114,7 +119,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
             html += `<div class="question-block">`;
             html += `<td><p class="question">${question.description}</p></td>`;
             for(let i = 0; i < methods.length; i++){
-                html += `<td>${(indexAnswer == i ? 'x':'')}</td>`
+                html += `<td style="text-align: center;justify-itens:center;align-itens:center;font-size:28px;font-weight: bold;">${(indexAnswer == i ? 'x':'')}</td>`
             }
             html += `</div>`;
             html += `</tr>`;
@@ -218,35 +223,35 @@ exports.GeneratePdf = async(req, res) => {
                 }
             },
             ev_method:{
-                0:{
-                    id:0,
-                    name: 'A',
-                    value: 10
-                },
-                1:{
-                    id:1,
-                    name: 'B',
-                    value: 8
-                },
-                2:{
-                    id:2,
-                    name: 'C',
-                    value: 6
-                },
-                3:{
-                    id:3,
-                    name: 'D',
-                    value: 4
-                },
                 4:{
                     id:4,
-                    name: 'E',
-                    value: 2
+                    name: 'F',
+                    value: 0
                 },
                 5:{
                     id:5,
-                    name: 'F',
-                    value: 0
+                    name: 'C',
+                    value: 6
+                },
+                0:{
+                    id:0,
+                    name: 'B',
+                    value: 8
+                },
+                3:{
+                    id:3,
+                    name: 'A',
+                    value: 10
+                },
+                2:{
+                    id:2,
+                    name: 'D',
+                    value: 4
+                },
+                1:{
+                    id:1,
+                    name: 'E',
+                    value: 2
                 }
             },
         }
