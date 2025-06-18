@@ -1,6 +1,9 @@
 const express = require('express');
 const routerStudent = express.Router();
 const studenController = require('../controller/studentController.js');
+const pdf = require('../utils/pdfGenrator.js')
+
+routerStudent.get('/pdf/:id/:studentId', pdf.GeneratePdf);
 
 //Listar studantes de uma turma
 routerStudent.get('/student/:classid/list', studenController.List);

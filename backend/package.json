@@ -29,7 +29,8 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",
     "nodemailer": "^6.10.1",
-    "pg": "^8.15.6"
+    "pg": "^8.15.6",
+    "puppeteer": "^24.10.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
