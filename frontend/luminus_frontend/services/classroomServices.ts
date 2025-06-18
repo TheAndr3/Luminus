@@ -29,7 +29,7 @@ export interface GetClassroomResponse {
 export interface ListClassroomResponse {
     msg: string;
     data: GetClassroomResponse[];
-    ammount: number;
+    ammount: number;  // Total de turmas
 }
 
 export interface DeleteClassroomResponse {
@@ -89,9 +89,9 @@ export const GetClassroom = async (id: number): Promise<GetClassroomResponse> =>
 }
 
 // listar as turmas
-export const ListClassroom = async (professorID: number): Promise<ListClassroomResponse> => {
+export const ListClassroom = async (professorID: number, start = 0, size = 6, search = ''): Promise<ListClassroomResponse> => {
     try {
-        const response = await api.get(`/classroom/list/${professorID}`);
+        const response = await api.get(`/classroom/list/${professorID}?start=${start}&size=${size}&search=${encodeURIComponent(search)}`);
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao listar turmas';

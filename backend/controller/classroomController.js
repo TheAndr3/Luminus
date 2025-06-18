@@ -25,8 +25,18 @@ exports.List = async (req, res) => {
   }
 
   try{
-    const classData = await db.pgSelect('Classroom', {costumUser_id:professor_id});
+    let classData = await db.pgSelect('Classroom', {costumUser_id:professor_id});
     console.log('Dados brutos das turmas:', classData);
+    
+    // Filtro de busca no servidor
+    if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim() !== '') {
+      const search = req.query.search.trim().toLowerCase();
+      classData = classData.filter(turma =>
+        (turma.name && turma.name.toLowerCase().includes(search)) ||
+        (turma.season && turma.season.toLowerCase().includes(search)) ||
+        (turma.description && turma.description.toLowerCase().includes(search))
+      );
+    }
     
     const endIndex = start + size;
     const slicedData = classData.slice(start, endIndex);
