@@ -48,7 +48,7 @@ exports.Get = async (req, res) => {
   const id = req.params.id;
 
   try{
-    const classData = await db.pgSelect('classroom',{id:id});
+    const classData = await db.pgSelect('classroom',{costumUser_id:id});
     return res.status(200).json({msg:'sucesso', data:classData});
   } catch(err) {
     return res.status(400).json({msg:'id invalido'});
@@ -59,7 +59,7 @@ exports.Create = async (req, res) => {
 
   try {
     console.log(req.body.professor_id)
-    const professor = await db.pgSelect('professor', {id: req.body.professor_id})
+    const professor = await db.pgSelect('costumUser', {id: req.body.professor_id})
     console.log(professor)
     
     if (Object.values(professor).length > 0) {
@@ -85,7 +85,7 @@ exports.Create = async (req, res) => {
 
 exports.Update = async (req, res) => {
   try {
-    const professor = await db.pgSelect('professor', { id: req.body.professor_id });
+    const professor = await db.pgSelect('costumUser', { id: req.body.professor_id });
 
     if (Object.values(professor).length > 0) {
       const payload = {};
