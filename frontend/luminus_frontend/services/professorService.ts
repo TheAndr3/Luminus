@@ -3,7 +3,7 @@ import { encryptWithPublicKey } from '../utils/crypto';
 
 // LOGIN
 interface LoginPayLoad {
-  email_professor: string,
+  customUserEmail: string,
   password: string
 }
 
@@ -15,7 +15,7 @@ interface LoginResponseData {
 
 // CADASTRO
 export interface CreatePayLoad {
-  email_professor: string,
+  customUserEmail: string,
   password: string,
   name: string
 }
