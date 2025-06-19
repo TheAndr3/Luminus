@@ -17,13 +17,13 @@ exports.GetPublicKey = async (req, res) => {
 }
 
 exports.Login = async (req, res) => {
-    const { email_professor, password } = req.body;
+    const { customUserEmail, password } = req.body;
 
     try {
         // Desencriptar a senha recebida
         const decryptedPassword = await decryptPassword(password);
         // Buscar o professor pelo email usando pgSelect
-        const rows = await db.pgSelect('costumUser', { email: email_professor });
+        const rows = await db.pgSelect('CustomUser', { email: customUserEmail });
 
 
         if (rows.length == 0) {
@@ -61,10 +61,10 @@ exports.Login = async (req, res) => {
 };
 
 exports.Create = async (req, res) => {
-    const { email_professor, password, name } = req.body;
+    const { customUserEmail, password, name } = req.body;
     // Verificar se todos os campos foram preenchidos
-    if (!email_professor || !password || !name) {
-        return res.status(400).json({ msg: "Os campos precisam estar preenchidos corretamente" });
+    if (!customUserEmail || !password || !name) {
+        return res.status(403).json({ msg: "Os campos precisam estar preenchidos corretamente" });
     }
     try {
         // Desencriptar a senha
@@ -74,20 +74,19 @@ exports.Create = async (req, res) => {
         const hashedPassword = await hashPassword(decryptedPassword);
 
         // Verificar se o email já está cadastrado
-        const verification = await db.pgSelect('costumUser', { email: email_professor });
+        const verification = await db.pgSelect('CustomUser', { email: customUserEmail });
 
         //Cadastrar professor no banco de dados
-        if (verification.length === 0) {
-            await db.pgInsert('costumUser', {
-                email: email_professor, 
+        if (verification.length === 0 || !verification[0]) {
+            const customUserId = await db.pgInsert('CustomUser', {
+                email: customUserEmail, 
                 password: hashedPassword, 
                 name: name,
                 role:"unknow"
             });
-            const professor = await db.pgSelect('costumUser', { email: email_professor });
             const data = new Date();
             var code = genRandomCode(0, 9999);
-            const old_code = await db.pgSelect('verifyCode', {costumUser_id:professor[0].id, data_sol:data.toISOString()});
+            const old_code = await db.pgSelect('verifyCode', {customUserId:customUserId, requestDate:data.toISOString()});
 
             const used_codes = old_code.map((iten) => {
                 iten.code
@@ -97,19 +96,19 @@ exports.Create = async (req, res) => {
                 code = genRandomCode(0, 9999);
             }
 
-            emailSender.sendEmail(professor[0].email, code);
-            const payload = {userId: professor[0].id, email:professor[0].email, code:code, data:data}
+            emailSender.sendEmail(customUserEmail, code);
+            const payload = {userId: customUserId, email:customUserEmail, code:code, data:data.toISOString()}
 
             //geracao do token a ser utilizado
             const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
 
             try {
 
-                const resp = await db.pgInsert('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data.toISOString(), status:0});
+                const resp = await db.pgInsert('verifyCode', {code:code, customUserId:customUserId, requestDate:data.toISOString(), status:0});
                 return res.status(200).json({msg:'email enviado', token:token});
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
-                return res.status(400).json({msg:"falha ao enviar codigo"})
+                return res.status(500).json({msg:"falha ao enviar codigo"})
             }
 
         } else {
@@ -127,7 +126,7 @@ exports.Create = async (req, res) => {
 exports.GetProfile = async (req, res) => {
     const id = req.params.id;
     try{
-        const data = await db.pgSelect('costumUser', {id:id})
+        const data = await db.pgSelect('CustomUser', {id:id})
 
     res.status(200).json({msg:'sucesso', data:data});
     } catch (err) {
@@ -147,29 +146,29 @@ exports.RecoverPassword = async (req, res) => {
     const {code, email} = req.body;
 
     try{
-        const data = new Date();
-        const professor = await db.pgSelect('costumUser', {email:email});
-        const bd_code = await db.pgSelect('verifyCode', {code:code, costumUser_id:professor[0].id, data_sol:data});
+        const data = new Date().toISOString();
+        const professor = await db.pgSelect('CustomUser', {email:email});
+        const bd_code = await db.pgSelect('VerifyCode', {code:code, customUserId:professor[0].id, requestDate:data});
 
         if(bd_code[0].status == 0) {
             bd_code[0].status = 1;
 
-            const payload = {userId: professor[0].id, email:professor[0].email, code:code, data_sol:data}
+            const payload = {userId: professor[0].id, email:professor[0].email, code:code, requestDate:data}
 
             //geracao do token a ser utilizado
             const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
             
             //atualiza que o codigo ja foi utilizado
-            await db.pgUpdate('verifyCode', {status:bd_code.status}, {costumUser_id:professor[0].id, code:code, data_sol:data});
-            await db.pgInsert('tokencode', {token:token, costumUser_id:professor[0].id, verifyStatus:0});
+            await db.pgUpdate('VerifyCode', {status:bd_code.status}, {customUserId:professor[0].id, code:code, requestDate:data});
+            await db.pgInsert('TokenCode', {token:token, customUserId:professor[0].id, verifyStatus:0});
 
             return res.status(200).json({msg:'sucesso', pb_k: PUBLIC_KEY, token:token});
         } else {
-            return res.status(400).json({msg:'codigo ja utilizado'});
+            return res.status(403).json({msg:'codigo ja utilizado'});
         }
     } catch (err) {
         console.log('erro: ', err);
-        return res.status(400).json({msg:'nao foi possivel atender sua solicitacao'});
+        return res.status(500).json({msg:'nao foi possivel atender sua solicitacao'});
     }
 }
 
@@ -183,14 +182,14 @@ exports.SendEmail = async (req, res) => {
     
     try {
         // CORREÇÃO: Adicionado 'await' e corrigido o parâmetro do email
-        const professor = await db.pgSelect('costumUser', {email: req.params.id});
+        const professor = await db.pgSelect('CustomUser', {email: req.params.id});
         
         if(professor && professor.length > 0) { // Adicionada verificação se o professor foi encontrado
             const data = new Date();
             var code = genRandomCode(0, 9999);
             
             // CORREÇÃO: Usando 'costumUser_id' como no restante do código
-            const old_code = await db.pgSelect('verifyCode', {costumUser_id: professor[0].id, data_sol: data.toISOString()});
+            const old_code = await db.pgSelect('verifyCode', {customUserId: professor[0].id, requestDate: data.toISOString()});
 
             const used_codes = old_code.map((item) => {
                 return item.code;
@@ -203,13 +202,12 @@ exports.SendEmail = async (req, res) => {
             emailSender.sendEmail(professor[0].email, code);
 
             try {
-                // CORREÇÃO: Corrigido 'data_sol:data.toISOString' para 'data_sol:data.toISOString()' e 'id' para 'costumUser_id'
-                const resp = await db.pgInsert('verifyCode', {code: code, costumUser_id: professor[0].id, data_sol: data.toISOString(), status: 0});
+                const resp = await db.pgInsert('VerifyCode', {code: code, customUserId: professor[0].id, requestDate: data.toISOString(), status: 0});
                 return res.status(200).json({msg:'email enviado'});
 
             } catch(err) {
                 console.log('erro ao inserir no banco de dados: ', err);
-                return res.status(400).json({msg:'erro no banco de dados, nao foi possivel atender a sua solicitacao'});
+                return res.status(500).json({msg:'erro no banco de dados, nao foi possivel atender a sua solicitacao'});
             }
             
         } else {
@@ -231,26 +229,25 @@ exports.NewPassword = async (req, res) => {
         const decryptedPassword = await decryptPassword(newPass);
         //fazer hash de senha
         const hashedPassword = await hashPassword(decryptedPassword);
-        const professor = await db.pgSelect('costumUser', {email:email});
+        const professor = await db.pgSelect('CustomUser', {email:email});
 
         //verifica se o token passado eh valido
         try{
             const result = jwt.verify(token, process.env.TOKEN_KEY, (err, decode) => {
                 if(err) {
-                    console.log('deu ruim: ', err);
+                    console.log('falha ao decodificar token: ', err);
                     throw err;
                 } else {
                     console.log(decode);
                     return decode;
                 }
-            })
-            const data = new Date();
+            });
 
-            const oldTokens = await db.pgSelect('tokencode', {token:token, costumUser_id:professor[0].id});
+            const oldTokens = await db.pgSelect('TokenCode', {token:token, customUserId:professor[0].id});
 
             //caso o token ja tenha sido utilizado
             if(oldTokens[0].verifyStatus == 1) {
-                return res.status(403).json({msg:'token invalido 1'});
+                return res.status(403).json({msg:'token ja utilizado'});
             } else {
                 //token valido e pertence aquele professor
                 if (result.userId == professor[0].id && result.email == email) {
@@ -259,21 +256,21 @@ exports.NewPassword = async (req, res) => {
                     }
 
                     //insere na tabela o token ja utilizado
-                    await db.pgUpdate('tokencode', dataToDb, {token:token});
-                    const resp = await db.pgUpdate('costumUser', {password:hashedPassword}, {id:professor[0].id});
+                    await db.pgUpdate('TokenCode', dataToDb, {token:token});
+                    const resp = await db.pgUpdate('CustomUser', {password:hashedPassword}, {id:professor[0].id});
                     return res.status(201).json({msg:'password trocado com sucesso', data:resp})
                 } else {
-                    return res.status(403).json({msg:'token invalido 2'});
+                    return res.status(403).json({msg:'token não pertence a este usuario'});
                 }
             }
             
         } catch (err) {
-            return res.status(403).json({msg:'token invalido 3'});
+            return res.status(403).json({msg:'token invalido, falha ao decodificar'});
         }
 
     } catch (err) {
         console.log('erro: ', err);
-        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+        return res.status(500).json({msg:'não foi possivel atender a sua solicitacao'});
     }
 }
 
@@ -282,28 +279,28 @@ exports.ConfirmEmail = async (req, res) => {
     console.log(email)
     console.log(code)
     try {
-        const professor = await db.pgSelect('costumUser', {email:email});
-        if (professor.length == 0) {
-            return res.status(404).json({msg:'email nao encontrado'});
+        const professor = await db.pgSelect('CustomUser', {email:email});
+        if (professor.length == 0 || !professor[0]) {
+            return res.status(404).json({msg:'conta não encontrada'});
         }
 
         // Verifica o token primeiro
         try {
             const decoded = jwt.verify(token, process.env.TOKEN_KEY);
             if (decoded.email !== email) {
-                return res.status(403).json({msg:'token invalido'});
+                return res.status(403).json({msg:'token invalido, token não pertence a este usuario'});
             }
         } catch (err) {
             console.log('Token verification error:', err);
-            return res.status(403).json({msg:'token invalido'});
+            return res.status(403).json({msg:'token invalido, falha ao decodificar token'});
         }
 
         // Busca o código de verificação
         const data = new Date();
-        const bd_code = await db.pgSelect('verifyCode', {
+        const bd_code = await db.pgSelect('VerifyCode', {
             code: code, 
-            costumUser_id: professor[0].id, 
-            data_sol: data.toISOString()
+            customUserId: professor[0].id, 
+            requestDate: data.toISOString()
         });
 
         if (!bd_code || bd_code.length === 0) {
@@ -312,17 +309,17 @@ exports.ConfirmEmail = async (req, res) => {
 
         if(bd_code[0].status == 0) {
             // Marca o código como utilizado
-            await db.pgUpdate('verifyCode', 
+            await db.pgUpdate('VerifyCode', 
                 {status: 1}, 
                 {
-                    costumUser_id: professor[0].id, 
+                    customUserId: professor[0].id, 
                     code: code, 
-                    data_sol: data.toISOString()
+                    requestDate: data.toISOString()
                 }
             );
 
             // Atualiza o role do usuário para professor
-            await db.pgUpdate('costumUser', 
+            await db.pgUpdate('CustomUser', 
                 {role: "professor"}, 
                 {id: professor[0].id}
             );
@@ -333,11 +330,9 @@ exports.ConfirmEmail = async (req, res) => {
         }
     } catch (err) {
         console.log('erro: ', err);
-        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+        return res.status(500).json({msg:'nao foi possivel atender a sua solicitacao'});
     }
 }
-
-
 
 function genRandomCode(min = 0, max = 9999) {
     const number = Math.floor(Math.random() * (max - min + 1)) + min;

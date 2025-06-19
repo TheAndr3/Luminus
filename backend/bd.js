@@ -45,25 +45,24 @@ async function pgSelect(table, data) {
 
 }
 
-async function pgSelectStudentsInClassroom(classroom_id) {
-    const query = `
-        SELECT cs.student_id, s.name, s.id AS matricula
-        FROM ClassroomStudent cs
-        JOIN student s ON cs.student_id = s.id
-        WHERE cs.classroom_id = $1
-    `;
-    const client = await connect();
-    const res = await client.query(query, [classroom_id]);
-    client.release();
-    return res.rows;
-}
-
 async function pgInsert(table, data) {
 
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeHolder = keys.map((_,i) => `$${i+1}`).join(', ');
-    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES(${placeHolder}) RETURNING ${keys.join(', ')};`;
+    var whatIsReturned = '';
+
+
+    if (table == 'classroomStudent' || table == 'classroomstudent' || table == 'ClassroomStudent' || table == 'Classroomstudent') {
+        whatIsReturned = "classroomId, studentId, customUserId";
+    } else if (table == 'verifyCode' || table == 'Verifycode' || table == 'VerifyCode') {
+        whatIsReturned = "code, status";
+    } else if (table == 'Tokencode' || table == 'tokencode' || table == 'TOKENCODE' || table == 'TokenCode'){
+        whatIsReturned = "token, verifyStatus";
+    } else {
+        whatIsReturned = 'id';
+    }
+    const query = `INSERT INTO ${table} (${keys.join(', ')}) VALUES(${placeHolder}) RETURNING ${whatIsReturned};`;
 
 
     const client = await connect();
@@ -102,11 +101,23 @@ async function pgUpdate(table, data, keys) {
 
 }
 
+async function pgSelectStudentsInClassroom(classroom_id) {
+    const query = `
+        SELECT cs.studentId, s.name, s.id AS matricula
+        FROM ClassroomStudent cs
+        JOIN student s ON cs.studentId = s.id
+        WHERE cs.classroomId = $1
+    `;
+    const client = await connect();
+    const res = await client.query(query, [classroom_id]);
+    client.release();
+    return res.rows;
+}
 
 async function pgDossieSelect(id) {
     // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
     const query = `
-    SELECT d.id as dossierId, d.costumUser_id as professorId, d.name as dossierName, d.description as dossierDescription, d.evaluation_method as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossier_id JOIN Question as q ON s.id = q.section_id WHERE d.id = $1;
+    SELECT d.id as dossierId, d.customUserId, d.name as dossierName, d.description as dossierDescription, d.evaluationMethod as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossierId JOIN Question as q ON s.id = q.sectionId WHERE d.id = $1;
     `;
 
     const client = await connect();
@@ -122,10 +133,10 @@ async function pgDossieSelect(id) {
     } else {
         var result = {
             id: data.rows[0].dossierId,
-            costumUser_id: data.rows[0].professorId,
+            customUserId: data.rows[0].customUserId,
             name: data.rows[0].dossierName,
             description: data.rows[0].dossierDescription,
-            evaluation_method: {
+            evaluationMethod: {
                 id: data.rows[0].dossierEvaluationMethod,
                 name: method[0].name,
                 evaluationType: {}
@@ -134,7 +145,7 @@ async function pgDossieSelect(id) {
         };
 
         for (let i = 0;i < methodType.length; i++){
-            result.evaluation_method.evaluationType[methodType[i].id] = {
+            result.evaluationMethod.evaluationType[methodType[i].id] = {
                 id: methodType[i].id,
                 name: methodType[i].name,
                 value: methodType[i].value
@@ -167,36 +178,70 @@ async function pgDossieSelect(id) {
 async function pgDossieUpdate(data) {
 
     try {
-        await pgDelete('Section',{dossie_id:data.id});
+        const evaluationMethod = data.evaluationMethod;
+        await pgDelete('EvaluationMethod', {id:evaluationMethod.id});
+        const payloadEvaluationMethod = {
+            customUserId: data.customUserId,
+            name: evaluationMethod.name,
+        }
+        const evmid = await pgInsert('EvaluationMethod', payloadEvaluationMethod);
 
+        
+        for (let i = 0; i < evaluationMethod.length; i++) {
+            const evaluationType = evaluationMethod[i];
+            const payloadEvaluationType = {
+                evaluationMethodId: evmid.rows[0].id,
+                customUserId: data.customUserId,
+                name: evaluationType.name,
+                value: evaluationType.value
+            }
+            await pgInsert('evaluationMethod', payloadEvaluationType);
+        }
+
+        await pgDelete('Section',{dossierId:data.id});
         var sections = data.sections;
 
         for(let i = 0; i < sections.length; i++){
             var section = sections[i];
-            await pgInsert('section', section);
+            const payloadSection = {
+                customUserId: data.customUserId,
+                dossierId: data.id,
+                name: section.name,
+                description: section.description,
+                weigth: section.weigth
+            };
+            
+            const secid = await pgInsert('section', payloadSection);
             
             for (let j = 0; j < section.questions.length; j++) {
                 var question = section.questions[j];
-                await pgInsert('question', question)
+
+                const payloadQuestion = {
+                    customUserId: data.customUserId,
+                    sectionId: secid.rows[0].id,
+                    dossierId: data.id,
+                    evaluationMethodId: evmid.rows[0].id,
+                    name: question.name
+                };
+                await pgInsert('question', payloadQuestion);
             }
         }
-        const payload = {
+        
+
+        const payloadDossier = {
             name: data.name,
             description: data.description,
-            evaluation_method: data.evaluation_method
+            evaluationMethodId: evmid.rows[0].id
         };
-        const data = pgUpdate('dossier',payload, {id:data.id})
+        const data = pgUpdate('dossier',payloadDossier, {id:data.id})
     } catch (error) {
         throw error;
     }
     
 }
 
-//coisa que eu preciso
-
-
 async function pgAppraisalSelect(id, idDossie, idClass) {
-    const query = 'SELECT e.id, e.student_id, e.costumUser, e.classroom_id, e.dossie_id, e.section_id, e.evaluation_method, e.question_id, e.appraisal_id, e.question_option, a.points, a.filling_date, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisal_id = a.id JOIN Question AS q ON e.question_id = q.id JOIN Section AS s ON q.section_id = s.id JOIN Dossier AS d ON s.dossier_id = d.id JOIN EvaluationMethod as em ON e.evaluation_method = em.id JOIN EvaluationType as et ON em.id = et.evaluation_method WHERE a.student_id == $1 AND d.id == $2 AND a.classroom_id == $3;';
+    const query = 'SELECT e.id, e.studentId, e.customUserId, e.classroomId, e.dossierId, e.sectionId, e.evaluationMethodId, e.questionId, e.appraisalId, e.questionOption, a.points, a.fillingDate, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisalId = a.id JOIN Question AS q ON e.questionId = q.id JOIN Section AS s ON q.sectionId = s.id JOIN Dossier AS d ON s.dossierId = d.id JOIN EvaluationMethod as em ON e.evaluationMethodId = em.id JOIN EvaluationType as et ON em.id = et.evaluationMethodId WHERE a.studentId == $1 AND d.id == $2 AND a.classroomId == $3;';
 
     const client = await connect();
 
@@ -205,31 +250,31 @@ async function pgAppraisalSelect(id, idDossie, idClass) {
     const data = await response.rows;
     var result = {
         questions:{},
-        appraisal_id:data[0].appraisal_id,
+        appraisalId:data[0].appraisalId,
         points:data[0].points,
-        filling_date:data[0].filling_date,
-        student_id:data[0].student_id,
-        costumUser_id:data[0].costumUser,
-        classroom_id:data[0].classroom_id,
-        dossie_id:data[0].dossie_id,
-        dossie_name:data[0].dossierName,
-        dossie_description:data[0].dossierDescription,
-        evaluation_method:data[0].evaluation_method,
-        evaluation_method_name:data[0].evaluationMethodName
+        fillingDate:data[0].fillingDate,
+        studentId:data[0].studentId,
+        costumUserId:data[0].costumUserId,
+        classroomId:data[0].classroomId,
+        dossierId:data[0].dossierId,
+        dossieName:data[0].dossierName,
+        dossieDescription:data[0].dossierDescription,
+        evaluationMethodId:data[0].evaluationMethodId,
+        evaluationMethodName:data[0].evaluationMethodName
     };
     
     for(let i=0; i < data.length; i++){
         var row = data[i];
-        if(!Object.keys(result.questions).find(row.question_id)) {
-            result.questions[row.question_id] = {
-                question:row.question_id,
-                question_name:row.questionName,
-                section_id:row.section_id,
-                section_name:row.sectionName,
-                section_description:row.sectionDescription,
-                section_weigth:row.weigth,
-                question_option:row.question_option,
-                evaluation_type_name:row.evaluationTypeName,
+        if(!Object.keys(result.questions).find(row.questionId)) {
+            result.questions[row.questionId] = {
+                question:row.questionId,
+                questionName:row.questionName,
+                sectionId:row.sectionId,
+                sectionName:row.sectionName,
+                sectionDescription:row.sectionDescription,
+                sectionWeigth:row.weigth,
+                questionOption:row.questionOption,
+                evaluationTypeName:row.evaluationTypeName,
 
             }
         }
@@ -239,6 +284,7 @@ async function pgAppraisalSelect(id, idDossie, idClass) {
     return result;
 }
 
+//refatorar isso aqui pra galerar poder fazer o update
 async function pgAppraisalUpdate(data) {
     try {
         await pgDelete('Evaluation', {appraisal_id:data.id});
@@ -260,6 +306,7 @@ async function pgAppraisalUpdate(data) {
     }
 }
 
+//refatorar isso aqui
 async function pgAppraisalGetPoints(classId) {
     try {
         const response = await pgSelect('Appraisal', {classroom_id: classId});

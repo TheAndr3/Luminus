@@ -51,6 +51,7 @@ export interface DossierListResponse {
 }
 
 export interface UpdateDossierPayload {
+  id:number
   name: string;
   customUserId: number;
   description: string;

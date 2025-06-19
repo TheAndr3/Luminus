@@ -136,7 +136,7 @@ CREATE TABLE Evaluation(
 );
 
 create table VerifyCode(
-	code INT UNIQUE NOT NULL,
+	code INT NOT NULL,
 	customUserId INT,
 	requestDate date,
 	status INT,
