@@ -2,56 +2,54 @@ const db = require('../bd');
 
 exports.Create = async (req, res) => {
   try{
-    const {name, costumUser_id, description, evaluation_method, sections} = req.body;
+    const {name, customUserId, description, evaluationMethod, sections} = req.body;
 
-    if (!name || !costumUser_id || !description || !evaluation_method || !sections) {
+    if (!name || !customUserId || !description || !evaluationMethod || !sections) {
       console.error('Campos obrigatórios faltando:', { 
         hasName: !!name, 
-        hasCostumUser_id: !!costumUser_id, 
+        hasCostumUser_id: !!customUserId, 
         hasDescription: !!description, 
-        hasEvaluation_method: !!evaluation_method, 
+        hasEvaluation_method: !!evaluationMethod, 
         hasSections: !!sections 
       });
-      return res.status(400).json({msg:'Campos obrigatórios faltando'});
+      return res.status(403).json({msg:'Campos obrigatórios faltando'});
     }
 
-    var payload = {
-      name:evaluation_method[0].name,
-      costumUser_id:costumUser_id,
+    const payloadEvaluationMethod = {
+      name:evaluationMethod.name,
+      customUserId:customUserId
     };
 
     //insere o metodo de avaliação no banco de dados
-    await db.pgInsert('EvaluationMethod', payload);
-    const evMethod = await db.pgSelect('EvaluationMethod', {costumUser_id:costumUser_id, name:evaluation_method[0].name});
+    const evMethodId = await db.pgInsert('EvaluationMethod', payloadEvaluationMethod);
 
-    if (!evMethod || evMethod.length === 0) {
+    if (!evMethodId || evMethodId.length === 0) {
       return res.status(400).json({msg:'Erro ao criar método de avaliação'});
     }
 
     //insere os campos de avaliação
-    for (let i = 0; i < evaluation_method.length; i++) {
-      var type = evaluation_method[i];
-      payload = {
+    for (let i = 0; i < evaluationMethod.length; i++) {
+      var type = evaluationMethod[i];
+      var payloadEvaluationType = {
         name:type.name,
         value:type.value,
-        evaluation_method:evMethod[0].id,
-        costumUser_id:costumUser_id
+        evaluationMethodId:evMethodId[0].id,
+        customUserId:customUserId
       }
-      await db.pgInsert('EvaluationType', payload);
+      await db.pgInsert('EvaluationType', payloadEvaluationType);
     } 
 
-    payload = {
+    const payloadDossier = {
       name:name, 
-      costumUser_id:costumUser_id,
+      customUserId:customUserId, 
       description:description,
-      evaluation_method:evMethod[0].id,
+      evaluationMethodId:evMethodId[0].id,
     }
     
     //insere no banco de dados o novo dossie
-    const dossie = await db.pgInsert('dossier', payload);
-    const lastDossie = await db.pgSelect('dossier', {costumUser_id:costumUser_id, name:name});
+    const dossierId = await db.pgInsert('Dossier', payloadDossier);
 
-    if (!lastDossie || lastDossie.length === 0) {
+    if (!dossierId || dossierId.length === 0) {
       return res.status(400).json({msg:'Erro ao criar dossiê'});
     }
 
@@ -59,67 +57,77 @@ exports.Create = async (req, res) => {
     for (let i = 0; i < sections.length; i++) {
       var section = sections[i];
       const questions = section.questions;
-      payload = {
-        dossier_id:lastDossie[0].id,
-        costumUser_id:costumUser_id,
+      var payloadSection = {
+        dossierId:dossierId[0].id,
+        customUserId:customUserId,
         name:section.name,
         description:section.description,
         weigth:section.weigth
       }
 
       //atualiza o objeto sessao para conter agora tambem seu Id
-      await db.pgInsert('Section', payload);
-      var lastSection = await db.pgSelect('Section', {costumUser_id:costumUser_id, name:section.name, dossier_id:lastDossie[0].id});
+      var sectionId = await db.pgInsert('Section', payloadSection);
 
-      if (!lastSection || lastSection.length === 0) {
+      if (!sectionId || sectionId.length === 0) {
         return res.status(400).json({msg:'Erro ao criar seção'});
       }
 
       //para cada questao dentro desta sessao, cria uma nova entrada no banco de dados
       for (let j = 0; j < questions.length; j++) {
         var question = questions[j];
-        payload = {
-          costumUser_id:costumUser_id,
-          dossier_id:lastDossie[0].id,
-          section_id:lastSection[0].id,
-          evaluation_method:evMethod[0].id,
-          name: question.description
+        var payloadQuestion = {
+          customUserId:customUserId,
+          dossierId:dossierId[0].id,
+          sectionId:sectionId[0].id,
+          evaluationMethodId:evMethodId[0].id,
+          name: question.name
         }
-        await db.pgInsert('question', payload);
+        await db.pgInsert('Question', payloadQuestion);
       }
     }
-
     return res.status(201).json({msg:'dossie criado com sucesso', data:dossie});
+
   } catch (err) {
     console.error('Erro ao criar dossiê:', err);
-    console.error('Error stack:', err.stack);
-    return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'});
+    return res.status(500).json({msg:'nao foi possivel atender a sua solicitacao'});
   }
 }
 
 exports.List = async(req, res) => {
-  const costumUser_id = req.params.professorid;
-  let start;
-  let size;
+  const customUserId = req.params.professorid;
+  let start = 0;
+  let size = 6;
   let search = req.query.search || '';
 
-  try{
-    start = (parseInt(req.query.start)==NaN) ? 0:parseInt(req.query.start);
-    size = (parseInt(req.query.size)==NaN) ? 6:parseInt(req.query.size);
-  } catch (erro) {
-    console.log(erro);
+  //para debug
+  if ('start' in req.query || 'size' in req.query) {
+    console.log('Parâmetros de paginação fornecidos')
+  }
+  else {
+    console.log('Nenhum parâmetro de paginação fornecido')
+  }
+
+  if ('start' in req.query) {
+    start = parseInt(req.query.start);
+  }
+  if ('size' in req.query) {
+    size = parseInt(req.query.size);
   }
   
   try {
-    const payload = {costumUser_id:costumUser_id};
-    const result = await db.pgSelect('dossier', payload);
+    const payload = {customUserId:customUserId};
+    const result = await db.pgSelect('Dossier', payload);
 
     // Filtra os resultados com base no termo de busca
     const filteredResults = result.filter(dossier => 
       dossier.name.toLowerCase().includes(search.toLowerCase()) ||
-      dossier.description.toLowerCase().includes(search.toLowerCase()) ||
-      String(dossier.evaluation_method).toLowerCase().includes(search.toLowerCase())
+      dossier.description.toLowerCase().includes(search.toLowerCase())
     );
+
+    
+    if (!filteredResults || filteredResults.length === 0 && search !== '') {
+      return res.status(404).json({msg:'nenhum dossie encontrado que atenda a solicitação'});
+    } 
 
     return res.status(200).json({
       msg:'sucesso', 
@@ -128,7 +136,7 @@ exports.List = async(req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(400).json({msg:'falha ao atender sua solicitacao'});
+    return res.status(500).json({msg:'falha ao atender sua solicitacao'});
   }
 }
 
@@ -149,65 +157,30 @@ exports.Get = async (req, res) => {
 
 exports.Update = async (req, res) => {
     const id = req.params.id;
-    const body = req.body;
+    const body = req.body; //depois ver se isso não pode ser mudado, é certo que pode dar errado em algum momento
     try {
-        const haveAssociationInAnyClass = await db.pgSelect('appraisal', {
-            dossier_id: id,
-            costumUser_id: body.costumUser_id
+        const haveAssociationInAnyClass = await db.pgSelect('Appraisal', {
+            dossierId: id,
+            costumUserId: body.customUserId
         });
         
         if (haveAssociationInAnyClass.length > 0) {
             return res.status(403).json({msg:'o dossie ja esta associado a uma turma e tem uma avaliação ja preenchida'});
         } else {
-            const { name, costumUser_id, description, evaluation_method, sections } = body;
+            const { name, customUserId, description, evaluationMethod, sections } = body;
 
-            if (!id || !name || !costumUser_id || !description || !evaluation_method || !sections) {
+            if (!id || !name || !customUserId || !description || !evaluationMethod || !sections) {
                 return res.status(400).json({msg:'Campos obrigatórios faltando'});
             }
 
-            // Primeiro atualiza o método de avaliação
-            const evMethodPayload = {
-                name: evaluation_method[0].name,
-                costumUser_id: costumUser_id
-            };
+            //leiam o que as funções fazem, bastava apenas chamar a função de update que ela ja se preocupava com os pormenores de atualizar o dossier
+            await db.pgDossieUpdate(body);
 
-            await db.pgInsert('EvaluationMethod', evMethodPayload);
-            const evMethod = await db.pgSelect('EvaluationMethod', {
-                costumUser_id: costumUser_id,
-                name: evaluation_method[0].name
-            });
-
-            if (!evMethod || evMethod.length === 0) {
-                return res.status(400).json({msg:'Erro ao atualizar método de avaliação'});
-            }
-
-            // Atualiza os tipos de avaliação
-            for (let i = 0; i < evaluation_method.length; i++) {
-                const type = evaluation_method[i];
-                const typePayload = {
-                    name: type.name,
-                    value: type.value,
-                    evaluation_method: evMethod[0].id,
-                    costumUser_id: costumUser_id
-                };
-                await db.pgInsert('EvaluationType', typePayload);
-            }
-
-            // Atualiza o dossiê
-            const result = await db.pgDossieUpdate({
-                id,
-                costumUser_id,
-                name,
-                description,
-                evaluation_method: evMethod[0].id,
-                sections
-            });
-
-            return res.status(200).json(result);
+            return res.status(200).json({msg:'dossie atualizado com sucesso'});
         }
     } catch (err) {
         console.error('Erro ao atualizar dossiê:', err);
-        return res.status(400).json({msg:'erro no envio das informações'});
+        return res.status(500).json({msg:'não foi possivel atender a sua solicitação'});
     }
 }
 
@@ -220,6 +193,8 @@ exports.Delete = async (req, res) => {
     if (!dossier || dossier.length === 0) {
       return res.status(404).json({msg: "Dossiê não encontrado"});
     }
+    
+    //era importante verificar se ele não esta associado a alguma turma
 
     // Deleta o dossiê
     const resp = await db.pgDelete('dossier', {id: id});

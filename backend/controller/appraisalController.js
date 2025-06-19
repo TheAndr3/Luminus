@@ -4,7 +4,7 @@ const db = require('../bd');
 
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
-    var start =0;
+    var start = 0;
     var size = 0;
 
     try {
@@ -52,9 +52,11 @@ exports.Get = async (req, res) => {
 
 exports.GetAppraisal = async (req, res) => {
   const id = req.params.id;
+  const class_id = req.params.classid;
+  const dossier_id = req.params.dossierid;
   
   try {
-    const studentAppraisal = await db.pgAppraisalSelect(id);
+    const studentAppraisal = await db.pgAppraisalSelect(id, dossier_id, class_id);
 
     return res.status(200).json({msg:"sucesso", data:studentAppraisal});
   } catch (error) {

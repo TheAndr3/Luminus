@@ -3,7 +3,7 @@
 // Componentes e tipos
 import ListClass from "./components/listClass";
 import { Classroom } from "@/app/(appLayout)/classroom/components/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import GridClass from "./components/gridClass";
 import { LayoutGrid, Menu } from "lucide-react";
 import ClassViewMode from "./components/classViewMode";
@@ -29,7 +29,8 @@ export default function VizualizationClass() {
   const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
   const [classi, setClassi] = useState<Classroom[]>([]); // Lista de turmas
   const [currentPage, setCurrentPage] = useState(1); // Paginação
-  const turmasPorPagina = visualization === 'grid' ? 6 : 6; // Itens por página
+  const turmasPorPagina = 6; // Itens por página (fixed at 6)
+  const [totalItems, setTotalItems] = useState(0); // Total de itens para paginação
   const [confirmOpen, setConfirmOpen] = useState(false); // Controle do modal de delete
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]); // IDs para deletar
   const [archiveConfirmation, setarchiveConfirmation] = useState(false) // Modal de arquivamento
@@ -38,6 +39,7 @@ export default function VizualizationClass() {
   const [classDescription, setClassDescription] = useState("") // Descrição para modal
   const [codeClass, setCodeClass] = useState<string | undefined>(undefined); // Código da turma
   const [searchTerm, setSearchTerm] = useState(""); // Termo de busca
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null); // Para debounce
   const [missingDialog, setMissingDialog] = useState(false); //para abrir dialog de erro
   const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
   const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
@@ -45,53 +47,58 @@ export default function VizualizationClass() {
   
 
   // ============ CÁLCULOS DERIVADOS ============
-  const totalPages = Math.ceil((classi?.length || 0) / turmasPorPagina);
-  const startIndex = (currentPage - 1) * turmasPorPagina;
-  const turmasVisiveis = classi?.slice(startIndex, startIndex + turmasPorPagina) || [];
-  const isAllSelected = turmasVisiveis.every((t) => t.selected);
-  const filteredClasses = turmasVisiveis.filter((turma) =>
-    turma.dossie.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    turma.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    turma.disciplina.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalPages = Math.ceil(totalItems / turmasPorPagina);
+  const isAllSelected = classi.every((t) => t.selected);
+  const filteredClasses = classi; // Não é necessário filtro no cliente já que fazemos busca no servidor
 
   // ============ CHAMADAS À API ============
-  useEffect(() => {
-    const fetchTurmas = async () => {
-      try {
-        setIsLoading(true);
-        // Pegar o ID do professor do localStorage (definido durante o login)
-        const professorId = localStorage.getItem('professorId');
-        console.log('Professor ID from localStorage:', professorId);
-        
-        if (!professorId) {
-          throw new Error('ID do professor não encontrado');
-        }
-        
-        const response = await ListClassroom(Number(professorId));
-        console.log('API Response:', response);
-        
-        // Mapear a resposta da API para o formato local
-        const turmasFormatadas = response.data.map((turma: GetClassroomResponse) => ({
-          id: turma.id,
-          disciplina: turma.name,
-          codigo: turma.season,
-          dossie: turma.description,
-          selected: false
-        }));
-        console.log('Turmas Formatadas:', turmasFormatadas);
-        setClassi(turmasFormatadas);
-      } catch (error: any) {
-        console.error("Erro ao carregar turmas:", error);
-        setMessageErro(error.message || "Erro ao carregar turmas");
-        setMissingDialog(true);
-      } finally {
-        setIsLoading(false);
+  const fetchTurmas = async (searchValue = searchTerm) => {
+    try {
+      setIsLoading(true);
+      // Pegar o ID do professor do localStorage (definido durante o login)
+      const professorId = localStorage.getItem('professorId');
+      if (!professorId) {
+        throw new Error('ID do professor não encontrado');
       }
-    };
+      const start = (currentPage - 1) * turmasPorPagina;
+      // Mapear a resposta da API para o formato local
+      const response = await ListClassroom(Number(professorId), start, turmasPorPagina, searchValue);
+      const turmasFormatadas = response.data.map((turma: GetClassroomResponse) => ({
+        id: turma.id,
+        disciplina: turma.name,
+        codigo: turma.season,
+        dossie: turma.description,
+        selected: false
+      }));
+      setClassi(turmasFormatadas);
+      setTotalItems(response.ammount);
+    } catch (error: any) {
+      setMessageErro(error.message || "Erro ao carregar turmas");
+      setMissingDialog(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTurmas();
-  }, []);
+    // eslint-disable-next-line
+  }, [currentPage]);
+
+  // Busca com debounce
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      fetchTurmas(value);
+    }, 400);
+  };
+
+  // Manipular mudança de página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   // ============ FUNÇÕES ============
 
@@ -99,12 +106,10 @@ export default function VizualizationClass() {
   // Alterna seleção de todas as turmas visíveis
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
-    const novaLista = classi.map((turma, index) => {
-      if (index >= startIndex && index < startIndex + turmasPorPagina) {
-        return { ...turma, selected: newSelected };
-      }
-      return turma;
-    });
+    const novaLista = classi.map((turma) => ({
+      ...turma,
+      selected: newSelected
+    }));
     setClassi(novaLista);
   };
 
@@ -130,25 +135,28 @@ export default function VizualizationClass() {
     try {
       setIsLoading(true);
       
-      const professorId = localStorage.getItem('professorId'); // Pega o ID do professor do localStorage
+      const professorId = localStorage.getItem('professorId');
       if (!professorId) {
         throw new Error('ID do professor não autenticado.');
       }
 
       // Deletar cada turma selecionada
       for (const id of idsToDelete) {
-        // Chama a função de serviço ATUALIZADA com o id da turma e do professor
         await DeleteClassroom(id, Number(professorId));
       }
 
       // Exibe uma notificação de sucesso
       toast.success(`${idsToDelete.length} turma(s) deletada(s) com sucesso!`);
 
-      // Atualização otimista do estado
-      setClassi(prev => prev.filter(turma => !idsToDelete.includes(turma.id)));
+      // Recarregar dados para obter a contagem total atualizada
+      await fetchTurmas();
 
-      // Ajusta a página atual se a última página ficou vazia
-      if (currentPage > Math.ceil((classi.length - idsToDelete.length) / turmasPorPagina)) {
+      // Ajusta a página atual se necessário
+      const remainingClassrooms = totalItems - idsToDelete.length;
+      const newTotalPages = Math.ceil(remainingClassrooms / turmasPorPagina);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      } else if (newTotalPages === 0) {
         setCurrentPage(1);
       }
     } catch (error: any) {
@@ -228,7 +236,7 @@ export default function VizualizationClass() {
           type="text"
           placeholder="Procure pela turma"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
         ></BaseInput>
       </div>
@@ -277,7 +285,7 @@ export default function VizualizationClass() {
               isAllSelected={isAllSelected}
               currentPage={currentPage}
               totalPages={totalPages}
-              setCurrentPage={setCurrentPage}
+              setCurrentPage={handlePageChange}
               visualization={visualization}
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
@@ -294,7 +302,7 @@ export default function VizualizationClass() {
               isAllSelected={isAllSelected}
               currentPage={currentPage}
               totalPages={totalPages}
-              setCurrentPage={setCurrentPage}
+              setCurrentPage={handlePageChange}
               visualization={visualization}
               setVisualization={setVisualization}
               onDeleteClass={handleDeleteClass}
