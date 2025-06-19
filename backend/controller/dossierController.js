@@ -115,7 +115,7 @@ exports.List = async(req, res) => {
   }
   
   try {
-    const payload = {customUserId:customUserId};
+    const payload = {costumuser_id:customUserId};
     const result = await db.pgSelect('Dossier', payload);
 
     // Filtra os resultados com base no termo de busca

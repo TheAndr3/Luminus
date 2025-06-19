@@ -62,8 +62,8 @@ export default function GerenciarDossies() {
         id: dossie.id,
         name: dossie.name,
         description: dossie.description,
-        evaluation_method: dossie.evaluation_method,
-        costumUser_id: dossie.costumUser_id,
+        evaluationMethod: dossie.evaluationMethod,
+        customUserId: dossie.customUserId,
         selected: false
       }));
       setDossies(dossiesFormatados);

@@ -2,8 +2,8 @@ export interface Dossie {
   id: number;
   name: string;
   description: string;
-  evaluation_method: string;
-  costumUser_id: number;
+  evaluationMethod: string;
+  customUserId: number;
   selected?: boolean;
 }
 
