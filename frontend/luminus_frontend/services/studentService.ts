@@ -4,6 +4,7 @@ interface createPayLoad {
     id: number;
     name: string;
     classroomId: number;
+    customUserId: number;
 }
 
 interface CreateResponse {
@@ -14,13 +15,15 @@ interface CreateResponse {
 export interface StudentGetResponse {
     id: number;
     name: string;
-    classroom_id: number;
+    classroomId: number;
+    customUserId: number;
 }
 
 export interface StudentListResponse {
     id: number;
     name: string;
-    classroom_id: number;
+    classroomId: number;
+    customUserId: number;
 }
 
 export const CreateStudent = async (currentTurmaId: number, p0: { matricula: number; nome: string; }, payLoad: createPayLoad): Promise<CreateResponse> => {

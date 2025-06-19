@@ -1,4 +1,4 @@
-CREATE TABLE costumUser(
+CREATE TABLE CustomUser(
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -8,63 +8,63 @@ CREATE TABLE costumUser(
 
 CREATE TABLE EvaluationMethod(
     id SERIAL,
-    costumUser_id INT,
+    customUserId INT,
     name VARCHAR(255) NOT NULL,
-    CONSTRAINT fk_EvaluationMethod_costumUser FOREIGN KEY(costumUser_id) REFERENCES costumUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    PRIMARY KEY(id, costumUser_id)
+    CONSTRAINT fk_EvaluationMethod_customUser FOREIGN KEY(customUserId) REFERENCES CustomUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    PRIMARY KEY(id, customUserId)
 );
 
 create TABLE EvaluationType(
     id SERIAL,
-    costumUser_id INT,
-    evaluation_method INT,
+    customUserId INT,
+    evaluationMethodId INT,
     name VARCHAR(255) NOT NULL,
     value REAL NOT NULL,
 
-    CONSTRAINT fk_Evaluation_costumUser FOREIGN KEY(evaluation_method, costumUser_id) REFERENCES EvaluationMethod(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Evaluation_customUser FOREIGN KEY(evaluationMethodId, customUserId) REFERENCES EvaluationMethod(id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
-    PRIMARY KEY(id, evaluation_method, costumUser_id)
+    PRIMARY KEY(id, evaluationMethodId, customUserId)
 );
 
 
 CREATE TABLE Dossier(
     id SERIAL,
-    costumUser_id INT,
+    customUserId INT,
     name VARCHAR(255) NOT NULL,
     description text,
-    evaluation_method INT,
+    evaluationMethodId INT,
 
-    CONSTRAINT fk_Dossier_costumUser FOREIGN KEY(costumUser_id) REFERENCES costumUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_Dossier_EvaluationMethod FOREIGN KEY(evaluation_method, costumUser_id) REFERENCES EvaluationMethod(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Dossier_customUser FOREIGN KEY(customUserId) REFERENCES customUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Dossier_EvaluationMethod FOREIGN KEY(evaluationMethodId, customUserId) REFERENCES EvaluationMethod(id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
-    PRIMARY KEY(id, costumUser_id)
+    PRIMARY KEY(id, customUserId)
 );
 
 CREATE TABLE Section(
     id SERIAL,
-    costumUser_id INT,
-    dossier_id INT,
+    customUserId INT,
+    dossierId INT,
     name VARCHAR(255) NOT NULL,
     description text,
     weigth REAL,
 
-    CONSTRAINT fk_Section_Dossier FOREIGN KEY(dossier_id, costumUser_id) REFERENCES Dossier(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Section_Dossier FOREIGN KEY(dossierId, customUserId) REFERENCES Dossier(id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
-    PRIMARY KEY(id, dossier_id, costumUser_id)
+    PRIMARY KEY(id, dossierId, customUserId)
 );
 
 CREATE TABLE Question(
     id SERIAL,
-    costumUser_id INT,
-    section_id INT,
-    dossier_id INT,
-    evaluation_method int,
+    customUserId INT,
+    sectionId INT,
+    dossierId INT,
+    evaluationMethodId int,
     name VARCHAR(255) NOT NULL,
 
-    CONSTRAINT fk_Question_Evaluation FOREIGN KEY(evaluation_method, costumUser_id) REFERENCES EvaluationMethod(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_Question_Section FOREIGN KEY(section_id, dossier_id, costumUser_id) REFERENCES Section(id, dossier_id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Question_Evaluation FOREIGN KEY(evaluationMethodId, customUserId) REFERENCES EvaluationMethod(id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Question_Section FOREIGN KEY(sectionId, dossierId, customUserId) REFERENCES Section(id, dossierId, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
-    PRIMARY KEY(id, section_id, dossier_id, costumUser_id)
+    PRIMARY KEY(id, sectionId, dossierId, customUserId)
 );
 
 CREATE TABLE Student(
@@ -74,82 +74,82 @@ CREATE TABLE Student(
 
 CREATE TABLE Classroom(
     id SERIAL,
-    costumUser_id INT NOT NULL,
-    dossier_id INT,
+    customUserId INT NOT NULL,
+    dossierId INT,
     name VARCHAR(255) NOT NULL,
     description text,
     season VARCHAR(50) NOT NULL,
     institution VARCHAR(255),
 
-    CONSTRAINT fk_Classroom_Dossier FOREIGN KEY(dossier_id, costumUser_id) REFERENCES Dossier(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Classroom_Dossier FOREIGN KEY(dossierId, customUserId) REFERENCES Dossier(id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
-    PRIMARY KEY(id, costumUser_id)
+    PRIMARY KEY(id, customUserId)
 );
 
 CREATE TABLE ClassroomStudent(
-    classroom_id INT,
-    student_id INT,
-    costumUser_id INT,
+    classroomId INT,
+    studentId INT,
+    customUserId INT,
 
-    CONSTRAINT fk_ClassroomStudent_Classroom FOREIGN KEY(classroom_id, costumUser_id) REFERENCES Classroom(id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_ClassroomStudent_Student FOREIGN KEY(student_id) REFERENCES Student(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_ClassroomStudent_Classroom FOREIGN KEY(classroomId, customUserId) REFERENCES Classroom(id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_ClassroomStudent_Student FOREIGN KEY(studentId) REFERENCES Student(id) ON DELETE CASCADE ON UPDATE CASCADE,
 
-    PRIMARY KEY(classroom_id, student_id, costumUser_id)
+    PRIMARY KEY(classroomId, studentId, customUserId)
 
 );
 
 CREATE TABLE Appraisal(
     id SERIAL,
-    student_id INT,
-    costumUser_id INT,
-    classroom_id INT,
-    dossier_id INT,
+    studentId INT,
+    customUserId INT,
+    classroomId INT,
+    dossierId INT,
     points REAL,
-    filling_date date NOT NULL,
+    fillingDate date NOT NULL,
 
-    CONSTRAINT fk_Appraisal_Dossier FOREIGN KEY(dossier_id, costumUser_id) REFERENCES Dossier(id, costumUser_id) ON DELETE CASCADE  ON UPDATE CASCADE,
-    CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroom_id, student_id, costumUser_id) REFERENCES ClassroomStudent(classroom_id, student_id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Appraisal_Dossier FOREIGN KEY(dossierId, customUserId) REFERENCES Dossier(id, customUserId) ON DELETE CASCADE  ON UPDATE CASCADE,
+    CONSTRAINT fk_Appraisal_Classroom FOREIGN KEY(classroomId, studentId, customUserId) REFERENCES ClassroomStudent(classroomId, studentId, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
     
-    PRIMARY KEY(id, student_id, costumUser_id, classroom_id)
+    PRIMARY KEY(id, studentId, customUserId, classroomId)
 );
 
 CREATE TABLE Evaluation(
     id SERIAL,
-    student_id INT,
-    costumUser_id INT,
-    classroom_id INT,
-    dossier_id INT,
-    section_id INT,
-    evaluation_method INT,
+    studentId INT,
+    customUserId INT,
+    classroomId INT,
+    dossierId INT,
+    sectionId INT,
+    evaluationMethodId INT,
 
-    question_id INT,
-    appraisal_id INT,
+    questionId INT,
+    appraisalId INT,
 
-    question_option INT,
+    questionOption INT,
 
-    CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisal_id, student_id, costumUser_id, classroom_id) REFERENCES Appraisal(id, student_id, costumUser_id, classroom_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_Evaluation_question FOREIGN KEY(question_option, section_id, dossier_id, costumUser_id) REFERENCES Question(id, section_id, dossier_id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_Evaluation_EvType FOREIGN KEY(evaluation_method, question_option, costumUser_id) REFERENCES EvaluationType(evaluation_method, id, costumUser_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Evauation_appraisal FOREIGN KEY(appraisalId, studentId, customUserId, classroomId) REFERENCES Appraisal(id, studentId, customUserId, classroomId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Evaluation_question FOREIGN KEY(questionId, sectionId, dossierId, customUserId) REFERENCES Question(id, sectionId, dossierId, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_Evaluation_EvType FOREIGN KEY(evaluationMethodId, questionOption, customUserId) REFERENCES EvaluationType(evaluationMethodId, id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
 
-    PRIMARY KEY(id, appraisal_id)
+    PRIMARY KEY(id, appraisalId)
 );
 
 create table VerifyCode(
 	code INT UNIQUE NOT NULL,
-	costumUser_id INT,
-	data_sol date,
+	customUserId INT,
+	requestDate date,
 	status INT,
 
-	CONSTRAINT fk_VerifyCode_costumUser FOREIGN KEY(costumUser_id) REFERENCES costumUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(code, costumUser_id, data_sol)
+	CONSTRAINT fk_VerifyCode_customUser FOREIGN KEY(customUserId) REFERENCES CustomUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(code, customUserId, requestDate)
 );
 
 create table TokenCode(
 	token VARCHAR(255),
-	costumUser_id INT,
+	customUserId INT,
     verifyStatus INT,
 
-	CONSTRAINT fk_Token_costumUser FOREIGN KEY(costumUser_id) REFERENCES costumUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(token, costumUser_id)
+	CONSTRAINT fk_Token_customUser FOREIGN KEY(customUserId) REFERENCES CustomUser(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(token, customUserId)
 );
