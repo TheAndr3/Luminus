@@ -149,7 +149,7 @@ export default function VisualizacaoAlunos() {
 
       // Mapeia e define o estado dos alunos
       const formattedStudents = studentsFromService.map(student => ({
-        matricula: student.id,
+        matricula: student.studentId || student.matricula,
         nome: student.name,
         selected: false,
       }));

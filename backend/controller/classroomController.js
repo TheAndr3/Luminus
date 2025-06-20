@@ -63,7 +63,7 @@ exports.Get = async (req, res) => {
   const id = req.params.id;
 
   try{
-    const classData = await db.pgSelect('Classroom',{customUserId:id});
+    const classData = await db.pgSelect('Classroom',{id:id});
     return res.status(200).json({msg:'sucesso', data:classData});
   } catch(err) {
     return res.status(400).json({msg:'id invalido'});
