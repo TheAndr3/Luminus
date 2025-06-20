@@ -158,7 +158,7 @@ export default function RegisterPage() {
     // Construir o payload para a API
     const payload: CreatePayLoad = {
       name: formData.username,
-      email_professor: formData.email,
+      customUserEmail: formData.email,
       password: formData.password,
     };
 
