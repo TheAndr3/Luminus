@@ -126,10 +126,10 @@ exports.Update = async (req, res) => {
 };
 
 exports.Delete = async (req, res) => {
-  const id = req.params.id;
+  const classroomId = req.params.id;
     try {
     const payload = {
-      classroomId: req.params.id,
+      id: classroomId,
       customUserId: req.body.customUserId
     };
 
@@ -137,6 +137,7 @@ exports.Delete = async (req, res) => {
 
     return res.status(204).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
+    console.error('Erro ao deletar turma:', error);
     return res.status(500).json({ msg: 'nao foi possivel atender a solicitacao' });
 }
 }
