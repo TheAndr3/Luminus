@@ -85,8 +85,8 @@ export default function DialogPage() {
 
         try {
             // Obtém o ID do professor do localStorage
-            const professorId = localStorage.getItem('professorId');
-            if (!professorId) {
+            const customUserId = localStorage.getItem('professorId');
+            if (!customUserId) {
                 throw new Error('ID do professor não encontrado');
             }
 
@@ -95,7 +95,7 @@ export default function DialogPage() {
                 // Cria a turma com o arquivo CSV
                 const formData = new FormData();
                 formData.append('csvfile', csvFileToUpload);
-                formData.append('professor_id', professorId);
+                formData.append('customUserId', customUserId);
                 formData.append('name', titulo);
                 formData.append('description', inputDisc);
                 formData.append('season', inputPer);
@@ -115,7 +115,7 @@ export default function DialogPage() {
 
                 // Cria a turma sem o arquivo CSV
                 const newClassData = {
-                    professor_id: Number(professorId),
+                    customUserId: Number(customUserId),
                     name: titulo,
                     description: inputDisc,
                     season: inputPer,
