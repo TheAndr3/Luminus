@@ -104,6 +104,7 @@ export const UpdateClassroom = async (id: number, data: {
     description?: string;
     season?: string;
     institution?: string;
+    customUserId: number;
 }): Promise<CreateResponse> => {
     try {
         const response = await api.put(`/classroom/${id}/update`, data);

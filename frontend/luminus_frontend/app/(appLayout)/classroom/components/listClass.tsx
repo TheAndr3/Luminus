@@ -118,7 +118,7 @@ export default function ListClass({
             {/* Cabeçalhos para as colunas principais da tabela */}
             <th className="px-2vh text-lg pl-24">Disciplina</th>
             <th className="px-2vh text-lg pl-2">Turma</th>
-            <th className="px-2vh text-lg pl-15">Dossiê</th>
+            <th className="px-2vh text-lg pl-15">Instituição</th>
             <th className="px-2vh text-lg">
               <div className="flex gap-2 items-center justify-end">
                 <ClassViewMode
@@ -162,9 +162,9 @@ export default function ListClass({
 
               {/* Colunas com dados da turma: disciplina, código da turma e dossiê */}
               <>
-                <td className="p-2 pl-20 text-xl">{classroom.disciplina}</td>
-                <td className="p-2 text-xl">{classroom.codigo}</td>
-                <td className="p-2 text-xl">{classroom.dossie}</td>
+                <td className="p-2 pl-32 text-xl">{classroom.disciplina}</td>
+                <td className="p-2 pl-8 text-xl">{classroom.codigo}</td>
+                <td className="p-2 pl-24 text-xl">{classroom.institution}</td>
               </>
 
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
@@ -226,7 +226,8 @@ export default function ListClass({
                         id: classroom.id,
                         name: classroom.disciplina,
                         course: classroom.codigo,
-                        institution: classroom.dossie,
+                        season: classroom.codigo,
+                        institution: classroom.institution,
                       }}
                     />
                   </div>

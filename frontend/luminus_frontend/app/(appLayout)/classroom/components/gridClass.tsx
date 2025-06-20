@@ -182,7 +182,8 @@ export default function Gridclassrooms({
                           id: classroom.id,
                           name: classroom.disciplina,
                           course: classroom.codigo,
-                          institution: classroom.dossie,
+                          season: classroom.codigo,
+                          institution: classroom.institution,
                         }}
                       />
                     </div>
@@ -197,7 +198,7 @@ export default function Gridclassrooms({
               onClick={(e)=>e.stopPropagation()
               }
             >
-              {classroom.dossie}
+              {classroom.institution}
             </button>
           </div>
         ))} 

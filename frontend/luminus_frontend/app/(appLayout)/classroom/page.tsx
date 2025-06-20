@@ -68,6 +68,7 @@ export default function VizualizationClass() {
         disciplina: turma.name,
         codigo: turma.season,
         dossie: turma.description,
+        institution: turma.institution,
         selected: false
       }));
       setClassi(turmasFormatadas);

@@ -7,7 +7,7 @@ import { use, useState, useRef } from "react"; // Importa hooks do React
 import { toast } from 'react-hot-toast';
 
 import { Pencil, Plus } from "lucide-react";
-import class_icon from "@/components/icon/icon_classroom.svg" // Importa o ícone da turma em formato SVG
+import dark_class_icon from "@/components/icon/dark_icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { CreateClassroom} from "@/services/classroomServices";
 import { ErroMessageDialog } from "./erroMessageDialog";
@@ -26,7 +26,7 @@ export default function DialogPage() {
     const [inputInst, setinputInst] = useState('') // Estado para armazenar o valor do input Instituição
     const [inputPer, setInputPer] = useState('') // Estado para armazenar o valor do input Período
 
-    let title = "Digite o nome da turma"
+    let title = ""
     const [titulo, setTitulo] = useState(title) // Estado para armazenar o título (nome da turma)
     const [editing, setEditing] = useState(false); // Estado para controlar se o título está sendo editado
 
@@ -162,7 +162,7 @@ export default function DialogPage() {
                     {/* Imagem fixa à esquerda */}
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
                         <Image 
-                        src={class_icon}
+                        src={dark_class_icon}
                         alt="icone turma"
                         className="w-12 h-12"
                         />
@@ -170,15 +170,12 @@ export default function DialogPage() {
 
                     {/* Conteúdo centralizado */}
                     <div className="flex items-center gap-2 justify-center">
-                        {editing ? (
-                        <input 
-                            className="text-4xl font-bold"
-                            placeholder={titulo}
+                        <BaseInput 
+                            className="text-4xl font-bold bg-gray-100 text-gray-900 rounded-2xl px-4 py-2"
+                            placeholder="Digite o nome da turma"
+                            value={titulo}
                             onChange={(e) => setTitulo(e.target.value)}
                         />
-                        ) : (
-                        <span className="text-4xl font-bold"> {titulo} </span>
-                        )}
                         <Pencil 
                         className="w-5 h-5 text-white cursor-pointer" 
                         onClick={() => setEditing(!editing)} 
