@@ -94,8 +94,8 @@ export default function VisualizacaoAlunos() {
     try {
       const response = await api.get(`/student/${turmaId}/list`);
       // Mapeamento aqui:
-      const studentsFromApi = response.data.map((student: any) => ({
-        matricula: student.matricula || student.student_id || student.id,
+      const studentsFromApi = response.data.data.map((student: any) => ({
+        matricula: student.studentId || student.matricula,
         nome: student.name || student.nome || "Nome não disponível",
         selected: false,
       }));
@@ -363,17 +363,19 @@ export default function VisualizacaoAlunos() {
           return;
         }
 
-        // --- NOVO: Definir o professor_id ---
-        // OPÇÃO 1: Hardcoded (apenas para teste inicial, não recomendado para produção)
-        const professorId = 1; // Substitua por um ID de professor real ou logicamente obtido.
-                              // Se o professor_id vem do contexto do usuário logado, você precisará buscá-lo.
-                              // Por exemplo, de um hook de autenticação, um localStorage, ou um Context API.
+        const customUserId = parseInt(localStorage.getItem('professorId') || '1', 10);
+        
+        if (!customUserId || isNaN(customUserId)) {
+          toast.error("ID do professor não encontrado. Não é possível adicionar o aluno.");
+          setIsLoading(false);
+          return;
+        }
 
         // Constrói o corpo da requisição com os dados do novo aluno
         const studentData = {
           id: matriculaNum, // O backend espera 'id' para a matrícula
           name: inlineNewStudentName.trim(), // O backend espera 'name' para o nome
-          professor_id: professorId, // Adiciona o professor_id necessário para a tabela ClassroomStudent
+          customUserId: customUserId, // O backend espera 'customUserId'
         };
 
         // --- NOVO: Chamada real à API ---
