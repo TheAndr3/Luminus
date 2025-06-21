@@ -105,7 +105,7 @@ export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateR
     return response.data;
 
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Erro ao cadastrar';
+    const message = error.response?.data?.msg || 'Erro ao cadastrar';
     throw new Error(message);
   }
 }

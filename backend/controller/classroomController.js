@@ -63,7 +63,7 @@ exports.Get = async (req, res) => {
   const id = req.params.id;
 
   try{
-    const classData = await db.pgSelect('classroom',{customUserId:id});
+    const classData = await db.pgSelect('Classroom',{id:id});
     return res.status(200).json({msg:'sucesso', data:classData});
   } catch(err) {
     return res.status(400).json({msg:'id invalido'});
@@ -77,7 +77,7 @@ exports.Create = async (req, res) => {
     const professor = await db.pgSelect('CustomUser', {id: req.body.customUserId})
     console.log(professor)
     
-    if (Object.values(professor).length > 0) {
+    if (professor && professor.length > 0) {
       const payload = {
         customUserId: req.body.customUserId,
         name: req.body.name,
@@ -102,7 +102,7 @@ exports.Update = async (req, res) => {
   try {
     const professor = await db.pgSelect('CustomUser', { id: req.body.customUserId });
 
-    if (Object.values(professor).length > 0) {
+    if (professor && professor.length > 0) {
       const payload = {};
       
       if (req.body.name) {payload.name = req.body.name;}
@@ -126,17 +126,18 @@ exports.Update = async (req, res) => {
 };
 
 exports.Delete = async (req, res) => {
-  const id = req.params.id;
+  const classroomId = req.params.id;
     try {
     const payload = {
-      classroomId: req.params.id,
+      id: classroomId,
       customUserId: req.body.customUserId
     };
 
-    await db.pgDelete('classroom', payload);
+    await db.pgDelete('Classroom', payload);
 
     return res.status(204).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
+    console.error('Erro ao deletar turma:', error);
     return res.status(500).json({ msg: 'nao foi possivel atender a solicitacao' });
 }
 }

@@ -41,7 +41,7 @@ export const CreateClassroom = async (payload: ClassroomData): Promise<CreateRes
         const response = await api.post('/classroom/create', payload);
         return response.data;
     } catch (error:any) {
-        const message = error.response?.data || 'Erro ao criar classe';
+        const message = error.response?.data?.msg || error.response?.data?.message || 'Erro ao criar classe';
         throw new Error(message);
     }
 };
@@ -104,6 +104,7 @@ export const UpdateClassroom = async (id: number, data: {
     description?: string;
     season?: string;
     institution?: string;
+    customUserId: number;
 }): Promise<CreateResponse> => {
     try {
         const response = await api.put(`/classroom/${id}/update`, data);

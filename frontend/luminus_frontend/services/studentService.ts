@@ -3,7 +3,6 @@ import {api} from './api';
 interface createPayLoad {
     id: number;
     name: string;
-    classroomId: number;
     customUserId: number;
 }
 
@@ -13,22 +12,20 @@ interface CreateResponse {
 
 
 export interface StudentGetResponse {
-    id: number;
+    studentId: number;
     name: string;
-    classroomId: number;
-    customUserId: number;
+    matricula: number;
 }
 
 export interface StudentListResponse {
-    id: number;
+    studentId: number;
     name: string;
-    classroomId: number;
-    customUserId: number;
+    matricula: number;
 }
 
 export const CreateStudent = async (currentTurmaId: number, p0: { matricula: number; nome: string; }, payLoad: createPayLoad): Promise<CreateResponse> => {
     try {
-        const response = await api.post(`/student/${payLoad.classroomId}/create`, payLoad);
+        const response = await api.post(`/student/${currentTurmaId}/create`, payLoad);
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao adicionar estudante';
@@ -39,7 +36,7 @@ export const CreateStudent = async (currentTurmaId: number, p0: { matricula: num
 export const GetStudent = async (studentID: number, classroomID: number): Promise<StudentGetResponse> => {
     try {
         const response = await api.get(`/student/${classroomID}/${studentID}`);
-        return response.data[0]
+        return response.data.data[0] || response.data[0];
     } catch (error:any) {
         const message = error.response?.data?.msg || 'Erro ao buscar estudante';
         throw new Error(message);
@@ -49,10 +46,22 @@ export const GetStudent = async (studentID: number, classroomID: number): Promis
 export const ListStudents = async (classroomID: number): Promise<StudentListResponse[]> => {
     try {
         const response = await api.get(`/student/${classroomID}/list`);
-        return response.data;
+        return response.data.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao listar estudantes';
         throw new Error(message);
         
+    }
+}
+
+export const DeleteStudent = async (classroomID: number, studentID: number, customUserId: number): Promise<CreateResponse> => {
+    try {
+        const response = await api.delete(`/student/${classroomID}/delete/${studentID}`, {
+            data: { customUserId: customUserId }
+        });
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao deletar estudante';
+        throw new Error(message);
     }
 }

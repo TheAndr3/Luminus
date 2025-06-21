@@ -78,18 +78,19 @@ exports.Create = async (req, res) => {
 
         //Cadastrar professor no banco de dados
         if (verification.length === 0 || !verification[0]) {
-            const customUserId = await db.pgInsert('CustomUser', {
+            const customUserResult = await db.pgInsert('CustomUser', {
                 email: customUserEmail, 
                 password: hashedPassword, 
                 name: name,
                 role:"unknow"
             });
+            const customUserId = customUserResult.rows[0].id;
             const data = new Date();
             var code = genRandomCode(0, 9999);
             const old_code = await db.pgSelect('verifyCode', {customUserId:customUserId, requestDate:data.toISOString()});
 
             const used_codes = old_code.map((iten) => {
-                iten.code
+                return iten.code;
             })
             
             while (used_codes.includes(code)) {

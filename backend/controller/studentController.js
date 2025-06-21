@@ -62,11 +62,11 @@ exports.Create = async (req, res) => {
         };
         console.log('Backend: Tentando inserir em student com payload:', payload); // Novo log
         const student = await db.pgSelect('Student', {id:req.body.id});
-        if(student[0].length <= 0) {
+        if(student.length === 0) {
           await db.pgInsert('Student', payload);
         }
         
-        console.log('Backend: student inserido com sucesso:', studentresp);
+        console.log('Backend: student inserido com sucesso');
 
         payload = {
             customUserId:req.body.customUserId,
@@ -76,13 +76,13 @@ exports.Create = async (req, res) => {
 
         const classStudent = await db.pgSelect('Classroom', {id:class_id});
 
-        if(classStudent[0].length > 0) {
+        if(classStudent.length > 0) {
           await db.pgInsert('ClassroomStudent', payload);
         } else {
           return res.status(403).json({msg:'turma nao existe'})
         }
 
-        if (classStudent[0].dossierId) {
+        if (classStudent[0] && classStudent[0].dossierId) {
           payload = {
             classroomId: classStudent[0].id,
             studentId: req.body.id,
@@ -96,6 +96,7 @@ exports.Create = async (req, res) => {
 
         return res.status(201).json({msg:'estudante inserido com sucesso'});
     } catch (error) {
+        console.error('Erro ao criar estudante:', error);
         return res.status(500).json({msg:'nao foi possivel atender a sua solicitacao'})
     }
 

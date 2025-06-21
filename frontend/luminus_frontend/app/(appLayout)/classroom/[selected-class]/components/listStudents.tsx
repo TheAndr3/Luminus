@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomActions";
 import { Classroom } from "../../components/types";
 import AssociarDossie from "./associarDossie";
+import StudentActions from "./StudentActions";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
@@ -32,6 +33,7 @@ interface ListStudentsProps {
   toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
   toggleOne: (id: number) => void;             // Alterna a seleção de um aluno específico
   onDeleteStudents: () => void;                // Função para deletar alunos
+  onDeleteStudent: (id: number) => void;       // Função para deletar um aluno específico
 
   isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
   currentPage: number;                         // Página atual
@@ -62,6 +64,7 @@ export default function ListStudents({
   toggleSelectAll,
   toggleOne,
   onDeleteStudents,
+  onDeleteStudent,
 
   isAllSelected,
   currentPage,
@@ -130,7 +133,6 @@ export default function ListStudents({
 
   return (
     <div className="w-full">
-      
       {/* Cabeçalho da tabela */}
       <table className="table-fixed w-full text-left border-separate border-spacing-y-2 rounded-md">
         <thead className="bg-gray-100">
@@ -143,24 +145,23 @@ export default function ListStudents({
                 className="w-5 h-5 accent-blue-600"
               />
             </th>
-            <th className="w-10 px-4 py-3"></th> 
+            <th className="w-10 px-4 py-3"></th>
             <th className="px-4 py-3 text-left">Matrícula</th>
             <th className="px-4 py-3 text-left">Aluno</th>
-            <th className="w-14 px-2"></th> 
+            <th className="w-14 px-2"></th>
           </tr>
         </thead>
-        
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
             <tr className="bg-slate-800 text-white border-b border-slate-700">
-              <td className="px-4 py-3 w-12"></td> {/* Checkbox vazio para alinhamento */}
+              <td className="px-4 py-3 w-12"></td>
               <td className="w-10 px-5 py-3 text-left">
-                <UserIcon className="w-6 h-6 text-gray-400" /> {/* Ícone de usuário */}
+                <UserIcon className="w-6 h-6 text-gray-400" />
               </td>
               <td className="px-4 py-3">
                 <input
-                  type="number" // Alterado para number para matrículas
+                  type="number"
                   value={inlineNewStudentMatricula}
                   onChange={(e) => setInlineNewStudentMatricula(e.target.value)}
                   placeholder="Matrícula"
@@ -214,9 +215,8 @@ export default function ListStudents({
               key={students.matricula}
               onMouseEnter={() => setHovered(students.matricula)}
               onMouseLeave={() => setHovered(null)}
-              className="bg-slate-900 text-white border-b border-slate-700 hover:brightness-110"//"bg-[#101828] text-white rounded-xl shadow-sm transition hover:brightness-110"
+              className="bg-slate-900 text-white border-b border-slate-700 hover:brightness-110"
             >
-              {/* Checkbox individual */}
               <td className="px-4 py-3 w-12">
                 <input
                   type="checkbox"
@@ -225,15 +225,12 @@ export default function ListStudents({
                   className="w-5 h-5 accent-blue-600"
                 />
               </td>
-              {/* Ícone da students */}
               <td className="w-10 px-5 py-3 text-left">
                 <FaUsers className="w-6 h-6" />
               </td>
-
-              {/* Modo de edição ou exibição */}
               {editingId === students.matricula ? (
                 <>
-                <td className="px-4 py-3">
+                  <td className="px-4 py-3">
                     <input
                       type="text"
                       value={editedData.matricula || ""}
@@ -268,33 +265,30 @@ export default function ListStudents({
                 <>
                   <td className="px-4 py-3 text-lg">{students.matricula}</td>
                   <td className="px-4 py-3 text-lg">{students.nome}</td>
+                  <td className="p-2">
+                    {hovered === students.matricula && (
+                      <StudentActions
+                        studentId={students.matricula}
+                        onEdit={() => setEditingId(students.matricula)}
+                        onDelete={() => onDeleteStudent(students.matricula)}
+                      />
+                    )}
+                  </td>
                 </>
               )}
-
-              {/* Exibe as ações ao passar o mouse */}
-              <td className="p-2">
-                {hovered === students.matricula && editingId !== students.matricula && (
-                  <ClassroomActions
-                    classroomId={students.matricula}
-                    onEdit={() => setEditingId(students.matricula)}  // Ao clicar para editar, altera o estado de edição
-                  />
-                )}
-              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
       <div className="flex justify-end mt-6">
-      {/* Paginação */}
-      <PageController
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
+        <PageController
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
       </div>
 
-      {/* Painel de ações que aparece quando há turmas selecionadas */}
       <div className="mt-10">
         {hasSelected && (
           <ActionPanel
