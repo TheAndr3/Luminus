@@ -1,6 +1,6 @@
 // luminus_frontend/app/(appLayout)/classroom/components/actionPainel.tsx
 import { Trash2, Download, Archive, BarChart2 } from "lucide-react";
-import React, { useRef, useState } from "react"; // Importe useRef
+import React, { useRef } from "react"; // Importe useRef
 import { ColoredButton } from "@/components/colored-button/colored-button"; //
 
 interface ActionPanelProps {
@@ -36,29 +36,32 @@ export default function ActionPanel({
   };
 
   return (
-    <div className="left-4 bg-[#0A2B3D] shadow-lg rounded-xl flex flex-row gap-4 z-50 w-fit">
+    <div 
+      className="left-4 shadow-lg rounded-xl flex flex-row z-50 w-fit"
+      style={{ backgroundColor: mainColor }}
+    >
       
-      <button className="hover:bg-[#123a4f] p-2 rounded-xl" > 
-        <Trash2 //TESTAR PARA VER SE DA CERTO !
-         className="w-6 h-6 text-white"
-        />
-      </button>
-
-      <ColoredButton //TESTE PARA VER SE DA CERTO!
+      <ColoredButton
           mainColor={mainColor}
           hoverColor={hoverColor}
           icon={<Trash2 className="w-6 h-6 text-white" color="white" />}
           onClick={onDeleted}
         />
 
-      <button className="hover:bg-[#123a4f] p-2 rounded-xl" onClick={onDownload}>
-        <Download className="w-6 h-6 text-white" />
-      </button>
+      <ColoredButton
+          mainColor={mainColor}
+          hoverColor={hoverColor}
+          icon={<Download className="w-6 h-6 text-white" color="white" />}
+          onClick={onDownload}
+        />
 
       {/* Botão que "clica" no input de arquivo escondido */}
-      <button className="hover:bg-[#123a4f] p-2 rounded-xl" onClick={handleArchiveButtonClick}>
-        <Archive className="w-6 h-6 text-white" />
-      </button>
+      <ColoredButton
+          mainColor={mainColor}
+          hoverColor={hoverColor}
+          icon={<Archive className="w-6 h-6 text-white" color="white" />}
+          onClick={handleArchiveButtonClick}
+        />
       {/* Input de arquivo escondido*/}
       <input
         type="file"
@@ -68,9 +71,12 @@ export default function ActionPanel({
         style={{ display: "none" }} // Esconde o input
       />
 
-      <button className="hover:bg-[#123a4f] p-2 rounded-xl" onClick={onViewChart}>
-        <BarChart2 className="w-6 h-6 text-white" />
-      </button>
+      <ColoredButton
+          mainColor={mainColor}
+          hoverColor={hoverColor}
+          icon={<BarChart2 className="w-6 h-6 text-white" color="white" />}
+          onClick={onViewChart}
+        />
     </div>
   );
 }

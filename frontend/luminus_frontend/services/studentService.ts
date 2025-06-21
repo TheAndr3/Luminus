@@ -23,6 +23,12 @@ export interface StudentListResponse {
     matricula: number;
 }
 
+export interface StudentListApiResponse {
+    msg: string;
+    data: StudentListResponse[];
+    ammount: number;
+}
+
 export const CreateStudent = async (currentTurmaId: number, p0: { matricula: number; nome: string; }, payLoad: createPayLoad): Promise<CreateResponse> => {
     try {
         const response = await api.post(`/student/${currentTurmaId}/create`, payLoad);
@@ -43,10 +49,10 @@ export const GetStudent = async (studentID: number, classroomID: number): Promis
     }
 }
 
-export const ListStudents = async (classroomID: number): Promise<StudentListResponse[]> => {
+export const ListStudents = async (classroomID: number, start = 0, size = 6, search = ''): Promise<StudentListApiResponse> => {
     try {
-        const response = await api.get(`/student/${classroomID}/list`);
-        return response.data.data;
+        const response = await api.get(`/student/${classroomID}/list?start=${start}&size=${size}&search=${encodeURIComponent(search)}`);
+        return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao listar estudantes';
         throw new Error(message);
@@ -62,6 +68,16 @@ export const DeleteStudent = async (classroomID: number, studentID: number, cust
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao deletar estudante';
+        throw new Error(message);
+    }
+}
+
+export const UpdateStudent = async (classroomID: number, studentID: number, updateData: { id: number; name: string }): Promise<CreateResponse> => {
+    try {
+        const response = await api.put(`/student/${classroomID}/update/${studentID}`, updateData);
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao atualizar estudante';
         throw new Error(message);
     }
 }

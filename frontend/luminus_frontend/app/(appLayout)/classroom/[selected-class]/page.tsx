@@ -60,9 +60,11 @@ export default function VisualizacaoAlunos() {
   const [classi, setClassi] = useState<Students[]>([]); 
   const [currentPage, setCurrentPage] = useState(1);
   const alunosPorPagina = 6; // Ajuste conforme necessário
+  const [totalItems, setTotalItems] = useState(0); // Total de itens para paginação
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false); // Renomeado para clareza
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null); // Para debounce
   
   // Estados para CSV
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
@@ -120,6 +122,40 @@ export default function VisualizacaoAlunos() {
     }
   };
 
+  // Função para buscar alunos com paginação e busca no servidor
+  const fetchStudentsWithParams = async (searchValue = searchTerm) => {
+    if (!currentTurmaId) return;
+    setIsFetchingStudents(true);
+    try {
+      const start = (currentPage - 1) * alunosPorPagina;
+      const response = await ListStudentsService(currentTurmaId, start, alunosPorPagina, searchValue);
+      
+      // Mapeamento dos dados
+      const studentsFromApi = response.data.map((student: any) => ({
+        matricula: student.studentId || student.matricula,
+        nome: student.name || student.nome || "Nome não disponível",
+        selected: false,
+      }));
+
+      // Filtro para garantir que só alunos válidos sejam exibidos
+      const validStudents = studentsFromApi.filter(
+        (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
+      );
+
+      setClassi(validStudents);
+      setTotalItems(response.ammount);
+      
+    } catch (error: any) {
+      console.error("Erro ao buscar alunos:", error);
+      const errorMsg = error.response?.data?.msg || `Falha ao carregar alunos da turma ${currentTurmaId}.`;
+      toast.error(errorMsg);
+      setClassi([]);
+      setTotalItems(0);
+    } finally {
+      setIsFetchingStudents(false);
+    }
+  };
+
   // Busca o nome da turma pelo ID e define no título da página
   const fetchClassDetails = async (turmaId: number) => {
     try {
@@ -148,7 +184,7 @@ export default function VisualizacaoAlunos() {
       setClassTitle(classDetails.name || `Turma ${id}`);
 
       // Mapeia e define o estado dos alunos
-      const formattedStudents = studentsFromService.map(student => ({
+      const formattedStudents = studentsFromService.data.map((student: any) => ({
         matricula: student.studentId || student.matricula,
         nome: student.name,
         selected: false,
@@ -173,20 +209,34 @@ export default function VisualizacaoAlunos() {
     }
   }, [pathname, fetchPageData]);
 
-  const totalPages = Math.ceil(classi.length / alunosPorPagina);
-  const startIndex = (currentPage - 1) * alunosPorPagina;
-  // Aplicar filtro de busca ANTES da paginação para que a paginação reflita o total filtrado
-  const alunosFiltradosParaCalculo = classi.filter((aluno) =>
-    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  const totalPagesFiltradas = Math.ceil(alunosFiltradosParaCalculo.length / alunosPorPagina);
-  const alunosVisiveis = alunosFiltradosParaCalculo.slice(startIndex, startIndex + alunosPorPagina);
-  const isAllSelected = alunosVisiveis.length > 0 && alunosVisiveis.every((t) => t.selected);
+  // Busca com debounce
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      fetchStudentsWithParams(value);
+    }, 400);
+  };
+
+  // Manipular mudança de página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  useEffect(() => {
+    if (currentTurmaId) {
+      fetchStudentsWithParams();
+    }
+  }, [currentPage, currentTurmaId]);
+
+  const totalPages = Math.ceil(totalItems / alunosPorPagina);
+  const isAllSelected = classi.length > 0 && classi.every((t) => t.selected);
 
 
   const toggleSelectAll = () => {
     const newSelected = !isAllSelected;
-    const idsVisiveis = alunosVisiveis.map(a => a.matricula);
+    const idsVisiveis = classi.map(a => a.matricula);
     const novaLista = classi.map((aluno) => {
       if (idsVisiveis.includes(aluno.matricula)) {
         return { ...aluno, selected: newSelected };
@@ -229,7 +279,7 @@ export default function VisualizacaoAlunos() {
       );
 
       toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso.`);
-      fetchStudents(currentTurmaId); // Recarrega a lista
+      fetchStudentsWithParams(searchTerm); // Recarrega a lista com parâmetros atuais
 
     } catch (error: any) {
       console.error("Erro ao excluir alunos:", error);
@@ -330,7 +380,9 @@ export default function VisualizacaoAlunos() {
           console.warn("Erros de processamento de linha no CSV:", response.data.processingErrors);
           toast(`Algumas linhas do CSV tiveram problemas. Verifique o console.`, { icon: "⚠️" });
         }
-        fetchStudents(currentTurmaId); // ATUALIZA A LISTA APÓS SUCESSO
+        // Reset to first page and refresh with current search parameters
+        setCurrentPage(1);
+        fetchStudentsWithParams(searchTerm);
       } else {
         toast.error(response.data.msg || "Ocorreu um problema durante a importação.");
       }
@@ -397,22 +449,13 @@ export default function VisualizacaoAlunos() {
 
         // Verifica a resposta da API
         if (response.status === 201) { // 201 Created é o status de sucesso do seu backend
-          const newStudent: Students = {
-            matricula: matriculaNum, // Usamos a matrícula que o usuário inseriu, pois o backend usa o 'id' fornecido
-            nome: inlineNewStudentName.trim(),
-            selected: false,
-          };
-          
-          // Adiciona o aluno à lista localmente APÓS a confirmação do backend
-          setClassi(prevClassi => [...prevClassi, newStudent]);
           toast.success(response.data.msg); // Usa a mensagem de sucesso do backend: "estudante inserido com sucesso"
           setInlineNewStudentMatricula('');
           setInlineNewStudentName('');
           setShowInlineAddStudent(false);
 
-          // É fundamental recarregar a lista de alunos para garantir que a UI reflita o estado real do backend
-          fetchStudents(currentTurmaId);
-
+          // Refresh the student list with current search and pagination parameters
+          fetchStudentsWithParams(searchTerm);
         } else {
           // Se a API retornar um status de erro (ex: 400 Bad Request, 500 Internal Server Error)
           // O backend retorna 'msg' em caso de erro
@@ -448,7 +491,7 @@ export default function VisualizacaoAlunos() {
           hoverColor={hoverColor}
           onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
           searchTerm={searchTerm}
-          onSearchTermChange={setSearchTerm}
+          onSearchTermChange={handleSearch}
           onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
         />
 
@@ -531,15 +574,16 @@ export default function VisualizacaoAlunos() {
           <ListStudents
             mainColor={color}
             hoverColor={hoverColor}
-            students={alunosVisiveis}
+            classroomId={currentTurmaId || 0}
+            students={classi}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
             onDeleteStudents={handleDeleteStudent}
             onDeleteStudent={handleDeleteSingleStudent}
             isAllSelected={isAllSelected}
             currentPage={currentPage}
-            totalPages={totalPagesFiltradas}
-            setCurrentPage={setCurrentPage}
+            totalPages={totalPages}
+            setCurrentPage={handlePageChange}
             showInlineAddStudent={showInlineAddStudent}
             inlineNewStudentMatricula={inlineNewStudentMatricula}
             setInlineNewStudentMatricula={setInlineNewStudentMatricula}
@@ -550,6 +594,7 @@ export default function VisualizacaoAlunos() {
             inlineAddStudentError={inlineAddStudentError}
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
+            refreshStudents={() => fetchStudentsWithParams(searchTerm)}
           />
         </div>
       </div>
