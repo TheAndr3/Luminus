@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { Folder } from "lucide-react";
-import { Dossie } from "@/app/(appLayout)/dossie/components/types";
+import { Dossier } from "@/services/dossierServices";
 import { useRouter } from "next/navigation";
 import { listDossiers } from "@/services/dossierServices";
 import { AssociateDossier } from "@/services/classroomServices";
@@ -28,7 +28,7 @@ export default function AssociarDossie({
     const [open, setOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
-    const [dossies, setDossies] = useState<Dossie[]>([]);
+    const [dossies, setDossies] = useState<Dossier[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isAssociating, setIsAssociating] = useState(false);
@@ -68,7 +68,7 @@ export default function AssociarDossie({
         dossie.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleClickDossie = async (dossie: Dossie) => {
+    const handleClickDossie = async (dossie: Dossier) => {
         try {
             setIsAssociating(true);
             const classId = Number(params['selected-class']);
@@ -93,30 +93,29 @@ export default function AssociarDossie({
         setOpen(false);
     }
 
-/*      OLD BUTTON              
-<div className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
-        Associar dossiê
-</div> 
-*/
-
     return (
         <>
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-
                     <div>
-                        <ColoredButton // NEW BUTTON
-                            mainColor={mainColor}
-                            hoverColor={hoverColor}
-                            text={'Associar dossiê'}
-                            haveBorder={false}
-                        ></ColoredButton>
+                        {mainColor === "white" ? (
+                            <div className="bg-white text-black hover:bg-gray-100 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
+                                Associar dossiê
+                            </div>
+                        ) : (
+                            <ColoredButton
+                                mainColor={mainColor}
+                                hoverColor={hoverColor}
+                                text={'Associar dossiê'}
+                                haveBorder={false}
+                            />
+                        )}
                     </div>
                 </DialogTrigger>
 
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
 
-                <DialogContent className="h-[600px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                <DialogContent className="h-[600px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
                     <DialogTitle className="sr-only">Associar Dossiê</DialogTitle>
                     <div className="relative mb-6">
                         <div className="flex items-center gap-2 justify-center">

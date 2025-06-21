@@ -154,7 +154,7 @@ export default function DialogPage() {
                 </DialogTrigger>
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
 
-                <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                <DialogContent className="h-[400px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
                     <DialogTitle className="sr-only">Criar Nova Turma</DialogTitle>
 
                     {/* Header do dialog */}

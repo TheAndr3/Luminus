@@ -326,7 +326,7 @@ export default function ListStudents({
         </tbody>
       </table>
 
-      <div className="flex justify-between items-center -mt-4">
+      <div className="flex justify-between items-center -mt-6">
         <div>
           {hasSelected && (
             <ActionPanel
