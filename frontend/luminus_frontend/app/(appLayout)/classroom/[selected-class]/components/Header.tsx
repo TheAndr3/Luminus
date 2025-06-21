@@ -2,31 +2,40 @@ import { ColoredButton } from "@/components/colored-button/colored-button";
 import { clsx } from 'clsx';
 import { ClipboardEdit, Plus, Download, Filter, Edit } from 'lucide-react';
 import AssociarDossie from "./associarDossie";
+
 // components/Header.tsx
-export function Header({ title, mainColor, hoverColor}: { title: string; mainColor?: string; hoverColor?:string}) {
+export function Header({ 
+  title, 
+  mainColor, 
+  hoverColor
+}: { 
+  title: string; 
+  mainColor?: string; 
+  hoverColor?: string;
+}) {
     return (
       <div 
       style={{backgroundColor: mainColor,}}
-      className={`content-end rounded h-40 px-4`}>
-        <div className={`flex justify-between items-center text-white text-[35px] font-bold p-4 px-4`}>
+      className={`content-end rounded h-18 px-4`}>
+        <div className={`flex justify-between items-center text-white text-[35px] font-bold p-2 px-4`}>
           {title}
-          <div className="flex items-center justify-between gap-3">
-            <AssociarDossie
-              mainColor={mainColor}
-              hoverColor={hoverColor}
-            />
-            <ColoredButton
-              mainColor={mainColor}
-              hoverColor={hoverColor}
-              text={''}  
-              icon={<Edit size={35}/>} 
-              haveBorder={true}
-            ></ColoredButton>
+          <div className="flex items-center justify-between gap- -mt-6">
+            <div className="flex flex-col items-center gap-0 ml-8">
+              <AssociarDossie
+                mainColor="white"
+                hoverColor="gray-100"
+              />
+              <ColoredButton
+                mainColor={mainColor}
+                hoverColor={hoverColor}
+                text={''}  
+                icon={<Edit size={25}/>} 
+                haveBorder={true}
+                className="ml-20"
+              ></ColoredButton>
+            </div>
           </div>
         </div>
-
-        
-        
       </div>
     );
   }
