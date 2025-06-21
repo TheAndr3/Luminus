@@ -22,22 +22,24 @@ export function Header({
     return (
       <div 
       style={{backgroundColor: mainColor,}}
-      className={`content-end rounded h-18 px-4`}>
+      className={`content-end rounded h-28 px-4`}>
         <div className={`flex justify-between items-center text-white text-[35px] font-bold p-2 px-4`}>
           {title}
           <div className="flex items-center justify-between gap- -mt-6">
             <div className="flex flex-col items-center gap-0 ml-8">
-              <AssociarDossie
-                mainColor="white"
-                hoverColor="gray-100"
-              />
+              <div className="-mt-6">
+                <AssociarDossie
+                  mainColor="white"
+                  hoverColor="gray-100"
+                />
+              </div>
               <ColoredButton
                 mainColor={mainColor}
                 hoverColor={hoverColor}
                 text={''}  
                 icon={<Edit size={25}/>} 
                 haveBorder={true}
-                className="ml-20"
+                className="ml-20 mt-6"
                 onClick={() => setShowEditModal(true)}
               ></ColoredButton>
             </div>

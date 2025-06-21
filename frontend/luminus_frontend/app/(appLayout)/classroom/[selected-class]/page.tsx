@@ -483,7 +483,7 @@ export default function VisualizacaoAlunos() {
 
 
   return (
-    <div className={styles.pageContainer}>
+    <div className={`${styles.pageContainer} -mt-6`}>
       <div className="flex-1 bg-white px-1"> {/* Ajustado para px-1 como no código original */}
         <Header 
           title={classTitle} 
@@ -575,7 +575,7 @@ export default function VisualizacaoAlunos() {
             </DialogContent>
         </Dialog>
 
-        <div className="px-10 flex items-center justify-center mt-2 ml-auto"> {/*px-10 no original*/}
+        <div className="px-10 flex items-center justify-center -mt-2 ml-auto"> {/*px-10 no original*/}
           <ListStudents
             mainColor={color}
             hoverColor={hoverColor}
