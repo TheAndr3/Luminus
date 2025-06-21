@@ -65,3 +65,13 @@ export const DeleteStudent = async (classroomID: number, studentID: number, cust
         throw new Error(message);
     }
 }
+
+export const UpdateStudent = async (classroomID: number, studentID: number, updateData: { id: number; name: string }): Promise<CreateResponse> => {
+    try {
+        const response = await api.put(`/student/${classroomID}/update/${studentID}`, updateData);
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao atualizar estudante';
+        throw new Error(message);
+    }
+}

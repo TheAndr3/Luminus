@@ -22,11 +22,13 @@ import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomAc
 import { Classroom } from "../../components/types";
 import AssociarDossie from "./associarDossie";
 import StudentActions from "./StudentActions";
+import { UpdateStudent } from "@/services/studentService";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
   mainColor?: string;
   hoverColor: string;
+  classroomId: number; // ID da turma atual
 
   students: Students[];                        // Lista de alunos visíveis (paginadas)
 
@@ -58,6 +60,7 @@ interface ListStudentsProps {
 export default function ListStudents({
   mainColor,
   hoverColor,
+  classroomId,
 
   students,
 
@@ -110,8 +113,29 @@ export default function ListStudents({
   };
 
   // Função para salvar as edições feitas em uma classroom (ainda não implementada)
-  const handleSave = () => {
-    // A lógica de salvamento pode ser implementada aqui
+  const handleSave = async () => {
+    if (!editingId || !editedData.matricula || !editedData.nome) {
+      return;
+    }
+
+    try {
+      const updateData = {
+        id: parseInt(editedData.matricula.toString()),
+        name: editedData.nome
+      };
+
+      await UpdateStudent(classroomId, editingId, updateData);
+      
+      // Limpa o estado de edição
+      setEditingId(null);
+      setEditedData({});
+      
+      // Recarrega a página para mostrar os dados atualizados
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro ao atualizar estudante:', error);
+      alert(error.message || 'Erro ao atualizar estudante');
+    }
   };
 
   // Função para cancelar a edição e limpar os dados

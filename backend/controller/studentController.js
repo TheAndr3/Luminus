@@ -104,31 +104,39 @@ exports.Create = async (req, res) => {
 
 exports.Update = async (req, res) => {
     try {
+      const currentStudentId = req.params.id;
+      const newStudentId = req.body.id;
+      const newName = req.body.name;
 
-      const studentPayload = {
-        id: req.body.id,
-        name: req.body.name
-      };
-
-      await db.pgUpdate('Student', studentPayload, { id: req.params.id });
-
-      if (req.body.id) {
-        const existingStudent = await db.pgSelect('Student', { id: req.body.id });
+      // Se a matrícula for alterada, verificar se a nova matrícula já existe
+      if (newStudentId && newStudentId != currentStudentId) {
+        const existingStudent = await db.pgSelect('Student', { id: newStudentId });
         if (existingStudent.length > 0) {
           return res.status(403).json({ msg: 'Número de matrícula já existe' });
         }
+      }
 
+      // Atualiza o estudante
+      const studentPayload = {
+        id: newStudentId,
+        name: newName
+      };
+
+      await db.pgUpdate('Student', studentPayload, { id: currentStudentId });
+
+      // Se a matrícula foi alterada, atualiza as tabelas relacionadas
+      if (newStudentId && newStudentId != currentStudentId) {
         const classroomStudentPayload = {
-          studentId: req.body.id,
+          studentId: newStudentId,
         };
 
-        await db.pgUpdate('ClassroomStudent', classroomStudentPayload, { studentId: req.params.id});
+        await db.pgUpdate('ClassroomStudent', classroomStudentPayload, { studentId: currentStudentId});
 
         const appraisalPayload = {
-          studentId: req.body.id 
+          studentId: newStudentId 
         };
 
-        await db.pgUpdate('Appraisal', appraisalPayload, { studentId: req.params.id });
+        await db.pgUpdate('Appraisal', appraisalPayload, { studentId: currentStudentId });
       }
 
       return res.status(200).json({ msg: 'estudante atualizado com sucesso' });

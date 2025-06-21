@@ -531,6 +531,7 @@ export default function VisualizacaoAlunos() {
           <ListStudents
             mainColor={color}
             hoverColor={hoverColor}
+            classroomId={currentTurmaId || 0}
             students={alunosVisiveis}
             toggleSelectAll={toggleSelectAll}
             toggleOne={toggleOne}
