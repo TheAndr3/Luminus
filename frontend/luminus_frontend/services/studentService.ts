@@ -53,3 +53,15 @@ export const ListStudents = async (classroomID: number): Promise<StudentListResp
         
     }
 }
+
+export const DeleteStudent = async (classroomID: number, studentID: number, customUserId: number): Promise<CreateResponse> => {
+    try {
+        const response = await api.delete(`/student/${classroomID}/delete/${studentID}`, {
+            data: { customUserId: customUserId }
+        });
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.msg || 'Erro ao deletar estudante';
+        throw new Error(message);
+    }
+}

@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomActions";
 import { Classroom } from "../../components/types";
 import AssociarDossie from "./associarDossie";
+import StudentActions from "./StudentActions";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
@@ -32,6 +33,7 @@ interface ListStudentsProps {
   toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
   toggleOne: (id: number) => void;             // Alterna a seleção de um aluno específico
   onDeleteStudents: () => void;                // Função para deletar alunos
+  onDeleteStudent: (id: number) => void;       // Função para deletar um aluno específico
 
   isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
   currentPage: number;                         // Página atual
@@ -62,6 +64,7 @@ export default function ListStudents({
   toggleSelectAll,
   toggleOne,
   onDeleteStudents,
+  onDeleteStudent,
 
   isAllSelected,
   currentPage,
@@ -264,9 +267,10 @@ export default function ListStudents({
                   <td className="px-4 py-3 text-lg">{students.nome}</td>
                   <td className="p-2">
                     {hovered === students.matricula && (
-                      <ClassroomActions
-                        classroomId={students.matricula}
+                      <StudentActions
+                        studentId={students.matricula}
                         onEdit={() => setEditingId(students.matricula)}
+                        onDelete={() => onDeleteStudent(students.matricula)}
                       />
                     )}
                   </td>
