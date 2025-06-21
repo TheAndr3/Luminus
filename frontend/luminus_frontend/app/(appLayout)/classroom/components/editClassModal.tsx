@@ -135,7 +135,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> 
 
                 {/* Conteúdo do modal */}
-                <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                <DialogContent className="h-[400px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
                     <DialogTitle className="sr-only">Editar Turma</DialogTitle>
 
                     {/* Cabeçalho do modal */}

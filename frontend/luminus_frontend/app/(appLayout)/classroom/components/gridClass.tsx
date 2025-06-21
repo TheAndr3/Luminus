@@ -101,7 +101,7 @@ export default function Gridclassrooms({
             key={classroom.id}
             onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
             onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
-            className="bg-[#0A2B3D] text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46"
+            className="bg-gray-900 text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46"
             onClick={() => handleClickPageStudent(classroom.id)}
           >
             <div className="flex justify-between items-start mb-2">
