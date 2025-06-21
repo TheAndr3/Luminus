@@ -2,17 +2,23 @@ import { ColoredButton } from "@/components/colored-button/colored-button";
 import { clsx } from 'clsx';
 import { ClipboardEdit, Plus, Download, Filter, Edit } from 'lucide-react';
 import AssociarDossie from "./associarDossie";
+import { useState } from 'react';
+import EditClassModal from '../../components/editClassModal';
 
 // components/Header.tsx
 export function Header({ 
   title, 
   mainColor, 
-  hoverColor
+  hoverColor,
+  classroomId
 }: { 
   title: string; 
   mainColor?: string; 
   hoverColor?: string;
+  classroomId?: number | null;
 }) {
+    const [showEditModal, setShowEditModal] = useState(false);
+
     return (
       <div 
       style={{backgroundColor: mainColor,}}
@@ -32,10 +38,26 @@ export function Header({
                 icon={<Edit size={25}/>} 
                 haveBorder={true}
                 className="ml-20"
+                onClick={() => setShowEditModal(true)}
               ></ColoredButton>
             </div>
           </div>
         </div>
+
+        {/* Edit Class Modal */}
+        {showEditModal && (
+          <EditClassModal
+            open={showEditModal}
+            onCancel={() => setShowEditModal(false)}
+            classroom={{
+              id: classroomId || 0,
+              name: title,
+              course: title,
+              season: "",
+              institution: ""
+            }}
+          />
+        )}
       </div>
     );
   }

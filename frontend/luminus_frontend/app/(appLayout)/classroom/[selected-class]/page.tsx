@@ -489,6 +489,7 @@ export default function VisualizacaoAlunos() {
           title={classTitle} 
           mainColor={color} 
           hoverColor={hoverColor}
+          classroomId={currentTurmaId}
         />
         <ActionBar
           mainColor={color}
