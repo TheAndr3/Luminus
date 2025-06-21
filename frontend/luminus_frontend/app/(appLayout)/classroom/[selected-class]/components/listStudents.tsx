@@ -3,7 +3,7 @@ import {Students} from "./types"
 // Componente para o modal de criação de studentss
 import DialogPage from "@/app/(appLayout)/classroom/components/createClassModal";
 // Componente de controle de paginação
-import PageController from "@/app/(appLayout)/classroom/components/paginationController";
+import PageController from "@/app/(appLayout)/classroom/[selected-class]/components/paginationController";
 // Componente para alternar entre visualização em lista ou grade
 import ClassViewMode from "@/app/(appLayout)/classroom/components/classViewMode";
 
@@ -117,10 +117,7 @@ export default function ListStudents({
   // Função para cancelar a edição e limpar os dados
   const handleCancel = () => {
     setEditingId(null);
-    setEditedData({
-      matricula: 0,
-      nome: '',
-    });
+    setEditedData({});
   };
 
   // Função para lidar com a alteração de dados de uma classroom enquanto ela está sendo editada
@@ -129,6 +126,12 @@ export default function ListStudents({
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Função para iniciar a edição de um estudante
+  const handleStartEdit = (student: Students) => {
+    setEditingId(student.matricula);
+    setEditedData({}); // Inicia com dados vazios para mostrar placeholders
   };
 
   return (
@@ -165,7 +168,7 @@ export default function ListStudents({
                   value={inlineNewStudentMatricula}
                   onChange={(e) => setInlineNewStudentMatricula(e.target.value)}
                   placeholder="Matrícula"
-                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
+                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
                   disabled={isLoading}
                 />
               </td>
@@ -175,7 +178,7 @@ export default function ListStudents({
                   value={inlineNewStudentName}
                   onChange={(e) => setInlineNewStudentName(e.target.value)}
                   placeholder="Nome do Aluno"
-                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
+                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
                   disabled={isLoading}
                 />
               </td>
@@ -235,30 +238,38 @@ export default function ListStudents({
                       type="text"
                       value={editedData.matricula || ""}
                       onChange={(e) => handleInputChange("matricula", e.target.value)}
-                      className="w-full p-2 rounded-md border border-gray-300 text-gray-900"
+                      placeholder={students.matricula.toString()}
+                      className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10 placeholder-gray-500"
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editedData.nome || ""}
-                      onChange={(e) => handleInputChange("nome", e.target.value)}
-                      className="w-full p-2 rounded-md border border-gray-300 text-gray-900"
-                    />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={editedData.nome || ""}
+                          onChange={(e) => handleInputChange("nome", e.target.value)}
+                          placeholder={students.nome}
+                          className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10 placeholder-gray-500"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                          onClick={handleSave}
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                          onClick={handleCancel}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md"
-                      onClick={handleSave}
-                    >
-                      Salvar
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md"
-                      onClick={handleCancel}
-                    >
-                      Cancelar
-                    </button>
+                  <td className="px-4 py-3">
                   </td>
                 </>
               ) : (
@@ -269,7 +280,7 @@ export default function ListStudents({
                     {hovered === students.matricula && (
                       <StudentActions
                         studentId={students.matricula}
-                        onEdit={() => setEditingId(students.matricula)}
+                        onEdit={() => handleStartEdit(students)}
                         onDelete={() => onDeleteStudent(students.matricula)}
                       />
                     )}
