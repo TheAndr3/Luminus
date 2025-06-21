@@ -181,7 +181,7 @@ export default function ListStudents({
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
-            <tr className="bg-slate-800 text-white border-b border-slate-700">
+            <tr className="bg-slate-900 text-white border-b border-slate-700">
               <td className="px-4 py-3 w-12"></td>
               <td className="w-10 px-5 py-3 text-left">
                 <UserIcon className="w-6 h-6 text-gray-400" />
@@ -192,37 +192,41 @@ export default function ListStudents({
                   value={inlineNewStudentMatricula}
                   onChange={(e) => setInlineNewStudentMatricula(e.target.value)}
                   placeholder="Matrícula"
-                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
+                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10"
                   disabled={isLoading}
                 />
               </td>
               <td className="px-4 py-3">
-                <input
-                  type="text"
-                  value={inlineNewStudentName}
-                  onChange={(e) => setInlineNewStudentName(e.target.value)}
-                  placeholder="Nome do Aluno"
-                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
-                  disabled={isLoading}
-                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={inlineNewStudentName}
+                      onChange={(e) => setInlineNewStudentName(e.target.value)}
+                      placeholder="Nome do Aluno"
+                      className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                      onClick={handleInlineAddStudent}
+                      disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                      onClick={handleCancelInlineAdd}
+                      disabled={isLoading}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               </td>
-              <td className="px-4 py-3 flex gap-2 items-center">
-                <button
-                  className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full disabled:opacity-50"
-                  onClick={handleInlineAddStudent}
-                  disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
-                  title="Adicionar Aluno"
-                >
-                  <Check size={20} />
-                </button>
-                <button
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full disabled:opacity-50"
-                  onClick={handleCancelInlineAdd}
-                  disabled={isLoading}
-                  title="Cancelar"
-                >
-                  <X size={20} />
-                </button>
+              <td className="px-4 py-3">
               </td>
             </tr>
           )}
@@ -316,23 +320,22 @@ export default function ListStudents({
         </tbody>
       </table>
 
-      <div className="flex justify-end mt-6">
+      <div className="flex justify-between items-center -mt-4">
+        <div>
+          {hasSelected && (
+            <ActionPanel
+              mainColor={mainColor}
+              hoverColor={hoverColor}
+              onDeleted={onDeleteStudents}
+              onCsvFileSelected={onCsvFileSelected}
+            />
+          )}
+        </div>
         <PageController
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
         />
-      </div>
-
-      <div className="mt-10">
-        {hasSelected && (
-          <ActionPanel
-            mainColor={mainColor}
-            hoverColor={hoverColor}
-            onDeleted={onDeleteStudents}
-            onCsvFileSelected={onCsvFileSelected}
-          />
-        )}
       </div>
     </div>
   );

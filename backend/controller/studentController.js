@@ -24,6 +24,28 @@ exports.List = async (req, res) => {
     try {
         const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
+        // Filtro de busca no servidor
+        if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim() !== '') {
+          const search = req.query.search.trim().toLowerCase();
+          const filteredStudents = dataStudent.filter(student =>
+            (student.name && student.name.toLowerCase().includes(search)) ||
+            (student.id && student.id.toString().includes(search))
+          );
+
+          if (filteredStudents.length === 0) {
+            return res.status(404).json({msg:'nenhum estudante encontrado que atenda a solicitação'});
+          }
+
+          const endIndex = start + size;
+          const slicedData = filteredStudents.slice(start, endIndex);
+          
+          return res.status(200).json({
+            msg:"sucesso",
+            data: slicedData,
+            ammount: filteredStudents.length
+          });
+        }
+
         // Sempre retorna 200, mesmo se não houver alunos
         res.status(200).json({msg:"sucesso",data:dataStudent.slice(start, start + size),ammount:dataStudent.length});
     } catch (error) {
