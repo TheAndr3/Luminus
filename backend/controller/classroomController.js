@@ -7,6 +7,7 @@ exports.List = async (req, res) => {
   var start = 0;
   var size = 6; // Tamanho padrão de 6 turmas por página
 
+
   console.log('Listando turmas para o professor:', professor_id);
 
   //para debug
@@ -25,8 +26,22 @@ exports.List = async (req, res) => {
   }
 
   try{
-    const classData = await db.pgSelect('Classroom', {costumUser_id:professor_id});
+    var classData = await db.pgSelect('Classroom', {customUserId:professor_id});
     console.log('Dados brutos das turmas:', classData);
+    
+    // Filtro de busca no servidor
+    if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim() !== '') {
+      const search = req.query.search.trim().toLowerCase();
+      classData = classData.filter(turma =>
+        (turma.name && turma.name.toLowerCase().includes(search)) ||
+        (turma.season && turma.season.toLowerCase().includes(search)) ||
+        (turma.description && turma.description.toLowerCase().includes(search)) ||
+        (turma.institution && turma.institution.toLowerCase().includes(search)));
+
+        if (classData.length === 0) {
+          return res.status(404).json({msg:'nenhuma turma encontrada que atenda a solicitação'});
+        }
+    }
     
     const endIndex = start + size;
     const slicedData = classData.slice(start, endIndex);
@@ -40,7 +55,7 @@ exports.List = async (req, res) => {
   }
     catch (err) {
       console.log('Erro ao buscar turmas:', err)
-      return res.status(400).json({msg:'falha ao atender solicitacao'});
+      return res.status(500).json({msg:'falha ao atender solicitacao'});
     }
 }
 
@@ -48,7 +63,7 @@ exports.Get = async (req, res) => {
   const id = req.params.id;
 
   try{
-    const classData = await db.pgSelect('classroom',{costumUser_id:id});
+    const classData = await db.pgSelect('Classroom',{id:id});
     return res.status(200).json({msg:'sucesso', data:classData});
   } catch(err) {
     return res.status(400).json({msg:'id invalido'});
@@ -58,72 +73,72 @@ exports.Get = async (req, res) => {
 exports.Create = async (req, res) => {
 
   try {
-    console.log(req.body.professor_id)
-    const professor = await db.pgSelect('costumUser', {id: req.body.professor_id})
+    console.log(req.body.customUserId)
+    const professor = await db.pgSelect('CustomUser', {id: req.body.customUserId})
     console.log(professor)
     
-    if (Object.values(professor).length > 0) {
+    if (professor && professor.length > 0) {
       const payload = {
-        costumUser_id: req.body.professor_id,
+        customUserId: req.body.customUserId,
         name: req.body.name,
         description: req.body.description,
         season: req.body.season,
         institution: req.body.institution
       }
 
-      const resp = await db.pgInsert('classroom', payload);
+      const resp = await db.pgInsert('Classroom', payload);
 
       return res.status(201).json({msg:'classe criada com sucesso', data:resp});
 
     } else {
-      return res.status(400).json({msg:'id de professor invalido'});
+      return res.status(403).json({msg:'id de professor invalido'});
     }
   } catch (error) {
-    return res.status(400).json({msg:'nao foi possivel atender a solicitacao'})
+    return res.status(500).json({msg:'nao foi possivel atender a solicitacao'})
   }
 }
 
 exports.Update = async (req, res) => {
   try {
-    const professor = await db.pgSelect('costumUser', { id: req.body.professor_id });
+    const professor = await db.pgSelect('CustomUser', { id: req.body.customUserId });
 
-    if (Object.values(professor).length > 0) {
+    if (professor && professor.length > 0) {
       const payload = {};
       
-      if (req.body.name) payload.name = req.body.name;
-      if (req.body.description) payload.description = req.body.description;
-      if (req.body.season) payload.season = req.body.season;
-      if (req.body.institution) payload.institution = req.body.institution;
-      if (req.body.dossier_id) payload.dossier_id = req.body.dossier_id;
-      if (req.body.dossier_professor_id) payload.dossier_professor_id = req.body.dossier_professor_id;
+      if (req.body.name) {payload.name = req.body.name;}
+      if (req.body.description) {payload.description = req.body.description;}
+      if (req.body.season) {payload.season = req.body.season;}
+      if (req.body.institution) {payload.institution = req.body.institution;}
+      if (req.body.dossierId) {payload.dossierId = req.body.dossierId;}
 
-      const resp = await db.pgUpdate('classroom', payload, { 
+      const resp = await db.pgUpdate('Classroom', payload, { 
         id: req.params.id,
-        costumUser_id: req.body.professor_id 
+        customUserId: req.body.customUserId 
       });
 
       return res.status(200).json({ msg: 'turma atualizada com sucesso', data:resp});
     } else {
-      return res.status(400).json({ msg: 'id de professor invalido' });
+      return res.status(403).json({ msg: 'id de professor invalido' });
     }
   } catch (error) {
-    return res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+    return res.status(500).json({ msg: 'nao foi possivel atender a solicitacao' });
   }
 };
 
 exports.Delete = async (req, res) => {
-  const id = req.params.id;
+  const classroomId = req.params.id;
     try {
     const payload = {
-      classroom_id: req.params.id,
-      costumUser_id: req.body.professor_id
+      id: classroomId,
+      customUserId: req.body.customUserId
     };
 
-    await db.pgDelete('classroom', { id: payload.classroom_id, costumUser_id: payload.professor_id });
+    await db.pgDelete('Classroom', payload);
 
-    return res.status(200).json({ msg: 'turma e registros relacionados removidos com sucesso' });
+    return res.status(204).json({ msg: 'turma e registros relacionados removidos com sucesso' });
   } catch (error) {
-    return res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+    console.error('Erro ao deletar turma:', error);
+    return res.status(500).json({ msg: 'nao foi possivel atender a solicitacao' });
 }
 }
 
@@ -144,15 +159,14 @@ exports.AssociateDossier = async (req, res) => {
       return res.status(404).json({ msg: 'Turma não encontrada' });
     }
 
-    // Atualiza a classe com os dois campos exigidos pela FK composta
+    // Atualiza a classe com o campo exigido pela FK
     const updateData = {
-      dossier_id: dossier[0].id,
-      dossier_professor_id: dossier[0].costumUser_id
+      dossierId: dossier[0].id,
     };
 
     await db.pgUpdate('Classroom', updateData, { id: classId });
 
-    return res.status(200).json({ msg: 'Dossiê associado com sucesso' });
+    return res.status(202).json({ msg: 'Dossiê associado com sucesso' });
   } catch (error) {
     console.error('Erro ao associar dossiê:', error);
     return res.status(500).json({ msg: 'Erro ao associar dossiê' });
@@ -162,21 +176,21 @@ exports.AssociateDossier = async (req, res) => {
 // NOVA FUNÇÃO para criar turma e importar alunos de um CSV
 exports.CreateWithCsv = async (req, res) => {
     // Os campos de texto do FormData estarão em req.body graças ao multer
-    const { name, description, season, institution, professor_id, dossier_id, dossier_professor_id } = req.body;
+    const { name, description, season, institution, customUserId} = req.body;
     const csvFile = req.file; // O arquivo CSV estará em req.file
 
     // Validação básica dos dados da turma
-    if (!name || !description || !season || !professor_id) {
+    if (!name || !description || !season || !customUserId) {
         return res.status(400).json({ msg: 'Campos obrigatórios da turma (nome, descrição, período, ID do professor) não fornecidos.' });
     }
 
-    let newClassroomId;
-    let classProfessorId = parseInt(professor_id, 10); // Garante que é um número
+    var newClassroomId;
+    var classProfessorId = parseInt(customUserId, 10); //Garante que é um número
 
     try {
         // 1. Criar a Turma (Classroom)
         const classroomPayload = {
-            costumUser_id: classProfessorId,
+            customUserId: classProfessorId,
             name: name,
             description: description, // No frontend, 'inputDisc' é usado como descrição
             season: season,
@@ -186,7 +200,7 @@ exports.CreateWithCsv = async (req, res) => {
             // dossier_professor_id: dossier_professor_id ? parseInt(dossier_professor_id, 10) : null,
         };
 
-        const classroomCreationResult = await db.pgInsert('classroom', classroomPayload); // Usa nome da tabela em minúsculas
+        const classroomCreationResult = await db.pgInsert('Classroom', classroomPayload); // Usa nome da tabela em minúsculas
         if (!classroomCreationResult || classroomCreationResult.rows.length === 0) {
             throw new Error('Falha ao criar a turma no banco de dados.');
         }
@@ -196,7 +210,7 @@ exports.CreateWithCsv = async (req, res) => {
         // classProfessorId já foi definido acima, e é o mesmo usado para criar a turma
 
         // 2. Processar Alunos do CSV (se um arquivo foi enviado)
-        let importedStudentsCount = 0;
+        var importedStudentsCount = 0;
         const studentImportFailures = [];
         const studentsFromCsvToProcess = [];
 
@@ -228,26 +242,26 @@ exports.CreateWithCsv = async (req, res) => {
             for (const studentData of studentsFromCsvToProcess) {
                 try {
                     // 2a. Verificar/Criar Aluno (Student)
-                    let studentExists = await db.pgSelect('student', { id: studentData.matricula }); // Usa nome da tabela em minúsculas
+                    let studentExists = await db.pgSelect('Student', { id:studentData.matricula }); // Usa nome da tabela em minúsculas
                     
                     if (studentExists.length === 0) {
-                        await db.pgInsert('student', { id: studentData.matricula, name: studentData.nome });
+                        await db.pgInsert('Student', { id: studentData.matricula, name: studentData.nome });
                     } else if (studentExists[0].name !== studentData.nome) {
                         // Opcional: Atualizar nome do aluno se estiver diferente no CSV
-                        await db.pgUpdate('student', { name: studentData.nome }, { id: studentData.matricula });
+                        await db.pgUpdate('Student', { name: studentData.nome }, { id: studentData.matricula });
                     }
 
                     // 2b. Associar Aluno à Turma (ClassroomStudent)
                     const classroomStudentPayload = {
-                        classroom_id: newClassroomId,
-                        student_id: studentData.matricula,
-                        costumUser_id: classProfessorId // O professor_id da turma
+                        classroomId: newClassroomId,
+                        studentId: studentData.matricula,
+                        customUserId: classProfessorId // O professor_id da turma
                     };
                     
                     // Evitar duplicatas em ClassroomStudent
-                    const existingAssociation = await db.pgSelect('classroomstudent', classroomStudentPayload); // Usa nome da tabela em minúsculas
+                    const existingAssociation = await db.pgSelect('ClassroomStudent', classroomStudentPayload); // Usa nome da tabela em minúsculas
                     if (existingAssociation.length === 0) {
-                        await db.pgInsert('classroomstudent', classroomStudentPayload);
+                        await db.pgInsert('ClassroomStudent', classroomStudentPayload);
                         importedStudentsCount++;
                     } else {
                         studentImportFailures.push({ ...studentData, error: 'Aluno já cadastrado nesta turma.' });

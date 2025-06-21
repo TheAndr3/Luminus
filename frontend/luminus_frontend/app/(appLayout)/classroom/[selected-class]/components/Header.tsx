@@ -2,31 +2,64 @@ import { ColoredButton } from "@/components/colored-button/colored-button";
 import { clsx } from 'clsx';
 import { ClipboardEdit, Plus, Download, Filter, Edit } from 'lucide-react';
 import AssociarDossie from "./associarDossie";
+import { useState } from 'react';
+import EditClassModal from '../../components/editClassModal';
+
 // components/Header.tsx
-export function Header({ title, mainColor, hoverColor}: { title: string; mainColor?: string; hoverColor?:string}) {
+export function Header({ 
+  title, 
+  mainColor, 
+  hoverColor,
+  classroomId
+}: { 
+  title: string; 
+  mainColor?: string; 
+  hoverColor?: string;
+  classroomId?: number | null;
+}) {
+    const [showEditModal, setShowEditModal] = useState(false);
+
     return (
       <div 
       style={{backgroundColor: mainColor,}}
-      className={`content-end rounded h-40 px-4`}>
-        <div className={`flex justify-between items-center text-white text-[35px] font-bold p-4 px-4`}>
+      className={`content-end rounded h-28 px-4`}>
+        <div className={`flex justify-between items-center text-white text-[35px] font-bold p-2 px-4`}>
           {title}
-          <div className="flex items-center justify-between gap-3">
-            <AssociarDossie
-              mainColor={mainColor}
-              hoverColor={hoverColor}
-            />
-            <ColoredButton
-              mainColor={mainColor}
-              hoverColor={hoverColor}
-              text={''}  
-              icon={<Edit size={35}/>} 
-              haveBorder={true}
-            ></ColoredButton>
+          <div className="flex items-center justify-between gap- -mt-6">
+            <div className="flex flex-col items-center gap-0 ml-8">
+              <div className="-mt-6">
+                <AssociarDossie
+                  mainColor="white"
+                  hoverColor="gray-100"
+                />
+              </div>
+              <ColoredButton
+                mainColor={mainColor}
+                hoverColor={hoverColor}
+                text={''}  
+                icon={<Edit size={25}/>} 
+                haveBorder={true}
+                className="ml-20 mt-6"
+                onClick={() => setShowEditModal(true)}
+              ></ColoredButton>
+            </div>
           </div>
         </div>
 
-        
-        
+        {/* Edit Class Modal */}
+        {showEditModal && (
+          <EditClassModal
+            open={showEditModal}
+            onCancel={() => setShowEditModal(false)}
+            classroom={{
+              id: classroomId || 0,
+              name: title,
+              course: title,
+              season: "",
+              institution: ""
+            }}
+          />
+        )}
       </div>
     );
   }

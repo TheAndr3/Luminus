@@ -3,7 +3,7 @@ import { encryptWithPublicKey } from '../utils/crypto';
 
 // LOGIN
 interface LoginPayLoad {
-  email_professor: string,
+  customUserEmail: string,
   password: string
 }
 
@@ -15,7 +15,7 @@ interface LoginResponseData {
 
 // CADASTRO
 export interface CreatePayLoad {
-  email_professor: string,
+  customUserEmail: string,
   password: string,
   name: string
 }
@@ -105,7 +105,7 @@ export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateR
     return response.data;
 
   } catch (error: any) {
-    const message = error.response?.data?.message || 'Erro ao cadastrar';
+    const message = error.response?.data?.msg || 'Erro ao cadastrar';
     throw new Error(message);
   }
 }

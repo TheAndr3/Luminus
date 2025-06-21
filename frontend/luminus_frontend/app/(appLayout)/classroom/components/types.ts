@@ -4,5 +4,6 @@ export type Classroom = {
     disciplina: string;
     codigo: string;
     dossie: string;
+    institution?: string;
   };
   

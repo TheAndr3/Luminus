@@ -180,7 +180,7 @@ export default function LoginPage() {
     try {
       // Chamada à API de login
       const response = await LoginProfessor({
-        email_professor: formData.email,
+        customUserEmail: formData.email,
         password: formData.password
       });
 

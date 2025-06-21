@@ -24,11 +24,33 @@ exports.List = async (req, res) => {
     try {
         const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
+        // Filtro de busca no servidor
+        if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim() !== '') {
+          const search = req.query.search.trim().toLowerCase();
+          const filteredStudents = dataStudent.filter(student =>
+            (student.name && student.name.toLowerCase().includes(search)) ||
+            (student.id && student.id.toString().includes(search))
+          );
+
+          if (filteredStudents.length === 0) {
+            return res.status(404).json({msg:'nenhum estudante encontrado que atenda a solicitação'});
+          }
+
+          const endIndex = start + size;
+          const slicedData = filteredStudents.slice(start, endIndex);
+          
+          return res.status(200).json({
+            msg:"sucesso",
+            data: slicedData,
+            ammount: filteredStudents.length
+          });
+        }
+
         // Sempre retorna 200, mesmo se não houver alunos
         res.status(200).json({msg:"sucesso",data:dataStudent.slice(start, start + size),ammount:dataStudent.length});
     } catch (error) {
         console.log(error);
-        res.status(400).json({msg:'falha ao atender a solicitacao'});
+        res.status(500).json({msg:'falha ao atender a solicitacao'});
     }
 }
 
@@ -37,7 +59,7 @@ exports.Get = async (req, res) => {
     const class_id = req.params.classid;
 
     try {
-        const payload = {classroom_id: class_id, student_id:id};
+        const payload = {classroomId: class_id, studentId:id};
         const dataStudent = await db.pgSelect('ClassroomStudent', payload);
 
         if(Object.values(dataStudent).length > 0) {
@@ -46,7 +68,7 @@ exports.Get = async (req, res) => {
             res.status(400).json({msg:'estudante nao existe na turma'})
         }
     } catch (error) {
-        res.status(400).json({msg:'nao foi possivel atender a solicitacao'});
+        res.status(500).json({msg:'nao foi possivel atender a solicitacao'});
     }
 
     
@@ -61,77 +83,87 @@ exports.Create = async (req, res) => {
             name: req.body.name
         };
         console.log('Backend: Tentando inserir em student com payload:', payload); // Novo log
-        const student = await db.pgSelect('student', {id:req.body.id});
-        if(student[0].length <= 0) {
-          const studentresp = await db.pgInsert('student', payload);
+        const student = await db.pgSelect('Student', {id:req.body.id});
+        if(student.length === 0) {
+          await db.pgInsert('Student', payload);
         }
         
-        console.log('Backend: student inserido com sucesso:', studentresp);
+        console.log('Backend: student inserido com sucesso');
 
         payload = {
-            customUser_id:req.body.professor_id,
-            student_id: req.body.id,
-            classroom_id:req.params.classid
+            customUserId:req.body.customUserId,
+            studentId: req.body.id,
+            classroomId:req.params.classid
         };
 
         const classStudent = await db.pgSelect('Classroom', {id:class_id});
 
-        if(classStudent[0].length > 0) {
-          const studentclassresp = await db.pgInsert('ClassroomStudent', payload);
+        if(classStudent.length > 0) {
+          await db.pgInsert('ClassroomStudent', payload);
         } else {
           return res.status(403).json({msg:'turma nao existe'})
         }
 
-        if (classStudent[0].dossier_id) {
+        if (classStudent[0] && classStudent[0].dossierId) {
           payload = {
-            classroom_id: classStudent[0].id,
-            student_id: req.body.id,
-            costumUser_id: req.body.professor_id,
+            classroomId: classStudent[0].id,
+            studentId: req.body.id,
+            customUserId: req.body.customUserId,
             points: 0,
-            filling_date: new Date(),
-            dossier_id: classStudent[0].dossier_id
+            fillingDate: new Date().toISOString(),
+            dossierId: classStudent[0].dossierId,
           }
           await db.pgInsert('Appraisal', payload);
         }
 
         return res.status(201).json({msg:'estudante inserido com sucesso'});
     } catch (error) {
-        return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
+        console.error('Erro ao criar estudante:', error);
+        return res.status(500).json({msg:'nao foi possivel atender a sua solicitacao'})
     }
 
 }
 
 exports.Update = async (req, res) => {
     try {
-      if (req.body.id) {
-        const existingStudent = await db.pgSelect('student', { id: req.body.id });
+      const currentStudentId = req.params.id;
+      const newStudentId = req.body.id;
+      const newName = req.body.name;
+
+      // Se a matrícula for alterada, verificar se a nova matrícula já existe
+      if (newStudentId && newStudentId != currentStudentId) {
+        const existingStudent = await db.pgSelect('Student', { id: newStudentId });
         if (existingStudent.length > 0) {
-          return res.status(400).json({ msg: 'Número de matrícula já existe' });
+          return res.status(403).json({ msg: 'Número de matrícula já existe' });
         }
-
-        const classroomStudentPayload = {
-          student_id: req.body.id 
-        };
-
-        await db.pgUpdate('ClassroomStudent', classroomStudentPayload, { student_id: req.params.id });
-
-        const appraisalPayload = {
-          student_id: req.body.id 
-        };
-
-        await db.pgUpdate('Appraisal', appraisalPayload, { student_id: req.params.id });
       }
 
+      // Atualiza o estudante
       const studentPayload = {
-        id: req.body.id,
-        name: req.body.name
+        id: newStudentId,
+        name: newName
       };
 
-      await db.pgUpdate('student', studentPayload, { id: req.params.id });
-  
+      await db.pgUpdate('Student', studentPayload, { id: currentStudentId });
+
+      // Se a matrícula foi alterada, atualiza as tabelas relacionadas
+      if (newStudentId && newStudentId != currentStudentId) {
+        const classroomStudentPayload = {
+          studentId: newStudentId,
+        };
+
+        await db.pgUpdate('ClassroomStudent', classroomStudentPayload, { studentId: currentStudentId});
+
+        const appraisalPayload = {
+          studentId: newStudentId 
+        };
+
+        await db.pgUpdate('Appraisal', appraisalPayload, { studentId: currentStudentId });
+      }
+
       return res.status(200).json({ msg: 'estudante atualizado com sucesso' });
     } catch (error) {
-      return res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
+      return res.status(500).json({ msg: 'nao foi possivel atender a sua solicitacao' });
     }
   };
   
@@ -139,16 +171,16 @@ exports.Update = async (req, res) => {
   exports.Delete = async (req, res) => {
     try {
       const classroomStudentPayload = {
-        classroom_id: req.params.classid,
-        student_id: req.params.id,
-        customUser_id: req.body.professor_id
+        classroomId: req.params.classid,
+        studentId: req.params.id,
+        customUserId: req.body.customUserId
       };
 
       await db.pgDelete('ClassroomStudent', classroomStudentPayload);
       
       const appraisalPayload = {
-        student_id: req.params.id,
-        costumUser_id: req.body.professor_id
+        studentId: req.params.id,
+        customUserId: req.body.customUserId
       };
 
       await db.pgDelete('Appraisal', appraisalPayload);
@@ -157,11 +189,11 @@ exports.Update = async (req, res) => {
         id: req.params.id
       };
       
-      await db.pgDelete('student', studentPayload);
+      await db.pgDelete('Student', studentPayload);
   
       return res.status(200).json({ msg: 'estudante removido com sucesso' });
     } catch (error) {
-      return res.status(400).json({ msg: 'nao foi possivel atender a solicitacao' });
+      return res.status(500).json({ msg: 'nao foi possivel atender a solicitacao' });
     }
   };
   
@@ -172,27 +204,33 @@ exports.ImportCsv = async (req, res) => {
   const alunos = req.body.alunos;
 
   if (!classId) {
-    return res.status(400).json({ msg: 'ID da turma não fornecido.' });
+    return res.status(403).json({ msg: 'ID da turma não fornecido.' });
   }
   if (!Array.isArray(alunos) || alunos.length === 0) {
-    return res.status(400).json({ msg: 'Nenhum aluno enviado.' });
+    return res.status(403).json({ msg: 'Nenhum aluno enviado.' });
   }
 
   const imported = [];
   const failures = [];
 
   // Buscar o professor_id da turma
-  let professorId;
+  let customUserId;
+  let dossierId;
+  let parsedClassId;
   try {
-    const turma = await db.pgSelect('Classroom', { id: parseInt(classId) });
+    parsedClassId = parseInt(classId);
+    const turma = await db.pgSelect('Classroom', { id: parsedClassId });
     if (!turma || turma.length === 0) {
       return res.status(404).json({ msg: 'Turma não encontrada.' });
     }
-    professorId = turma[0].costumUser_id;
-    if (!professorId) {
-      return res.status(500).json({ msg: 'professor_id não encontrado para a turma.' });
+    // PostgreSQL returns column names in lowercase, so we need to use 'customuserid'
+    customUserId = turma[0].customuserid;
+    dossierId = turma[0].dossierid;
+    if (!customUserId) {
+      return res.status(404).json({ msg: 'customUserId não encontrado para a turma.' });
     }
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ msg: 'Erro ao buscar turma.', error: err.message });
   }
 
@@ -203,34 +241,34 @@ exports.ImportCsv = async (req, res) => {
     }
     try {
       // 1. Inserir ou atualizar o aluno na tabela student
-      const existingStudent = await db.pgSelect('student', { id: aluno.matricula });
+      const existingStudent = await db.pgSelect('Student', { id: aluno.matricula });
       if (existingStudent.length === 0) {
-        await db.pgInsert('student', { id: aluno.matricula, name: aluno.nome });
+        await db.pgInsert('Student', { id: aluno.matricula, name: aluno.nome });
       } else if (existingStudent[0].name !== aluno.nome) {
-        await db.pgUpdate('student', { name: aluno.nome }, { id: aluno.matricula });
+        await db.pgUpdate('Student', { name: aluno.nome }, { id: aluno.matricula });
       }
 
       // 2. Associar o aluno à turma na tabela ClassroomStudent
       const existsInClass = await db.pgSelect('ClassroomStudent', {
-        classroom_id: classId,
-        student_id: aluno.matricula,
-        customUser_id: professorId
+        classroomId: parsedClassId,
+        studentId: aluno.matricula,
+        customUserId: customUserId
       });
       if (existsInClass.length === 0) {
         await db.pgInsert('ClassroomStudent', {
-          classroom_id: classId,
-          student_id: aluno.matricula,
-          customUser_id: professorId
+          classroomId: parsedClassId,
+          studentId: aluno.matricula,
+          customUserId: customUserId
         });
         imported.push(aluno);
-        if (turma.dossier_id) {
+        if (dossierId) {
           await db.pgInsert('Appraisal', {
-            classroom_id: classId,
-            student_id: aluno.matricula,
-            costumUser_id: professorId,
+            classroomId: parsedClassId,
+            studentId: aluno.matricula,
+            customUserId: customUserId,
             points: 0,
-            dossier_id: turma.dossier_id,
-            filling_date: new Date()
+            dossierId: dossierId,
+            fillingDate: new Date().toISOString()
           });
         }
       } else {

@@ -12,11 +12,22 @@ export interface Section {
   questions: Question[];
 }
 
+export interface EvaluationType{
+  name: string;
+  value: number;
+}
+
+
+export interface EvaluationMethod{
+  name: string;
+  evaluationType:EvaluationType[];
+}
+
 export interface CreateDossierPayload {
   name: string;
-  costumUser_id: number;
+  customUserId: number;
   description: string;
-  evaluation_method: { name: string; value: string; }[];
+  evaluationMethod: EvaluationMethod;
   sections: Section[];
 }
 
@@ -29,8 +40,8 @@ export interface Dossier {
   id: number;
   name: string;
   description: string;
-  evaluation_method: string;
-  costumUser_id: number;
+  evaluationMethod: string;
+  customUserId: number;
 }
 
 export interface DossierListResponse {
@@ -40,10 +51,11 @@ export interface DossierListResponse {
 }
 
 export interface UpdateDossierPayload {
+  id:number
   name: string;
-  costumUser_id: number;
+  customUserId: number;
   description: string;
-  evaluation_method: { name: string; value: string; }[];
+  evaluationMethod: EvaluationMethod;
   sections: Section[];
 }
 

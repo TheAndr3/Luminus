@@ -3,7 +3,7 @@ import {Students} from "./types"
 // Componente para o modal de criação de studentss
 import DialogPage from "@/app/(appLayout)/classroom/components/createClassModal";
 // Componente de controle de paginação
-import PageController from "@/app/(appLayout)/classroom/components/paginationController";
+import PageController from "@/app/(appLayout)/classroom/[selected-class]/components/paginationController";
 // Componente para alternar entre visualização em lista ou grade
 import ClassViewMode from "@/app/(appLayout)/classroom/components/classViewMode";
 
@@ -21,17 +21,21 @@ import { useEffect, useState } from "react";
 import ClassroomActions from "@/app/(appLayout)/classroom/components/classroomActions";
 import { Classroom } from "../../components/types";
 import AssociarDossie from "./associarDossie";
+import StudentActions from "./StudentActions";
+import { UpdateStudent } from "@/services/studentService";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
   mainColor?: string;
   hoverColor: string;
+  classroomId: number; // ID da turma atual
 
   students: Students[];                        // Lista de alunos visíveis (paginadas)
 
-  toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
+  toggleSelectAll: () => void;                 // Seleciona/deseleciona todas da página
   toggleOne: (id: number) => void;             // Alterna a seleção de um aluno específico
   onDeleteStudents: () => void;                // Função para deletar alunos
+  onDeleteStudent: (id: number) => void;       // Função para deletar um aluno específico
 
   isAllSelected: boolean;                      // Indica se todas da página estão selecionadas
   currentPage: number;                         // Página atual
@@ -50,18 +54,23 @@ interface ListStudentsProps {
   isLoading: boolean;                          // Estado de loading global
 
   onCsvFileSelected: (file: File) => void;
+  
+  // Nova prop para refresh dos alunos
+  refreshStudents: () => void;
 };
 
 // Componente principal que renderiza a lista de studentss
 export default function ListStudents({
   mainColor,
   hoverColor,
+  classroomId,
 
   students,
 
   toggleSelectAll,
   toggleOne,
   onDeleteStudents,
+  onDeleteStudent,
 
   isAllSelected,
   currentPage,
@@ -80,6 +89,9 @@ export default function ListStudents({
   isLoading,
 
   onCsvFileSelected,
+  
+  // Nova prop para refresh dos alunos
+  refreshStudents,
 }: ListStudentsProps) {
 
   // Estado local para verificar se algum item está selecionado
@@ -107,17 +119,35 @@ export default function ListStudents({
   };
 
   // Função para salvar as edições feitas em uma classroom (ainda não implementada)
-  const handleSave = () => {
-    // A lógica de salvamento pode ser implementada aqui
+  const handleSave = async () => {
+    if (!editingId || !editedData.matricula || !editedData.nome) {
+      return;
+    }
+
+    try {
+      const updateData = {
+        id: parseInt(editedData.matricula.toString()),
+        name: editedData.nome
+      };
+
+      await UpdateStudent(classroomId, editingId, updateData);
+      
+      // Limpa o estado de edição
+      setEditingId(null);
+      setEditedData({});
+      
+      // Recarrega a página para mostrar os dados atualizados
+      refreshStudents();
+    } catch (error: any) {
+      console.error('Erro ao atualizar estudante:', error);
+      alert(error.message || 'Erro ao atualizar estudante');
+    }
   };
 
   // Função para cancelar a edição e limpar os dados
   const handleCancel = () => {
     setEditingId(null);
-    setEditedData({
-      matricula: 0,
-      nome: '',
-    });
+    setEditedData({});
   };
 
   // Função para lidar com a alteração de dados de uma classroom enquanto ela está sendo editada
@@ -128,9 +158,14 @@ export default function ListStudents({
     }));
   };
 
+  // Função para iniciar a edição de um estudante
+  const handleStartEdit = (student: Students) => {
+    setEditingId(student.matricula);
+    setEditedData({}); // Inicia com dados vazios para mostrar placeholders
+  };
+
   return (
     <div className="w-full">
-      
       {/* Cabeçalho da tabela */}
       <table className="table-fixed w-full text-left border-separate border-spacing-y-2 rounded-md">
         <thead className="bg-gray-100">
@@ -143,58 +178,61 @@ export default function ListStudents({
                 className="w-5 h-5 accent-blue-600"
               />
             </th>
-            <th className="w-10 px-4 py-3"></th> 
+            <th className="w-10 px-4 py-3"></th>
             <th className="px-4 py-3 text-left">Matrícula</th>
             <th className="px-4 py-3 text-left">Aluno</th>
-            <th className="w-14 px-2"></th> 
+            <th className="w-14 px-2"></th>
           </tr>
         </thead>
-        
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
-            <tr className="bg-slate-800 text-white border-b border-slate-700">
-              <td className="px-4 py-3 w-12"></td> {/* Checkbox vazio para alinhamento */}
+            <tr className="bg-slate-900 text-white border-b border-slate-700">
+              <td className="px-4 py-3 w-12"></td>
               <td className="w-10 px-5 py-3 text-left">
-                <UserIcon className="w-6 h-6 text-gray-400" /> {/* Ícone de usuário */}
+                <UserIcon className="w-6 h-6 text-gray-400" />
               </td>
               <td className="px-4 py-3">
                 <input
-                  type="number" // Alterado para number para matrículas
+                  type="number"
                   value={inlineNewStudentMatricula}
                   onChange={(e) => setInlineNewStudentMatricula(e.target.value)}
                   placeholder="Matrícula"
-                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
+                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10"
                   disabled={isLoading}
                 />
               </td>
               <td className="px-4 py-3">
-                <input
-                  type="text"
-                  value={inlineNewStudentName}
-                  onChange={(e) => setInlineNewStudentName(e.target.value)}
-                  placeholder="Nome do Aluno"
-                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-gray-200"
-                  disabled={isLoading}
-                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={inlineNewStudentName}
+                      onChange={(e) => setInlineNewStudentName(e.target.value)}
+                      placeholder="Nome do Aluno"
+                      className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                      onClick={handleInlineAddStudent}
+                      disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                      onClick={handleCancelInlineAdd}
+                      disabled={isLoading}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               </td>
-              <td className="px-4 py-3 flex gap-2 items-center">
-                <button
-                  className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full disabled:opacity-50"
-                  onClick={handleInlineAddStudent}
-                  disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
-                  title="Adicionar Aluno"
-                >
-                  <Check size={20} />
-                </button>
-                <button
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full disabled:opacity-50"
-                  onClick={handleCancelInlineAdd}
-                  disabled={isLoading}
-                  title="Cancelar"
-                >
-                  <X size={20} />
-                </button>
+              <td className="px-4 py-3">
               </td>
             </tr>
           )}
@@ -214,9 +252,8 @@ export default function ListStudents({
               key={students.matricula}
               onMouseEnter={() => setHovered(students.matricula)}
               onMouseLeave={() => setHovered(null)}
-              className="bg-slate-900 text-white border-b border-slate-700 hover:brightness-110"//"bg-[#101828] text-white rounded-xl shadow-sm transition hover:brightness-110"
+              className="bg-slate-900 text-white border-b border-slate-700 hover:brightness-110"
             >
-              {/* Checkbox individual */}
               <td className="px-4 py-3 w-12">
                 <input
                   type="checkbox"
@@ -225,85 +262,86 @@ export default function ListStudents({
                   className="w-5 h-5 accent-blue-600"
                 />
               </td>
-              {/* Ícone da students */}
               <td className="w-10 px-5 py-3 text-left">
                 <FaUsers className="w-6 h-6" />
               </td>
-
-              {/* Modo de edição ou exibição */}
               {editingId === students.matricula ? (
                 <>
-                <td className="px-4 py-3">
+                  <td className="px-4 py-3">
                     <input
                       type="text"
                       value={editedData.matricula || ""}
                       onChange={(e) => handleInputChange("matricula", e.target.value)}
-                      className="w-full p-2 rounded-md border border-gray-300 text-gray-900"
+                      placeholder={students.matricula.toString()}
+                      className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10 placeholder-gray-500"
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <input
-                      type="text"
-                      value={editedData.nome || ""}
-                      onChange={(e) => handleInputChange("nome", e.target.value)}
-                      className="w-full p-2 rounded-md border border-gray-300 text-gray-900"
-                    />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={editedData.nome || ""}
+                          onChange={(e) => handleInputChange("nome", e.target.value)}
+                          placeholder={students.nome}
+                          className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10 placeholder-gray-500"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                          onClick={handleSave}
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                          onClick={handleCancel}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 flex gap-2">
-                    <button
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md"
-                      onClick={handleSave}
-                    >
-                      Salvar
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md"
-                      onClick={handleCancel}
-                    >
-                      Cancelar
-                    </button>
+                  <td className="px-4 py-3">
                   </td>
                 </>
               ) : (
                 <>
                   <td className="px-4 py-3 text-lg">{students.matricula}</td>
                   <td className="px-4 py-3 text-lg">{students.nome}</td>
+                  <td className="p-2">
+                    {hovered === students.matricula && (
+                      <StudentActions
+                        studentId={students.matricula}
+                        onEdit={() => handleStartEdit(students)}
+                        onDelete={() => onDeleteStudent(students.matricula)}
+                      />
+                    )}
+                  </td>
                 </>
               )}
-
-              {/* Exibe as ações ao passar o mouse */}
-              <td className="p-2">
-                {hovered === students.matricula && editingId !== students.matricula && (
-                  <ClassroomActions
-                    classroomId={students.matricula}
-                    onEdit={() => setEditingId(students.matricula)}  // Ao clicar para editar, altera o estado de edição
-                  />
-                )}
-              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div className="flex justify-end mt-6">
-      {/* Paginação */}
-      <PageController
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
-      </div>
-
-      {/* Painel de ações que aparece quando há turmas selecionadas */}
-      <div className="mt-10">
-        {hasSelected && (
-          <ActionPanel
-            mainColor={mainColor}
-            hoverColor={hoverColor}
-            onDeleted={onDeleteStudents}
-            onCsvFileSelected={onCsvFileSelected}
-          />
-        )}
+      <div className="flex justify-between items-center -mt-6">
+        <div>
+          {hasSelected && (
+            <ActionPanel
+              mainColor={mainColor}
+              hoverColor={hoverColor}
+              onDeleted={onDeleteStudents}
+              onCsvFileSelected={onCsvFileSelected}
+            />
+          )}
+        </div>
+        <PageController
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
       </div>
     </div>
   );

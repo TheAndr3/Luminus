@@ -2,11 +2,11 @@ import {api} from './api';
 
 // Interface para os dados da turma (sem o CSV, já que ele vai no FormData)
 interface ClassroomData {
-    professor_id: number;
+    customUserId: number;
     name: string;
     description: string;
     season: string;
-    institution: string;
+    institution?: string; //parametro nao obrigatorio
 }
 
 interface CreateResponse {
@@ -19,17 +19,16 @@ export interface GetClassroomResponse {
     name: string;
     season: string;
     description: string;
-    professor_id?: number;
+    customUserId?: number;
     institution?: string;
-    dossier_id?: number;
-    dossier_professor_id?: number;
+    dossierId?: number;
 }
 
 //OBTER CLASSE
 export interface ListClassroomResponse {
     msg: string;
     data: GetClassroomResponse[];
-    ammount: number;
+    ammount: number;  // Total de turmas
 }
 
 export interface DeleteClassroomResponse {
@@ -42,7 +41,7 @@ export const CreateClassroom = async (payload: ClassroomData): Promise<CreateRes
         const response = await api.post('/classroom/create', payload);
         return response.data;
     } catch (error:any) {
-        const message = error.response?.data || 'Erro ao criar classe';
+        const message = error.response?.data?.msg || error.response?.data?.message || 'Erro ao criar classe';
         throw new Error(message);
     }
 };
@@ -89,9 +88,9 @@ export const GetClassroom = async (id: number): Promise<GetClassroomResponse> =>
 }
 
 // listar as turmas
-export const ListClassroom = async (professorID: number): Promise<ListClassroomResponse> => {
+export const ListClassroom = async (professorID: number, start = 0, size = 6, search = ''): Promise<ListClassroomResponse> => {
     try {
-        const response = await api.get(`/classroom/list/${professorID}`);
+        const response = await api.get(`/classroom/list/${professorID}?start=${start}&size=${size}&search=${encodeURIComponent(search)}`);
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.msg || 'Erro ao listar turmas';
@@ -105,6 +104,7 @@ export const UpdateClassroom = async (id: number, data: {
     description?: string;
     season?: string;
     institution?: string;
+    customUserId: number;
 }): Promise<CreateResponse> => {
     try {
         const response = await api.put(`/classroom/${id}/update`, data);
@@ -116,10 +116,10 @@ export const UpdateClassroom = async (id: number, data: {
 }
 
 // deletar uma turma
-export const DeleteClassroom = async (id: number, professorId: number): Promise<DeleteClassroomResponse> => {
+export const DeleteClassroom = async (id: number, customUserId: number): Promise<DeleteClassroomResponse> => {
     try {
         const response = await api.delete(`/classroom/${id}/delete`, {
-            data: { professor_id: professorId } // <<< ADICIONADO: Enviando o professor_id no corpo
+            data: { customUserId: customUserId } // <<< ADICIONADO: Enviando o professor_id no corpo
         });
         return response.data;
     } catch (error: any) {

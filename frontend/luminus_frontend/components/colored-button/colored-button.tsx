@@ -27,7 +27,7 @@ export function ColoredButton({
     const [isHovered, setIsHovered] = useState(false);
     
     // Combina classes internas com externas, se houver
-    const combinedClassName = `text-white flex items-center gap-1 px-3 py-1 rounded-full border text-sm transition-all duration-300 ease-in-out ${className || ''}`.trim();
+    const combinedClassName = `text-white flex items-center gap-1 px-3 py-1 rounded-xl border text-sm transition-all duration-300 ease-in-out ${className || ''}`.trim();
 
     return (
       <button

@@ -13,7 +13,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { use, useState } from "react"; 
 // Importa hooks do React (useState para estado local)
 
-import class_icon from "@/components/icon/icon_classroom.svg"
+import dark_class_icon from "@/components/icon/dark_icon_classroom.svg"
 // Importa uma imagem SVG para usar como ícone da turma
 
 import Image from "next/image"; 
@@ -21,6 +21,7 @@ import Image from "next/image";
 
 import { CreateClassroom, UpdateClassroom } from "@/services/classroomServices";
 import { ErroMessageDialog } from "./erroMessageDialog";
+import { Pencil } from "lucide-react";
 
 
 
@@ -35,6 +36,7 @@ interface EditClassModalProps{
         id:number,
         name: string,
         course: string,
+        season: string,
         institution?: string
     }
 }
@@ -54,6 +56,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     const [descriptionClassroomModal, setDescriptionClassroomModal] = useState('') 
     const [seasonClassroomModal, setSeasonClassroomModal] = useState('') 
     const [institutionClassroomModal, setInstitutionClassroomModal] = useState('') 
+    const [classroomName, setClassroomName] = useState(classroom.name) // Estado para o nome da turma no header
 
     const [editing, setEditing] = useState(false); 
     // Estado que poderia ser usado para controlar edição do título (não utilizado no momento)
@@ -81,14 +84,21 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
         setMessageButton("Carregando..."); // Atualiza o texto do botão
         
         // Verifica se os campos obrigatórios foram preenchidos
-        if (nameClassroomModal && descriptionClassroomModal) {
+        if (classroomName && seasonClassroomModal) {
             try {
+                // Obtém o ID do professor do localStorage
+                const customUserId = localStorage.getItem('professorId');
+                if (!customUserId) {
+                    throw new Error('ID do professor não encontrado');
+                }
+
                 // Monta o objeto com dados para enviar ao backend
                 const updateData = {
-                    name: nameClassroomModal,
-                    description: descriptionClassroomModal,
+                    name: classroomName,
+                    description: descriptionClassroomModal || classroom.name, // Usa o nome da turma como descrição padrão
                     season: seasonClassroomModal,
-                    institution: institutionClassroomModal || undefined
+                    institution: institutionClassroomModal || undefined,
+                    customUserId: Number(customUserId)
                 }
 
                 // Chama a API para atualizar os dados da turma
@@ -125,7 +135,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> 
 
                 {/* Conteúdo do modal */}
-                <DialogContent className="h-[400px] max-w-6xl bg-[#012D48] rounded-2xl text-white border-1 border-black">
+                <DialogContent className="h-[400px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
                     <DialogTitle className="sr-only">Editar Turma</DialogTitle>
 
                     {/* Cabeçalho do modal */}
@@ -133,7 +143,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                         {/* Ícone fixo à esquerda */}
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
                             <Image 
-                                src={class_icon}
+                                src={dark_class_icon}
                                 alt="icone turma"
                                 className="w-12 h-12"
                             />
@@ -141,7 +151,20 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
 
                         {/* Título centralizado */}
                         <div className="flex items-center gap-2 justify-center">
-                            <span className="text-4xl font-bold"> {title} </span>
+                            {editing ? (
+                            <BaseInput 
+                                className="text-4xl font-bold bg-gray-100 text-gray-900 rounded-2xl px-4 py-2"
+                                placeholder="Digite o nome da turma"
+                                value={classroomName}
+                                onChange={(e) => setClassroomName(e.target.value)}
+                            />
+                            ) : (
+                            <span className="text-4xl font-bold"> {classroomName} </span>
+                            )}
+                            <Pencil 
+                            className="w-5 h-5 text-white cursor-pointer" 
+                            onClick={() => setEditing(!editing)} 
+                            />
                         </div>
                     </div>
 
@@ -162,8 +185,8 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                             <BaseInput
                                 className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
                                 placeholder={classroom.institution} // Placeholder da instituição atual
-                                value={descriptionClassroomModal} // Valor do input Instituição
-                                onChange={(e) => setDescriptionClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                                value={institutionClassroomModal} // Valor do input Instituição
+                                onChange={(e) => setInstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
                             />
                         </div>
 
@@ -171,9 +194,9 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                             <label className="text-2xl">Turma:</label> {/* Label para o campo Turma */}
                             <BaseInput 
                                 className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder={classroom.course} // Placeholder com valor atual do curso
-                                value={institutionClassroomModal} // Valor do input Turma
-                                onChange={(e) => setInstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
+                                placeholder={classroom.season} // Placeholder com valor atual da turma
+                                value={seasonClassroomModal} // Valor do input Turma
+                                onChange={(e) => setSeasonClassroomModal(e.target.value)} // Atualiza estado ao digitar
                             />
                         </div>
 

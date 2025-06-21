@@ -4,7 +4,7 @@ const db = require('../bd');
 
 exports.List = async (req, res) => {
     const class_id = req.params.classid;
-    var start =0;
+    var start = 0;
     var size = 0;
 
     try {
