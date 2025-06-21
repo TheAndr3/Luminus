@@ -25,34 +25,33 @@ import {
 
 import styles from './DossierCRUDPage.module.css';
 
-// Interface para a estrutura de dados retornada pelo GET /dossier/:id (pgDossieSelect)
 interface EvaluationTypeFromAPI {
-    id: number; // ou string, dependendo do DB
+    id: number | string;
     name: string;
     value: string;
 }
 interface EvaluationMethodFromAPI {
-    id: number; // ou string
-    name: string; // 'numerical' ou 'letter' ou o nome do método customizado
-    evaluationType: { [key: string]: EvaluationTypeFromAPI }; // Objeto de tipos
+    id: number | string;
+    name: string; 
+    evaluationType: { [key: string]: EvaluationTypeFromAPI };
 }
 
-interface DossierDetailFromAPI { // Não estende Dossier diretamente para evitar conflito de evaluation_method
+interface DossierDetailFromAPI {
   id: number;
   costumUser_id: number;
   name: string;
   description: string;
-  evaluation_method: EvaluationMethodFromAPI; // Agora é um objeto
-  sections: { // Esta estrutura de sections já é um objeto com chaves sectionId
-    [key: string]: { // key é sectionId
-        id: number; // ou string
+  evaluation_method: EvaluationMethodFromAPI;
+  sections: { 
+    [key: string]: {
+        id: number | string;
         name: string;
         description: string;
         weigth: number;
-        questions: { // Objeto com chaves questionId
-            [key: string]: { // key é questionId
-                id: number; // ou string
-                name: string; // que é a description da questão na UI
+        questions: {
+            [key: string]: {
+                id: number | string;
+                name: string;
             }
         }
     }
@@ -72,12 +71,13 @@ const DEFAULT_SECTION: SectionData = {
   }]
 };
 
+// Valores vêm vazios para o usuário preencher no modal
 const DEFAULT_EVALUATION_METHODS_LETTER: EvaluationMethodItem[] = [
-  { id: `default-method-${Date.now()}-1`, name: 'Excelente', value: 'A+' },
-  { id: `default-method-${Date.now()}-2`, name: 'Muito Bom', value: 'A' },
-  { id: `default-method-${Date.now()}-3`, name: 'Bom', value: 'B' },
-  { id: `default-method-${Date.now()}-4`, name: 'Satisfatório', value: 'C' },
-  { id: `default-method-${Date.now()}-5`, name: 'Insuficiente', value: 'D' },
+  { id: `default-method-${Date.now()}-1`, name: 'Maximo', value: ' 10.0' }, // Valor inicial vazio
+  { id: `default-method-${Date.now()}-2`, name: 'Minimo', value: '0.0' }, // Valor inicial vazio
+  // Adicione mais dois para ter um mínimo de 2 por padrão, se desejar, ou deixe a validação pegar.
+  // { id: `default-method-${Date.now()}-3`, name: 'Bom', value: '' },
+  // { id: `default-method-${Date.now()}-4`, name: 'Regular', value: '' },
 ];
 
 
@@ -111,7 +111,8 @@ const DossierAppPage: React.FC = () => {
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [evaluationMethodsForModal, setEvaluationMethodsForModal] = useState<EvaluationMethodItem[]>(
-    DEFAULT_EVALUATION_METHODS_LETTER
+    // Inicializa com os defaults que agora têm valores vazios
+    DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})) // Cria cópia para evitar mutação
   );
 
   useEffect(() => {
@@ -129,17 +130,19 @@ const DossierAppPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      if (!dossierId) {
+      if (!dossierId) { // Modo de criação
         setDossierTitle("");
         setDossierDescription("");
         setSectionsData([DEFAULT_SECTION]);
         setEvaluationConcept('numerical');
-        setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER);
+        // Para novo dossiê, usa os defaults com valores vazios
+        setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
         setIsEditingMode(true);
         setIsLoading(false);
         return;
       }
 
+      // Modo de edição/visualização
       try {
         const response: DossierResponse = await getDossierById(dossierId);
         const dossierFromApi = response.data as DossierDetailFromAPI;
@@ -151,13 +154,12 @@ const DossierAppPage: React.FC = () => {
         setDossierTitle(dossierFromApi.name);
         setDossierDescription(dossierFromApi.description);
         
-        // O nome do método principal ('numerical', 'letter', ou nome customizado)
-        // é a chave para determinar o tipo de avaliação na UI.
         const mainMethodName = dossierFromApi.evaluation_method.name;
-        let conceptTypeFromApi: EvaluationConcept = 'numerical'; // Default
+        let conceptTypeFromApi: EvaluationConcept = 'numerical'; 
 
         if (mainMethodName.toLowerCase() === 'letter' || 
-            Object.values(dossierFromApi.evaluation_method.evaluationType).some(et => isNaN(parseFloat(et.value)))) {
+            (dossierFromApi.evaluation_method.evaluationType && 
+             Object.values(dossierFromApi.evaluation_method.evaluationType).some(et => isNaN(parseFloat(et.value))))) {
             conceptTypeFromApi = 'letter';
         } else {
             conceptTypeFromApi = 'numerical';
@@ -165,21 +167,28 @@ const DossierAppPage: React.FC = () => {
         setEvaluationConcept(conceptTypeFromApi);
 
         if (conceptTypeFromApi === 'letter') {
-            const methodsFromApi = Object.values(dossierFromApi.evaluation_method.evaluationType).map((et, idx) => ({
-                id: et.id.toString() || `loaded-type-${idx}-${Date.now()}`, // id do EvaluationType
-                name: et.name,
-                value: et.value,
-            }));
-            if (methodsFromApi.length > 0) {
+            const typesFromApi = dossierFromApi.evaluation_method.evaluationType;
+            const methodsFromApi = typesFromApi ? 
+                Object.values(typesFromApi).map((et, idx) => ({
+                    id: et.id.toString() || `loaded-type-${idx}-${Date.now()}`,
+                    name: et.name,
+                    value: parseFloat(et.value).toFixed(1), // Formata valor do backend
+                })) : [];
+
+            // Se o backend retornar métodos válidos (pelo menos 2), usa-os.
+            // Senão, usa os defaults (que agora têm values vazios).
+            if (methodsFromApi.length >= 2) { 
                 setEvaluationMethodsForModal(methodsFromApi);
             } else {
-                setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER);
+                setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+                 if (methodsFromApi.length > 0) { // Log apenas se o backend enviou algo, mas insuficiente
+                    console.warn("Backend retornou menos de 2 métodos para 'letter', usando defaults da UI com valores a serem preenchidos.");
+                 }
             }
         } else { // numerical
-            setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER); // Mantém defaults para o modal
+            setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
         }
         
-        // Adaptar sections que agora é um objeto
         const adaptedSections: SectionData[] = Object.values(dossierFromApi.sections || {}).map(section => ({
             id: section.id.toString(),
             title: section.name,
@@ -187,11 +196,10 @@ const DossierAppPage: React.FC = () => {
             weight: section.weigth.toString(),
             items: Object.values(section.questions || {}).map(question => ({
                 id: question.id.toString(),
-                description: question.name, // 'name' da questão no backend é a 'description' na UI
+                description: question.name, 
                 value: 'N/A' 
             }))
         }));
-
 
         if (adaptedSections.length === 0) {
           adaptedSections.push(DEFAULT_SECTION);
@@ -216,7 +224,7 @@ const DossierAppPage: React.FC = () => {
         setDossierDescription("");
         setSectionsData([DEFAULT_SECTION]);
         setEvaluationConcept('numerical');
-        setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER);
+        setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
         setIsEditingMode(true);
         setIsLoading(false);
     }
@@ -400,7 +408,13 @@ const DossierAppPage: React.FC = () => {
 
   const handleDossierTitleChange = useCallback((newTitle: string) => { setDossierTitle(newTitle); }, []);
   const handleDossierDescriptionChange = useCallback((newDescription: string) => { setDossierDescription(newDescription); }, []);
-  const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => { setEvaluationConcept(concept); }, []);
+  const handleEvaluationConceptChange = useCallback((concept: EvaluationConcept) => { 
+    setEvaluationConcept(concept);
+    if (concept === 'letter' && evaluationMethodsForModal.length < 2) {
+        setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+    }
+  }, [evaluationMethodsForModal]);
+
   const handleSectionDescriptionChange = useCallback((sectionId: string, newDescription: string) => {
     setSectionsData(prev => prev.map(sec => (sec.id === sectionId ? { ...sec, description: newDescription } : sec)));
   }, []);
@@ -629,6 +643,7 @@ const DossierAppPage: React.FC = () => {
 
   const openEvaluationSettingsModal = useCallback(() => {
     clearBlurTimeoutAndSignalIgnore(); 
+    setError(null); 
     setIsSettingsModalOpen(true);
   }, [clearBlurTimeoutAndSignalIgnore]);
 
@@ -646,9 +661,17 @@ const DossierAppPage: React.FC = () => {
   }, []);
 
   const handleSaveEvaluationMethods = useCallback((updatedMethods: EvaluationMethodItem[]) => {
+    if (evaluationConcept === 'letter' && updatedMethods.length < 2) {
+        alert("São necessários pelo menos dois conceitos de avaliação para o método 'Letra'.");
+        // Manter o modal aberto para o usuário corrigir.
+        // O erro pode ser exibido dentro do modal também.
+        const modalErrorElement = document.querySelector(`.${styles.modalContent} .${styles.modalError}`);
+        if(modalErrorElement) modalErrorElement.textContent = "São necessários pelo menos dois conceitos de avaliação.";
+        return; 
+    }
     setEvaluationMethodsForModal(updatedMethods);
     closeEvaluationSettingsModal();
-  }, [closeEvaluationSettingsModal]);
+  }, [closeEvaluationSettingsModal, evaluationConcept]);
 
   const handleDossierSettingsClick = useCallback(() => {
     openEvaluationSettingsModal();
@@ -667,10 +690,25 @@ const DossierAppPage: React.FC = () => {
 
       if (!dossierTitle.trim()) throw new Error("O título do Dossiê não pode ser vazio.");
       if (!evaluationConcept) throw new Error("O método de avaliação não pode ser vazio.");
-      if (evaluationConcept === 'letter' && evaluationMethodsForModal.length === 0) {
-        openEvaluationSettingsModal(); 
-        throw new Error("Para o conceito 'Letra', ao menos um método de avaliação customizado deve ser definido.");
+      
+      if (evaluationConcept === 'letter') {
+          if (evaluationMethodsForModal.length < 2) {
+            openEvaluationSettingsModal(); 
+            throw new Error("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
+          }
+          for(const method of evaluationMethodsForModal) {
+              if (method.value.trim() === '') {
+                  openEvaluationSettingsModal();
+                  throw new Error(`O valor para o conceito '${method.name}' não pode ser vazio. Deve ser entre 0.0 e 10.0.`);
+              }
+              const val = parseFloat(method.value);
+              if(isNaN(val) || val < 0.0 || val > 10.0) {
+                  openEvaluationSettingsModal();
+                  throw new Error(`Valor inválido '${method.value}' para o conceito '${method.name}'. Deve ser entre 0.0 e 10.0.`);
+              }
+          }
       }
+
       if (sectionsData.length === 0) throw new Error("O Dossiê deve conter pelo menos uma seção.");
       
       const hasValidSectionWithQuestion = sectionsData.some(sec => 
@@ -705,8 +743,8 @@ const DossierAppPage: React.FC = () => {
       setIsEditingMode(false); 
       router.push('/dossie'); 
     } catch (error: any) {
-      console.error("Falha ao salvar dossiê:", error); // Log do erro detalhado no console do navegador
-      setError(error.response?.data?.msg || error.message || 'Falha ao salvar dossiê.'); // Tenta pegar msg do backend
+      console.error("Falha ao salvar dossiê:", error); 
+      setError(error.response?.data?.msg || error.message || 'Falha ao salvar dossiê.');
     } finally {
         setIsLoading(false); 
     }
@@ -738,7 +776,6 @@ const DossierAppPage: React.FC = () => {
   if (isLoading && (dossierId || (!isAuthenticated && !dossierId) )) { 
     return <div className={styles.loadingMessage}>Carregando dados...</div>;
   }
-  // Mostrar erro de carregamento APENAS se o carregamento falhou e era para um dossiê existente
   if (error && isLoading && dossierId) { 
      return <div className={styles.errorMessage} style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Erro ao carregar: {error}</div>;
   }
@@ -865,7 +902,7 @@ const DossierAppPage: React.FC = () => {
         <EvaluationSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={closeEvaluationSettingsModal}
-          initialMethods={evaluationMethodsForModal}
+          initialMethods={evaluationMethodsForModal} // Passa os métodos com valores vazios se for novo
           onSave={handleSaveEvaluationMethods}
           modalOverlayClassName={styles.modalOverlay}
           modalContentClassName={styles.modalContent}
