@@ -279,7 +279,7 @@ export default function VisualizacaoAlunos() {
       );
 
       toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso.`);
-      fetchStudents(currentTurmaId); // Recarrega a lista
+      fetchStudentsWithParams(searchTerm); // Recarrega a lista com parâmetros atuais
 
     } catch (error: any) {
       console.error("Erro ao excluir alunos:", error);
@@ -380,7 +380,9 @@ export default function VisualizacaoAlunos() {
           console.warn("Erros de processamento de linha no CSV:", response.data.processingErrors);
           toast(`Algumas linhas do CSV tiveram problemas. Verifique o console.`, { icon: "⚠️" });
         }
-        fetchStudents(currentTurmaId); // ATUALIZA A LISTA APÓS SUCESSO
+        // Reset to first page and refresh with current search parameters
+        setCurrentPage(1);
+        fetchStudentsWithParams(searchTerm);
       } else {
         toast.error(response.data.msg || "Ocorreu um problema durante a importação.");
       }
@@ -447,22 +449,13 @@ export default function VisualizacaoAlunos() {
 
         // Verifica a resposta da API
         if (response.status === 201) { // 201 Created é o status de sucesso do seu backend
-          const newStudent: Students = {
-            matricula: matriculaNum, // Usamos a matrícula que o usuário inseriu, pois o backend usa o 'id' fornecido
-            nome: inlineNewStudentName.trim(),
-            selected: false,
-          };
-          
-          // Adiciona o aluno à lista localmente APÓS a confirmação do backend
-          setClassi(prevClassi => [...prevClassi, newStudent]);
           toast.success(response.data.msg); // Usa a mensagem de sucesso do backend: "estudante inserido com sucesso"
           setInlineNewStudentMatricula('');
           setInlineNewStudentName('');
           setShowInlineAddStudent(false);
 
-          // É fundamental recarregar a lista de alunos para garantir que a UI reflita o estado real do backend
-          fetchStudents(currentTurmaId);
-
+          // Refresh the student list with current search and pagination parameters
+          fetchStudentsWithParams(searchTerm);
         } else {
           // Se a API retornar um status de erro (ex: 400 Bad Request, 500 Internal Server Error)
           // O backend retorna 'msg' em caso de erro
@@ -601,6 +594,7 @@ export default function VisualizacaoAlunos() {
             inlineAddStudentError={inlineAddStudentError}
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
+            refreshStudents={() => fetchStudentsWithParams(searchTerm)}
           />
         </div>
       </div>

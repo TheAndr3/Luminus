@@ -32,7 +32,7 @@ interface ListStudentsProps {
 
   students: Students[];                        // Lista de alunos visíveis (paginadas)
 
-  toggleSelectAll: () => void;                 // Seleciona/deseleciona todas as da página
+  toggleSelectAll: () => void;                 // Seleciona/deseleciona todas da página
   toggleOne: (id: number) => void;             // Alterna a seleção de um aluno específico
   onDeleteStudents: () => void;                // Função para deletar alunos
   onDeleteStudent: (id: number) => void;       // Função para deletar um aluno específico
@@ -54,6 +54,9 @@ interface ListStudentsProps {
   isLoading: boolean;                          // Estado de loading global
 
   onCsvFileSelected: (file: File) => void;
+  
+  // Nova prop para refresh dos alunos
+  refreshStudents: () => void;
 };
 
 // Componente principal que renderiza a lista de studentss
@@ -86,6 +89,9 @@ export default function ListStudents({
   isLoading,
 
   onCsvFileSelected,
+  
+  // Nova prop para refresh dos alunos
+  refreshStudents,
 }: ListStudentsProps) {
 
   // Estado local para verificar se algum item está selecionado
@@ -131,7 +137,7 @@ export default function ListStudents({
       setEditedData({});
       
       // Recarrega a página para mostrar os dados atualizados
-      window.location.reload();
+      refreshStudents();
     } catch (error: any) {
       console.error('Erro ao atualizar estudante:', error);
       alert(error.message || 'Erro ao atualizar estudante');

@@ -215,12 +215,17 @@ exports.ImportCsv = async (req, res) => {
 
   // Buscar o professor_id da turma
   let customUserId;
+  let dossierId;
+  let parsedClassId;
   try {
-    const turma = await db.pgSelect('Classroom', { id: parseInt(classId) });
+    parsedClassId = parseInt(classId);
+    const turma = await db.pgSelect('Classroom', { id: parsedClassId });
     if (!turma || turma.length === 0) {
       return res.status(404).json({ msg: 'Turma não encontrada.' });
     }
-    customUserId = turma[0].customUserId;
+    // PostgreSQL returns column names in lowercase, so we need to use 'customuserid'
+    customUserId = turma[0].customuserid;
+    dossierId = turma[0].dossierid;
     if (!customUserId) {
       return res.status(404).json({ msg: 'customUserId não encontrado para a turma.' });
     }
@@ -245,24 +250,24 @@ exports.ImportCsv = async (req, res) => {
 
       // 2. Associar o aluno à turma na tabela ClassroomStudent
       const existsInClass = await db.pgSelect('ClassroomStudent', {
-        classroomId: classId,
+        classroomId: parsedClassId,
         studentId: aluno.matricula,
         customUserId: customUserId
       });
       if (existsInClass.length === 0) {
         await db.pgInsert('ClassroomStudent', {
-          classroomId: classId,
+          classroomId: parsedClassId,
           studentId: aluno.matricula,
           customUserId: customUserId
         });
         imported.push(aluno);
-        if (turma.dossierId) {
+        if (dossierId) {
           await db.pgInsert('Appraisal', {
-            classroomId: classId,
+            classroomId: parsedClassId,
             studentId: aluno.matricula,
             customUserId: customUserId,
             points: 0,
-            dossierId: turma.dossierId,
+            dossierId: dossierId,
             fillingDate: new Date().toISOString()
           });
         }
