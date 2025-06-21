@@ -14,6 +14,30 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
   // Estado para controlar o valor do input (campo de número da página)
   const [inputController, setInputController] = useState<number | ''>(''); // Aceita número ou string vazia
 
+  // Função para calcular quais páginas mostrar (máximo 5 páginas)
+  const getVisiblePages = () => {
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Se há 5 ou menos páginas, mostrar todas
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    // Calcular o range de páginas para mostrar
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = startPage + maxVisiblePages - 1;
+
+    // Ajustar se o endPage excede o total de páginas
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  };
+
+  const visiblePages = getVisiblePages();
+
   return (
     <div>
       {/* Container dos controles de paginação */}
@@ -53,20 +77,30 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
           }}
         />
 
-        {/* Botões numéricos para cada página */}
-        {Array.from({ length: totalPages }, (_, i) => (
+        {/* Mostrar "..." se não estiver na primeira página visível */}
+        {visiblePages[0] > 1 && (
+          <span className="px-2 text-gray-600">...</span>
+        )}
+
+        {/* Botões numéricos para as páginas visíveis */}
+        {visiblePages.map((page) => (
           <button
-            key={i}
+            key={page}
             className={`border px-[2vh] py-[1vh] rounded-full ${
-              currentPage === i + 1
+              currentPage === page
                 ? "bg-[#101828] text-white" // Estilo diferente para a página atual
                 : "bg-gray-200 text-black hover:bg-gray-600"
             }`}
-            onClick={() => setCurrentPage(i + 1)} // Altera a página ao clicar
+            onClick={() => setCurrentPage(page)} // Altera a página ao clicar
           >
-            {i + 1}
+            {page}
           </button>
         ))}
+
+        {/* Mostrar "..." se não estiver na última página visível */}
+        {visiblePages[visiblePages.length - 1] < totalPages && (
+          <span className="px-2 text-gray-600">...</span>
+        )}
 
         {/* Botão de próxima página */}
         <button
