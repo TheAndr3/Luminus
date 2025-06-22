@@ -792,84 +792,141 @@ const DossierAppPage: React.FC = () => {
     setError(null);    
     try {
       const customUserIdStr = localStorage.getItem('professorId'); // Nome da chave no localStorage
-      if (!customUserIdStr) {
-          throw new Error("Sua sessão expirou. Por favor, faça o login novamente.");
+      if (!customUserIdStr) { // Se não houver ID do professor no localStorage
+          setError("Sua sessão expirou ou o ID do usuário não foi encontrado. Por favor, faça o login novamente.");
+          setIsLoading(false);
+          return; // Interrompe a execução
       }
       const customUserId = parseInt(customUserIdStr);
 
-      if (!dossierTitle.trim()) throw new Error("O título do Dossiê não pode ser vazio.");
-      if (!evaluationConcept) throw new Error("O método de avaliação não pode ser vazio."); // evaluationConcept é 'numerical' ou 'letter'
+      // Validação adicional para customUserId
+      if (isNaN(customUserId) || customUserId <= 0) {
+          setError("ID de usuário inválido. Por favor, verifique os dados de login ou entre em contato com o suporte.");
+          setIsLoading(false);
+          return; // Interrompe a execução
+      }
+
+
+      if (!dossierTitle.trim()) {
+        setError("O título do Dossiê não pode ser vazio.");
+        setIsLoading(false);
+        return;
+      }
+      if (!evaluationConcept) {
+        setError("O método de avaliação não pode ser vazio.");
+        setIsLoading(false);
+        return;
+      }
       
       if (evaluationConcept === 'letter') {
           if (evaluationMethodsForModal.length < 2) {
-            // Abre o modal para o usuário corrigir se ainda não estiver aberto ou se a validação falhou antes.
             openEvaluationSettingsModal(); 
-            throw new Error("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
+            setError("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
+            setIsLoading(false);
+            return;
           }
           for(const method of evaluationMethodsForModal) {
               if (!method.name.trim()) {
                   openEvaluationSettingsModal();
-                  throw new Error(`Um dos conceitos de avaliação está sem nome. Verifique as configurações.`);
+                  setError(`Um dos conceitos de avaliação está sem nome. Verifique as configurações.`);
+                  setIsLoading(false);
+                  return;
               }
               if (method.value.trim() === '') {
                   openEvaluationSettingsModal();
-                  throw new Error(`O valor para o conceito '${method.name}' não pode ser vazio. Deve ser entre 0.0 e 10.0.`);
+                  setError(`O valor para o conceito '${method.name}' não pode ser vazio. Deve ser entre 0.0 e 10.0.`);
+                  setIsLoading(false);
+                  return;
               }
               const val = parseFloat(method.value);
               if(isNaN(val) || val < 0.0 || val > 10.0) {
                   openEvaluationSettingsModal();
-                  throw new Error(`Valor inválido '${method.value}' para o conceito '${method.name}'. Deve ser entre 0.0 e 10.0.`);
+                  setError(`Valor inválido '${method.value}' para o conceito '${method.name}'. Deve ser entre 0.0 e 10.0.`);
+                  setIsLoading(false);
+                  return;
               }
           }
            // Validar nomes e valores únicos para 'letter'
           const names = evaluationMethodsForModal.map(m => m.name.trim().toLowerCase());
           if (new Set(names).size !== names.length) {
               openEvaluationSettingsModal();
-              throw new Error('Os nomes dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
+              setError('Os nomes dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
+              setIsLoading(false);
+              return;
           }
           const values = evaluationMethodsForModal.map(m => parseFloat(m.value));
           if (new Set(values).size !== values.length) {
               openEvaluationSettingsModal();
-              throw new Error('Os valores numéricos dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
+              setError('Os valores numéricos dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
+              setIsLoading(false);
+              return;
           }
       }
 
-      if (sectionsData.length === 0) throw new Error("O Dossiê deve conter pelo menos uma seção.");
+      if (sectionsData.length === 0) {
+        setError("O Dossiê deve conter pelo menos uma seção.");
+        setIsLoading(false);
+        return;
+      }
       
       const hasValidSectionWithQuestion = sectionsData.some(sec => 
         sec.title.trim() !== "" && Array.isArray(sec.items) && 
         sec.items.length > 0 && sec.items.some(it => it.description.trim() !== "")
       );
-      if (!hasValidSectionWithQuestion) throw new Error("O Dossiê deve conter pelo menos uma seção com título e um item com descrição preenchidos.");
+      if (!hasValidSectionWithQuestion) {
+        setError("O Dossiê deve conter pelo menos uma seção com título e um item com descrição preenchidos.");
+        setIsLoading(false);
+        return;
+      }
 
       let totalWeight = 0;
       for (const sec of sectionsData) {
-        if (!sec.title.trim()) throw new Error(`Uma das seções não pode ter um título vazio.`);
-        if (!Array.isArray(sec.items) || sec.items.length === 0) throw new Error(`A seção "${sec.title || 'sem título'}" deve conter pelo menos um item.`);
+        if (!sec.title.trim()) {
+            setError(`Uma das seções não pode ter um título vazio.`);
+            setIsLoading(false);
+            return;
+        }
+        if (!Array.isArray(sec.items) || sec.items.length === 0) {
+            setError(`A seção "${sec.title || 'sem título'}" deve conter pelo menos um item.`);
+            setIsLoading(false);
+            return;
+        }
         for (const item of sec.items) {
-            if (!item.description.trim()) throw new Error(`Um dos itens na seção "${sec.title || 'sem título'}" não pode ter a descrição vazia.`);
+            if (!item.description.trim()) {
+                setError(`Um dos itens na seção "${sec.title || 'sem título'}" não pode ter a descrição vazia.`);
+                setIsLoading(false);
+                return;
+            }
         }
         const parsedWeight = parseInt(sec.weight, 10);
-        if (isNaN(parsedWeight) || parsedWeight < 0) throw new Error(`O peso da seção "${sec.title || 'sem título'}" é inválido. Deve ser um número positivo (0-100).`);
+        if (isNaN(parsedWeight) || parsedWeight < 0) {
+            setError(`O peso da seção "${sec.title || 'sem título'}" é inválido. Deve ser um número positivo (0-100).`);
+            setIsLoading(false);
+            return;
+        }
         totalWeight += parsedWeight;
       }
-      if (totalWeight !== 100) throw new Error(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
+      if (totalWeight !== 100) {
+        setError(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
+        setIsLoading(false);
+        return;
+      }
       
       const payload: ServiceCreateDossierPayload = adaptDossierStateToPayload(
         dossierTitle, dossierDescription, evaluationConcept, sectionsData,
-        customUserId, evaluationMethodsForModal // Passa os métodos da UI
+        customUserId, 
+        evaluationMethodsForModal
       );
 
-      if (dossierId) { // Se dossierId existe, é uma atualização
-        await updateDossier(dossierId, payload as UpdateDossierPayload); // O ID é adicionado implicitamente pela URL no serviço, mas o payload é o mesmo
-      } else { // Criação
+      if (dossierId) {
+        await updateDossier(dossierId, payload as UpdateDossierPayload);
+      } else {
         await createDossier(payload);
       }
-      setIsEditingMode(false); // Sai do modo de edição após salvar
-      router.push('/dossie'); // Redireciona para a lista de dossiês
+      setIsEditingMode(false); 
+      router.push('/dossie'); 
     } catch (error: any) {
       console.error("Falha ao salvar dossiê:", error); 
-      // Tenta pegar a mensagem de erro da resposta da API, senão a mensagem do objeto de erro, ou uma padrão.
       setError(error.response?.data?.msg || error.message || 'Falha ao salvar dossiê.');
     } finally {
         setIsLoading(false); 
@@ -880,39 +937,31 @@ const DossierAppPage: React.FC = () => {
     ]);
 
   // Determina se a sidebar de ações deve ser mostrada.
-  // A sidebar é mostrada se estiver em modo de edição,
-  // um elemento DENTRO de um item de seção estiver focado, e a posição da sidebar tiver sido calculada.
-  const isFocusedElementAnItemField = isClient && // Garante que estamos no cliente
+  const isFocusedElementAnItemField = isClient && 
                                      focusedElementRef.current instanceof HTMLElement &&
                                      focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
   const showActionSidebar = isClient && isEditingMode && isFocusedElementAnItemField && sidebarTargetTop !== null;
 
-  // Limpa o erro ao tentar uma nova edição, exceto para erro de sessão
   useEffect(() => {
-    if (error && !isLoading) { // Se houver um erro e não estiver carregando
-        // Não limpa o erro de sessão para que o usuário veja
-        if (error !== "Sua sessão expirou. Por favor, faça o login novamente.") {
-            // Para outros erros, pode-se optar por limpar ou não ao editar.
-            // Se for para limpar ao editar, descomente:
-            // setError(null); 
+    if (error && !isLoading) { 
+        if (error !== "Sua sessão expirou ou o ID do usuário não foi encontrado. Por favor, faça o login novamente." &&
+            error !== "ID de usuário inválido. Por favor, verifique os dados de login ou entre em contato com o suporte.") {
+            // setError(null); // Opcional: limpar outros erros ao editar
         }
     }
-  // Observa mudanças nos dados do formulário e no erro.
   }, [dossierTitle, dossierDescription, sectionsData, evaluationMethodsForModal, error, isLoading]);
 
 
   // --- Renderização ---
-  if (!isClient || (!isAuthenticated && dossierId)) { // Tentando ver/editar dossiê sem estar logado
+  if (!isClient || (!isAuthenticated && dossierId)) { 
     return <div className={styles.loadingMessage}>Carregando e verificando autenticação...</div>;
   }
-  if (!isClient && !dossierId && !isAuthenticated) { // Tentando criar sem estar logado (já deve ser pego pelo redirect no primeiro useEffect)
+  if (!isClient && !dossierId && !isAuthenticated) { 
     return <div className={styles.loadingMessage}>Verificando autenticação...</div>;
   }
-  // Se estiver carregando dados de um dossiê existente OU se ainda não autenticou para criar um novo
   if (isLoading && (dossierId || (!isAuthenticated && !dossierId) )) { 
     return <div className={styles.loadingMessage}>Carregando dados...</div>;
   }
-  // Se houve erro DURANTE o carregamento de um dossiê existente
   if (error && isLoading && dossierId) { 
      return <div className={styles.errorMessage} style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Erro ao carregar: {error}</div>;
   }
@@ -932,11 +981,10 @@ const DossierAppPage: React.FC = () => {
             backButtonClassName={styles.pageHeader_backButton}
             backButtonIconClassName={styles.pageHeader_backIcon}
             toggleButtonClassName={`${styles.pageHeader_toggleButtonBase} ${isEditingMode ? styles.pageHeader_toggleButtonEditing : styles.pageHeader_toggleButtonViewing}`}
-            onFieldFocus={handleFieldFocus} // Passa para gerenciar o foco nos botões do PageHeader
-            onFieldBlur={handleFieldBlur}   // Passa para gerenciar o blur nos botões do PageHeader
+            onFieldFocus={handleFieldFocus} 
+            onFieldBlur={handleFieldBlur}   
           />
 
-          {/* Exibe erro geral da página (ex: falha ao salvar) se não estiver carregando */}
           {error && !isLoading && <div className={styles.modalError} style={{marginBottom: '15px'}}>{error}</div>}
 
           <div ref={scrollableAreaRef} className={styles.scrollableArea}>
@@ -948,9 +996,9 @@ const DossierAppPage: React.FC = () => {
               onTitleChange={handleDossierTitleChange}
               onDescriptionChange={handleDossierDescriptionChange}
               onEvaluationConceptChange={handleEvaluationConceptChange}
-              onSettingsClick={handleDossierSettingsClick} // Para abrir o modal de configurações
-              onFieldFocus={handleFieldFocus} // Para gerenciar foco nos campos do DossierHeader
-              onFieldBlur={handleFieldBlur}   // Para gerenciar blur nos campos do DossierHeader
+              onSettingsClick={handleDossierSettingsClick} 
+              onFieldFocus={handleFieldFocus} 
+              onFieldBlur={handleFieldBlur}   
               className={styles.dossierHeaderContainer}
               titleTextClassName={styles.dossierHeader_titleText}
               titleInputClassName={styles.dossierHeader_titleInput}
@@ -966,7 +1014,7 @@ const DossierAppPage: React.FC = () => {
               descriptionTextareaClassName={styles.dossierHeader_descriptionTextarea}
               evaluationAndSettingsClassName={styles.dossierHeader_evaluationAndSettings}
               settingsButtonClassName={styles.dossierHeader_settingsButton}
-              settingsButtonIconClassName={styles.pageHeader_backIcon} // Reutiliza ícone se aplicável ou usa um específico
+              settingsButtonIconClassName={styles.pageHeader_backIcon} 
             />
             <SectionList
               sections={sectionsData} 
@@ -979,23 +1027,23 @@ const DossierAppPage: React.FC = () => {
               onSectionWeightChange={handleSectionWeightChange}
               onItemChange={handleItemChange}
               onItemSelect={handleItemSelect}
-              onFieldFocus={handleFieldFocus} // Propaga para Section e SectionItem
-              onFieldBlur={handleFieldBlur}   // Propaga para Section e SectionItem
+              onFieldFocus={handleFieldFocus} 
+              onFieldBlur={handleFieldBlur}   
               className={styles.sectionListContainer}
               sectionComponentClassName={styles.section_outerContainer}
               sectionComponentContentWrapperClassName={styles.section_contentWrapper}
               sectionComponentSelectedStylingClassName={styles.section_selectedStyling}
               sectionComponentTitleAndWeightContainerClassName={styles.section_titleAndWeightContainer}
               sectionComponentTitleContainerClassName={styles.section_titleContainer}
-              sectionComponentTitleEditableFieldClassName={styles.editableField_inputBase} // Verificar se esta classe é adequada ou se precisa de uma específica
+              sectionComponentTitleEditableFieldClassName={styles.editableField_inputBase} 
               sectionComponentTitleTextClassName={styles.section_titleText}
               sectionComponentTitleInputClassName={styles.section_titleInput}
               sectionComponentDescriptionContainerClassName={styles.section_descriptionContainer}
-              sectionComponentDescriptionEditableFieldClassName={styles.editableField_inputBase} // Similar ao título
+              sectionComponentDescriptionEditableFieldClassName={styles.editableField_inputBase} 
               sectionComponentDescriptionTextClassName={styles.section_descriptionText}
               sectionComponentDescriptionTextareaClassName={styles.section_descriptionTextarea}
               sectionComponentWeightFieldContainerClassName={styles.section_weightFieldContainer}
-              sectionComponentWeightEditableFieldClassName={styles.editableField_inputBase} // Similar ao título
+              sectionComponentWeightEditableFieldClassName={styles.editableField_inputBase} 
               sectionComponentWeightTextClassName={styles.section_weightText}
               sectionComponentWeightInputClassName={styles.section_weightInput}
               sectionComponentItemsListClassName={styles.section_itemsList}
@@ -1005,7 +1053,7 @@ const DossierAppPage: React.FC = () => {
               sectionItemDescriptionTextDisplayClassName={styles.editableField_textDisplayItem}
               sectionItemDescriptionInputClassName={styles.editableField_inputItem}
             />
-            {isClient && showActionSidebar && ( // Renderiza a sidebar condicionalmente
+            {isClient && showActionSidebar && ( 
               <ActionSidebar
                 targetTopPosition={sidebarTargetTop}
                 onAddItemToSection={handleAddItemForSidebar}
@@ -1014,11 +1062,11 @@ const DossierAppPage: React.FC = () => {
                 onDeleteSection={handleDeleteSectionForSidebar}
                 canDeleteItem={canDeleteItem}
                 canDeleteSection={canDeleteSection}
-                onClearBlurTimeout={clearBlurTimeoutAndSignalIgnore} // Para gerenciar o blur ao interagir com a sidebar
+                onClearBlurTimeout={clearBlurTimeoutAndSignalIgnore} 
                 containerClassNameFromPage={styles.actionSidebarVisualBase}
                 buttonClassNameFromPage={styles.actionSidebarButtonVisualBase}
                 disabledButtonClassNameFromPage={styles.actionSidebarButtonDisabledVisualBase}
-                iconClassNameFromPage={styles.actionSidebarIconVisualBase} // Se houver estilos específicos para ícones na sidebar
+                iconClassNameFromPage={styles.actionSidebarIconVisualBase} 
               />
             )}
           </div>
@@ -1027,7 +1075,7 @@ const DossierAppPage: React.FC = () => {
               <button 
                 onClick={handleSave} 
                 className={styles.saveButton} 
-                disabled={isLoading} // Desabilita o botão enquanto estiver salvando/carregando
+                disabled={isLoading} 
               >
                 {isLoading && !error ? 'Salvando...' : 'Salvar Alterações'}
               </button>
@@ -1036,20 +1084,19 @@ const DossierAppPage: React.FC = () => {
         </main>
       </div>
 
-      {isClient && ( // Garante que o modal só seja renderizado no cliente
+      {isClient && ( 
         <EvaluationSettingsModal
           isOpen={isSettingsModalOpen}
           onClose={closeEvaluationSettingsModal}
           initialMethods={evaluationMethodsForModal}
           onSave={handleSaveEvaluationMethods}
-          // Passando classes CSS do módulo CSS da página para o modal
-          modalOverlayClassName={styles.modalOverlay} // Supondo que você tenha essas classes definidas
+          modalOverlayClassName={styles.modalOverlay} 
           modalContentClassName={styles.modalContent}
           modalHeaderClassName={styles.modalHeader}
           modalTitleClassName={styles.modalTitle}
           modalCloseButtonClassName={styles.modalCloseButton}
           modalBodyClassName={styles.modalBody}
-          modalErrorClassName={styles.modalError} // Para exibir erros dentro do modal
+          modalErrorClassName={styles.modalError} 
           modalListClassName={styles.modalList}
           modalListItemClassName={styles.modalListItem}
           modalListItemNameClassName={styles.modalListItemName}
@@ -1059,7 +1106,7 @@ const DossierAppPage: React.FC = () => {
           modalAddButtonClassName={styles.modalAddButton}
           modalSaveButtonClassName={styles.modalSaveButton}
           modalCancelButtonClassName={styles.modalCancelButton}
-          editableFieldForModalInputClassName={styles.modalEditableFieldInput} // Classes para EditableField dentro do modal
+          editableFieldForModalInputClassName={styles.modalEditableFieldInput} 
           editableFieldForModalTextDisplayClassName={styles.modalEditableFieldTextDisplay}
         />
       )}

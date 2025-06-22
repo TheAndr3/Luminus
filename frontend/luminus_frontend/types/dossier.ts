@@ -2,11 +2,12 @@
 import {
     CreateDossierPayload as ServiceCreateDossierPayload,
     Section as ServiceSection,
-    // Question as ServiceQuestion // Não vamos usar ServiceQuestion diretamente para o mapeamento
-                                 // por causa da incompatibilidade com o uso de 'name' no backend.
-    Question // Importando Question para referência, mas sabendo da limitação.
+    Question, // Mantendo a importação original. { description: string; }
+    EvaluationMethod as ServiceEvaluationMethod, // Importando o tipo do serviço
+    EvaluationType as ServiceEvaluationType // Importando o tipo do serviço
 } from '../services/dossierServices';
 
+// UI types (permanecem os mesmos que você forneceu)
 export interface ItemData {
   id: string;
   description: string;
@@ -23,93 +24,82 @@ export interface SectionData {
 
 export type EvaluationConcept = 'numerical' | 'letter';
 
-export interface EvaluationMethodItem {
+export interface EvaluationMethodItem { // UI type for custom eval methods (e.g., from modal)
   id: string;
   name: string;
-  value: string;
+  value: string; // User inputs as string, will be parsed to float for backend
 }
 
-interface BackendEvaluationTypePayload {
-    name: string;
-    value: number;
-}
-
-// Interface para o que o backend realmente espera para cada questão DENTRO do payload
-// baseado no DossierController.js (payloadQuestion.name = question.name)
+// Interface para o que o backend controller espera para cada Question no payload.
+// Baseado em DossierController.js: payloadQuestion.name = question.name
 interface BackendQuestionPayload {
     name: string;
-    // Se a interface Question do dossierServices tivesse outros campos obrigatórios,
-    // teríamos que adicioná-los aqui com valores dummy ou reais se o backend os usasse.
-    // Como Question só tem 'description', e o backend usa 'name',
-    // vamos priorizar 'name' e fazer um cast.
 }
 
 
 export const adaptDossierStateToPayload = (
     dossierTitle: string,
     dossierDescription: string,
-    evaluationConcept: EvaluationConcept,
-    sectionsData: SectionData[],
-    professorId: number,
-    customEvaluationMethodsFromUI: EvaluationMethodItem[]
+    evaluationConcept: EvaluationConcept, // 'numerical' or 'letter'
+    sectionsData: SectionData[], // UI sections
+    professorId: number, // Corresponde a customUserId
+    customEvaluationMethodsFromUI: EvaluationMethodItem[] // UI state for 'letter' concept methods
 ): ServiceCreateDossierPayload => {
 
-    let evaluationMethodPayloadForBackend: BackendEvaluationTypePayload[];
-
+    // 1. Construir o array `evaluationType` para o payload do serviço.
+    // Este array conterá objetos do tipo ServiceEvaluationType: { name: string, value: number }
+    const serviceEvaluationTypes: ServiceEvaluationType[] = [];
     if (evaluationConcept === 'letter') {
-        evaluationMethodPayloadForBackend = customEvaluationMethodsFromUI.map(method => ({
-            name: method.name,
-            value: parseFloat(method.value),
-        }));
-    } else {
-        evaluationMethodPayloadForBackend = [];
+        customEvaluationMethodsFromUI.forEach(uiMethod => {
+            serviceEvaluationTypes.push({
+                name: uiMethod.name,
+                value: parseFloat(uiMethod.value), // Converte o valor string da UI para número
+            });
+        });
     }
+    // Se evaluationConcept for 'numerical', serviceEvaluationTypes permanecerá um array vazio.
 
+    // 2. Construir o objeto `evaluationMethod` para o payload do serviço.
+    // Este objeto deve corresponder à interface ServiceEvaluationMethod: { name: string, evaluationType: ServiceEvaluationType[] }
+    const servicePayloadEvaluationMethod: ServiceEvaluationMethod = {
+        name: evaluationConcept, // Será 'numerical' ou 'letter'
+        evaluationType: serviceEvaluationTypes
+    };
+
+    // 3. Construir o array `sections` para o payload do serviço
     const backendSections: ServiceSection[] = sectionsData.map(sectionUI => {
-        // O backend DossierController.js usa 'question.name' ao criar payloadQuestion.
-        // A interface Question em dossierServices.ts espera 'description'.
-        // Vamos criar objetos com 'name' e depois fazer um cast para Question[].
+        // O backend DossierController.js (em payloadQuestion) usa `question.name`.
+        // A interface Question em dossierServices.ts usa `description`.
+        // Vamos criar objetos com `name` para o que o controller parece consumir,
+        // e então fazer um cast para Question[] para satisfazer a tipagem de ServiceSection.
         const questionsForBackendController: BackendQuestionPayload[] = sectionUI.items.map(itemUI => ({
             name: itemUI.description,
         }));
 
         const parsedWeight = parseInt(sectionUI.weight, 10);
-        const sectionWeight = isNaN(parsedWeight) ? 0 : parsedWeight;
+        const sectionWeight = isNaN(parsedWeight) ? 0 : parsedWeight; // Garante que o peso seja um número
 
         return {
             name: sectionUI.title,
             description: sectionUI.description,
             weigth: sectionWeight,
-            // Aqui está o ponto crítico:
+            // Ponto crítico de tipagem:
             // Fazemos um cast de BackendQuestionPayload[] para Question[] (de dossierServices.ts).
-            // Isso satisfaz o TypeScript para a interface ServiceSection, mas o conteúdo real
-            // dos objetos no array é { name: string }, que é o que o backend controller usa.
+            // Isso satisfaz o TypeScript para a interface ServiceSection. O conteúdo real dos
+            // objetos no array é { name: string }, que é o que o backend controller parece usar.
             questions: questionsForBackendController as unknown as Question[],
         };
     });
 
-    const payloadStructureForController = {
+    // 4. Construir o payload final para o serviço
+    const servicePayload: ServiceCreateDossierPayload = {
         name: dossierTitle,
         customUserId: professorId,
         description: dossierDescription,
-        evaluationMethod: evaluationMethodPayloadForBackend as any, // Para o loop do controller
+        evaluationMethod: servicePayloadEvaluationMethod, // Agora usa o objeto corretamente tipado
         sections: backendSections,
     };
 
-    // Adiciona a propriedade .name ao array evaluationMethod para o backend controller
-    if (evaluationConcept === 'letter' && evaluationMethodPayloadForBackend.length > 0) {
-      (payloadStructureForController.evaluationMethod as any).name = evaluationConcept;
-    } else if (evaluationConcept === 'numerical') {
-      (payloadStructureForController.evaluationMethod as any).name = evaluationConcept;
-    }
-    // O tipo de payloadStructureForController aqui é quase ServiceCreateDossierPayload,
-    // exceto pela estrutura interna de `evaluationMethod` e `questions` que foram
-    // ajustadas para o que o *código do controller* espera, não necessariamente a *interface*.
-
-    // Precisamos fazer um cast final para ServiceCreateDossierPayload.
-    // A incompatibilidade principal é `evaluationMethod` (array vs objeto)
-    // e o conteúdo de `questions` (name vs description).
-    // O `as any` em evaluationMethod já lida com a primeira.
-    // O `as unknown as Question[]` em questions lida com a segunda para a tipagem.
-    return payloadStructureForController as ServiceCreateDossierPayload;
+    // O tipo de servicePayload agora corresponde a ServiceCreateDossierPayload.
+    return servicePayload;
 };
