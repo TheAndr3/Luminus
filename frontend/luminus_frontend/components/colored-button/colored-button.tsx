@@ -6,11 +6,12 @@ interface ColoredButtonProps {
   text?: string;
   icon?: ReactNode;
   haveBorder?: boolean;
-  onClick?: MouseEventHandler<HTMLButtonElement>; // <<< ADICIONADO AQUI
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   className?: string; 
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
-  textColor?: string; // New prop for text color
+  textColor?: string;
+  title?: string;
 }
 
 export function ColoredButton({
@@ -23,7 +24,8 @@ export function ColoredButton({
   className, 
   disabled,  
   type = "button", 
-  textColor = 'white', // Default to white
+  textColor = 'white',
+  title,
 }: ColoredButtonProps) {
     
     const [isHovered, setIsHovered] = useState(false);
@@ -33,20 +35,21 @@ export function ColoredButton({
 
     return (
       <button
-        type={type} // Adicionado
-        disabled={disabled} // Adicionado
+        type={type}
+        disabled={disabled}
         onClick={onClick} 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
             backgroundColor: disabled ? '#A0A0A0' : (isHovered ? hoverColor : mainColor), 
             borderColor: haveBorder ? (isHovered ? hoverColor : mainColor) : 'transparent', 
-            color: textColor, // Use the textColor prop
+            color: textColor,
         }}
         className={combinedClassName}
+        title={title || text}
       >    
-        {icon && icon}
-        {text}
+        {icon && <span className="flex-shrink-0">{icon}</span>}
+        <span className="truncate w-full text-center">{text}</span>
       </button>
     );
   }

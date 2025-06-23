@@ -73,14 +73,18 @@ export function Header({
                     icon={<Folder size={18} color={mainColor} />}
                     haveBorder={false}
                     textColor={mainColor}
+                    title={associatedDossier.name}
+                    className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
                   />
                 ) : (
                   <ColoredButton
                     mainColor="white"
                     hoverColor="gray-100"
                     text="Nenhum dossiê associado"
+                    icon={<Folder size={18} color="#888" />}
                     haveBorder={false}
-                    textColor={mainColor}
+                    textColor="#888"
+                    className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
                   />
                 )}
               </div>
@@ -90,7 +94,7 @@ export function Header({
                 text={''}  
                 icon={<Edit size={25}/>} 
                 haveBorder={true}
-                className="ml-20 mt-6"
+                className="ml-50 mt-6"
                 onClick={() => setShowEditModal(true)}
               ></ColoredButton>
             </div>
