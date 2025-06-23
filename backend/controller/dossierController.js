@@ -21,44 +21,50 @@ exports.Create = async (req, res) => {
     };
 
     //insere o metodo de avaliação no banco de dados
-    const evMethodId = await db.pgInsert('EvaluationMethod', payloadEvaluationMethod);
+    const evMethodResult = await db.pgInsert('EvaluationMethod', payloadEvaluationMethod);
 
-    if (!evMethodId || evMethodId.length === 0) {
+    if (!evMethodResult || !evMethodResult.rows || evMethodResult.rows.length === 0) {
       return res.status(400).json({msg:'Erro ao criar método de avaliação'});
     }
 
+    const evMethodId = evMethodResult.rows[0].id;
+
     //insere os campos de avaliação
-    for (let i = 0; i < evaluationMethod.length; i++) {
-      var type = evaluationMethod[i];
-      var payloadEvaluationType = {
-        name:type.name,
-        value:type.value,
-        evaluationMethodId:evMethodId[0].id,
-        customUserId:customUserId
+    if (evaluationMethod.evaluationType && Array.isArray(evaluationMethod.evaluationType)) {
+      for (let i = 0; i < evaluationMethod.evaluationType.length; i++) {
+        var type = evaluationMethod.evaluationType[i];
+        var payloadEvaluationType = {
+          name:type.name,
+          value:type.value,
+          evaluationMethodId:evMethodId,
+          customUserId:customUserId
+        }
+        await db.pgInsert('EvaluationType', payloadEvaluationType);
       }
-      await db.pgInsert('EvaluationType', payloadEvaluationType);
-    } 
+    }
 
     const payloadDossier = {
       name:name, 
       customUserId:customUserId, 
       description:description,
-      evaluationMethodId:evMethodId[0].id,
+      evaluationMethodId:evMethodId,
     }
     
     //insere no banco de dados o novo dossie
-    const dossierId = await db.pgInsert('Dossier', payloadDossier);
+    const dossierResult = await db.pgInsert('Dossier', payloadDossier);
 
-    if (!dossierId || dossierId.length === 0) {
+    if (!dossierResult || !dossierResult.rows || dossierResult.rows.length === 0) {
       return res.status(400).json({msg:'Erro ao criar dossiê'});
     }
+
+    const dossierId = dossierResult.rows[0].id;
 
     //pra cada sessao existente insere no banco de dados as sessoes pertencentes a esse dossie
     for (let i = 0; i < sections.length; i++) {
       var section = sections[i];
       const questions = section.questions;
       var payloadSection = {
-        dossierId:dossierId[0].id,
+        dossierId:dossierId,
         customUserId:customUserId,
         name:section.name,
         description:section.description,
@@ -66,26 +72,28 @@ exports.Create = async (req, res) => {
       }
 
       //atualiza o objeto sessao para conter agora tambem seu Id
-      var sectionId = await db.pgInsert('Section', payloadSection);
+      var sectionResult = await db.pgInsert('Section', payloadSection);
 
-      if (!sectionId || sectionId.length === 0) {
+      if (!sectionResult || !sectionResult.rows || sectionResult.rows.length === 0) {
         return res.status(400).json({msg:'Erro ao criar seção'});
       }
+
+      const sectionId = sectionResult.rows[0].id;
 
       //para cada questao dentro desta sessao, cria uma nova entrada no banco de dados
       for (let j = 0; j < questions.length; j++) {
         var question = questions[j];
         var payloadQuestion = {
           customUserId:customUserId,
-          dossierId:dossierId[0].id,
-          sectionId:sectionId[0].id,
-          evaluationMethodId:evMethodId[0].id,
+          dossierId:dossierId,
+          sectionId:sectionId,
+          evaluationMethodId:evMethodId,
           name: question.name
         }
         await db.pgInsert('Question', payloadQuestion);
       }
     }
-    return res.status(201).json({msg:'dossie criado com sucesso', data:dossie});
+    return res.status(201).json({msg:'dossie criado com sucesso', data:{id: dossierId}});
 
   } catch (err) {
     console.error('Erro ao criar dossiê:', err);
@@ -161,7 +169,7 @@ exports.Update = async (req, res) => {
     try {
         const haveAssociationInAnyClass = await db.pgSelect('Appraisal', {
             dossierId: id,
-            costumUserId: body.customUserId
+            customUserId: body.customUserId
         });
         
         if (haveAssociationInAnyClass.length > 0) {

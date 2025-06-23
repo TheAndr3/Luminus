@@ -919,7 +919,11 @@ const DossierAppPage: React.FC = () => {
       );
 
       if (dossierId) {
-        await updateDossier(dossierId, payload as UpdateDossierPayload);
+        const updatePayload = {
+          ...payload,
+          id: dossierId
+        } as UpdateDossierPayload;
+        await updateDossier(dossierId, updatePayload);
       } else {
         await createDossier(payload);
       }

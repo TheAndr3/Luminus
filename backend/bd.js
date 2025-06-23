@@ -59,6 +59,16 @@ async function pgInsert(table, data) {
         whatIsReturned = "code, status";
     } else if (table == 'Tokencode' || table == 'tokencode' || table == 'TOKENCODE' || table == 'TokenCode'){
         whatIsReturned = "token, verifyStatus";
+    } else if (table == 'EvaluationMethod' || table == 'evaluationmethod' || table == 'evaluationMethod') {
+        whatIsReturned = 'id, customUserId';
+    } else if (table == 'EvaluationType' || table == 'evaluationtype' || table == 'evaluationType') {
+        whatIsReturned = 'id, evaluationMethodId, customUserId';
+    } else if (table == 'Dossier' || table == 'dossier') {
+        whatIsReturned = 'id, customUserId';
+    } else if (table == 'Section' || table == 'section') {
+        whatIsReturned = 'id, dossierId, customUserId';
+    } else if (table == 'Question' || table == 'question') {
+        whatIsReturned = 'id, sectionId, dossierId, customUserId';
     } else {
         whatIsReturned = 'id';
     }
@@ -115,97 +125,128 @@ async function pgSelectStudentsInClassroom(classroom_id) {
 }
 
 async function pgDossieSelect(id) {
-    // Consulta SQL que usa uma CTE (Expressão de Tabela Comum) para primeiro verificar se o dossiê existe
-    const query = `
-    SELECT d.id as dossierId, d.customUserId, d.name as dossierName, d.description as dossierDescription, d.evaluationMethod as dossierEvaluationMethod, s.id as sectionId, s.name as sectionName, s.description as sectionDescription, s.weigth as sectionWeigth, q.id as questionId, q.name as questionName FROM Dossier as d INNER JOIN Section as s ON d.id = s.dossierId JOIN Question as q ON s.id = q.sectionId WHERE d.id = $1;
+    // First, get the basic dossier information
+    const dossierQuery = `
+    SELECT d.id as dossierid, d.customuserid, d.name as dossiername, d.description as dossierdescription, d.evaluationmethodid as dossierevaluationmethod
+    FROM dossier as d 
+    WHERE d.id = $1;
     `;
 
     const client = await connect();
-    const data = await client.query(query, [id]);
+    const dossierData = await client.query(dossierQuery, [id]);
     client.release();
 
-    const methodType = await pgSelect('EvaluationType', {id:data.rows[0].dossierEvaluationMethod});
-    const method = await pgSelect('EvaluationMethod', {id:data.rows[0].dossierEvaluationMethod});
-    
     // Retorna null se nenhum dossiê for encontrado
-    if (!data.rows || data.rows.length === 0) {
+    if (!dossierData.rows || dossierData.rows.length === 0) {
         return null;
-    } else {
-        var result = {
-            id: data.rows[0].dossierId,
-            customUserId: data.rows[0].customUserId,
-            name: data.rows[0].dossierName,
-            description: data.rows[0].dossierDescription,
-            evaluationMethod: {
-                id: data.rows[0].dossierEvaluationMethod,
-                name: method[0].name,
-                evaluationType: {}
-            },
-            sections: {}
-        };
-
-        for (let i = 0;i < methodType.length; i++){
-            result.evaluationMethod.evaluationType[methodType[i].id] = {
-                id: methodType[i].id,
-                name: methodType[i].name,
-                value: methodType[i].value
-            }
-        }
-        //talvez não funcione 
-        for (let i = 0; i < data.rows.length; i++) {
-            if (!result.sections[data.rows[i].sectionId]) {
-                result.sections[data.rows[i].sectionId] = {
-                    id: data.rows[i].sectionId,
-                    name: data.rows[i].sectionName,
-                    description: data.rows[i].sectionDescription,
-                    weigth: data.rows[i].sectionWeigth,
-                    questions: {}
-                };
-            } 
-            result.sections[data.rows[i].sectionId].questions[data.rows[i].questionId] = {
-                id: data.rows[i].questionId,
-                name: data.rows[i].questionName
-            };
-            
-        }
-        
-        // Retorna o objeto dossiê diretamente já no formato correto
-        return result;
-
     }
+
+    // Get the customUserId and evaluationMethodId from the dossier
+    const customUserId = dossierData.rows[0]["customuserid"];
+    const evaluationMethodId = dossierData.rows[0]["dossierevaluationmethod"];
+
+    // Get evaluation method and types using correct column names
+    const methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
+    const method = await pgSelect('evaluationmethod', {id: evaluationMethodId, customuserid: customUserId});
+    
+    // Get sections and questions with LEFT JOINs
+    const sectionsQuery = `
+    SELECT s.id as sectionid, s.name as sectionname, s.description as sectiondescription, s.weigth as sectionweigth, 
+           q.id as questionid, q.name as questionname
+    FROM section as s 
+    LEFT JOIN question as q ON s.id = q.sectionid AND s.dossierid = q.dossierid AND s.customuserid = q.customuserid 
+    WHERE s.dossierid = $1 AND s.customuserid = $2
+    ORDER BY s.id, q.id;
+    `;
+
+    const client2 = await connect();
+    const sectionsData = await client2.query(sectionsQuery, [id, customUserId]);
+    client2.release();
+    
+    var result = {
+        id: dossierData.rows[0]["dossierid"],
+        customUserId: dossierData.rows[0]["customuserid"],
+        name: dossierData.rows[0]["dossiername"],
+        description: dossierData.rows[0]["dossierdescription"],
+        evaluation_method: {
+            id: evaluationMethodId,
+            name: method[0]?.name || 'Unknown',
+            evaluationType: []
+        },
+        sections: {}
+    };
+
+    // Process evaluation types as array
+    for (let i = 0; i < methodType.length; i++){
+        result.evaluation_method.evaluationType.push({
+            id: methodType[i].id,
+            name: methodType[i].name,
+            value: methodType[i].value
+        });
+    }
+    
+    // Process sections and questions
+    for (let i = 0; i < sectionsData.rows.length; i++) {
+        const row = sectionsData.rows[i];
+        const sectionId = row["sectionid"];
+        if (!sectionId) continue;
+        if (!result.sections[sectionId]) {
+            result.sections[sectionId] = {
+                id: sectionId,
+                name: row["sectionname"],
+                description: row["sectiondescription"],
+                weigth: row["sectionweigth"],
+                questions: {}
+            };
+        } 
+        // Only add question if it exists (not null due to LEFT JOIN)
+        if (row["questionid"]) {
+            result.sections[sectionId].questions[row["questionid"]] = {
+                id: row["questionid"],
+                name: row["questionname"]
+            };
+        }
+    }
+    
+    // Retorna o objeto dossiê diretamente já no formato correto
+    return result;
 }
 
 async function pgDossieUpdate(data) {
 
     try {
         const evaluationMethod = data.evaluationMethod;
-        await pgDelete('EvaluationMethod', {id:evaluationMethod.id});
+        // For composite primary key, need to include customUserId
+        await pgDelete('evaluationmethod', {id:evaluationMethod.id, customuserid: data.customUserId});
         const payloadEvaluationMethod = {
-            customUserId: data.customUserId,
+            customuserid: data.customUserId,
             name: evaluationMethod.name,
         }
-        const evmid = await pgInsert('EvaluationMethod', payloadEvaluationMethod);
+        const evmid = await pgInsert('evaluationmethod', payloadEvaluationMethod);
 
         
-        for (let i = 0; i < evaluationMethod.length; i++) {
-            const evaluationType = evaluationMethod[i];
-            const payloadEvaluationType = {
-                evaluationMethodId: evmid.rows[0].id,
-                customUserId: data.customUserId,
-                name: evaluationType.name,
-                value: evaluationType.value
+        if (evaluationMethod.evaluationType && Array.isArray(evaluationMethod.evaluationType)) {
+            for (let i = 0; i < evaluationMethod.evaluationType.length; i++) {
+                const evaluationType = evaluationMethod.evaluationType[i];
+                const payloadEvaluationType = {
+                    evaluationmethodid: evmid.rows[0].id,
+                    customuserid: data.customUserId,
+                    name: evaluationType.name,
+                    value: evaluationType.value
+                }
+                await pgInsert('evaluationtype', payloadEvaluationType);
             }
-            await pgInsert('evaluationMethod', payloadEvaluationType);
         }
 
-        await pgDelete('Section',{dossierId:data.id});
+        // For composite primary key, need to include customUserId
+        await pgDelete('section',{dossierid:data.id, customuserid: data.customUserId});
         var sections = data.sections;
 
         for(let i = 0; i < sections.length; i++){
             var section = sections[i];
             const payloadSection = {
-                customUserId: data.customUserId,
-                dossierId: data.id,
+                customuserid: data.customUserId,
+                dossierid: data.id,
                 name: section.name,
                 description: section.description,
                 weigth: section.weigth
@@ -217,10 +258,10 @@ async function pgDossieUpdate(data) {
                 var question = section.questions[j];
 
                 const payloadQuestion = {
-                    customUserId: data.customUserId,
-                    sectionId: secid.rows[0].id,
-                    dossierId: data.id,
-                    evaluationMethodId: evmid.rows[0].id,
+                    customuserid: data.customUserId,
+                    sectionid: secid.rows[0].id,
+                    dossierid: data.id,
+                    evaluationmethodid: evmid.rows[0].id,
                     name: question.name
                 };
                 await pgInsert('question', payloadQuestion);
@@ -231,9 +272,9 @@ async function pgDossieUpdate(data) {
         const payloadDossier = {
             name: data.name,
             description: data.description,
-            evaluationMethodId: evmid.rows[0].id
+            evaluationmethodid: evmid.rows[0].id
         };
-        const data = pgUpdate('dossier',payloadDossier, {id:data.id})
+        await pgUpdate('dossier',payloadDossier, {id:data.id, customuserid: data.customUserId});
     } catch (error) {
         throw error;
     }
@@ -254,7 +295,7 @@ async function pgAppraisalSelect(id, idDossie, idClass) {
         points:data[0].points,
         fillingDate:data[0].fillingDate,
         studentId:data[0].studentId,
-        costumUserId:data[0].costumUserId,
+        customUserId:data[0].customUserId,
         classroomId:data[0].classroomId,
         dossierId:data[0].dossierId,
         dossieName:data[0].dossierName,
