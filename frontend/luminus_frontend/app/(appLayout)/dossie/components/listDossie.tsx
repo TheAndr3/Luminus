@@ -130,7 +130,7 @@ export default function ListDossie({
               key={dossie.id}
               onMouseEnter={() => setHovered(dossie.id)}
               onMouseLeave={() => setHovered(null)}
-              className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh]"
+              className="bg-gray-900 text-white rounded px-[4vh] py-[2vh] cursor-pointer hover:brightness-110"
               onClick={() => handleClickDossie(dossie.id)}
             >
               {/* Checkbox para selecionar esse dossiê individualmente */}

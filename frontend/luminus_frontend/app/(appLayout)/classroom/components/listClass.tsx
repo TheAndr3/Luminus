@@ -138,7 +138,7 @@ export default function ListClass({
               key={classroom.id}
               onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
               onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
-              className="bg-slate-900 text-white rounded px-[4vh] py-[2vh] "
+              className="bg-gray-900 text-white rounded px-[4vh] py-[2vh] cursor-pointer hover:brightness-110"
               onClick={() => handleClickPageStudent(classroom.id)}
             >
               {/* Checkbox para selecionar essa turma individualmente */}

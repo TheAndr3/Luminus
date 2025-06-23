@@ -187,7 +187,7 @@ export default function ListStudents({
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
-            <tr className="bg-slate-900 text-white border-b border-slate-700">
+            <tr className="bg-gray-900 text-white border-b border-gray-700">
               <td className="px-4 py-3 w-12"></td>
               <td className="w-10 px-5 py-3 text-left">
                 <UserIcon className="w-6 h-6 text-gray-400" />
@@ -252,7 +252,7 @@ export default function ListStudents({
               key={students.matricula}
               onMouseEnter={() => setHovered(students.matricula)}
               onMouseLeave={() => setHovered(null)}
-              className="bg-slate-900 text-white border-b border-slate-700 hover:brightness-110"
+              className="bg-gray-900 text-white border-b border-gray-700 hover:brightness-110 cursor-pointer"
             >
               <td className="px-4 py-3 w-12">
                 <input
