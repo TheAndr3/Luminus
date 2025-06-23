@@ -10,6 +10,7 @@ interface ColoredButtonProps {
   className?: string; 
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
+  textColor?: string; // New prop for text color
 }
 
 export function ColoredButton({
@@ -22,12 +23,13 @@ export function ColoredButton({
   className, 
   disabled,  
   type = "button", 
+  textColor = 'white', // Default to white
 }: ColoredButtonProps) {
     
     const [isHovered, setIsHovered] = useState(false);
     
     // Combina classes internas com externas, se houver
-    const combinedClassName = `text-white flex items-center gap-1 px-3 py-1 rounded-xl border text-sm transition-all duration-300 ease-in-out ${className || ''}`.trim();
+    const combinedClassName = `flex items-center gap-1 px-3 py-1 rounded-xl border text-sm transition-all duration-300 ease-in-out ${className || ''}`.trim();
 
     return (
       <button
@@ -39,6 +41,7 @@ export function ColoredButton({
         style={{
             backgroundColor: disabled ? '#A0A0A0' : (isHovered ? hoverColor : mainColor), 
             borderColor: haveBorder ? (isHovered ? hoverColor : mainColor) : 'transparent', 
+            color: textColor, // Use the textColor prop
         }}
         className={combinedClassName}
       >    

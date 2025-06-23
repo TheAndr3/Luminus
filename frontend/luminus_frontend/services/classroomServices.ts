@@ -22,6 +22,8 @@ export interface GetClassroomResponse {
     customUserId?: number;
     institution?: string;
     dossierId?: number;
+    dossier_id?: number; // Alternative field name that might be returned by the backend
+    dossierid?: number; // PostgreSQL returns lowercase field names
 }
 
 //OBTER CLASSE
@@ -61,12 +63,15 @@ export const CreateClassroomWithCSV = async (formData: FormData): Promise<Create
 export const GetClassroom = async (id: number): Promise<GetClassroomResponse> => {
     try {
         const response = await api.get(`/classroom/${id}`);
+        console.log('GetClassroom raw response:', response.data); // Debug log
+        
         if (
             response.data &&
             response.data.data &&
             Array.isArray(response.data.data) &&
             response.data.data.length > 0
         ) {
+            console.log('GetClassroom returning first item from array:', response.data.data[0]); // Debug log
             return response.data.data[0];
         } else if (
             response.data &&
