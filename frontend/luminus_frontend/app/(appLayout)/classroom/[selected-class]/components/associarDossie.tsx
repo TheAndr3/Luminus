@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BaseInput } from "@/components/inputs/BaseInput";
@@ -12,6 +12,7 @@ import { AssociateDossier } from "@/services/classroomServices";
 import { useParams } from "next/navigation";
 
 import { ColoredButton } from "@/components/colored-button/colored-button";
+import PageController from "../../../dossie/components/paginationController";
 
 interface AssociarDossieProps {
   mainColor?: string;
@@ -35,42 +36,50 @@ export default function AssociarDossie({
     const [dossies, setDossies] = useState<Dossier[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [totalItems, setTotalItems] = useState(0);
+    const searchTimeout = useRef<NodeJS.Timeout | null>(null);
     const [isAssociating, setIsAssociating] = useState(false);
 
     const dossiesPerPage = 6;
+    const totalPages = Math.ceil(totalItems / dossiesPerPage);
+
+    const fetchDossies = async (searchValue = searchTerm, page = currentPage) => {
+        if (!open) return;
+        try {
+            setIsLoading(true);
+            setError(null);
+            const professorId = Number(localStorage.getItem('professorId'));
+            if (!professorId) throw new Error('ID do professor não encontrado');
+            const start = page * dossiesPerPage;
+            const response = await listDossiers(professorId, start, dossiesPerPage, searchValue);
+            setDossies((response.data || []).map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                description: d.description,
+                evaluationMethod: d.evaluation_method,
+                customUserId: d.costumUser_id
+            })));
+            setTotalItems(response.ammount || 0);
+        } catch (error: any) {
+            setError(error.message || 'Erro ao carregar dossiês');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDossies = async () => {
-            if (!open) return;
-            
-            try {
-                setIsLoading(true);
-                setError(null);
-                const professorId = Number(localStorage.getItem('professorId'));
-                
-                if (!professorId) {
-                    throw new Error('ID do professor não encontrado');
-                }
-
-                const response = await listDossiers(professorId);
-                if (response.data) {
-                    setDossies(response.data);
-                }
-            } catch (error: any) {
-                console.error('Falha ao carregar dossiês:', error);
-                setError(error.message || 'Erro ao carregar dossiês');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         fetchDossies();
-    }, [open]);
+        // eslint-disable-next-line
+    }, [open, currentPage]);
 
-    // FILTRO DE DOSSIÊS
-    const filteredDossies = dossies.filter(dossie =>
-        dossie.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleSearch = (value: string) => {
+        setSearchTerm(value);
+        setCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            fetchDossies(value, 0);
+        }, 400);
+    };
 
     const handleClickDossie = async (dossie: Dossier) => {
         try {
@@ -158,7 +167,7 @@ export default function AssociarDossie({
                                 type="text"
                                 placeholder="Procure pelo dossiê"
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => handleSearch(e.target.value)}
                                 className="bg-white border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh] placeholder-black text-black"
                             />
                         </div>
@@ -173,7 +182,7 @@ export default function AssociarDossie({
                             <div className="text-white text-2xl mb-4">
                                 {error}
                             </div>
-                        ) : filteredDossies.length === 0 ? (
+                        ) : dossies.length === 0 ? (
                             <>
                                 <div className="text-white text-2xl mb-4">
                                     Sem dossiês criados
@@ -183,22 +192,29 @@ export default function AssociarDossie({
                                 </Button>
                             </>
                         ) : (
-                            filteredDossies
-                                .slice(currentPage * dossiesPerPage, (currentPage + 1) * dossiesPerPage)
-                                .map((dossie) => (
-                                    <div
-                                        key={dossie.id}
-                                        onClick={() => !isAssociating && handleClickDossie(dossie)}
-                                        className={`bg-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors ${isAssociating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
-                                            <Folder className="w-10 h-10 text-black" />
-                                        </div>
-                                        <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-black pl-4">
-                                            {dossie.name}
-                                        </div>
+                            dossies.map((dossie) => (
+                                <div
+                                    key={dossie.id}
+                                    onClick={() => !isAssociating && handleClickDossie(dossie)}
+                                    className={`bg-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors ${isAssociating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
+                                        <Folder className="w-10 h-10 text-black" />
                                     </div>
-                                ))
+                                    <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-black pl-4">
+                                        {dossie.name}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                        {totalItems > dossiesPerPage && (
+                            <div className="mt-2">
+                                <PageController
+                                    currentPage={currentPage + 1}
+                                    totalPages={totalPages}
+                                    setCurrentPage={page => setCurrentPage(page - 1)}
+                                />
+                            </div>
                         )}
                     </div>
                 </DialogContent>
