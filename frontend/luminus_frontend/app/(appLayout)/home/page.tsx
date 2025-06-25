@@ -24,14 +24,12 @@ export default function Home() {
     const fetchProfessorData = async () => {
       try {
         const professorId = localStorage.getItem('professorId');
-        
         if (professorId) {
           const userData = await GetProfile(parseInt(professorId));
           setProfessor(userData);
         }
       } catch (error) {
         console.error('Home page - Error fetching professor data:', error);
-        // Define um usuário padrão caso ocorra um erro
         setProfessor({
           id: 0,
           name: "Usuário",
@@ -47,21 +45,24 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white overflow-hidden">
-      <div className="flex flex-col p-8 space-y-8">
-        <div className="text-center mt-8">
-          <h1 className="font-poppins font-semibold text-[68px] text-[#1E1E1E]">
+    <div className="flex flex-col bg-white min-h-0">
+      <div className="flex flex-col px-4 pt-3 pb-4 flex-1 overflow-hidden">
+
+        {/* TÍTULO */}
+        <div className="text-center mb-4 flex-shrink-0">
+          <h1 className="font-poppins font-semibold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-[#1E1E1E] leading-tight">
             Bem vindo ao Luminus,{" "}
             <span className="text-[#112C3F]">{professor?.name}</span>!
           </h1>
         </div>
+
+        {/* ACESSO RÁPIDO
+        <div className="flex flex-col pl-4 flex-shrink-0 mb-1">
         
-        <div className="space-y-4">
-          <h2 className="text-[#1E1E1E] text-xl font-medium">Acesso rápido</h2>
-          <div className="flex gap-4">
+          <div className="flex gap-2 flex-wrap mt-1">
             <button
               onClick={() => setSelectedTab(selectedTab === "recent" ? null : "recent")}
-              className={`px-4 py-2 rounded-full border transition-all ${
+              className={`px-4 py-2 rounded-full border transition-all text-sm md:text-base ${
                 selectedTab === "recent"
                   ? "bg-[#112C3F] text-white"
                   : "bg-white text-[#1E1E1E] hover:bg-gray-100"
@@ -71,7 +72,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setSelectedTab(selectedTab === "archived" ? null : "archived")}
-              className={`px-4 py-2 rounded-full border transition-all ${
+              className={`px-4 py-2 rounded-full border transition-all text-sm md:text-base ${
                 selectedTab === "archived"
                   ? "bg-[#112C3F] text-white"
                   : "bg-white text-[#1E1E1E] hover:bg-gray-100"
@@ -80,29 +81,39 @@ export default function Home() {
               Arquivados
             </button>
             <button
-              className="px-4 py-2 rounded-full border bg-white text-[#1E1E1E] hover:bg-gray-100 transition-all"
+              className="px-4 py-2 rounded-full border bg-white text-[#1E1E1E] hover:bg-gray-100 transition-all text-sm md:text-base"
             >
               <Plus className="h-4 w-4" />
             </button>
           </div>
-        </div>
+        </div> */}
 
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="relative w-full max-w-3xl aspect-[16/9]">
-            <Image
-              src="/homiEstudando.svg"
-              alt="Student studying illustration"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <div className="text-center space-y-1">
-            <p className="font-ag-title text-2xl text-[#1E1E1E]">
-              Nenhum conteúdo recente
+        {/* VÍDEO E TEXTO */}
+        <div className="flex flex-col items-center flex-1 min-h-0 mt-2">
+          <div className="text-center mb-2 flex-shrink-0 w-full">
+            <p className="font-poppins font-semibold text-base sm:text-lg md:text-xl lg:text-2xl text-[#1E1E1E]">
+              Criar e avaliar dossiês nunca foi tão fácil.
             </p>
-            <p className="font-ag-subtitle text-lg text-[#1E1E1E]">
-              Crie um novo dossiê para começar
+            <p className="text-center text-sm md:text-base lg:text-lg text-[#1E1E1E] max-w-2xl mx-auto mt-1">
+              Assista ao tutorial e descubra como aproveitar todos os recursos.
+            </p>
+          </div>
+          <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl aspect-[16/9] flex-shrink-0">
+            <iframe
+              src="https://www.youtube.com/embed/wMTD8maO6U4"
+              title="Luminus Platform Introduction"
+              className="w-full h-full rounded-lg"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
+          </div>
+          <div className="text-center mt-2 flex-shrink-0">
+            <p className="font-ag-title text-sm md:text-base lg:text-lg text-[#1E1E1E]">
+              Simples, rápido e eficiente
+            </p>
+            <p className="font-ag-subtitle text-sm md:text-base text-[#1E1E1E]">
+              Cadastre turmas, e crie um novo dossiê para começar!
             </p>
           </div>
         </div>
