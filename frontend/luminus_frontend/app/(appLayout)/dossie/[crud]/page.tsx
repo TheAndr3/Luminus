@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Head from 'next/head';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 
 import PageHeader from '../../../../components/dossier/PageHeader';
 import DossierHeader from '../../../../components/dossier/DossierHeader';
@@ -70,8 +70,8 @@ const DEFAULT_SECTION: SectionData = {
 };
 
 const DEFAULT_EVALUATION_METHODS_LETTER: EvaluationMethodItem[] = [
-  { id: `default-method-${Date.now()}-1`, name: 'Maximo', value: '10.0' },
-  { id: `default-method-${Date.now()}-2`, name: 'Minimo', value: '0.0' },
+  { id: `default-method-${Date.now()}-1`, name: 'Máximo', value: '10.0' },
+  { id: `default-method-${Date.now()}-2`, name: 'Mínimo', value: '0.0' },
 ];
 
 
@@ -99,10 +99,11 @@ const DossierAppPage: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const searchParams = useSearchParams();
   const modeParam = searchParams.get('mode');
   const dossierIdParam = params?.crud;
   const dossierId = dossierIdParam && dossierIdParam !== 'create' ? parseInt(dossierIdParam as string) : null;
+  const templateId = searchParams.get('templateId');
 
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -126,14 +127,80 @@ const DossierAppPage: React.FC = () => {
       setError(null);
 
       if (!dossierId) { // Modo de criação
-        setDossierTitle("");
-        setDossierDescription("");
-        setSectionsData([JSON.parse(JSON.stringify(DEFAULT_SECTION))]); // Deep copy
-        setEvaluationConcept('numerical');
-        setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
-        setIsEditingMode(true);
-        setIsLoading(false);
-        return;
+        // Se templateId está presente, carrega o dossiê como template
+        if (templateId) {
+          try {
+            const response: DossierResponse = await getDossierById(Number(templateId));
+            const dossierFromApi = response.data as DossierDetailFromAPI;
+            if (!dossierFromApi || !dossierFromApi.evaluation_method) {
+              throw new Error("Dossiê não encontrado ou formato de resposta inválido.");
+            }
+            setDossierTitle(dossierFromApi.name);
+            setDossierDescription(dossierFromApi.description);
+            // Determina o conceito de avaliação ('numerical' ou 'letter')
+            const conceptNameFromApi = dossierFromApi.evaluation_method.name.toLowerCase();
+            let conceptTypeFromApi: EvaluationConcept;
+            if (conceptNameFromApi === 'letter') {
+                conceptTypeFromApi = 'letter';
+            } else if (conceptNameFromApi === 'numerical') {
+                conceptTypeFromApi = 'numerical';
+            } else {
+                conceptTypeFromApi = 'numerical';
+            }
+            setEvaluationConcept(conceptTypeFromApi);
+            // Métodos de avaliação
+            if (conceptTypeFromApi === 'letter') {
+                const typesFromApi = dossierFromApi.evaluation_method.evaluationType;
+                if (Array.isArray(typesFromApi) && typesFromApi.length > 0) {
+                    const methodsFromApi = typesFromApi.map((et, idx) => ({
+                        id: et.id?.toString() || `loaded-type-${idx}-${Date.now()}`,
+                        name: et.name,
+                        value: typeof et.value === 'number' ? et.value.toFixed(1) : parseFloat(et.value || "0").toFixed(1),
+                    }));
+                    setEvaluationMethodsForModal(methodsFromApi.length >= 2 ? methodsFromApi : DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+                } else {
+                    setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+                }
+            } else {
+                setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+            }
+            // Seções
+            const adaptedSections: SectionData[] = Object.values(dossierFromApi.sections || {}).map(section => ({
+                id: section.id.toString(),
+                title: section.name,
+                description: section.description || "",
+                weight: section.weigth.toString(),
+                items: Object.values(section.questions || {}).map(question => ({
+                    id: question.id.toString(),
+                    description: question.name,
+                    value: 'N/A'
+                }))
+            }));
+            setSectionsData(adaptedSections.length > 0 ? adaptedSections : [JSON.parse(JSON.stringify(DEFAULT_SECTION))]);
+            setIsEditingMode(true);
+            setIsLoading(false);
+            return;
+          } catch (err) {
+            setError('Erro ao carregar dossiê como template.');
+            setDossierTitle("");
+            setDossierDescription("");
+            setSectionsData([JSON.parse(JSON.stringify(DEFAULT_SECTION))]);
+            setEvaluationConcept('numerical');
+            setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+            setIsEditingMode(true);
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          setDossierTitle("");
+          setDossierDescription("");
+          setSectionsData([JSON.parse(JSON.stringify(DEFAULT_SECTION))]); // Deep copy
+          setEvaluationConcept('numerical');
+          setEvaluationMethodsForModal(DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m})));
+          setIsEditingMode(true);
+          setIsLoading(false);
+          return;
+        }
       }
 
       // Modo de edição/visualização
@@ -231,7 +298,7 @@ const DossierAppPage: React.FC = () => {
         setIsLoading(false);
     }
   // Adicionado dossierIdParam para reagir a mudanças no ID da URL
-  }, [dossierId, isClient, modeParam, isAuthenticated, dossierIdParam]);
+  }, [dossierId, isClient, modeParam, isAuthenticated, dossierIdParam, templateId]);
   
 
   const clearBlurTimeoutAndSignalIgnore = useCallback(() => {
