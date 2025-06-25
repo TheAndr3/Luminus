@@ -75,6 +75,7 @@ export function Header({
                     textColor={mainColor}
                     title={associatedDossier.name}
                     className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
+                    showPointer={false}
                   />
                 ) : (
                   <ColoredButton
@@ -85,6 +86,7 @@ export function Header({
                     haveBorder={false}
                     textColor="#888"
                     className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
+                    showPointer={false}
                   />
                 )}
               </div>

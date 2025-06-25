@@ -12,6 +12,7 @@ interface ColoredButtonProps {
   type?: "button" | "submit" | "reset";
   textColor?: string;
   title?: string;
+  showPointer?: boolean;
 }
 
 export function ColoredButton({
@@ -26,6 +27,7 @@ export function ColoredButton({
   type = "button", 
   textColor = 'white',
   title,
+  showPointer = true,
 }: ColoredButtonProps) {
     
     const [isHovered, setIsHovered] = useState(false);
@@ -44,6 +46,7 @@ export function ColoredButton({
             backgroundColor: disabled ? '#A0A0A0' : (isHovered ? hoverColor : mainColor), 
             borderColor: haveBorder ? (isHovered ? hoverColor : mainColor) : 'transparent', 
             color: textColor,
+            cursor: showPointer ? 'pointer' : 'default',
         }}
         className={combinedClassName}
         title={title || text}

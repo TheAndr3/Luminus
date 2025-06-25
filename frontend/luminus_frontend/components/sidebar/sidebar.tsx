@@ -108,7 +108,7 @@ const Sidebar = () => {
             {/* This is the button visible in the sidebar */}
             <Button
               variant="ghost" // Use ghost variant for no background/border
-              className="relative flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-400 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-400 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 cursor-pointer"
             >
               <span className="sr-only">Open user menu</span>
               <Avatar className="h-8 w-8">
@@ -155,11 +155,11 @@ const Sidebar = () => {
             {/* Group of Action Items */}
             <DropdownMenuGroup>
               {/* Use DropdownMenuItem for links/actions */}
-              <DropdownMenuItem onSelect={() => router.push('/account')}>
+              <DropdownMenuItem onSelect={() => router.push('/account')} className="cursor-pointer">
                 <CheckCircle className="mr-2 h-4 w-4" />
                 <span>Account</span>
               </DropdownMenuItem>
-               <DropdownMenuItem onSelect={() => router.push('/notifications')}>
+               <DropdownMenuItem onSelect={() => router.push('/notifications')} className="cursor-pointer">
                 <Bell className="mr-2 h-4 w-4" />
                 <span>Notifications</span>
               </DropdownMenuItem>
@@ -167,7 +167,7 @@ const Sidebar = () => {
             <DropdownMenuSeparator />
 
             {/* Logout Item */}
-            <DropdownMenuItem onSelect={handleLogout}> {/* Use onSelect for consistency */}
+            <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>
