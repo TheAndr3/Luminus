@@ -4,11 +4,13 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { GetProfile } from '@/services/professorService';
 
 interface Professor {
   id: number;
-  nome: string;
+  name: string;
   email: string;
+  role: string;
 }
 
 type TabType = "recent" | "archived" | null;
@@ -16,18 +18,32 @@ type TabType = "recent" | "archived" | null;
 export default function Home() {
   const [professor, setProfessor] = useState<Professor | null>(null);
   const [selectedTab, setSelectedTab] = useState<TabType>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const professorId = localStorage.getItem('professorId');
-    if (professorId) {
-      // Aqui tem que buscar os dados do professor usando o ID
-      // Por enquanto, tá usando "Professor"
-      setProfessor({
-        id: parseInt(professorId),
-        nome: "Professor",
-        email: ""
-      });
-    }
+    const fetchProfessorData = async () => {
+      try {
+        const professorId = localStorage.getItem('professorId');
+        
+        if (professorId) {
+          const userData = await GetProfile(parseInt(professorId));
+          setProfessor(userData);
+        }
+      } catch (error) {
+        console.error('Home page - Error fetching professor data:', error);
+        // Define um usuário padrão caso ocorra um erro
+        setProfessor({
+          id: 0,
+          name: "Usuário",
+          email: "",
+          role: ""
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfessorData();
   }, []);
 
   return (
@@ -36,7 +52,7 @@ export default function Home() {
         <div className="text-center mt-8">
           <h1 className="font-poppins font-semibold text-[68px] text-[#1E1E1E]">
             Bem vindo ao Luminus,{" "}
-            <span className="text-[#112C3F]">{professor?.nome}</span>!
+            <span className="text-[#112C3F]">{professor?.name}</span>!
           </h1>
         </div>
         
