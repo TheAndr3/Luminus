@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 // Modal para editar uma turma
 import EditClassModal from "./editClassModal";
 // Ícones para as ações de editar, excluir, arquivar e download
-import { Archive, Download, Pencil, Trash } from "lucide-react";
+import {Download, Pencil, Trash } from "lucide-react";
 
 import { useRouter } from "next/navigation"; 
 
@@ -107,7 +107,7 @@ export default function ListClass({
                   type="checkbox"
                   onChange={handleToggleAll}
                   checked={!!isAllSelected}
-                  className="w-6 h-6 accent-blue-600"
+                  className="w-6 h-6 accent-blue-600 cursor-pointer"
                 />
                 <span className="text-lg text-gray-600 font-bold">Selecionar todos</span>
               </div>
@@ -138,7 +138,7 @@ export default function ListClass({
               key={classroom.id}
               onMouseEnter={() =>!lockHover && setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
               onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
-              className="bg-slate-900 text-white rounded px-[4vh] py-[2vh] "
+              className="bg-gray-900 text-white rounded px-[4vh] py-[2vh] cursor-pointer hover:brightness-110"
               onClick={() => handleClickPageStudent(classroom.id)}
             >
               {/* Checkbox para selecionar essa turma individualmente */}
@@ -147,7 +147,7 @@ export default function ListClass({
                   type="checkbox"
                   checked={!!classroom.selected}  // Marca se a turma está selecionada
                   onChange={() => handleToggleOne(classroom.id)}  // Alterna seleção ao clicar
-                  className="w-6 h-6 accent-blue-600"
+                  className="w-6 h-6 accent-blue-600 cursor-pointer"
                 />
               </td>
 
@@ -173,7 +173,7 @@ export default function ListClass({
                   <div className="flex gap-2 justify-end mr-2">
                     {/* Botões de ação: editar, excluir, arquivar e download */}
                     <button
-                      className="hover:text-yellow-400"
+                      className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         
                         setOpenEditingModal(true);  // Abre o modal de edição
@@ -185,7 +185,7 @@ export default function ListClass({
                     </button>
                     
                     <button
-                      className="hover:text-yellow-400"
+                      className="hover:text-yellow-400 cursor-pointer"
                       onClick={()=> {
                         classroom.selected = true;
                         onDeleteClass()
@@ -196,18 +196,7 @@ export default function ListClass({
                     </button>
 
                     <button
-                      className="hover:text-yellow-400"
-                      onClick={()=> {
-                        classroom.selected = true;
-                        toArchiveClass();
-                        classroom.selected = false;
-                      }}
-                    >
-                      <Archive></Archive>
-                    </button>
-
-                    <button
-                      className="hover:text-yellow-400"
+                      className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         classroom.selected = true;
                         toExportClass();
@@ -252,7 +241,6 @@ export default function ListClass({
         {hasSelected && (
           <ActionPanel
             onDeleted={onDeleteClass}
-            toArchive={toArchiveClass}
             toExport={toExportClass}
           />
         )}

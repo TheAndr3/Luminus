@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BaseInput } from "@/components/inputs/BaseInput";
-import { Folder } from "lucide-react";
+import { Folder, Plus, ArrowLeftRight } from "lucide-react";
 import { Dossier } from "@/services/dossierServices";
 import { useRouter } from "next/navigation";
 import { listDossiers } from "@/services/dossierServices";
@@ -16,12 +16,16 @@ import { ColoredButton } from "@/components/colored-button/colored-button";
 interface AssociarDossieProps {
   mainColor?: string;
   hoverColor?: string;
+  associatedDossier?: { id: number; name: string } | null;
+  onDossierAssociated?: (dossierId: number) => void;
 }
 
 
 export default function AssociarDossie({
   mainColor = '',
   hoverColor = '',
+  associatedDossier = null,
+  onDossierAssociated,
 }: AssociarDossieProps) {
     const router = useRouter();
     const params = useParams();
@@ -79,6 +83,12 @@ export default function AssociarDossie({
 
             await AssociateDossier(classId, dossie.id);
             setOpen(false);
+            
+            // Call the callback to update the parent component
+            if (onDossierAssociated) {
+                onDossierAssociated(dossie.id);
+            }
+            
             router.refresh(); // Refresh the page to show the updated association
         } catch (error: any) {
             console.error('Erro ao associar dossiê:', error);
@@ -93,6 +103,21 @@ export default function AssociarDossie({
         setOpen(false);
     }
 
+    // Determine button text and icon based on whether a dossier is associated
+    const getButtonText = () => {
+        if (associatedDossier) {
+            return 'Trocar Dossiê';
+        }
+        return 'Associar dossiê';
+    };
+
+    const getButtonIcon = () => {
+        if (associatedDossier) {
+            return <ArrowLeftRight size={18} color="white" />;
+        }
+        return <Plus size={18} color="white" />;
+    };
+
     return (
         <>
             <Dialog open={open} onOpenChange={setOpen}>
@@ -100,13 +125,14 @@ export default function AssociarDossie({
                     <div>
                         {mainColor === "white" ? (
                             <div className="bg-white text-black hover:bg-gray-100 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
-                                Associar dossiê
+                                {getButtonText()}
                             </div>
                         ) : (
                             <ColoredButton
                                 mainColor={mainColor}
                                 hoverColor={hoverColor}
-                                text={'Associar dossiê'}
+                                text={getButtonText()}
+                                icon={getButtonIcon()}
                                 haveBorder={false}
                             />
                         )}
@@ -115,7 +141,7 @@ export default function AssociarDossie({
 
                 <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
 
-                <DialogContent className="h-[600px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
+                <DialogContent className="max-w-4xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
                     <DialogTitle className="sr-only">Associar Dossiê</DialogTitle>
                     <div className="relative mb-6">
                         <div className="flex items-center gap-2 justify-center">
@@ -123,7 +149,7 @@ export default function AssociarDossie({
                                 <Folder color="white" size={50} /> 
                             </div>
                             <span className="text-4xl font-bold text-white">
-                                Associar Dossiê
+                                {associatedDossier ? 'Trocar Dossiê' : 'Associar Dossiê'}
                             </span>
                         </div>
 
@@ -138,7 +164,7 @@ export default function AssociarDossie({
                         </div>
                     </div>
 
-                    <div className="w-full min-h-[300px] space-y-2 flex flex-col items-center justify-start">
+                    <div className="space-y-2">
                         {isLoading ? (
                             <div className="text-white text-2xl mb-4">
                                 Carregando dossiês...

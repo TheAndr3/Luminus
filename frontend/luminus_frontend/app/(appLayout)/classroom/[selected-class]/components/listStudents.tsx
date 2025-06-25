@@ -175,7 +175,7 @@ export default function ListStudents({
                 type="checkbox"
                 onChange={handleToggleAll}
                 checked={!!isAllSelected}
-                className="w-5 h-5 accent-blue-600"
+                className="w-5 h-5 accent-blue-600 cursor-pointer"
               />
             </th>
             <th className="w-10 px-4 py-3"></th>
@@ -187,7 +187,10 @@ export default function ListStudents({
         <tbody>
           {/* Linha para adicionar novo aluno (condicional) */}
           {showInlineAddStudent && (
-            <tr className="bg-slate-900 text-white border-b border-slate-700">
+            <tr 
+              className="text-white border-b border-gray-700"
+              style={{ backgroundColor: mainColor || '#111827' }}
+            >
               <td className="px-4 py-3 w-12"></td>
               <td className="w-10 px-5 py-3 text-left">
                 <UserIcon className="w-6 h-6 text-gray-400" />
@@ -216,14 +219,14 @@ export default function ListStudents({
                   </div>
                   <div className="flex gap-2">
                     <button
-                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                      className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
                       onClick={handleInlineAddStudent}
                       disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
                     >
                       Salvar
                     </button>
                     <button
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                      className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
                       onClick={handleCancelInlineAdd}
                       disabled={isLoading}
                     >
@@ -252,14 +255,17 @@ export default function ListStudents({
               key={students.matricula}
               onMouseEnter={() => setHovered(students.matricula)}
               onMouseLeave={() => setHovered(null)}
-              className="bg-slate-900 text-white border-b border-slate-700 hover:brightness-110"
+              className={`text-white border-b border-gray-700 hover:brightness-110 ${
+                editingId === students.matricula ? 'cursor-default' : 'cursor-pointer'
+              }`}
+              style={{ backgroundColor: mainColor || '#111827' }}
             >
               <td className="px-4 py-3 w-12">
                 <input
                   type="checkbox"
                   checked={!!students.selected}
                   onChange={() => handleToggleOne(students.matricula)}
-                  className="w-5 h-5 accent-blue-600"
+                  className="w-5 h-5 accent-blue-600 cursor-pointer"
                 />
               </td>
               <td className="w-10 px-5 py-3 text-left">
@@ -289,13 +295,13 @@ export default function ListStudents({
                       </div>
                       <div className="flex gap-2">
                         <button
-                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm"
+                          className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
                           onClick={handleSave}
                         >
                           Salvar
                         </button>
                         <button
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                          className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
                           onClick={handleCancel}
                         >
                           Cancelar
@@ -327,7 +333,7 @@ export default function ListStudents({
       </table>
 
       <div className="flex justify-between items-center -mt-6">
-        <div>
+        <div className="mt-4">
           {hasSelected && (
             <ActionPanel
               mainColor={mainColor}
@@ -341,6 +347,8 @@ export default function ListStudents({
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
+          mainColor={mainColor}
+          hoverColor={hoverColor}
         />
       </div>
     </div>

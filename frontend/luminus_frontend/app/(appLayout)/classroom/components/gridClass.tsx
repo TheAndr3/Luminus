@@ -7,7 +7,7 @@ import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
 import ActionPanel from './actionPanel';
-import { Archive, Download, Pencil, Trash } from 'lucide-react';
+import {Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
 import { useRouter } from 'next/navigation';
 
@@ -80,7 +80,7 @@ export default function Gridclassrooms({
             type="checkbox"
             onChange={toggleSelectAll}
             checked={!!isAllSelected}
-            className="w-6 h-6 accent-blue-600"
+            className="w-6 h-6 accent-blue-600 cursor-pointer"
           />
           <span className="text-lg text-gray-600 font-bold">Selecionar todos</span>
         </div>
@@ -101,7 +101,7 @@ export default function Gridclassrooms({
             key={classroom.id}
             onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
             onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
-            className="bg-gray-900 text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46"
+            className="bg-gray-900 text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46 cursor-pointer hover:brightness-110"
             onClick={() => handleClickPageStudent(classroom.id)}
           >
             <div className="flex justify-between items-start mb-2">
@@ -120,16 +120,16 @@ export default function Gridclassrooms({
                     type="checkbox"
                     checked={classroom.selected}
                     onChange={() => toggleOne(classroom.id)}
-                    className="w-6 h-6 accent-blue-600"
+                    className="w-6 h-6 accent-blue-600 cursor-pointer"
                   />
 
                   {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
                 <div className="p-1 w-8 relative" onClick={(e)=> e.stopPropagation()}>
                   {hovered === classroom.id && (
-                    <div className="absolute right-0 top-0 flex flex-col gap-2 bg-[#0A2B3D]">
+                    <div className="absolute right-0 top-2 flex flex-col gap-2 bg-gray-900">
                       {/* Botão de edição com ícone de lápis */}
                       <button
-                        className="hover:text-yellow-400"
+                        className="hover:text-yellow-400 cursor-pointer"
                         onClick={() => {
                           setOpenEditingModal(true);  // Abre o modal de edição
                           setEditingClassroom(classroom);  // Define qual turma está sendo editada
@@ -140,7 +140,7 @@ export default function Gridclassrooms({
                       </button>
                         
                       <button
-                        className="hover:text-yellow-400"
+                        className="hover:text-yellow-400 cursor-pointer"
                         onClick={()=> {
                           classroom.selected = true;
                           onDeleteClass()
@@ -150,20 +150,9 @@ export default function Gridclassrooms({
                         <Trash size={18}></Trash>
                       
                       </button>
-
-                      <button
-                        className="hover:text-yellow-400"
-                        onClick={()=> {
-                          classroom.selected = true;
-                          toArchiveClass();
-                          classroom.selected = false;
-                        }}
-                        >
-                          <Archive size={18}></Archive>
-                        </button>
                       
                         <button
-                          className="hover:text-yellow-400"
+                          className="hover:text-yellow-400 cursor-pointer"
                           onClick={() => {
                             classroom.selected = true;
                             toExportClass();
@@ -216,7 +205,7 @@ export default function Gridclassrooms({
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
         {hasSelected && (
           <div className="absolute bottom-1 left">
-            <ActionPanel onDeleted={onDeleteClass} toArchive={toArchiveClass} toExport={toExportClass}/>
+            <ActionPanel onDeleted={onDeleteClass} toExport={toExportClass}/>
           </div>
         )}
       </div>

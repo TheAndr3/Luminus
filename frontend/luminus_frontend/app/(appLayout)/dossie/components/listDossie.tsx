@@ -1,7 +1,7 @@
 "use client"
 
 import { Dossie } from "./types";
-import { Download, Plus, Pencil, Trash, Folder, Archive } from "lucide-react";
+import { Download, Plus, Pencil, Trash, Folder} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageController from "./paginationController";
@@ -85,12 +85,12 @@ export default function ListDossie({
         <thead>
           <tr className="text-sm text-gray-600">
             {/* Coluna com checkbox para selecionar todos */}
-            <th className="w-[0px] px-2 gap-10">
+            <th className="w-8 px-4 py-3">
               <input
                 type="checkbox"
                 onChange={handleToggleAll}
                 checked={!!isAllSelected}
-                className="w-6 h-6 accent-blue-600"
+                className="w-5 h-5 accent-blue-600 cursor-pointer"
               />
             </th>
             {/* Texto do cabeçalho para selecionar todos */}
@@ -130,7 +130,7 @@ export default function ListDossie({
               key={dossie.id}
               onMouseEnter={() => setHovered(dossie.id)}
               onMouseLeave={() => setHovered(null)}
-              className="bg-[#0A2B3D] text-white rounded px-[4vh] py-[2vh]"
+              className="bg-gray-900 text-white rounded px-[4vh] py-[2vh] cursor-pointer hover:brightness-110"
               onClick={() => handleClickDossie(dossie.id)}
             >
               {/* Checkbox para selecionar esse dossiê individualmente */}
@@ -139,7 +139,7 @@ export default function ListDossie({
                   type="checkbox"
                   checked={!!dossie.selected}
                   onChange={() => handleToggleOne(dossie.id)}
-                  className="w-6 h-6 accent-blue-600"
+                  className="w-6 h-6 accent-blue-600 cursor-pointer"
                 />
               </td>
 
@@ -154,7 +154,7 @@ export default function ListDossie({
                 {hovered === dossie.id && (
                   <div className="flex gap-2 justify-end mr-2">
                     <button
-                      className="hover:text-yellow-400"
+                      className="hover:text-yellow-400 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         router.push(`/dossie/${dossie.id}?mode=edit`);
@@ -164,7 +164,7 @@ export default function ListDossie({
                     </button>
                     
                     <button
-                      className="hover:text-yellow-400"
+                      className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         dossie.selected = true;
                         onDeleteClass();
@@ -175,18 +175,7 @@ export default function ListDossie({
                     </button>
 
                     <button
-                      className="hover:text-yellow-400"
-                      onClick={() => {
-                        dossie.selected = true;
-                        toArchiveClass();
-                        dossie.selected = false;
-                      }}
-                    >
-                      <Archive />
-                    </button>
-
-                    <button
-                      className="hover:text-yellow-400"
+                      className="hover:text-yellow-400 cursor-pointer"
                       onClick={(e) => {
                         
                         dossie.selected = true;
@@ -220,7 +209,6 @@ export default function ListDossie({
         {hasSelected && (
           <ActionPanel
             onDeleted={onDeleteClass}
-            toArchive={toArchiveClass}
             toExport={toExportDossie}
           />
         )}

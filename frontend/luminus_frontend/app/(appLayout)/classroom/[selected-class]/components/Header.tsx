@@ -1,37 +1,94 @@
 import { ColoredButton } from "@/components/colored-button/colored-button";
 import { clsx } from 'clsx';
-import { ClipboardEdit, Plus, Download, Filter, Edit } from 'lucide-react';
+import { ClipboardEdit, Plus, Download, Filter, Edit, Folder } from 'lucide-react';
 import AssociarDossie from "./associarDossie";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EditClassModal from '../../components/editClassModal';
+import { getDossierById } from '@/services/dossierServices';
+import class_icon from "@/components/icon/icon_classroom.svg";
+import Image from 'next/image';
 
 // components/Header.tsx
 export function Header({ 
   title, 
   mainColor, 
   hoverColor,
-  classroomId
+  classroomId,
+  associatedDossier,
+  onDossierAssociated
 }: { 
   title: string; 
   mainColor?: string; 
   hoverColor?: string;
   classroomId?: number | null;
+  associatedDossier?: { id: number; name: string } | null;
+  onDossierAssociated?: (dossierId: number) => void;
 }) {
     const [showEditModal, setShowEditModal] = useState(false);
+    const [isLoadingDossier, setIsLoadingDossier] = useState(false);
+
+    // Fetch associated dossier information
+    const fetchAssociatedDossier = async (dossierId: number) => {
+        setIsLoadingDossier(true);
+        try {
+            const response = await getDossierById(dossierId);
+            if (response.data) {
+                // Update the parent component's state
+                if (onDossierAssociated) {
+                    onDossierAssociated(dossierId);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching dossier:', error);
+        } finally {
+            setIsLoadingDossier(false);
+        }
+    };
+
+    // This function will be called when a dossier is associated
+    const handleDossierAssociated = (dossierId: number) => {
+        if (onDossierAssociated) {
+            onDossierAssociated(dossierId);
+        }
+    };
 
     return (
       <div 
       style={{backgroundColor: mainColor,}}
       className={`content-end rounded h-28 px-4`}>
         <div className={`flex justify-between items-center text-white text-[35px] font-bold p-2 px-4`}>
-          {title}
+          <div className="flex items-center gap-3">
+            <Image src={class_icon} alt="Classroom icon" width={40} height={40} />
+            {title}
+          </div>
           <div className="flex items-center justify-between gap- -mt-6">
             <div className="flex flex-col items-center gap-0 ml-8">
               <div className="-mt-6">
-                <AssociarDossie
-                  mainColor="white"
-                  hoverColor="gray-100"
-                />
+                {/* Show dossier name button if associated, otherwise show "Nenhum dossiê associado" */}
+                {associatedDossier ? (
+                  <ColoredButton
+                    mainColor="white"
+                    hoverColor="gray-100"
+                    text={associatedDossier.name}
+                    icon={<Folder size={18} color={mainColor} />}
+                    haveBorder={false}
+                    textColor={mainColor}
+                    title={associatedDossier.name}
+                    className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
+                    showPointer={false}
+                  />
+                ) : (
+                  <ColoredButton
+                    mainColor="white"
+                    hoverColor="gray-100"
+                    text="Nenhum dossiê associado"
+                    icon={<Folder size={18} color="#888" />}
+                    haveBorder={false}
+                    textColor="#888"
+                    className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
+                    showPointer={false}
+                  />
+                )}
               </div>
               <ColoredButton
                 mainColor={mainColor}
@@ -39,7 +96,7 @@ export function Header({
                 text={''}  
                 icon={<Edit size={25}/>} 
                 haveBorder={true}
-                className="ml-20 mt-6"
+                className="ml-50 mt-6"
                 onClick={() => setShowEditModal(true)}
               ></ColoredButton>
             </div>

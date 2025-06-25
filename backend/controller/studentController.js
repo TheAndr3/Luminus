@@ -24,6 +24,9 @@ exports.List = async (req, res) => {
     try {
         const dataStudent = await db.pgSelectStudentsInClassroom(class_id);
 
+        // Ordena os estudantes em ordem alfabética pelo nome
+        dataStudent.sort((a, b) => a.name.localeCompare(b.name));
+
         // Filtro de busca no servidor
         if (req.query.search && typeof req.query.search === 'string' && req.query.search.trim() !== '') {
           const search = req.query.search.trim().toLowerCase();

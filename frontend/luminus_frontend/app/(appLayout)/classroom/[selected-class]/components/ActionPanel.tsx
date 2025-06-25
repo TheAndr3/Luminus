@@ -1,5 +1,5 @@
 // luminus_frontend/app/(appLayout)/classroom/components/actionPainel.tsx
-import { Trash2, Download, Archive, BarChart2 } from "lucide-react";
+import { Trash2, Download, BarChart2 } from "lucide-react";
 import React, { useRef } from "react"; // Importe useRef
 import { ColoredButton } from "@/components/colored-button/colored-button"; //
 
@@ -54,22 +54,6 @@ export default function ActionPanel({
           icon={<Download className="w-6 h-6 text-white" color="white" />}
           onClick={onDownload}
         />
-
-      {/* Botão que "clica" no input de arquivo escondido */}
-      <ColoredButton
-          mainColor={mainColor}
-          hoverColor={hoverColor}
-          icon={<Archive className="w-6 h-6 text-white" color="white" />}
-          onClick={handleArchiveButtonClick}
-        />
-      {/* Input de arquivo escondido*/}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept=".csv" // Aceita apenas arquivos CSV
-        style={{ display: "none" }} // Esconde o input
-      />
 
       <ColoredButton
           mainColor={mainColor}

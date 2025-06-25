@@ -253,7 +253,7 @@ export default function VizualizationClass() {
               type="checkbox"
               checked={isAllSelected}
               onChange={toggleSelectAll}
-              className="w-6 h-6 accent-blue-600"
+              className="w-6 h-6 accent-blue-600 cursor-pointer"
               disabled={!classi || classi.length === 0}
             />
             <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>

@@ -43,6 +43,9 @@ exports.List = async (req, res) => {
         }
     }
     
+    // Ordena os dados em ordem alfabética pelo nome da turma
+    classData.sort((a, b) => a.name.localeCompare(b.name));
+
     const endIndex = start + size;
     const slicedData = classData.slice(start, endIndex);
     console.log('Dados fatiados:', slicedData);

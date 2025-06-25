@@ -45,7 +45,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         
         {/* Botão de página anterior */}
         <button
-          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600"
+          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600 cursor-pointer"
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1} // Desativa se já estiver na primeira página
         >
@@ -86,7 +86,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         {visiblePages.map((page) => (
           <button
             key={page}
-            className={`border px-[2vh] py-[1vh] rounded-full ${
+            className={`border px-[2vh] py-[1vh] rounded-full cursor-pointer ${
               currentPage === page
                 ? "bg-[#101828] text-white" // Estilo diferente para a página atual
                 : "bg-gray-200 text-black hover:bg-gray-600"
@@ -104,7 +104,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
 
         {/* Botão de próxima página */}
         <button
-          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600"
+          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600 cursor-pointer"
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages} // Desativa se já estiver na última página
         >

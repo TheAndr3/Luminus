@@ -3,8 +3,9 @@
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { ColoredButton } from "@/components/colored-button/colored-button"; //
 import { ImportCSVButton } from "@/components/button-csv/import-csv-button"; //
-import { Plus, ClipboardEdit } from 'lucide-react';
+import { Plus, ClipboardEdit, Folder } from 'lucide-react';
 import React from 'react';
+import AssociarDossie from "./associarDossie";
 
 interface ActionBarProps {
   mainColor?: string;
@@ -13,6 +14,8 @@ interface ActionBarProps {
   onCsvFileSelected: (file: File) => void; // Modificado para aceitar File
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
+  associatedDossier?: { id: number; name: string } | null;
+  onDossierAssociated?: (dossierId: number) => void;
 }
 
 export function ActionBar({
@@ -22,6 +25,8 @@ export function ActionBar({
   onCsvFileSelected, // Nome da prop continua o mesmo
   searchTerm,
   onSearchTermChange,
+  associatedDossier,
+  onDossierAssociated,
 }: ActionBarProps) {
 
   // Esta função agora apenas repassa o arquivo selecionado
@@ -43,6 +48,13 @@ export function ActionBar({
           />
         </div>
         <div className="flex items-center gap-3">
+          {/* Show "Trocar Dossiê" button if dossier is associated, otherwise show "Associar Dossiê" */}
+          <AssociarDossie
+            mainColor={mainColor}
+            hoverColor={hoverColor}
+            associatedDossier={associatedDossier}
+            onDossierAssociated={onDossierAssociated}
+          />
           <ColoredButton
             mainColor={mainColor}
             hoverColor={hoverColor}

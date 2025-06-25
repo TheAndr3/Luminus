@@ -6,10 +6,12 @@ interface PageControllerProps {
   currentPage: number; // Página atual
   totalPages: number;  // Total de páginas disponíveis
   setCurrentPage: (page: number) => void; // Função para mudar a página atual
+  mainColor?: string; // Cor principal dos botões
+  hoverColor?: string; // Cor de hover dos botões
 }
 
 // Componente de paginação
-export default function PageController({ currentPage, totalPages, setCurrentPage }: PageControllerProps) {
+export default function PageController({ currentPage, totalPages, setCurrentPage, mainColor, hoverColor }: PageControllerProps) {
 
   // Estado para controlar o valor do input (campo de número da página)
   const [inputController, setInputController] = useState<number | ''>(''); // Aceita número ou string vazia
@@ -45,7 +47,23 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         
         {/* Botão de página anterior */}
         <button
-          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600"
+          className="border px-[3vh] py-[1vh] rounded-full cursor-pointer text-white"
+          style={{
+            backgroundColor: mainColor || '#9CA3AF',
+            borderColor: mainColor || '#9CA3AF',
+          }}
+          onMouseEnter={(e) => {
+            if (hoverColor) {
+              e.currentTarget.style.backgroundColor = hoverColor;
+              e.currentTarget.style.borderColor = hoverColor;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (mainColor) {
+              e.currentTarget.style.backgroundColor = mainColor;
+              e.currentTarget.style.borderColor = mainColor;
+            }
+          }}
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1} // Desativa se já estiver na primeira página
         >
@@ -86,11 +104,15 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         {visiblePages.map((page) => (
           <button
             key={page}
-            className={`border px-[2vh] py-[1vh] rounded-full ${
+            className={`border px-[2vh] py-[1vh] rounded-full cursor-pointer ${
               currentPage === page
-                ? "bg-[#101828] text-white" // Estilo diferente para a página atual
-                : "bg-gray-200 text-black hover:bg-gray-600"
+                ? "text-white" // Apenas texto branco para página atual
+                : "bg-gray-200 text-black hover:bg-gray-600" // Estilo original para outras páginas
             }`}
+            style={{
+              backgroundColor: currentPage === page ? (mainColor || '#101828') : undefined,
+              borderColor: currentPage === page ? (mainColor || '#101828') : undefined,
+            }}
             onClick={() => setCurrentPage(page)} // Altera a página ao clicar
           >
             {page}
@@ -104,7 +126,23 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
 
         {/* Botão de próxima página */}
         <button
-          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600"
+          className="border px-[3vh] py-[1vh] rounded-full cursor-pointer text-white"
+          style={{
+            backgroundColor: mainColor || '#9CA3AF',
+            borderColor: mainColor || '#9CA3AF',
+          }}
+          onMouseEnter={(e) => {
+            if (hoverColor) {
+              e.currentTarget.style.backgroundColor = hoverColor;
+              e.currentTarget.style.borderColor = hoverColor;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (mainColor) {
+              e.currentTarget.style.backgroundColor = mainColor;
+              e.currentTarget.style.borderColor = mainColor;
+            }
+          }}
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages} // Desativa se já estiver na última página
         >

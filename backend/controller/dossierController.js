@@ -137,6 +137,9 @@ exports.List = async(req, res) => {
       return res.status(404).json({msg:'nenhum dossie encontrado que atenda a solicitação'});
     } 
 
+    // Ordena os dossiês em ordem alfabética pelo nome
+    filteredResults.sort((a, b) => a.name.localeCompare(b.name));
+
     return res.status(200).json({
       msg:'sucesso', 
       data:filteredResults.slice(start, start+size), 

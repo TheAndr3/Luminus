@@ -16,6 +16,7 @@ import { toast } from 'react-hot-toast';
 import { api } from "@/services/api";
 import { GetClassroom } from '@/services/classroomServices';
 import { ListStudents as ListStudentsService, DeleteStudent } from '@/services/studentService';
+import { getDossierById } from '@/services/dossierServices';
 
 // Removido CreateStudent pois a importação em massa usará um endpoint diferente
 // import { CreateStudent } from "@/services/studentService"; 
@@ -88,6 +89,8 @@ export default function VisualizacaoAlunos() {
   const [inlineNewStudentName, setInlineNewStudentName] = useState('');
   const [inlineAddStudentError, setInlineAddStudentError] = useState<string | null>(null);
 
+  // Estado para o dossiê associado
+  const [associatedDossier, setAssociatedDossier] = useState<{ id: number; name: string } | null>(null);
 
   // Função para buscar alunos da API
   const fetchStudents = async (turmaId: number) => {
@@ -156,17 +159,6 @@ export default function VisualizacaoAlunos() {
     }
   };
 
-  // Busca o nome da turma pelo ID e define no título da página
-  const fetchClassDetails = async (turmaId: number) => {
-    try {
-      const response = await api.get(`/classroom/${turmaId}`);
-      // O nome da turma deve vir do backend no campo 'name' (ou 'titulo' se for esse o nome)
-      setClassTitle(response.data.name || response.data.titulo || "Turma sem nome");
-    } catch (error) {
-      setClassTitle("Turma não encontrada");
-    }
-  };
-
   // Função única para buscar detalhes da turma e alunos em paralelo
   const fetchPageData = useCallback(async (id: number) => {
     setIsLoading(true);
@@ -177,11 +169,27 @@ export default function VisualizacaoAlunos() {
         ListStudentsService(id)
       ]);
 
+      console.log('Classroom details:', classDetails); // Debug log
+
       // Ajuste conforme o retorno real do seu backend:
       // Se vier { data: [{ name: ... }] }, use:
       // setClassTitle(classDetails.data?.[0]?.name || `Turma ${id}`);
       // Se vier { name: ... }, use:
       setClassTitle(classDetails.name || `Turma ${id}`);
+
+      // Se a turma tem um dossiê associado, buscar os detalhes do dossiê
+      // Check for all possible field names that PostgreSQL might return
+      const dossierId = classDetails.dossierId || classDetails.dossier_id || classDetails.dossierid;
+      console.log('Looking for dossierId:', dossierId); // Debug log
+      console.log('All classDetails keys:', Object.keys(classDetails)); // Debug log
+      
+      if (dossierId) {
+        console.log('Found dossierId:', dossierId); // Debug log
+        await fetchAssociatedDossier(dossierId);
+      } else {
+        console.log('No dossierId found in classDetails:', classDetails); // Debug log
+        setAssociatedDossier(null);
+      }
 
       // Mapeia e define o estado dos alunos
       const formattedStudents = studentsFromService.data.map((student: any) => ({
@@ -481,6 +489,33 @@ export default function VisualizacaoAlunos() {
     setShowInlineAddStudent(false);
   };
 
+  // Função para atualizar o dossiê associado quando um novo dossiê é associado
+  const handleDossierAssociated = (dossierId: number) => {
+    fetchAssociatedDossier(dossierId);
+  };
+
+  // Função para buscar detalhes do dossiê associado
+  const fetchAssociatedDossier = async (dossierId: number) => {
+    try {
+      console.log('Fetching dossier with ID:', dossierId); // Debug log
+      const response = await getDossierById(dossierId);
+      console.log('Dossier response:', response); // Debug log
+      if (response.data) {
+        const dossierInfo = {
+          id: response.data.id,
+          name: response.data.name
+        };
+        console.log('Setting associated dossier:', dossierInfo); // Debug log
+        setAssociatedDossier(dossierInfo);
+      } else {
+        console.log('No dossier data in response:', response); // Debug log
+        setAssociatedDossier(null);
+      }
+    } catch (error) {
+      console.error('Error fetching associated dossier:', error);
+      setAssociatedDossier(null);
+    }
+  };
 
   return (
     <div className={`${styles.pageContainer} -mt-6`}>
@@ -490,6 +525,8 @@ export default function VisualizacaoAlunos() {
           mainColor={color} 
           hoverColor={hoverColor}
           classroomId={currentTurmaId}
+          associatedDossier={associatedDossier}
+          onDossierAssociated={handleDossierAssociated}
         />
         <ActionBar
           mainColor={color}
@@ -498,6 +535,8 @@ export default function VisualizacaoAlunos() {
           searchTerm={searchTerm}
           onSearchTermChange={handleSearch}
           onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
+          associatedDossier={associatedDossier}
+          onDossierAssociated={handleDossierAssociated}
         />
 
         {/* Modal de Confirmação de CSV */}

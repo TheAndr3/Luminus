@@ -31,6 +31,7 @@ export function ColoredButtonPagination({
         onMouseLeave={() => setIsHovered(false)}
         style={{
             backgroundColor: isHovered ? hoverColor : mainColor,
+            cursor: 'pointer',
         }}
         className={`text-white flex items-center gap-1 px-3 py-1 rounded-full border text-sm transition-all duration-300 ease-in-out`}>    
             {icon && icon} {/* Se mandou ícone, mostra ele */}

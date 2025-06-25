@@ -13,6 +13,14 @@ interface LoginResponseData {
   email: string;
 }
 
+// PROFILE
+interface ProfileResponseData {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 // CADASTRO
 export interface CreatePayLoad {
   customUserEmail: string,
@@ -185,6 +193,22 @@ export const ConfirmEmail = async (payload: ConfirmEmailPayload): Promise<Confir
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao confirmar email';
+    throw new Error(message);
+  }
+}
+
+//Get Usuário
+export const GetProfile = async (id: number): Promise<ProfileResponseData> => {
+  try {
+    const response = await api.get(`/professor/${id}`);
+    
+    if (!response.data || !response.data.data || response.data.data.length === 0) {
+      throw new Error("Perfil não encontrado");
+    }
+
+    return response.data.data[0];
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao buscar perfil';
     throw new Error(message);
   }
 }

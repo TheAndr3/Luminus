@@ -10,10 +10,10 @@ interface StudentActionsProps {
 export default function StudentActions({ studentId, onEdit, onDelete }: StudentActionsProps) {
   return (
     <div className="flex gap-3 text-white -ml-4">
-      <button onClick={() => onEdit(studentId)} className="hover:text-yellow-400">
+      <button onClick={() => onEdit(studentId)} className="hover:text-yellow-400 cursor-pointer">
         <Pencil size={18} />
       </button>
-      <button onClick={() => onDelete(studentId)} className="hover:text-yellow-400">
+      <button onClick={() => onDelete(studentId)} className="hover:text-yellow-400 cursor-pointer">
         <Trash2 size={18} />
       </button>
     </div>

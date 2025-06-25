@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation'; 
+import { useEffect, useState } from 'react';
 
     
 import {
@@ -32,6 +33,9 @@ import {
   CheckCircle,
 } from "lucide-react"; // Import icons from lucide-react
 
+// Import service
+import { GetProfile } from '@/services/professorService';
+
 // --- Existing navigation data ---
 const navigation = [
   { name: 'Home', href: '/home', icon: HomeIcon },
@@ -44,22 +48,50 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
 }
 
+// Interface do usuário
+interface UserData {
+  id: number;
+  name: string;  
+  email: string;
+  role: string;
+}
+
 // --- Sidebar Component ---
 const Sidebar = () => {
   const currentPath = usePathname(); 
-  const router = useRouter();      
+  const router = useRouter();
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // --- Mock User Data (Replace with actual data source/auth context) ---
-  const user = {
-    name: 'Tiago Amador',
-    email: 'tiago@uefs.com',
-    avatarUrl: 'https://avatars.githubusercontent.com/u/33457423?v=4', // Example avatar
-  };
+  // Busca os dados do usuário ao montar o componente
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const professorId = localStorage.getItem('professorId');
+        
+        if (professorId) {
+          const userData = await GetProfile(parseInt(professorId));
+          setUser(userData);
+        } else {
+          // Se não houver ID do professor, redireciona para a página de login
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // Se ocorrer um erro ao buscar os dados do usuário, redireciona para a página de login
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // --- Mock Logout Handler (Replace with actual logout function) ---
+    fetchUserData();
+  }, [router]);
+
+  // --- Logout Handler ---
   const handleLogout = () => {
-    console.log("Logout triggered");
-    router.push('/login'); // Or call your auth logout method
+    localStorage.removeItem('professorId');
+    router.push('/login');
   };
 
   // Determine Avatar Fallback (e.g., initials)
@@ -71,10 +103,22 @@ const Sidebar = () => {
       .join('')
       .toUpperCase();
   }
-  const avatarFallback = user.name ? getInitials(user.name) : <User className="h-5 w-5" />;
+  
+  const avatarFallback = user?.name ? getInitials(user.name) : <User className="h-5 w-5" />;
 
   // Notification Status (Replace with actual logic) 
   const hasNotification = true;
+
+  // Mostra o estado de carregamento
+  if (isLoading) {
+    return (
+      <aside className="fixed inset-y-0 left-0 z-30 flex w-20 flex-col items-center overflow-y-auto border-r border-gray-700 bg-gray-900 py-6">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-20 flex-col items-center overflow-y-auto border-r border-gray-700 bg-gray-900 py-6"> {/* Increased z-index */}
@@ -108,11 +152,10 @@ const Sidebar = () => {
             {/* This is the button visible in the sidebar */}
             <Button
               variant="ghost" // Use ghost variant for no background/border
-              className="relative flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-400 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-400 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 cursor-pointer"
             >
               <span className="sr-only">Open user menu</span>
               <Avatar className="h-8 w-8">
-                 {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                  <AvatarFallback>{avatarFallback}</AvatarFallback>
               </Avatar>
               {/* Or keep the simple icon */}
@@ -139,13 +182,12 @@ const Sidebar = () => {
             <DropdownMenuLabel className="font-normal">
               <div className="flex items-center space-x-3 p-1"> {/* Added padding & spacing */}
                  <Avatar className="h-9 w-9"> {/* Slightly larger avatar in dropdown */}
-                   {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                    <AvatarFallback>{avatarFallback}</AvatarFallback>
                  </Avatar>
                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">{user?.name || 'Usuário'}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {user?.email || 'email@exemplo.com'}
                     </p>
                  </div>
                </div>
@@ -155,11 +197,11 @@ const Sidebar = () => {
             {/* Group of Action Items */}
             <DropdownMenuGroup>
               {/* Use DropdownMenuItem for links/actions */}
-              <DropdownMenuItem onSelect={() => router.push('/account')}>
+              <DropdownMenuItem onSelect={() => router.push('/account')} className="cursor-pointer">
                 <CheckCircle className="mr-2 h-4 w-4" />
                 <span>Account</span>
               </DropdownMenuItem>
-               <DropdownMenuItem onSelect={() => router.push('/notifications')}>
+               <DropdownMenuItem onSelect={() => router.push('/notifications')} className="cursor-pointer">
                 <Bell className="mr-2 h-4 w-4" />
                 <span>Notifications</span>
               </DropdownMenuItem>
@@ -167,7 +209,7 @@ const Sidebar = () => {
             <DropdownMenuSeparator />
 
             {/* Logout Item */}
-            <DropdownMenuItem onSelect={handleLogout}> {/* Use onSelect for consistency */}
+            <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>
