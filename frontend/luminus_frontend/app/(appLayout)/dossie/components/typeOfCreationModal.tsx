@@ -74,7 +74,7 @@ export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationMod
                         {/* Botão para criar um novo dossiê */}
                         <Button 
                             onClick={handleClickNewDossie} 
-                            className="bg-gray-400 hover:bg-gray-300 text-gray-800 font-medium py-3 px-14 rounded-full shadow-md border border-gray-300 transition-all duration-200 hover:shadow-lg"
+                            className="bg-gray-400 hover:bg-gray-300 text-gray-800 font-medium py-3 px-14 rounded-full shadow-md border border-gray-300 transition-all duration-200 hover:shadow-lg cursor-pointer"
                         >
                             Criar novo dossiê
                         </Button>
@@ -82,7 +82,7 @@ export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationMod
                         {/* Botão para criar a partir de um modelo existente */}
                         <Button 
                             onClick={handleClickUsedDossie} 
-                            className="bg-gray-400 hover:bg-gray-300 text-gray-800 font-medium py-3 px-8 rounded-full shadow-md border border-gray-300 transition-all duration-200 hover:shadow-lg"
+                            className="bg-gray-400 hover:bg-gray-300 text-gray-800 font-medium py-3 px-8 rounded-full shadow-md border border-gray-300 transition-all duration-200 hover:shadow-lg cursor-pointer"
                         >
                             Criar a partir de um modelo
                         </Button>
