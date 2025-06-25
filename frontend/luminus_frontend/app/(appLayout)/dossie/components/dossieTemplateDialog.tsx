@@ -21,7 +21,7 @@ import { Folder } from "lucide-react";
 import { BaseInput } from "@/components/inputs/BaseInput";
 // Importa componente customizado de input para a barra de busca
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 // Hooks do React para gerenciar estados locais e efeitos colaterais do componente
 
 import { Dossie } from "./types";
@@ -53,49 +53,53 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
     const [dossies, setDossies] = useState<Dossie[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [totalItems, setTotalItems] = useState(0); // total de dossiês para paginação
+    const searchTimeout = useRef<NodeJS.Timeout | null>(null); // debounce
+
+    const dossiesPerPage = 6;
+    const totalPages = Math.ceil(totalItems / dossiesPerPage);
+
+    // Busca server-side
+    const fetchDossies = async (searchValue = searchTerm, page = currentPage) => {
+        if (!open) return;
+        try {
+            setLoading(true);
+            setError(null);
+            const professorId = Number(localStorage.getItem('professorId'));
+            if (!professorId) throw new Error('ID do professor não encontrado');
+            const start = page * dossiesPerPage;
+            const response = await listDossiers(professorId, start, dossiesPerPage, searchValue);
+            // Map to Dossie type
+            setDossies((response.data || []).map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                description: d.description,
+                evaluation_method: d.evaluation_method,
+                professor_id: d.costumUser_id,
+                selected: false
+            })));
+            setTotalItems(response.ammount || 0);
+        } catch (error: any) {
+            setError(error.message || 'Erro ao carregar dossiês');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDossies = async () => {
-            if (!open) return;
-            
-            try {
-                setLoading(true);
-                setError(null);
-                const professorId = Number(localStorage.getItem('professorId'));
-                
-                if (!professorId) {
-                    throw new Error('ID do professor não encontrado');
-                }
-
-                const response = await listDossiers(professorId);
-                if (response.data) {
-                    setDossies(response.data);
-                }
-            } catch (error: any) {
-                console.error('Falha ao carregar dossiês:', error);
-                setError(error.message || 'Erro ao carregar dossiês');
-            } finally {
-                // Remove o loading independente do resultado
-                setLoading(false);
-            }
-        };
-
         fetchDossies();
-    }, [open]);
+        // eslint-disable-next-line
+    }, [open, currentPage]);
 
-    // =============================================================================
-    // LÓGICA DE PAGINAÇÃO E FILTRO
-    // =============================================================================
-    const dossiesPerPage = 6;
-    // Define quantos dossiês serão exibidos por página
-    
-    const filteredDossies = dossies.filter(dossie =>
-        dossie.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    // Filtra os dossiês baseado no termo de busca, ignorando maiúsculas/minúsculas
-    
-    const totalPages = Math.ceil(filteredDossies.length / dossiesPerPage);
-    // Calcula o número total de páginas baseado nos dossiês filtrados
+    // Debounce para busca
+    const handleSearch = (value: string) => {
+        setSearchTerm(value);
+        setCurrentPage(0);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            fetchDossies(value, 0);
+        }, 400);
+    };
 
     // =============================================================================
     // HANDLERS (MANIPULADORES DE EVENTOS)
@@ -135,7 +139,7 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                 <DialogOverlay className="fixed inset-0 backdrop-blur-xs" />
 
                 {/* Conteúdo principal do modal */}
-                <DialogContent className="h-[600px] max-w-6xl bg-gray-300 rounded-2xl text-white border-3 border-black">
+                <DialogContent className="max-w-4xl bg-gray-300 text-white rounded-2xl border border-black p-6">
                     
                     {/* Título acessível apenas para leitores de tela (acessibilidade) */}
                     <DialogTitle className="sr-only">Escolha o dossiê a ser usado</DialogTitle>
@@ -143,7 +147,7 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                     {/* ======================================================= */}
                     {/* CABEÇALHO DO MODAL                                      */}
                     {/* ======================================================= */}
-                    <div className="relative mb-6">
+                    <div className="relative mb-2">
                         
                         {/* Container principal do cabeçalho com ícone e título */}
                         <div className="flex items-center gap-2 justify-center">
@@ -155,19 +159,19 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                             
                             {/* Título principal do modal */}
                             <span className="text-4xl font-bold text-black">
-                                Escolha o dossiê a ser usado 
+                                Escolha o dossiê a ser usado
                             </span>
                         </div>
 
                         {/* ======================================================= */}
                         {/* BARRA DE BUSCA                                          */}
                         {/* ======================================================= */}
-                        <div className="flex justify-center items-center my-[2vh] mb-[4vh]">
+                        <div className="flex justify-center items-center my-[1vh] mb-[1vh]">
                             <BaseInput
                                 type="text"
                                 placeholder="Procure pelo dossiê"
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => handleSearch(e.target.value)}
                                 className="bg-white border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh] placeholder-black text-black"
                             />
                             {/* 
@@ -200,7 +204,7 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                                     </button>
                                 </div>
                             </div>
-                        ) : filteredDossies.length === 0 ? (
+                        ) : dossies.length === 0 ? (
                             <div className="flex justify-center items-center h-64">
                                 <div className="text-black text-xl">
                                     {searchTerm ? 
@@ -211,28 +215,26 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                             </div>
                         ) : (
                             <>
-                                {filteredDossies
-                                    .slice(currentPage * dossiesPerPage, (currentPage + 1) * dossiesPerPage)
-                                    .map((dossie) => (
-                                        <div
-                                            key={dossie.id}
-                                            onClick={() => handleClickDossie(dossie)}
-                                            className="bg-[#0A2B3D] text-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors"
-                                        >
-                                            <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
-                                                <Folder className="w-10 h-10 text-white" />
-                                            </div>
-                                            <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis pl-4">
-                                                {dossie.name}
-                                            </div>
+                                {dossies.map((dossie) => (
+                                    <div
+                                        key={dossie.id}
+                                        onClick={() => handleClickDossie(dossie)}
+                                        className="bg-gray-900 text-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors"
+                                    >
+                                        <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
+                                            <Folder className="w-10 h-10 text-white" />
                                         </div>
-                                    ))}
-                                {filteredDossies.length > 0 && (
+                                        <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis pl-4">
+                                            {dossie.name}
+                                        </div>
+                                    </div>
+                                ))}
+                                {totalItems > dossiesPerPage && (
                                     <div className="mt-2">
                                         <PageController
-                                            currentPage={currentPage}
+                                            currentPage={currentPage + 1}
                                             totalPages={totalPages}
-                                            setCurrentPage={setCurrentPage}
+                                            setCurrentPage={page => setCurrentPage(page - 1)}
                                         />
                                     </div>
                                 )}
