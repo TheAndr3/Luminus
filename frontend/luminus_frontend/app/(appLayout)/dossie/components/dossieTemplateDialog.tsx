@@ -105,25 +105,8 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
     // HANDLERS (MANIPULADORES DE EVENTOS)
     // =============================================================================
     const handleClickDossie = (selectedDossie: Dossie) => {
-        // Função executada quando um dossiê é selecionado
-        console.log('Dossiê selecionado:', selectedDossie);
-        
-        // Aqui você pode implementar diferentes ações:
-        
-        // 1. Navegar para página específica do dossiê
-        // router.push(`/dossie/${selectedDossie.id}`);
-        
-        // 2. Callback para componente pai
-        // onDossieSelected?.(selectedDossie);
-        
-        // 3. Armazenar no estado global/contexto
-        // dispatch({ type: 'SET_SELECTED_DOSSIE', payload: selectedDossie });
-        
-        // 4. Fechar modal e continuar fluxo
-        // onClose();
-        
-        // Por enquanto, apenas mostra um alert com as informações
-        alert(`Dossiê selecionado: ${selectedDossie.name}\nID: ${selectedDossie.id}\nProfessor ID: ${selectedDossie.professor_id}`);
+        // Redireciona para a página de criação de dossiê com o templateId
+        router.push(`/dossie/crud?templateId=${selectedDossie.id}`);
     }
 
     return (
