@@ -57,6 +57,14 @@ interface ConfirmEmailResponse {
   msg: string;
 }
 
+
+interface ProfessorProfile {
+  id: number;
+  username: string;
+  contractNumber: string;
+  email: string
+}
+
 // FUNÇÕES
 
 //Login
@@ -176,3 +184,16 @@ export const ConfirmEmail = async (payload: ConfirmEmailPayload): Promise<Confir
     throw new Error(message);
   }
 }
+
+
+
+//Buscar perfil do professor
+export const GetProfessorProfile = async (id: string): Promise<ProfessorProfile> => {
+  try {
+    const response = await api.get(`/professor/${id}`);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao buscar o perfil';
+    throw new Error(message);
+  }
+};
