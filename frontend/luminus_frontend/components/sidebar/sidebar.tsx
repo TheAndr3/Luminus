@@ -125,7 +125,7 @@ const Sidebar = () => {
       {/* Optional Logo */}
       {/* ... */}
       {/* Main Navigation */}
-      <nav className="mt-6 flex flex-1 flex-col items-center space-y-6">
+      <nav className="mt-2 flex flex-1 flex-col items-center space-y-6">
         {navigation.map((item) => (
           <Link
             key={item.name}

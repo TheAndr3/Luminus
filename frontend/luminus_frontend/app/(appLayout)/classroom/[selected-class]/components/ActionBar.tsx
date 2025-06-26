@@ -37,14 +37,14 @@ export function ActionBar({
   return (
     <div className="mt-2">
       {/* Barra de ferramentas - sempre visível */}
-      <div className="flex justify-between items-center mb-3 px-[6vh]">
+      <div className="flex justify-between items-center mb-3 px-[6vh] pl-[8.5vh]">
         <div className="flex items-center gap-2 -ml-5">
           <BaseInput
             type="text"
             placeholder="Procure pelo aluno"
             value={searchTerm}
             onChange={(e) => onSearchTermChange(e.target.value)}
-            className="border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
+            className="border bg-[#F5F5F5] border-[#B3B3B3] rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
           />
         </div>
         <div className="flex items-center gap-3">

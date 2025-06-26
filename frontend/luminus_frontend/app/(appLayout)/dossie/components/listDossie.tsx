@@ -85,7 +85,7 @@ export default function ListDossie({
         <thead>
           <tr className="text-sm text-gray-600">
             {/* Coluna com checkbox para selecionar todos */}
-            <th className="w-8 px-4 py-3">
+            <th className="w-8 pl-2.5 pr-0 py-3">
               <input
                 type="checkbox"
                 onChange={handleToggleAll}
@@ -98,7 +98,7 @@ export default function ListDossie({
 
             {/* Cabeçalhos para as colunas principais da tabela */}
             <th className="px-2vh text-lg pl-4">Nome</th>
-            <th className="px-2vh text-lg pl-30">Descrição</th>
+            <th className="px-2vh text-lg pl-20">Descrição</th>
 
             {/* Área com botões */}
             <th className="px-2vh text-lg">
