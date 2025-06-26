@@ -173,6 +173,7 @@ export default function ListClass({
                   <div className="flex gap-2 justify-end mr-2">
                     {/* Botões de ação: editar, excluir, arquivar e download */}
                     <button
+                      title="Editar Turma"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         
@@ -185,6 +186,7 @@ export default function ListClass({
                     </button>
                     
                     <button
+                      title="Excluir Turma"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={()=> {
                         classroom.selected = true;
@@ -196,6 +198,7 @@ export default function ListClass({
                     </button>
 
                     <button
+                      title="Download CSV da Turma"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         classroom.selected = true;

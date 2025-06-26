@@ -148,12 +148,22 @@ export default function ListDossie({
                 <Folder className="w-10 h-10 text-white" />
               </td>
               <td className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{dossie.name}</td>
-              <td className="p-2 pl-20 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{dossie.description}</td>
+              <td
+                className="p-2 pl-20 text-xl"
+                title={dossie.description} // Tooltip nativo com toda a descrição
+              >
+                {dossie.description.length > 10 
+                  ? `${dossie.description.substring(0, 10)}...` 
+                  : dossie.description
+                }
+              </td>
+
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
               <td className="p-1 w-[5vw]" onClick={(e) => e.stopPropagation()}>
                 {hovered === dossie.id && (
                   <div className="flex gap-2 justify-end mr-2">
                     <button
+                      title="Editar Dossiê"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -164,6 +174,7 @@ export default function ListDossie({
                     </button>
                     
                     <button
+                      title="Excluir Dossiê"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         dossie.selected = true;
@@ -175,6 +186,7 @@ export default function ListDossie({
                     </button>
 
                     <button
+                      title="Exportar Dossiê"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={(e) => {
                         
