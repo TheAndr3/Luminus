@@ -76,6 +76,12 @@ export default function ListDossie({
     router.push(`/dossie/${id}?mode=view`);
   };
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
 
   
   return (
@@ -85,7 +91,7 @@ export default function ListDossie({
         <thead>
           <tr className="text-sm text-gray-600">
             {/* Coluna com checkbox para selecionar todos */}
-            <th className="w-8 px-4 py-3">
+            <th className="w-8 pl-2.5 pr-0 py-3">
               <input
                 type="checkbox"
                 onChange={handleToggleAll}
@@ -98,7 +104,7 @@ export default function ListDossie({
 
             {/* Cabeçalhos para as colunas principais da tabela */}
             <th className="px-2vh text-lg pl-4">Nome</th>
-            <th className="px-2vh text-lg pl-30">Descrição</th>
+            <th className="px-2vh text-lg pl-20">Descrição</th>
 
             {/* Área com botões */}
             <th className="px-2vh text-lg">
@@ -147,13 +153,20 @@ export default function ListDossie({
               <td className="p-2 flex items-center">
                 <Folder className="w-10 h-10 text-white" />
               </td>
-              <td className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{dossie.name}</td>
-              <td className="p-2 pl-20 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{dossie.description}</td>
+              <td className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{truncateText(dossie.name, 10)}</td>
+              <td
+                className="p-2 pl-20 text-xl"
+                title={dossie.description} // Tooltip nativo com toda a descrição
+              >
+                {truncateText(dossie.description, 10)}
+              </td>
+
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
               <td className="p-1 w-[5vw]" onClick={(e) => e.stopPropagation()}>
                 {hovered === dossie.id && (
                   <div className="flex gap-2 justify-end mr-2">
                     <button
+                      title="Editar Dossiê"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -164,6 +177,7 @@ export default function ListDossie({
                     </button>
                     
                     <button
+                      title="Excluir Dossiê"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={() => {
                         dossie.selected = true;
@@ -175,6 +189,7 @@ export default function ListDossie({
                     </button>
 
                     <button
+                      title="Exportar Dossiê"
                       className="hover:text-yellow-400 cursor-pointer"
                       onClick={(e) => {
                         
@@ -222,4 +237,4 @@ export default function ListDossie({
       
     </div>
   );
-} 
+}

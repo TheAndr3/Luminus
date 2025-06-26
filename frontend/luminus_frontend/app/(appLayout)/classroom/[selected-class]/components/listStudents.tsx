@@ -164,6 +164,13 @@ export default function ListStudents({
     setEditedData({}); // Inicia com dados vazios para mostrar placeholders
   };
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
+
   return (
     <div className="w-full">
       {/* Cabeçalho da tabela */}
@@ -315,7 +322,7 @@ export default function ListStudents({
               ) : (
                 <>
                   <td className="px-4 py-3 text-lg">{students.matricula}</td>
-                  <td className="px-4 py-3 text-lg">{students.nome}</td>
+                  <td className="px-4 py-3 text-lg">{truncateText(students.nome, 10)}</td>
                   <td className="p-2">
                     {hovered === students.matricula && (
                       <StudentActions
