@@ -76,6 +76,12 @@ export default function ListDossie({
     router.push(`/dossie/${id}?mode=view`);
   };
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
 
   
   return (
@@ -147,15 +153,12 @@ export default function ListDossie({
               <td className="p-2 flex items-center">
                 <Folder className="w-10 h-10 text-white" />
               </td>
-              <td className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{dossie.name}</td>
+              <td className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{truncateText(dossie.name, 10)}</td>
               <td
                 className="p-2 pl-20 text-xl"
                 title={dossie.description} // Tooltip nativo com toda a descrição
               >
-                {dossie.description.length > 10 
-                  ? `${dossie.description.substring(0, 10)}...` 
-                  : dossie.description
-                }
+                {truncateText(dossie.description, 10)}
               </td>
 
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
@@ -234,4 +237,4 @@ export default function ListDossie({
       
     </div>
   );
-} 
+}

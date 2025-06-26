@@ -20,7 +20,7 @@ import EditClassModal from "./editClassModal";
 // Ícones para as ações de editar, excluir, arquivar e download
 import {Download, Pencil, Trash } from "lucide-react";
 
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 
 
 // Definição do tipo das propriedades que o componente ListClass recebe
@@ -94,6 +94,13 @@ export default function ListClass({
     //pesquisar sobre cache que mano maike falou
   }
 
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
+
   return (
     <div className="w-full -mt-5">
       {/* Tabela que exibe as turmas com seus dados */}
@@ -162,9 +169,9 @@ export default function ListClass({
 
               {/* Colunas com dados da turma: disciplina, código da turma e dossiê */}
               <>
-                <td className="p-2 pl-32 text-xl">{classroom.disciplina}</td>
-                <td className="p-2 pl-8 text-xl">{classroom.codigo}</td>
-                <td className="p-2 pl-24 text-xl">{classroom.institution}</td>
+                <td className="p-2 pl-32 text-xl">{truncateText(classroom.disciplina, 10)}</td>
+                <td className="p-2 pl-8 text-xl">{truncateText(classroom.codigo, 10)}</td>
+                <td className="p-2 pl-24 text-xl">{truncateText(classroom.institution || '', 10)}</td>
               </>
 
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
