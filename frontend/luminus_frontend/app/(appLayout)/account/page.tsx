@@ -29,7 +29,7 @@ export default function Account() {
     const handleExitAccount = () => {
         router.push('/login');
     };
-
+    
     const fetchUserData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -143,9 +143,7 @@ export default function Account() {
                 user={{
                     id: formData.id,
                     username: formData.username,
-                    contractNumber: formData.contractNumber,
-                    password: '',
-                    email: formData.email
+                    password: '', 
                 }}
                 onUpdateSuccess={handleAccountUpdated}
             />

@@ -17,9 +17,7 @@ interface EditingAccountProps {
     user: { // Dados do usuário a ser editado
         id: number;
         username: string;
-        contractNumber: string;
         password: string;
-        email: string;
     };
     // NOVO: Função para notificar o pai que a atualização foi bem-sucedida
     onUpdateSuccess?: () => void;
@@ -47,28 +45,20 @@ export default function EditingAccount({ open, onCancel, user, onUpdateSuccess }
         setSave(true);
         setMessageButton("Carregando...");
 
-        if (!usernameAccount || !contractNumberAccount || !emailAccount) {
-            setMessageErro("Por favor, preencha todos os campos obrigatórios (Nome, Número de Contrato e Email)!");
+        if (!usernameAccount) {
+            setMessageErro("Por favor, preencha todos os campos obrigatórios");
             setMissingDialog(true);
             setSave(false);
             setMessageButton("Concluir");
             return;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(emailAccount)) {
-            setMessageErro("Por favor, insira um endereço de e-mail válido.");
-            setMissingDialog(true);
-            setSave(false);
-            setMessageButton("Concluir");
-            return;
-        }
+       
 
         try {
-            const updateData: { username: string; contractNumber: string; email: string; password?: string } = {
+            const updateData: { username: string; password?: string } = {
                 username: usernameAccount,
-                contractNumber: contractNumberAccount,
-                email: emailAccount,
+            
             };
 
             if (passwordAccount) {
@@ -135,16 +125,6 @@ export default function EditingAccount({ open, onCancel, user, onUpdateSuccess }
                             />
                         </div>
 
-                        <div className="flex items-center ml-2">
-                            <label className="text-2xl">Numero contrato:</label>
-                            <BaseInput
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl"
-                                placeholder={user.contractNumber}
-                                value={contractNumberAccount}
-                                onChange={(e) => setContractNumberAccount(e.target.value)}
-                            />
-                        </div>
-
                         <div className="flex items-center gap-3">
                             <label className="text-2xl">Senha:</label>
                             <BaseInput
@@ -155,17 +135,7 @@ export default function EditingAccount({ open, onCancel, user, onUpdateSuccess }
                                 onChange={(e) => setPasswordAccount(e.target.value)}
                             />
                         </div>
-
-                        <div className="flex items-center gap-12">
-                            <label className="text-2xl">Email:</label>
-                            <BaseInput
-                                type="email"
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl"
-                                placeholder={user.email}
-                                value={emailAccount}
-                                onChange={(e) => setEmailAccount(e.target.value)}
-                            />
-                        </div>
+                        
                     </div>
 
                     <div className="flex justify-end mr-7">

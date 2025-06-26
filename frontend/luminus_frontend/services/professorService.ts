@@ -59,10 +59,10 @@ interface ConfirmEmailResponse {
 
 
 interface ProfessorProfile {
+  email: string;
+  contractNumber: string;
   id: number;
   username: string;
-  contractNumber: string;
-  email: string
 }
 
 // FUNÇÕES
