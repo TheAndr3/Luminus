@@ -6,6 +6,7 @@ import EditingAccount from "./editingAccount"; // Componente para edição dos d
 import { ConfirmDeletation } from "./confirmDeletation"; // Componente para confirmação de exclusão de conta
 import { deleteProfile } from "@/services/profileService"; // Serviço de API para exclusão de perfil
 import { GetProfile } from "@/services/professorService"; // ✅ Chamada de API real para obter o perfil do professor
+import { ErroMessageDialog } from "../classroom/components/erroMessageDialog";
 
 // Define a forma dos dados para o formulário do usuário
 interface FormDataType {
@@ -15,6 +16,11 @@ interface FormDataType {
 }
 
 export default function Account() {
+
+  const [openMessage, setOpenMessage] = useState(false);
+  const [messageDialog, setMessageDialog] = useState('');
+
+
   // Estado para controlar a visibilidade do diálogo de confirmação de exclusão
   const [deleteDialog, setDeleteDialog] = useState(false);
   // Instância do roteador Next.js para navegação
@@ -50,6 +56,8 @@ export default function Account() {
 
       // Lança um erro se o professorId não for encontrado, indicando um problema potencial
       if (!professorId) {
+        setMessageDialog("ID do professor não encontrado no localStorage.")
+        setOpenMessage(true)
         throw new Error("ID do professor não encontrado no localStorage.");
       }
 
@@ -65,7 +73,9 @@ export default function Account() {
 
     } catch (err) {
       // Captura e define quaisquer erros que ocorram durante a operação de busca
-      setError("Erro ao carregar os dados do perfil.");
+      setMessageDialog("Erro ao carregar os dados do perfil.")
+      setOpenMessage(true)
+
       console.error(err); // Registra o erro para fins de depuração
     } finally {
       setLoading(false); // Finaliza o estado de carregamento, independentemente do sucesso ou falha
@@ -93,7 +103,7 @@ export default function Account() {
     try {
       const response = await deleteProfile(userId); // Chama a API para excluir o perfil
       console.log("Conta excluída com sucesso:", response.message);
-      router.push("/login"); // ✅ Redireciona para a página de login após a exclusão bem-sucedida
+      router.push("/login"); 
     } catch (error: any) {
       // Captura e registra quaisquer erros durante o processo de exclusão
       console.error("Erro ao excluir perfil:", error.message);
@@ -188,6 +198,14 @@ export default function Account() {
         onCancel={() => setDeleteDialog(false)} // Callback para cancelar a exclusão
         onConfirm={() => DeleteProfile(formData.id)} // Callback para confirmar e executar a exclusão
       />
+
+      <ErroMessageDialog
+        open={openMessage}
+        onConfirm={()=> setOpenMessage(false)}
+        description={messageDialog}
+      />
     </div>
+
+    
   );
 }
