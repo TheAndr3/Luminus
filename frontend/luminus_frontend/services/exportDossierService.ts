@@ -6,8 +6,9 @@ export const ExportDossierToCsv = async (dossierId: number): Promise<string> => 
       responseType: 'blob'
     });
 
-    // Retorna o conteúdo do CSV como texto
-    return response.data;
+    // Converter o blob para texto
+    const text = await response.data.text();
+    return text;
 
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao exportar o dossiê para CSV';
