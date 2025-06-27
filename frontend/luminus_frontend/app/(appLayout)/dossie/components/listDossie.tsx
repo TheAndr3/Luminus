@@ -153,7 +153,12 @@ export default function ListDossie({
               <td className="p-2 flex items-center">
                 <Folder className="w-10 h-10 text-white" />
               </td>
-              <td className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis">{truncateText(dossie.name, 10)}</td>
+              <td 
+                className="p-2 text-xl whitespace-nowrap overflow-hidden text-ellipsis"
+                title={dossie.name} // Adicione esta linha
+              >
+              {truncateText(dossie.name, 10)}
+              </td>
               <td
                 className="p-2 pl-20 text-xl"
                 title={dossie.description} // Tooltip nativo com toda a descrição
