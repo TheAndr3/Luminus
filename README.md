@@ -1,5 +1,5 @@
 # Luminus
-    O backend do Luminus é uma aplicação Node.js desenvolvida com o framework Express.js, operando como uma API RESTful. Ele é projetado para ser um sistema distinto do frontend, mas totalmente integrado a ele, conforme as recomendações do projeto. A comunicação entre os dois é realizada via requisições HTTP.
+O backend do Luminus é uma aplicação Node.js desenvolvida com o framework Express.js, operando como uma API RESTful. Ele é projetado para ser um sistema distinto do frontend, mas totalmente integrado a ele, conforme as recomendações do projeto. A comunicação entre os dois é realizada via requisições HTTP.
 ## Arquitetura e Componentes:
 ### Node.js e Express.js: 
 A escolha de Node.js proporciona um ambiente de execução JavaScript assíncrono e não-bloqueante, ideal para construir APIs de alta performance. O Express.js, um framework minimalista e flexível, é utilizado para definir rotas, lidar com middlewares e gerenciar as requisições e respostas HTTP.
