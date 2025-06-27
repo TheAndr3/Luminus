@@ -322,7 +322,9 @@ export default function ListStudents({
               ) : (
                 <>
                   <td className="px-4 py-3 text-lg">{students.matricula}</td>
-                  <td className="px-4 py-3 text-lg">{truncateText(students.nome, 10)}</td>
+                  <td className="px-4 py-3 text-lg" title={students.nome}>
+                  {truncateText(students.nome, 10)}
+                  </td>
                   <td className="p-2">
                     {hovered === students.matricula && (
                       <StudentActions

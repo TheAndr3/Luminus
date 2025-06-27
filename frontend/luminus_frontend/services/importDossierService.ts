@@ -1,14 +1,13 @@
-import axios from 'axios';
 import { api } from './api';
 
-// Tipagem das questões
+//Tipagem das questões
 interface Question {
   name: string;
   description: string;
   evaluationMethodId: number;
 }
 
-// Tipagem das seções
+//Tipagem das seções
 interface Section {
   name: string;
   description: string;
@@ -16,7 +15,7 @@ interface Section {
   questions: Question[];
 }
 
-// Payload para o dossiê
+//Payload para o dossiê
 interface ImportDossierPayload {
   name: string;
   customUserId: number;
@@ -25,13 +24,13 @@ interface ImportDossierPayload {
   sections: Section[];
 }
 
-// Resposta da API ao importar o dossiê
+//Resposta da API ao importar o dossiê
 interface ImportDossierResponse {
   msg: string;
   dossierId?: number;
 }
 
-// Função para importar o dossiê para a API
+//Função para importar o dossiê para a API
 export const ImportDossier = async (
   payload: ImportDossierPayload
 ): Promise<ImportDossierResponse> => {
