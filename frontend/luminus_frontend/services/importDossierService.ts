@@ -1,14 +1,13 @@
-import axios from 'axios';
 import { api } from './api';
 
-// Tipagem das questões
+//Tipagem das questões
 interface Question {
   name: string;
   description: string;
   evaluationMethodId: number;
 }
 
-// Tipagem das seções
+//Tipagem das seções
 interface Section {
   name: string;
   description: string;
@@ -34,11 +33,12 @@ interface ImportDossierPayload {
   sections: Section[];
 }
 
-// Resposta da API ao importar o dossiê
+//Resposta da API ao importar o dossiê
 interface ImportDossierResponse {
   msg: string;
   dossierId?: number;
 }
+
 
 // Interface para dados CSV
 interface CsvRow {
