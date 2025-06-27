@@ -161,7 +161,7 @@ export default function ListStudents({
   // Função para iniciar a edição de um estudante
   const handleStartEdit = (student: Students) => {
     setEditingId(student.matricula);
-    setEditedData({}); // Inicia com dados vazios para mostrar placeholders
+    setEditedData({ matricula: student.matricula, nome: student.nome });
   };
 
   const truncateText = (text: string, maxLength: number) => {
@@ -185,10 +185,10 @@ export default function ListStudents({
                 className="w-5 h-5 accent-blue-600 cursor-pointer"
               />
             </th>
-            <th className="p-2 text-xl">Matrícula</th>
-            <th className="p-2 text-xl">Aluno</th>
-            <th className="p-2"></th>
-            <th className="p-2"></th>
+            <th className="w-10 px-5 py-1"></th>
+            <th className="p-2 text-xl w-1/4">Matrícula</th>
+            <th className="p-2 text-xl w-2/4">Aluno</th>
+            <th className="p-2 w-1/4"></th>
           </tr>
         </thead>
         <tbody>
@@ -208,41 +208,37 @@ export default function ListStudents({
                   value={inlineNewStudentMatricula}
                   onChange={(e) => setInlineNewStudentMatricula(e.target.value)}
                   placeholder="Matrícula"
-                  className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10"
+                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-white"
                   disabled={isLoading}
                 />
               </td>
               <td className="px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={inlineNewStudentName}
-                      onChange={(e) => setInlineNewStudentName(e.target.value)}
-                      placeholder="Nome do Aluno"
-                      className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10"
-                      disabled={isLoading}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
-                      onClick={handleInlineAddStudent}
-                      disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
-                    >
-                      Salvar
-                    </button>
-                    <button
-                      className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
-                      onClick={handleCancelInlineAdd}
-                      disabled={isLoading}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
+                <input
+                  type="text"
+                  value={inlineNewStudentName}
+                  onChange={(e) => setInlineNewStudentName(e.target.value)}
+                  placeholder="Nome do Aluno"
+                  className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-white"
+                  disabled={isLoading}
+                />
               </td>
               <td className="px-4 py-3">
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
+                    onClick={handleInlineAddStudent}
+                    disabled={isLoading || !inlineNewStudentMatricula.trim() || !inlineNewStudentName.trim()}
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
+                    onClick={handleCancelInlineAdd}
+                    disabled={isLoading}
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </td>
             </tr>
           )}
@@ -257,82 +253,80 @@ export default function ListStudents({
           )}
 
           {/* Renderiza uma linha para cada students */}
-          {students.map((students) => (
+          {students.map((student) => (
             <tr
-              key={students.matricula}
-              onMouseEnter={() => setHovered(students.matricula)}
+              key={student.matricula}
+              onMouseEnter={() => setHovered(student.matricula)}
               onMouseLeave={() => setHovered(null)}
               className={`text-white border-b border-gray-700 hover:brightness-110 ${
-                editingId === students.matricula ? 'cursor-default' : 'cursor-pointer'
+                editingId === student.matricula ? 'cursor-default' : 'cursor-pointer'
               }`}
               style={{ backgroundColor: mainColor || '#111827' }}
             >
               <td className="px-4 py-3 w-12">
                 <input
                   type="checkbox"
-                  checked={!!students.selected}
-                  onChange={() => handleToggleOne(students.matricula)}
+                  checked={!!student.selected}
+                  onChange={() => handleToggleOne(student.matricula)}
                   className="w-5 h-5 accent-blue-600 cursor-pointer"
                 />
               </td>
               <td className="w-10 px-5 py-3 text-left">
                 <FaUsers className="w-6 h-6" />
               </td>
-              {editingId === students.matricula ? (
+              {editingId === student.matricula ? (
                 <>
                   <td className="px-4 py-3">
                     <input
                       type="text"
-                      value={editedData.matricula || ""}
-                      onChange={(e) => handleInputChange("matricula", e.target.value)}
-                      placeholder={students.matricula.toString()}
-                      className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10 placeholder-gray-500"
+                      value={editedData.matricula?.toString() ?? ''}
+                      onChange={(e) => handleInputChange('matricula', e.target.value)}
+                      placeholder="Matrícula do aluno"
+                      className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-white"
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="text"
-                          value={editedData.nome || ""}
-                          onChange={(e) => handleInputChange("nome", e.target.value)}
-                          placeholder={students.nome}
-                          className="w-[300px] p-2 rounded-md border border-gray-300 text-gray-900 bg-white relative z-10 placeholder-gray-500"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
-                          onClick={handleSave}
-                        >
-                          Salvar
-                        </button>
-                        <button
-                          className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded-md text-sm"
-                          onClick={handleCancel}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
+                    <input
+                      type="text"
+                      value={editedData.nome ?? ''}
+                      onChange={(e) => handleInputChange('nome', e.target.value)}
+                      placeholder="Nome do aluno"
+                      className="w-full p-2 rounded-md border border-gray-300 text-gray-900 bg-white"
+                    />
                   </td>
                   <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        className="bg-green-500 hover:bg-green-600 cursor-pointer text-white px-3 py-1 rounded-md"
+                        onClick={handleSave}
+                      >
+                        Salvar
+                      </button>
+                      <button
+                        className="bg-red-500 hover:bg-red-600 cursor-pointer text-white px-3 py-1 rounded-md"
+                        onClick={handleCancel}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </td>
                 </>
               ) : (
                 <>
-                  <td className="p-2 text-xl">{students.matricula}</td>
-                  <td className="p-2 text-xl" title={students.nome}>
-                  {truncateText(students.nome, 10)}
+                  <td className="p-2 text-xl">{student.matricula}</td>
+                  <td className="p-2 text-xl" title={student.nome}>
+                    {truncateText(student.nome, 10)}
                   </td>
                   <td className="p-2">
-                    {hovered === students.matricula && (
-                      <StudentActions
-                        studentId={students.matricula}
-                        onEdit={() => handleStartEdit(students)}
-                        onDelete={() => onDeleteStudent(students.matricula)}
-                      />
-                    )}
+                    <div className="flex justify-end">
+                      {hovered === student.matricula && (
+                        <StudentActions
+                          studentId={student.matricula}
+                          onEdit={() => handleStartEdit(student)}
+                          onDelete={() => onDeleteStudent(student.matricula)}
+                        />
+                      )}
+                    </div>
                   </td>
                 </>
               )}
