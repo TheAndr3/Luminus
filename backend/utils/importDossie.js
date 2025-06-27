@@ -4,7 +4,7 @@ const axios = require('axios');
 
 // --- INÍCIO DA CONFIGURAÇÃO ---
 const csvFilePath = 'Dossie.csv'; // Caminho para o seu arquivo CSV
-const apiUrl = 'http://localhost:3000/api/dossier/create'; // URL da sua API
+const apiUrl = 'http://localhost:3000/api/dossier/create'; // URL API
 const customUserId = 1; // O ID do usuário (que pode ser professor ou instituição)
 // --- FIM DA CONFIGURAÇÃO ---
 
