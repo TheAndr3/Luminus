@@ -10,7 +10,7 @@ import { darkenHexColor } from '@/utils/colorHover';
 // import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
 import { Header } from "./components/Header";
 import { ActionBar} from "./components/ActionBar"; // Corrigido nome do componente para ActionBar
-import { FileText } from "lucide-react"; // Manteve FileText
+import { FileText, AlertTriangle, Trash2 } from "lucide-react"; // Manteve FileText, AlertTriangle, Trash2
 import styles from './selected-classroom.module.css';
 import { toast } from 'react-hot-toast'; 
 import { api } from "@/services/api";
@@ -597,21 +597,32 @@ export default function VisualizacaoAlunos() {
 
         {/* Modal de Confirmação de Exclusão de Alunos (exemplo, se você tiver) */}
         <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
-            <DialogContent className="max-w-md bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
-                <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-center">Confirmar Exclusão</DialogTitle>
-                </DialogHeader>
-                <DialogDescription className="text-center my-4">
-                    Tem certeza que deseja excluir {idsToDelete.length} aluno(s) selecionado(s)?
-                </DialogDescription>
-                <DialogFooter className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white" disabled={isLoading}>Cancelar</Button>
-                    <Button onClick={confirmDeletion} className="bg-red-600 hover:bg-red-700 text-white" disabled={isLoading}>
-                        {isLoading ? "Excluindo..." : "Excluir"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
+          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm" />
+          <DialogContent className="max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
+            <DialogHeader className="text-center pb-4">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+              </div>
+              <DialogTitle className="text-xl font-bold text-gray-900">
+                Excluir {idsToDelete.length > 1 ? `${idsToDelete.length} Alunos` : `Aluno`}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 mt-2">
+                Tem certeza que deseja excluir {idsToDelete.length > 1 ? `${idsToDelete.length} alunos` : `este aluno`}?
+                Esta ação não pode ser desfeita e todos os dados vinculados serão perdidos.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)} className="w-full sm:w-auto px-8 py-3 border-gray-300 text-gray-700 bg-gray-300 hover:bg-gray-400 rounded-full font-medium shadow-md border transition-all duration-200 hover:shadow-lg cursor-pointer" disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmDeletion} className="w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium shadow-md border border-red-600 transition-all duration-200 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer" disabled={isLoading}>
+                <Trash2 className="w-4 h-4" />
+                {isLoading ? "Excluindo..." : "Excluir"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
 
         <div className="px-10 flex items-center justify-center -mt-2 ml-auto"> {/*px-10 no original*/}
