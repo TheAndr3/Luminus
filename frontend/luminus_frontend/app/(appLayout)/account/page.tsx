@@ -59,7 +59,7 @@ export default function Account() {
       // Atualiza o estado formData com os dados do usuário obtidos
       setFormData({
         id: parseInt(professorId, 10), // Garante que o ID seja analisado como um número inteiro
-        username: data.username,
+        username: data.name,
         email: data.email
       });
 
