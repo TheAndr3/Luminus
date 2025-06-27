@@ -8,9 +8,9 @@ import { Dossie } from "./components/types";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
 import { ArchiveConfirmation } from "./components/archiveConfirmation";
 import { ErroMessageDialog } from "./components/erroMessageDialog";
-import { ExportConfirmDialog } from './components/exportConfirmDialog';
 import ExportDownloadDialog from './components/exportDownloadDialog';
 import TypeOfCreationModal from './components/typeOfCreationModal';
+import ImportDossierDialog from './components/importDossierDialog';
 import { listDossiers, deleteDossier } from '@/services/dossierServices';
 
 
@@ -32,10 +32,10 @@ export default function GerenciarDossies() {
   const [totalItems, setTotalItems] = useState(0); // Total de itens para paginação
 
   const [idsToExport, setIdsToExport] = useState<number[]>([]);
-  const [openExportConfirmDialog, setOpenExportConfirmDialog] = useState(false);
   const [openDownloadDialog, setOpenDownloadDialog] = useState(false);
 
   const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
+  const [openImportDialog, setOpenImportDialog] = useState(false);
 
   let typeOfData = "Dossie";
 
@@ -106,8 +106,12 @@ export default function GerenciarDossies() {
   };
 
   const handleImportDossie = () => {
-    // TODO: Implementar importação de dossiê
-    console.log("Importando dossiê");
+    setOpenImportDialog(true);
+  };
+
+  const handleImportSuccess = () => {
+    // Recarregar a lista de dossiês após importação bem-sucedida
+    fetchDossies();
   };
 
   const handleCreateDossie = () => {
@@ -186,7 +190,7 @@ export default function GerenciarDossies() {
     if (selecionados.length === 0) return;
 
     setIdsToExport(selecionados); 
-    setOpenExportConfirmDialog(true);
+    setOpenDownloadDialog(true);
   };
 
   return (
@@ -293,25 +297,26 @@ export default function GerenciarDossies() {
         description={messageErro}
       />
 
-      <ExportConfirmDialog 
-        open={openExportConfirmDialog}
-        onCancel={() => setOpenExportConfirmDialog(false)}
-        onConfirm={() => setOpenDownloadDialog(true)}
-        description={"Tem certeza que quer exportar o(s) dossiê (s) selecionado (s)"}
-      />
-
       <ExportDownloadDialog
         open={openDownloadDialog}
         IdToExport={idsToExport}
         onClose={()=>setOpenDownloadDialog(false)}
         description={"Dossiê exportado"}
         typeOfData={typeOfData}
+        dossies={dossies}
       />
 
       {/* Modal de criação de dossiê */}
       <TypeOfCreationModal
         open={openTypeOfCreation}
         onClose={() => setOpenTypeOfCreation(false)}
+      />
+
+      {/* Modal de importação de dossiê */}
+      <ImportDossierDialog
+        open={openImportDialog}
+        onClose={() => setOpenImportDialog(false)}
+        onImportSuccess={handleImportSuccess}
       />
     </div>
   );
