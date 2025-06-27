@@ -175,9 +175,9 @@ export default function ListStudents({
     <div className="w-full">
       {/* Cabeçalho da tabela */}
       <table className="table-fixed w-full text-left border-separate border-spacing-y-2 rounded-md">
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-0">
           <tr className="text-sm text-gray-600">
-            <th className="w-8 px-4 py-3">
+            <th className="w-8 px-4 py-1">
               <input
                 type="checkbox"
                 onChange={handleToggleAll}
@@ -185,10 +185,10 @@ export default function ListStudents({
                 className="w-5 h-5 accent-blue-600 cursor-pointer"
               />
             </th>
-            <th className="w-10 px-4 py-3"></th>
-            <th className="px-4 py-3 text-left">Matrícula</th>
-            <th className="px-4 py-3 text-left">Aluno</th>
-            <th className="w-14 px-2"></th>
+            <th className="p-2 text-xl">Matrícula</th>
+            <th className="p-2 text-xl">Aluno</th>
+            <th className="p-2"></th>
+            <th className="p-2"></th>
           </tr>
         </thead>
         <tbody>
@@ -321,8 +321,8 @@ export default function ListStudents({
                 </>
               ) : (
                 <>
-                  <td className="px-4 py-3 text-lg">{students.matricula}</td>
-                  <td className="px-4 py-3 text-lg" title={students.nome}>
+                  <td className="p-2 text-xl">{students.matricula}</td>
+                  <td className="p-2 text-xl" title={students.nome}>
                   {truncateText(students.nome, 10)}
                   </td>
                   <td className="p-2">
