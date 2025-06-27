@@ -10,6 +10,7 @@ const customUserId = 1; // O ID do usuÃ¡rio (que pode ser professor ou instituiÃ
 
 const sections = {};
 
+// lendo o arquivo csv
 fs.createReadStream(csvFilePath)
     .pipe(csv())
     .on('data', (row) => {
