@@ -15,6 +15,7 @@ interface LoginResponseData {
 
 // PROFILE
 interface ProfileResponseData {
+  username: string;
   id: number;
   name: string;
   email: string;

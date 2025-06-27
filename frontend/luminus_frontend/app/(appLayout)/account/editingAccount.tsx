@@ -167,4 +167,4 @@ export default function EditingAccount({
         />
       </DialogContent>
     </Dialog>
-  );
+  )}
