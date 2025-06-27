@@ -169,9 +169,15 @@ export default function ListClass({
 
               {/* Colunas com dados da turma: disciplina, código da turma e dossiê */}
               <>
-                <td className="p-2 pl-32 text-xl">{truncateText(classroom.disciplina, 10)}</td>
-                <td className="p-2 pl-8 text-xl">{truncateText(classroom.codigo, 10)}</td>
-                <td className="p-2 pl-24 text-xl">{truncateText(classroom.institution || '', 10)}</td>
+                <td className="p-2 pl-32 text-xl" title={classroom.disciplina}>
+                  {truncateText(classroom.disciplina, 10)}
+                </td>
+                <td className="p-2 pl-8 text-xl" title={classroom.codigo}>
+                  {truncateText(classroom.codigo, 10)}
+                </td>
+                <td className="p-2 pl-24 text-xl" title={classroom.institution}>
+                  {truncateText(classroom.institution || '', 10)}
+                </td>
               </>
 
               {/* Coluna com os botões de ação, visíveis somente quando a linha está "hovered" */}
