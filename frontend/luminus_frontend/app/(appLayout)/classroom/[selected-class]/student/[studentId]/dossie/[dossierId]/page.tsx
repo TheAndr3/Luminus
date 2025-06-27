@@ -3,12 +3,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Download } from 'lucide-react';
 import styles from './preencherDossie.module.css';
 import { DossierFillData, DossierSection, DossierItem, HandleItemChange, HandleDossierChange, EvaluationType } from './types';
 import { getDossierById } from '@/services/dossierServices';
 import { GetStudentAppraisal, UpdateAppraisal, CreateAppraisal } from '@/services/appraisalService';
 import { GetStudent } from '@/services/studentService';
+import { api } from '@/services/api';
 
 // --- Interface para a estrutura da resposta da API ---
 interface DossierApiResponse {
@@ -20,14 +21,14 @@ interface DossierApiResponse {
         name: 'numerical' | 'letter';
         evaluationType: Array<{ id: number; name: string; value: number }>;
     };
-    sections: { [key: string]: { id: number; name: string; description: string; questions: { [key: string]: { id: number; name: string; }; }; }; };
+    sections: { [key: string]: { id: number; name: string; description: string; weigth: number; questions: { [key: string]: { id: number; name: string; }; }; }; };
 }
 
 interface AppraisalApiResponse {
     id: number;
     student_id: number;
     dossier_id: number;
-    answers: Array<{ question_id: number; evaluation_type_id: number; }>; // Campo de resposta atualizado
+    answers: Array<{ question_id: number; evaluation_type_id?: number; question_option_id?: number; }>;
 }
 
 
@@ -39,10 +40,18 @@ interface DossierItemRowProps {
   isEditing: boolean;
   onItemChange: HandleItemChange;
   evaluationOptions: EvaluationType[]; // Opções para o select
+  evaluationConcept: 'numerical' | 'letter'; // Para saber como formatar o dropdown
 }
 
-const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEditing, onItemChange, evaluationOptions }) => {
+const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEditing, onItemChange, evaluationOptions, evaluationConcept }) => {
   const selectedValue = item.answer && typeof item.answer === 'object' ? (item.answer as EvaluationType).id : item.answer;
+
+  const getOptionLabel = (opt: EvaluationType) => {
+    if (evaluationConcept === 'letter') {
+      return `${opt.name} (${opt.value.toFixed(1)})`;
+    }
+    return opt.name;
+  };
 
   return (
     <div className={styles.itemRow}>
@@ -61,7 +70,7 @@ const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEdit
         >
           <option value="">Selecione...</option>
           {evaluationOptions.map(opt => (
-            <option key={opt.id} value={opt.id}>{opt.name}</option>
+            <option key={opt.id} value={opt.id}>{getOptionLabel(opt)}</option>
           ))}
         </select>
       ) : (
@@ -81,9 +90,15 @@ interface DossierSectionCardProps {
 }
 
 const DossierSectionCard: React.FC<DossierSectionCardProps> = ({ section, isEditing, onItemChange, evaluationOptions }) => {
+  // Define o conceito com base nas opções para passar para o item
+  const evaluationConcept = evaluationOptions.some(opt => isNaN(Number(opt.name))) ? 'letter' : 'numerical';
+
   return (
     <div className={styles.sectionCard}>
-      <h2 className={styles.sectionTitle}>{section.title}</h2>
+      <div className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>{section.title}</h2>
+        <span className={styles.sectionWeight}>{`Peso: ${section.weight}%`}</span>
+      </div>
       {section.guidance && <p className={styles.sectionGuidance}>{section.guidance}</p>}
       <div className={styles.itemsList}>
         {section.items.map(item => (
@@ -94,6 +109,7 @@ const DossierSectionCard: React.FC<DossierSectionCardProps> = ({ section, isEdit
             isEditing={isEditing} 
             onItemChange={onItemChange}
             evaluationOptions={evaluationOptions}
+            evaluationConcept={evaluationConcept}
           />
         ))}
       </div>
@@ -110,6 +126,10 @@ const PreencherDossiePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalScore, setTotalScore] = useState<number>(0);
+
+  // Novo estado para verificar se o dossiê está completo
+  const [isDossierComplete, setIsDossierComplete] = useState(false);
 
   const params = useParams();
   const router = useRouter();
@@ -150,13 +170,19 @@ const PreencherDossiePage: React.FC = () => {
         
         const answersMap = new Map<number, number>();
         if (appraisalData?.answers) {
-            appraisalData.answers.forEach(ans => answersMap.set(ans.question_id, ans.evaluation_type_id));
+            appraisalData.answers.forEach(ans => {
+                const answerValue = ans.evaluation_type_id ?? ans.question_option_id;
+                if (answerValue !== undefined) {
+                    answersMap.set(ans.question_id, answerValue);
+                }
+            });
         }
 
         const adaptedSections: DossierSection[] = Object.values(dossierApiData.sections).map(apiSection => ({
             id: apiSection.id,
             title: apiSection.name,
             guidance: apiSection.description,
+            weight: apiSection.weigth, // Mapeando o peso
             items: Object.values(apiSection.questions).map(apiQuestion => {
                 const answerId = answersMap.get(apiQuestion.id);
                 const answerObject = dossierApiData.evaluation_method.evaluationType.find(opt => opt.id === answerId);
@@ -188,6 +214,39 @@ const PreencherDossiePage: React.FC = () => {
 
   }, [dossierId, studentId, classroomId]);
 
+  // Efeito para verificar se o dossiê está completo e calcular a nota
+  useEffect(() => {
+    if (dossierData) {
+      const allAnswered = dossierData.sections.every(section =>
+        section.items.every(item => item.answer !== null)
+      );
+      setIsDossierComplete(allAnswered);
+
+      // Lógica de cálculo da pontuação
+      let finalScore = 0;
+      dossierData.sections.forEach(section => {
+        let sectionScore = 0;
+        const answeredItems = section.items.filter(item => item.answer !== null);
+        
+        if (answeredItems.length > 0) {
+          answeredItems.forEach(item => {
+            // A resposta é um objeto EvaluationType, então acessamos 'value'
+            if (item.answer && typeof item.answer === 'object' && 'value' in item.answer) {
+              sectionScore += (item.answer as EvaluationType).value;
+            }
+          });
+
+          const sectionAverage = sectionScore / answeredItems.length;
+          const weightedSectionScore = sectionAverage * (section.weight / 100);
+          finalScore += weightedSectionScore;
+        }
+      });
+      setTotalScore(finalScore);
+    } else {
+      setIsDossierComplete(false);
+      setTotalScore(0);
+    }
+  }, [dossierData]);
 
   const handleDossierFieldChange: HandleDossierChange = useCallback((field, value) => {
     setDossierData(prev => prev ? { ...prev, [field]: value } : null);
@@ -218,11 +277,14 @@ const PreencherDossiePage: React.FC = () => {
         if (!currentAppraisalId) {
             const professorId = localStorage.getItem('professorId');
             if (!professorId) throw new Error("ID do professor não encontrado. Faça login novamente.");
-            const creationResponse = await CreateAppraisal(Number(classroomId), Number(studentId), Number(professorId), Number(dossierId));
-            if (creationResponse && creationResponse.data && creationResponse.data.id) {
-                currentAppraisalId = creationResponse.data.id;
-                setAppraisalId(currentAppraisalId);
-            } else throw new Error("Falha ao criar o registro da avaliação.");
+            
+            const createResponse = await CreateAppraisal(Number(classroomId), Number(studentId), Number(professorId), Number(dossierId));
+            if (createResponse && createResponse.data && createResponse.data.id) {
+              currentAppraisalId = createResponse.data.id;
+              setAppraisalId(currentAppraisalId); 
+            } else {
+                throw new Error("Falha ao criar o registro da avaliação.");
+            }
         }
         
         if (currentAppraisalId) {
@@ -230,20 +292,32 @@ const PreencherDossiePage: React.FC = () => {
         } else {
             throw new Error("Não foi possível obter um ID para a avaliação.");
         }
-        
-        alert("Progresso salvo com sucesso!");
+
+        alert("Dossiê salvo com sucesso!");
     } catch (err: any) {
-        const errorMessage = err.message || "Ocorreu um erro ao salvar o dossiê.";
-        setError(errorMessage);
-        alert(`Erro: ${errorMessage}`);
+        setError(err.message || "Erro ao salvar o dossiê.");
+        console.error(err);
     } finally {
         setIsSaving(false);
     }
   };
-  
-  if (isLoading) return <div className={styles.pageContainer}><p>Carregando dossiê...</p></div>;
-  if (error) return <div className={styles.pageContainer}><p style={{ color: 'red' }}>{error}</p></div>;
-  if (!dossierData) return <div className={styles.pageContainer}><p>Nenhum dossiê para exibir.</p></div>;
+
+  const handleExportPdf = () => {
+    if (!classroomId || !studentId || !dossierId) {
+      alert("Não é possível exportar o PDF: IDs de turma, aluno ou dossiê ausentes.");
+      return;
+    }
+    const pdfUrl = `${api.defaults.baseURL}/student/${classroomId}/pdf/${dossierId}/${studentId}`;
+    window.open(pdfUrl, '_blank');
+  };
+
+  const handleGoBack = () => {
+    router.back();
+  };
+
+  if (isLoading) return <div className={styles.loadingState}>Carregando...</div>;
+  if (error) return <div className={styles.errorState}>Erro: {error}</div>;
+  if (!dossierData) return <div className={styles.emptyState}>Nenhum dado de dossiê encontrado.</div>;
 
   return (
     <>
@@ -253,20 +327,33 @@ const PreencherDossiePage: React.FC = () => {
       <div className={styles.pageContainer}>
         <header className={styles.pageHeader}>
           <button 
-            onClick={() => router.push(`/classroom/${classroomId}`)} 
+            onClick={handleGoBack} 
             className={styles.backButton}
             aria-label="Voltar para a lista de alunos"
           >
             <ChevronLeft size={24} />
+            <span>Voltar</span>
           </button>
           
           <h1 className={styles.pageTitle}>{isEditing ? "Preenchendo Dossiê" : "Visualizando Dossiê"}</h1>
           
           <div className={styles.headerActions}>
             {isEditing && (
-              <button onClick={handleSaveDossier} className={styles.saveButton} disabled={isSaving}>
-                {isSaving ? 'Salvando...' : 'Salvar Progresso'}
-              </button>
+              <>
+                <button onClick={handleSaveDossier} className={styles.saveButton} disabled={isSaving}>
+                  {isSaving ? 'Salvando...' : 'Salvar Progresso'}
+                </button>
+                {/* Botão de Exportar PDF */}
+                <button 
+                  onClick={handleExportPdf} 
+                  className={`${styles.actionButton} ${!isDossierComplete ? styles.disabled : ''}`}
+                  disabled={!isDossierComplete}
+                  title={!isDossierComplete ? "Preencha todos os campos para exportar" : "Exportar como PDF"}
+                >
+                  <Download size={20} />
+                  Exportar PDF
+                </button>
+              </>
             )}
             <button onClick={handleToggleEditMode} className={styles.editButton}>
               {isEditing ? 'Modo Visualização' : 'Modo Edição'}
@@ -277,6 +364,9 @@ const PreencherDossiePage: React.FC = () => {
         <main className={styles.mainContent}>
           <div className={styles.dossierHeader}>
             <h2>{`Dossiê: ${dossierData.title} - Aluno: ${dossierData.studentName}`}</h2>
+            <div className={styles.scoreDisplay}>
+                <strong>Pontuação Atual:</strong> {totalScore.toFixed(2)}
+            </div>
             {dossierData.description && <p className={styles.dossierDescription}>{dossierData.description}</p>}
           </div>
 

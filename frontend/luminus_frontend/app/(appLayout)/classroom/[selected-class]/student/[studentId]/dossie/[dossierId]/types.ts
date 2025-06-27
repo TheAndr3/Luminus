@@ -8,6 +8,7 @@ export interface DossierSection {
   id: number;
   title: string;
   guidance: string;
+  weight: number;
   items: DossierItem[];
 }
 

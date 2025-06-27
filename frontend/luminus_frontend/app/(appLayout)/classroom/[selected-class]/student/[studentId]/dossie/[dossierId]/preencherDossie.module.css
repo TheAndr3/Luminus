@@ -76,6 +76,32 @@
     background-color: #3B82F6;
 }
 
+.exportButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #1e88e5;
+    background-color: #e3f2fd;
+    color: #1e88e5;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.exportButton:hover {
+    background-color: #bbdefb;
+    border-color: #1565c0;
+}
+
+.exportButton:disabled {
+    background-color: #e0e0e0;
+    border-color: #bdbdbd;
+    color: #9e9e9e;
+    cursor: not-allowed;
+}
+
 .mainContent {
     flex-grow: 1;
     padding: 25px 35px;
@@ -88,15 +114,18 @@
     background-color: #ffffff;
     padding: 20px 25px;
     border-radius: 8px;
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
 }
 
 .dossierHeader h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: #7E85C7;
     margin-top: 0;
     margin-bottom: 8px;
+    font-weight: 600;
 }
 
 .dossierDescription {
@@ -120,12 +149,27 @@
     border-left: 5px solid #A5B4FC;
 }
 
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
 .sectionTitle {
+    margin: 0;
     font-size: 1.3rem;
     font-weight: 600;
     color: #374151;
-    margin-top: 0;
-    margin-bottom: 5px;
+}
+
+.sectionWeight {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+    background-color: #f0f0f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
 }
 
 .sectionGuidance {
@@ -198,4 +242,19 @@
 .emptyAnswer {
     color: #9CA3AF;
     font-style: italic;
+}
+
+.scoreDisplay {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #333;
+    background-color: #f0f8ff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border: 1px solid #b3e0ff;
+    text-align: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
 } 

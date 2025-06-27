@@ -253,17 +253,15 @@ async function pgDossieUpdate(data) {
             };
             
             const secid = await pgInsert('section', payloadSection);
-            
-            for (let j = 0; j < section.questions.length; j++) {
-                var question = section.questions[j];
-
+            const questions = section.questions;
+            for(let j = 0; j < questions.length; j++){
+                const question = questions[j];
                 const payloadQuestion = {
                     customuserid: data.customUserId,
-                    sectionid: secid.rows[0].id,
                     dossierid: data.id,
-                    evaluationmethodid: evmid.rows[0].id,
+                    sectionid: secid.rows[0].id,
                     name: question.name
-                };
+                }
                 await pgInsert('question', payloadQuestion);
             }
         }
@@ -281,17 +279,15 @@ async function pgDossieUpdate(data) {
     
 }
 
-async function pgAppraisalSelect(id, idDossie, idClass) {
+async function pgAppraisalSelect(studentId, dossierId, classId) {
     const query = `
-        SELECT a.id as appraisalid, a."studentid", a."customuserid", a."classroomid", a."dossierid", a."fillingdate",
-               e.id as evaluationid, e."questionid", e."questionoption"
-        FROM "appraisal" as a 
-        LEFT JOIN "evaluation" as e ON a.id = e."appraisalid"
-        WHERE a."studentid" = $1 AND a."dossierid" = $2 AND a."classroomid" = $3;
-    `
-
+        SELECT a.id as appraisalid, a.studentid, a.dossierid, e.questionid, e.questionoption
+        FROM appraisal as a
+        LEFT JOIN evaluation as e ON a.id = e.appraisalid
+        WHERE a.studentid = $1 AND a.dossierid = $2 AND a.classroomid = $3;
+    `;
     const client = await connect();
-    const result = await client.query(query, [id, idDossie, idClass]);
+    const result = await client.query(query, [studentId, dossierId, classId]);
     client.release();
 
     if (result.rows.length === 0) {
@@ -306,10 +302,10 @@ async function pgAppraisalSelect(id, idDossie, idClass) {
     };
 
     result.rows.forEach(row => {
-        if (row.evaluationid) {
+        if (row.questionid) {
             appraisalData.answers.push({
                 question_id: row.questionid,
-                evaluation_type_id: row.questionoption // Mapeando questionOption para evaluation_type_id
+                question_option_id: row.questionoption
             });
         }
     });
@@ -318,7 +314,7 @@ async function pgAppraisalSelect(id, idDossie, idClass) {
 }
 
 async function pgAppraisalUpdate(data, appraisalId) {
-    const { answers } = data; // answers is an array of { question_id, evaluation_type_id }
+    const { answers } = data;
     if (!answers || !Array.isArray(answers)) {
         throw new Error("Payload de respostas inválido.");
     }
@@ -327,55 +323,41 @@ async function pgAppraisalUpdate(data, appraisalId) {
     try {
         await client.query('BEGIN');
 
+        // Limpa as respostas antigas
+        await client.query('DELETE FROM evaluation WHERE appraisalid = $1', [appraisalId]);
+
+        // Pega os IDs necessários da avaliação
+        const appraisalRes = await client.query('SELECT studentid, classroomid, dossierid FROM appraisal WHERE id = $1', [appraisalId]);
+        if (appraisalRes.rows.length === 0) throw new Error(`Avaliação ${appraisalId} não encontrada.`);
+        const { studentid, classroomid, dossierid } = appraisalRes.rows[0];
+
+        // Pega o ID do método de avaliação do dossiê
+        const dossierRes = await client.query('SELECT customuserid, evaluationmethodid FROM dossier WHERE id = $1', [dossierid]);
+        if (dossierRes.rows.length === 0) throw new Error(`Dossiê ${dossierid} não encontrado.`);
+        const { customuserid, evaluationmethodid } = dossierRes.rows[0];
+
+        // Itera e insere cada resposta com todos os IDs corretos
         for (const answer of answers) {
             if (answer.question_id == null || answer.evaluation_type_id == null) continue;
 
-            // Tenta encontrar a avaliação e o dossiê associado para ter todas as chaves
-            const appraisalQuery = `
-                SELECT "customuserid", "classroomid", "dossierid" 
-                FROM "appraisal" 
-                WHERE id = $1
-            `;
-            const appraisalRes = await client.query(appraisalQuery, [appraisalId]);
-            if (appraisalRes.rows.length === 0) {
-                throw new Error(`Avaliação com ID ${appraisalId} não encontrada.`);
-            }
-            const { customuserid, classroomid, dossierid } = appraisalRes.rows[0];
-
-            // Tenta encontrar a seção para a questão
-            const questionQuery = `SELECT "sectionid" FROM "question" WHERE id = $1`;
-            const questionRes = await client.query(questionQuery, [answer.question_id]);
+            const questionRes = await client.query('SELECT sectionid FROM question WHERE id = $1', [answer.question_id]);
             if (questionRes.rows.length === 0) {
-                // Pula questões que não existem mais no dossiê
-                console.warn(`Questão com ID ${answer.question_id} não encontrada. Pulando.`);
+                console.warn(`Questão ${answer.question_id} não encontrada. Pulando.`);
                 continue;
             }
             const { sectionid } = questionRes.rows[0];
 
-            // Upsert (Update or Insert)
-            const upsertQuery = `
-                INSERT INTO "evaluation" (
-                    "appraisalid", "studentid", "customuserid", "classroomid", "dossierid", 
-                    "questionid", "sectionid", "questionoption"
-                )
-                SELECT
-                    $1, p."studentid", p."customuserid", p."classroomid", p."dossierid",
-                    $2, $3, $4
-                FROM "appraisal" as p
-                WHERE p.id = $1
-                ON CONFLICT ("appraisalid", "questionid") 
-                DO UPDATE SET "questionoption" = EXCLUDED."questionoption";
+            const insertQuery = `
+                INSERT INTO evaluation (
+                    studentid, customuserid, classroomid, dossierid, sectionid, 
+                    evaluationmethodid, questionid, appraisalid, questionoption
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             `;
-            
-            // Os valores para a query
             const values = [
-                appraisalId,
-                answer.question_id,
-                sectionid,
-                answer.evaluation_type_id
+                studentid, customuserid, classroomid, dossierid, sectionid,
+                evaluationmethodid, answer.question_id, appraisalId, answer.evaluation_type_id
             ];
-            
-            await client.query(upsertQuery, values);
+            await client.query(insertQuery, values);
         }
 
         await client.query('COMMIT');
@@ -383,7 +365,7 @@ async function pgAppraisalUpdate(data, appraisalId) {
     } catch (error) {
         await client.query('ROLLBACK');
         console.error("Erro na transação de atualização da avaliação:", error);
-        throw error; // Re-throw para o controller lidar
+        throw error;
     } finally {
         client.release();
     }
