@@ -42,7 +42,7 @@ export const CreateStudent = async (currentTurmaId: number, p0: { matricula: num
 export const GetStudent = async (studentID: number, classroomID: number): Promise<StudentGetResponse> => {
     try {
         const response = await api.get(`/student/${classroomID}/${studentID}`);
-        return response.data.data[0] || response.data[0];
+        return response.data;
     } catch (error:any) {
         const message = error.response?.data?.msg || 'Erro ao buscar estudante';
         throw new Error(message);

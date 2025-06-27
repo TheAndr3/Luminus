@@ -20,7 +20,7 @@ import { getDossierById } from '@/services/dossierServices';
 
 // Removido CreateStudent pois a importação em massa usará um endpoint diferente
 // import { CreateStudent } from "@/services/studentService"; 
-import { usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import {
   Dialog,
@@ -45,13 +45,8 @@ interface ExpectedCreateResponse {
 }
 
 export default function VisualizacaoAlunos() {
-  const pathname = usePathname();
-  const getTurmaIdFromPath = () => {
-    const parts = pathname.split('/');
-    const idStr = parts[parts.length - 1];
-    const id = parseInt(idStr, 10);
-    return isNaN(id) ? null : id;
-  };
+  const params = useParams();
+  const classroomId = params['selected-class'] as string;
 
   const color = "#311e45";
   const hoverColor = darkenHexColor(color, 25);
@@ -210,21 +205,26 @@ export default function VisualizacaoAlunos() {
   }, []);
 
   useEffect(() => {
-    const turmaId = getTurmaIdFromPath();
+    const turmaId = classroomId ? parseInt(classroomId as string, 10) : null;
     setCurrentTurmaId(turmaId);
     if (turmaId !== null) {
       fetchPageData(turmaId);
     }
-  }, [pathname, fetchPageData]);
+  }, [classroomId, fetchPageData]);
+  
+  useEffect(() => {
+    if (currentTurmaId) {
+      // Debounce search
+      const timeoutId = setTimeout(() => {
+        fetchStudentsWithParams(searchTerm);
+      }, 300); // 300ms delay
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentTurmaId, currentPage, searchTerm, fetchStudentsWithParams]);
 
-  // Busca com debounce
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    setCurrentPage(1);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      fetchStudentsWithParams(value);
-    }, 400);
+    setCurrentPage(1); 
   };
 
   // Manipular mudança de página
@@ -531,10 +531,10 @@ export default function VisualizacaoAlunos() {
         <ActionBar
           mainColor={color}
           hoverColor={hoverColor}
-          onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
+          onCsvFileSelected={handleProcessCsvFile}
           searchTerm={searchTerm}
           onSearchTermChange={handleSearch}
-          onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
+          onAddStudentClick={() => setShowInlineAddStudent(true)}
           associatedDossier={associatedDossier}
           onDossierAssociated={handleDossierAssociated}
         />
@@ -542,7 +542,6 @@ export default function VisualizacaoAlunos() {
         {/* Modal de Confirmação de CSV */}
         <Dialog open={showCsvConfirmation} onOpenChange={(isOpen) => {
             if (!isOpen) resetCsvState();
-            // setShowCsvConfirmation(isOpen); // resetCsvState já faz setShowCsvConfirmation(false)
         }}>
           <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
           <DialogContent className="max-w-2xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
@@ -639,6 +638,7 @@ export default function VisualizacaoAlunos() {
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
             refreshStudents={() => fetchStudentsWithParams(searchTerm)}
+            associatedDossier={associatedDossier}
           />
         </div>
       </div>

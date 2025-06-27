@@ -23,6 +23,7 @@ import { Classroom } from "../../components/types";
 import AssociarDossie from "./associarDossie";
 import StudentActions from "./StudentActions";
 import { UpdateStudent } from "@/services/studentService";
+import { useRouter } from "next/navigation";
 
 // Tipagem das props que o componente ListClass recebe
 interface ListStudentsProps {
@@ -57,6 +58,7 @@ interface ListStudentsProps {
   
   // Nova prop para refresh dos alunos
   refreshStudents: () => void;
+  associatedDossier: { id: number; name: string } | null;
 };
 
 // Componente principal que renderiza a lista de studentss
@@ -92,6 +94,7 @@ export default function ListStudents({
   
   // Nova prop para refresh dos alunos
   refreshStudents,
+  associatedDossier,
 }: ListStudentsProps) {
 
   // Estado local para verificar se algum item está selecionado
@@ -102,6 +105,7 @@ export default function ListStudents({
   const [editingId, setEditingId] = useState<number | null>(null);
   // Estado para armazenar os dados editados de uma classroom
   const [editedData, setEditedData] = useState<Partial<Students>>({});
+  const router = useRouter();
 
   // UseEffect para verificar se alguma classroom está selecionada e atualizar o estado hasSelected
   useEffect(() => {
@@ -162,6 +166,18 @@ export default function ListStudents({
   const handleStartEdit = (student: Students) => {
     setEditingId(student.matricula);
     setEditedData({}); // Inicia com dados vazios para mostrar placeholders
+  };
+
+  const handleRowClick = (studentId: number) => {
+    // Navega para a página do dossiê somente se um dossiê estiver associado
+    // e se não estivermos no modo de edição para essa linha
+    if (associatedDossier && editingId !== studentId) {
+      router.push(`/classroom/${classroomId}/student/${studentId}/dossie/${associatedDossier.id}`);
+    } else if (!associatedDossier && editingId !== studentId) {
+      // Opcional: alertar o usuário que nenhum dossiê está associado
+      alert("Nenhum dossiê associado a esta turma. Associe um dossiê na barra de ações.");
+    }
+    // Se estiver em modo de edição, o clique não faz nada para evitar navegação acidental
   };
 
   return (
@@ -255,16 +271,18 @@ export default function ListStudents({
               key={students.matricula}
               onMouseEnter={() => setHovered(students.matricula)}
               onMouseLeave={() => setHovered(null)}
-              className={`text-white border-b border-gray-700 hover:brightness-110 ${
-                editingId === students.matricula ? 'cursor-default' : 'cursor-pointer'
-              }`}
-              style={{ backgroundColor: mainColor || '#111827' }}
+              onClick={() => handleRowClick(students.matricula)}
+              className={`text-white transition-all duration-300 ease-in-out border-b border-gray-700
+                ${hovered === students.matricula ? 'bg-opacity-40' : 'bg-opacity-20'}
+                ${associatedDossier ? 'cursor-pointer' : 'cursor-default'}`}
+              style={{ backgroundColor: hovered === students.matricula ? hoverColor : mainColor }}
             >
-              <td className="px-4 py-3 w-12">
+              <td className="w-12 px-4 py-3">
                 <input
                   type="checkbox"
-                  checked={!!students.selected}
+                  checked={students.selected}
                   onChange={() => handleToggleOne(students.matricula)}
+                  onClick={(e) => e.stopPropagation()} // Impede que o clique no checkbox acione o onClick da linha
                   className="w-5 h-5 accent-blue-600 cursor-pointer"
                 />
               </td>

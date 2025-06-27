@@ -69,32 +69,22 @@ exports.Create = async (req, res) => {
     const student_id = req.params.studentid;
     
     try {
-        var payload = {
-            classroom_id: class_id,
-            student_id: student_id
-        };
-
-        try {
-          var data = await db.pgSelect('appraisal', payload);
-          if(Object.values(data).length > 0) {
-            throw new Error('avaliação ja existe');
-          }
-        } catch (error) {
-          throw new Error("avaliação ja cadastrada");
-        }
-        
-
-        payload = {
-            costumUser_id:req.body.professor_id,
-            student_id: student_id,
-            classroom_id:class_id,
-            points:0.0,
-            filling_date: new Date()
+        const payload = {
+            customUserId: req.body.professor_id,
+            studentId: student_id,
+            classroomId: class_id,
+            dossierId: req.body.dossier_id,
+            points: 0.0,
+            fillingDate: new Date()
         };
 
         const respAppraisal = await db.pgInsert('Appraisal', payload);
 
-        return res.status(201).json({msg:'avaliação criada com sucesso', data:respAppraisal});
+        if (respAppraisal && respAppraisal.rows && respAppraisal.rows.length > 0) {
+            return res.status(201).json({msg:'avaliação criada com sucesso', data: respAppraisal.rows[0]});
+        } else {
+            throw new Error("Falha ao obter o retorno da criação da avaliação.");
+        }
     } catch (error) {
         console.log(error)
         return res.status(400).json({msg:'nao foi possivel atender a sua solicitacao'})
@@ -103,25 +93,16 @@ exports.Create = async (req, res) => {
 }
 
 exports.Update = async (req, res) => {
-  const id = req.params.id  
+  const id = req.params.id;
   const data = req.body;
   try {
-      try {
-        const hasAppraisal = await db.pgSelect('appraisal', {id:id});
-        if (Object.values(hasAppraisal).length > 0) {
-          const resp = await db.pgAppraisalUpdate(data);
-
-          return res.status(201).json({msg:'atualizado com sucesso', data:resp});
-        } else {
-          throw new Error('avaliação não existe');
-        }
-      } catch (error) {
-        throw new Error("avaliação não existe");
-      }
-    } catch (error) {
-      return res.status(400).json({ msg: 'nao foi possivel atender a sua solicitacao' });
-    }
-  };
+      const resp = await db.pgAppraisalUpdate(data, id);
+      return res.status(200).json({msg:'atualizado com sucesso', data:resp});
+  } catch (error) {
+      console.error("Erro ao atualizar avaliação:", error);
+      return res.status(400).json({ msg: 'Nao foi possivel atender a sua solicitacao', error: error.message });
+  }
+};
   
 
   exports.Delete = async (req, res) => {

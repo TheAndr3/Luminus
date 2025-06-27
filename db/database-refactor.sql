@@ -131,8 +131,8 @@ CREATE TABLE Evaluation(
     CONSTRAINT fk_Evaluation_question FOREIGN KEY(questionId, sectionId, dossierId, customUserId) REFERENCES Question(id, sectionId, dossierId, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_Evaluation_EvType FOREIGN KEY(evaluationMethodId, questionOption, customUserId) REFERENCES EvaluationType(evaluationMethodId, id, customUserId) ON DELETE CASCADE ON UPDATE CASCADE,
 
-
-    PRIMARY KEY(id, appraisalId)
+    PRIMARY KEY(id, appraisalId),
+    UNIQUE (appraisalId, questionId)
 );
 
 create table VerifyCode(
