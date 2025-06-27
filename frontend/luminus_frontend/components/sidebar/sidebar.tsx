@@ -201,10 +201,6 @@ const Sidebar = () => {
                 <CheckCircle className="mr-2 h-4 w-4" />
                 <span>Account</span>
               </DropdownMenuItem>
-               <DropdownMenuItem onSelect={() => router.push('/notifications')} className="cursor-pointer">
-                <Bell className="mr-2 h-4 w-4" />
-                <span>Notifications</span>
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
 
