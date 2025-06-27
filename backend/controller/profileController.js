@@ -11,8 +11,7 @@ exports.Delete = async(req, res) => {
     }
     
     try {
-        const data = await db.pgSelect('CustomUser', {id:id});
-        await db.pgDelete('CustomUser', data);
+        await db.pgDelete('CustomUser', { id: id });
         return res.status(200).json({ message: 'Sua conta foi excluída com sucesso.' });
     } catch (err) {
         console.error('Erro ao excluir usuário:', err);
