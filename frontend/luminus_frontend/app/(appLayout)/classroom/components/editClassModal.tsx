@@ -21,7 +21,7 @@ import Image from "next/image";
 
 import { CreateClassroom, UpdateClassroom } from "@/services/classroomServices";
 import { ErroMessageDialog } from "./erroMessageDialog";
-import { Pencil } from "lucide-react";
+import { Pencil, Save } from "lucide-react";
 
 
 
@@ -64,7 +64,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     const [missingDialog, setMissingDialog] = useState(false);
     const [messageErro, setMessageErro] = useState("");
 
-    const [messageButton, setMessageButton] = useState("Concluir");
+    const [messageButton, setMessageButton] = useState("Salvar Alterações");
 
     // Função para resetar os campos dos inputs ao fechar o modal
     const handleDialogClose = () => {
@@ -81,7 +81,7 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
     // Função chamada quando o usuário clica no botão "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que está salvando
-        setMessageButton("Carregando..."); // Atualiza o texto do botão
+        setMessageButton("Salvando..."); // Atualiza o texto do botão
         
         // Verifica se os campos obrigatórios foram preenchidos
         if (classroomName && seasonClassroomModal) {
@@ -114,12 +114,12 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
             } catch(err: any) {
                 setMessageErro(err.message || "Impossível salvar os dados editados. Por favor, tente novamente!");
                 setMissingDialog(true); // Alerta caso os campos obrigatórios não estejam preenchidos
-                setMessageButton("Concluir");
+                setMessageButton("Salvar Alterações");
             }
         } else {
             setMessageErro("Por favor, preencha todos os campos obrigatórios!");
             setMissingDialog(true); // Alerta caso os campos obrigatórios não estejam preenchidos
-            setMessageButton("Concluir");
+            setMessageButton("Salvar Alterações");
         }
     }
     /* --------------------------API---------------------------------------------------------- */
@@ -132,79 +132,101 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
             <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel() && handleDialogClose()}>
                 
                 {/* Fundo escuro com leve desfoque atrás do modal */}
-                <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> 
+                <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" /> 
 
                 {/* Conteúdo do modal */}
-                <DialogContent className="h-[400px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
+                <DialogContent className="max-w-4xl bg-white rounded-3xl text-gray-900 border-0 shadow-2xl p-0 overflow-hidden">
                     <DialogTitle className="sr-only">Editar Turma</DialogTitle>
 
-                    {/* Cabeçalho do modal */}
-                    <div className="relative mb-6">
-                        {/* Ícone fixo à esquerda */}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
-                            <Image 
-                                src={dark_class_icon}
-                                alt="icone turma"
-                                className="w-12 h-12"
-                            />
-                        </div>
-
-                        {/* Título centralizado */}
-                        <div className="flex items-center gap-2 justify-center">
-                            {editing ? (
-                            <BaseInput 
-                                className="text-4xl font-bold bg-gray-100 text-gray-900 rounded-2xl px-4 py-2"
-                                placeholder="Digite o nome da turma"
-                                value={classroomName}
-                                onChange={(e) => setClassroomName(e.target.value)}
-                            />
-                            ) : (
-                            <span className="text-4xl font-bold"> {classroomName} </span>
-                            )}
+                    {/* Header with gradient background */}
+                    <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 relative">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white p-3 rounded-2xl shadow-lg">
+                                <Image 
+                                    src={dark_class_icon}
+                                    alt="icone turma"
+                                    className="w-8 h-8"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                {editing ? (
+                                    <BaseInput 
+                                        className="text-3xl font-bold bg-white/10 text-white rounded-2xl px-6 py-4 border-0 placeholder-white/70 focus:bg-white/20 transition-all duration-300"
+                                        placeholder="Digite o nome da turma"
+                                        value={classroomName}
+                                        onChange={(e) => setClassroomName(e.target.value)}
+                                    />
+                                ) : (
+                                    <span className="text-3xl font-bold text-white"> {classroomName} </span>
+                                )}
+                            </div>
                             <Pencil 
-                            className="w-5 h-5 text-white cursor-pointer" 
-                            onClick={() => setEditing(!editing)} 
+                                className="w-6 h-6 text-white/80 hover:text-white cursor-pointer transition-colors duration-200" 
+                                onClick={() => setEditing(!editing)} 
                             />
                         </div>
                     </div>
 
-                    {/* Formulário dividido em duas colunas */}
-                    <div className="grid grid-cols-2 gap-4 m-6 ">
-                        <div className="flex items-center gap-3 "> 
-                            <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
-                            <BaseInput 
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder={classroom.name} // Placeholder recebe o valor atual da turma
-                                value={nameClassroomModal} // Valor do input Disciplina
-                                onChange={(e) => setnameClassroomModal(e.target.value)} // Atualiza estado ao digitar
-                            />
-                        </div>
+                    {/* Form content */}
+                    <div className="p-8 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Disciplina</label>
+                                <BaseInput 
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder={classroom.name}
+                                    value={nameClassroomModal}
+                                    onChange={(e) => setnameClassroomModal(e.target.value)}
+                                />
+                            </div>
 
-                        <div className="flex items-center gap-3 ml-8">
-                            <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
-                            <BaseInput
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder={classroom.institution} // Placeholder da instituição atual
-                                value={institutionClassroomModal} // Valor do input Instituição
-                                onChange={(e) => setInstitutionClassroomModal(e.target.value)} // Atualiza estado ao digitar
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Instituição</label>
+                                <BaseInput
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder={classroom.institution || "Instituição"}
+                                    value={institutionClassroomModal}
+                                    onChange={(e) => setInstitutionClassroomModal(e.target.value)}
+                                />
+                            </div>
 
-                        <div className="flex items-center gap-12">
-                            <label className="text-2xl">Turma:</label> {/* Label para o campo Turma */}
-                            <BaseInput 
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder={classroom.season} // Placeholder com valor atual da turma
-                                value={seasonClassroomModal} // Valor do input Turma
-                                onChange={(e) => setSeasonClassroomModal(e.target.value)} // Atualiza estado ao digitar
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Período *</label>
+                                <BaseInput 
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder={classroom.season}
+                                    value={seasonClassroomModal}
+                                    onChange={(e) => setSeasonClassroomModal(e.target.value)}
+                                />
+                            </div>
 
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Descrição</label>
+                                <BaseInput 
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder="Descrição da turma"
+                                    value={descriptionClassroomModal}
+                                    onChange={(e) => setDescriptionClassroomModal(e.target.value)}
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Botão para concluir a edição */}
-                    <div className="flex justify-end mr-7">
-                        <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
+                    {/* Footer */}
+                    <div className="bg-gray-50 px-8 py-6 flex justify-end gap-4">
+                        <Button 
+                            onClick={onCancel}
+                            variant="outline"
+                            className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200 cursor-pointer"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button 
+                            onClick={handleClick} 
+                            disabled={save}
+                            className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                        >
+                            <Save size={16} />
                             {messageButton}
                         </Button>
                     </div>
