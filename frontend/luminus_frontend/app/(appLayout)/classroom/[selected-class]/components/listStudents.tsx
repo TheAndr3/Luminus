@@ -271,7 +271,6 @@ export default function ListStudents({
               {editingId === student.matricula ? (
                 <>
                   <td className="px-4 py-3">
-                    {/* MUDANÇA: Campo de edição pré-preenchido */}
                     <input
                       type="text"
                       value={editedData.matricula?.toString() ?? ''}
@@ -282,7 +281,6 @@ export default function ListStudents({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-between">
-                        {/* MUDANÇA: Campo de edição pré-preenchido */}
                         <input
                           type="text"
                           value={editedData.nome ?? ''}
@@ -311,7 +309,6 @@ export default function ListStudents({
               ) : (
                 <>
                   <td className="px-4 py-3 text-lg">{student.matricula}</td>
-                  {/* MUDANÇA: Nome do aluno é truncado */}
                   <td className="px-4 py-3 text-lg" title={student.nome}>
                     {truncateText(student.nome, 30)}
                   </td>

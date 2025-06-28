@@ -15,6 +15,7 @@ interface EvaluationSettingsModalProps {
   onClose: () => void;
   initialMethods: EvaluationMethodItem[];
   onSave: (methods: EvaluationMethodItem[]) => void; // onSave agora pode falhar se a validação aqui não passar
+  evaluationConcept: 'numerical' | 'letter'; // Nova prop
   modalOverlayClassName?: string;
   modalContentClassName?: string;
   modalHeaderClassName?: string;
@@ -40,6 +41,7 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
   onClose,
   initialMethods,
   onSave,
+  evaluationConcept, // Recebe a nova prop
   modalOverlayClassName = localStyles.modalOverlay,
   modalContentClassName = localStyles.modalContent,
   modalHeaderClassName = localStyles.modalHeader,
@@ -76,7 +78,10 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
     return null;
   }
 
+  const isLimitReached = evaluationConcept === 'letter' && methods.length >= 7;
+
   const handleAddMethod = () => {
+    if (isLimitReached) return;
     setError(null);
     setMethods([
       ...methods,
@@ -237,9 +242,19 @@ const EvaluationSettingsModal: React.FC<EvaluationSettingsModalProps> = ({
               </li>
             ))}
           </ul>
-          <button onClick={handleAddMethod} className={modalAddButtonClassName}>
+          <button 
+            onClick={handleAddMethod} 
+            className={modalAddButtonClassName}
+            disabled={isLimitReached}
+            title={isLimitReached ? "Limite de 7 conceitos atingido" : "Adicionar novo conceito"}
+          >
             Adicionar Conceito
           </button>
+          {isLimitReached && (
+            <p className={localStyles.limitMessage}>
+              O limite de 7 conceitos foi atingido.
+            </p>
+          )}
         </div>
         <div className={modalActionsClassName}>
           <button onClick={onClose} className={modalCancelButtonClassName}>

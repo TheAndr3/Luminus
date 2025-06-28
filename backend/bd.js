@@ -399,14 +399,7 @@ async function pgAppraisalUpdate(data, appraisalId) {
 }
 
 async function pgAppraisalGetPoints(classId) {
-    try {
-        const response = await pgSelect('Appraisal', {classroom_id: classId});
 
-        const classPoints = response.map(i => { return {student_id:i.student_id, average:i.points}});
-        return classPoints;
-    } catch (error) {
-        throw error
-    }
 }
 
-module.exports = {pgSelect, pgInsert, pgDelete, pgUpdate, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints, pgSelectStudentsInClassroom};
+module.exports = {connect, pgSelect, pgInsert, pgDelete, pgUpdate, pgSelectStudentsInClassroom, pgDossieSelect, pgDossieUpdate, pgAppraisalSelect, pgAppraisalUpdate, pgAppraisalGetPoints};

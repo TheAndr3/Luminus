@@ -95,6 +95,16 @@
     border-color: #1565c0;
 }
 
+.exportButtonAvailable {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    border-color: #4CAF50;
+}
+
+.exportButtonAvailable:hover {
+    background-color: #45a049; /* Verde mais escuro no hover */
+}
+
 .exportButton:disabled {
     background-color: #e0e0e0;
     border-color: #bdbdbd;
@@ -248,13 +258,31 @@
     font-size: 1.25rem;
     font-weight: 500;
     color: #333;
-    background-color: #f0f8ff;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+}
+
+.progressBarContainer {
     margin-top: 1rem;
-    border: 1px solid #b3e0ff;
+}
+
+.progressBar {
+    background-color: #e0e0e0;
+    border-radius: 9999px;
+    height: 10px;
+    width: 100%;
+}
+
+.progressFill {
+    background-color: #4ade80; /* green-400 */
+    height: 10px;
+    border-radius: 9999px;
+    transition: width 0.3s ease-in-out;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
     text-align: center;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
+    padding: 4rem 1rem;
+    font-size: 1.2rem;
+    color: #555;
 } 
