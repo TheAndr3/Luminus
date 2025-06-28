@@ -625,21 +625,21 @@ export default function VisualizacaoAlunos() {
 
             {/* Footer */}
             <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
-                <Button 
-                    variant="outline" 
-                    onClick={resetCsvState} 
-                    disabled={isLoading}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-4 py-2 h-10 font-medium transition-all duration-200"
-                >
-                    Cancelar
-                </Button>
-                <Button 
-                    onClick={handleConfirmCsvImport} 
-                    disabled={isLoading || !!csvError || parsedStudentsFromCSV.length === 0}
-                    className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 h-10 font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {isLoading ? "Importando..." : "Importar Alunos"}
-                </Button>
+              <Button 
+                variant="outline" 
+                onClick={resetCsvState} 
+                disabled={isLoading}
+                className="h-10 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-6 py-2 shadow-md border transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleConfirmCsvImport} 
+                disabled={isLoading || !!csvError || parsedStudentsFromCSV.length === 0}
+                className="h-10 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2 shadow-md border border-gray-700 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Importando..." : "Importar Alunos"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

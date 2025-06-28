@@ -185,7 +185,7 @@ export default function AssociarDossie({
                                 placeholder="Procure pelo dossiê..."
                                 value={searchTerm}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                className="border bg-[#F5F5F5] border-[#B3B3B3] rounded-full w-full px-4 py-3 text-base font-normal text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200 pl-12"
                             />
                         </div>
                     </div>
@@ -211,7 +211,7 @@ export default function AssociarDossie({
                                     <p className="text-gray-500 mb-4 text-sm">Crie seu primeiro dossiê para começar a usar</p>
                                     <Button 
                                         onClick={createDossie}
-                                        className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                                        className="h-10 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-2 shadow-md border border-gray-700 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                                     >
                                         <Plus size={14} className="mr-2" />
                                         Criar dossiê

@@ -162,7 +162,7 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                                 placeholder="Procure pelo dossiê..."
                                 value={searchTerm}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                className="border bg-[#F5F5F5] border-[#B3B3B3] rounded-full w-full px-4 py-3 text-base font-normal text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200 pl-12"
                             />
                         </div>
                     </div>
@@ -181,7 +181,7 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
                                 <p className="text-red-700 font-medium mb-3">{error}</p>
                                 <Button 
                                     onClick={() => window.location.reload()} 
-                                    className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-4 py-2 font-medium transition-all duration-200"
+                                    className="h-10 text-base font-medium bg-red-600 hover:bg-red-700 text-white rounded-full px-6 py-2 shadow-md border border-red-600 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                                 >
                                     Tentar novamente
                                 </Button>
