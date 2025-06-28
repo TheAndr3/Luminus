@@ -101,91 +101,66 @@ export default function Gridclassrooms({
             key={classroom.id}
             onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
             onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
-            className="bg-gray-900 text-white rounded-lg p-[1vh] shadow-md flex flex-col justify-between w-[27vw] h-46 cursor-pointer hover:brightness-110"
+            className="bg-gray-900 text-white rounded-lg p-4 shadow-md flex flex-col justify-between h-48 cursor-pointer hover:brightness-110"
             onClick={() => handleClickPageStudent(classroom.id)}
           >
             <div className="flex justify-between items-start mb-2">
-              <div className="flex flex-col">
-
-                <div className="p-2 flex items-center">
-                  <Image src={class_icon} alt="icone classroom" className=" w-16 h-16" />
-                  <div className="text-xl text-gray-300 ml-3">{classroom.disciplina} <br/> {classroom.codigo}</div>
-                  
+              <div className="flex items-center">
+                <Image src={class_icon} alt="icone classroom" className="w-16 h-16" />
+                <div className="text-xl text-gray-300 ml-3">
+                  <div>{classroom.disciplina}</div>
+                  <div>{classroom.codigo}</div>
                 </div>
- 
               </div>
               
-              <div className="flex flex-col gap-2" onClick={(e)=>e.stopPropagation()}>
-                    <input
-                    type="checkbox"
-                    checked={classroom.selected}
-                    onChange={() => toggleOne(classroom.id)}
-                    className="w-6 h-6 accent-blue-600 cursor-pointer"
-                  />
+              <div className="flex flex-col items-end gap-3" onClick={(e)=>e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={classroom.selected}
+                  onChange={() => toggleOne(classroom.id)}
+                  className="w-6 h-6 accent-blue-600 cursor-pointer"
+                />
 
-                  {/* Coluna com o botão para editar, visível somente quando a linha está "hovered" */}
-                <div className="p-1 w-8 relative" onClick={(e)=> e.stopPropagation()}>
-                  {hovered === classroom.id && (
-                    <div className="absolute right-0 top-2 flex flex-col gap-2 bg-gray-900">
-                      {/* Botão de edição com ícone de lápis */}
-                      <button
-                        className="hover:text-yellow-400 cursor-pointer"
-                        onClick={() => {
-                          setOpenEditingModal(true);  // Abre o modal de edição
-                          setEditingClassroom(classroom);  // Define qual turma está sendo editada
-                          setLockHover(true);
-                        }}
-                      >
-                        <Pencil size={18} />
-                      </button>
-                        
-                      <button
-                        className="hover:text-yellow-400 cursor-pointer"
-                        onClick={()=> {
-                          classroom.selected = true;
-                          onDeleteClass()
-                          classroom.selected = false;
-                        }}
-                      >
-                        <Trash size={18}></Trash>
-                      
-                      </button>
-                      
-                        <button
-                          className="hover:text-yellow-400 cursor-pointer"
-                          onClick={() => {
-                            classroom.selected = true;
-                            toExportClass();
-                            classroom.selected = false;
-                          }}
-                        >
-                      
-                          <Download size={18}></Download>
-                        </button>
-
-                      {/* Modal de edição da turma */}
-                      <EditClassModal
-                        open={openEditingModal}
-                        onCancel={() => {setOpenEditingModal(false); setLockHover(false)}}  // Fecha o modal ao cancelar
-                        classroom={{
-                          id: classroom.id,
-                          name: classroom.disciplina,
-                          course: classroom.codigo,
-                          season: classroom.codigo,
-                          institution: classroom.institution,
-                        }}
-                      />
-                    </div>
-                  )}
+                <div className={`flex flex-col gap-3 ${hovered === classroom.id ? 'visible' : 'invisible'}`}>
+                  <button
+                    title="Editar Turma"
+                    className="hover:text-yellow-400 cursor-pointer"
+                    onClick={() => {
+                      setOpenEditingModal(true);
+                      setEditingClassroom(classroom);
+                      setLockHover(true);
+                    }}
+                  >
+                    <Pencil size={24} />
+                  </button>
+                  <button
+                    title="Excluir Turma"
+                    className="hover:text-yellow-400 cursor-pointer"
+                    onClick={() => {
+                      classroom.selected = true;
+                      onDeleteClass();
+                      classroom.selected = false;
+                    }}
+                  >
+                    <Trash size={24} />
+                  </button>
+                  <button
+                    title="Baixar CSV"
+                    className="hover:text-yellow-400 cursor-pointer"
+                    onClick={() => {
+                      classroom.selected = true;
+                      toExportClass();
+                      classroom.selected = false;
+                    }}
+                  >
+                    <Download size={24} />
+                  </button>
                 </div>
-                  
-              </div> 
-
+              </div>
             </div>
 
-            <button className="mb-2 bg-gray-200 text-black vw-1 vh-1 rounded-2xl text-sm hover:bg-gray-400" 
-              onClick={(e)=>e.stopPropagation()
-              }
+            <button className="w-full mt-auto bg-gray-200 text-black px-3 rounded-lg text-sm hover:bg-gray-400"
+              onClick={(e) => e.stopPropagation()}
             >
               {classroom.institution}
             </button>
@@ -200,6 +175,25 @@ export default function Gridclassrooms({
           setCurrentPage={setCurrentPage}
         />
       </div>
+
+      {/* Modal de edição da turma */}
+      {editingClassroom && (
+        <EditClassModal
+          open={openEditingModal}
+          onCancel={() => {
+            setOpenEditingModal(false);
+            setLockHover(false);
+            setEditingClassroom(null);
+          }}
+          classroom={{
+            id: editingClassroom.id,
+            name: editingClassroom.disciplina,
+            course: editingClassroom.codigo,
+            season: editingClassroom.codigo,
+            institution: editingClassroom.institution,
+          }}
+        />
+      )}
 
       <div className="relative">
         {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}

@@ -160,8 +160,8 @@ export default function ListStudents({
 
   // MUDANÇA: Função para truncar o texto re-adicionada
   const truncateText = (text: string, maxLength: number) => {
-    if (text.length > maxLength) {
-      return text.substring(0, maxLength) + "...";
+    if (text.length > 40) {
+      return text.substring(0, 40) + "...";
     }
     return text;
   };
