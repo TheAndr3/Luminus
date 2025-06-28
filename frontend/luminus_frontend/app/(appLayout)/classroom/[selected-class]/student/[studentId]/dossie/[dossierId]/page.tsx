@@ -132,7 +132,7 @@ const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEdit
         >
           <option value="">Selecione...</option>
           {evaluationOptions.map(opt => (
-            <option key={opt.id} value={opt.id}>{`${opt.name} (${opt.value})`}</option>
+            <option key={opt.id} value={opt.id}>{`${opt.name}`}</option>
           ))}
         </select>
       ) : (
@@ -187,11 +187,11 @@ const PreencherDossiePage: React.FC = () => {
   const [dossierData, setDossierData] = useState<DossierFillData | null>(null);
   const [evaluationOptions, setEvaluationOptions] = useState<EvaluationType[]>([]);
   const [appraisalId, setAppraisalId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalScore, setTotalScore] = useState<number>(0);
-  const [progress, setProgress] = useState(0);
 
   // Novo estado para verificar se o dossiê está completo
   const [isDossierComplete, setIsDossierComplete] = useState(false);
@@ -283,7 +283,7 @@ const PreencherDossiePage: React.FC = () => {
     loadDossierAndAppraisal();
   }, [loadDossierAndAppraisal]);
 
-  // Efeito para verificar se o dossiê está completo e calcular a nota/progresso
+  // Efeito para verificar se o dossiê está completo e calcular a nota
   useEffect(() => {
     if (dossierData) {
       const allAnswered = dossierData.sections.every(section =>
@@ -291,56 +291,47 @@ const PreencherDossiePage: React.FC = () => {
       );
       setIsDossierComplete(allAnswered);
 
-      // Lógica de cálculo de progresso e pontuação
+      // Lógica de cálculo da pontuação
       let finalScore = 0;
-      let completedSections = 0;
-      const totalSections = dossierData.sections.length;
-
       dossierData.sections.forEach(section => {
-        const isSectionComplete = section.items.every(item => item.answer !== null);
+        let sectionScore = 0;
+        const answeredItems = section.items.filter(item => item.answer !== null);
         
-        if (isSectionComplete) {
-          completedSections++;
-          let sectionScore = 0;
-          section.items.forEach(item => {
+        if (answeredItems.length > 0) {
+          answeredItems.forEach(item => {
+            // A resposta é um objeto EvaluationType, então acessamos 'value'
             if (item.answer && typeof item.answer === 'object' && 'value' in item.answer) {
               sectionScore += (item.answer as EvaluationType).value;
             }
           });
 
-          const sectionAverage = sectionScore / section.items.length;
+          const sectionAverage = sectionScore / answeredItems.length;
           const weightedSectionScore = sectionAverage * (section.weight / 100);
           finalScore += weightedSectionScore;
         }
       });
-      
-      const newProgress = totalSections > 0 ? (completedSections / totalSections) * 100 : 0;
-      setProgress(newProgress);
       setTotalScore(finalScore);
-
     } else {
       setIsDossierComplete(false);
       setTotalScore(0);
-      setProgress(0);
     }
   }, [dossierData]);
 
-  const handleDossierChange: HandleDossierChange = useCallback((key, value) => {
-    setDossierData(prev => prev ? { ...prev, [key]: value } : null);
+  const handleDossierFieldChange: HandleDossierChange = useCallback((field, value) => {
+    setDossierData(prev => prev ? { ...prev, [field]: value } : null);
   }, []);
 
-  const handleItemChange: HandleItemChange = useCallback((sectionId, itemId, key, value) => {
+  const handleItemFieldChange: HandleItemChange = useCallback((sectionId, itemId, field, value) => {
     setDossierData(prev => {
       if (!prev) return null;
-      return { ...prev, sections: prev.sections.map(sec => sec.id === sectionId ? { ...sec, items: sec.items.map(item => item.id === itemId ? { ...item, [key]: value } : item ) } : sec ), }
+      return { ...prev, sections: prev.sections.map(sec => sec.id === sectionId ? { ...sec, items: sec.items.map(item => item.id === itemId ? { ...item, [field]: value } : item ) } : sec ), }
     });
   }, []);
 
+  const handleToggleEditMode = () => setIsEditing(prev => !prev);
+
   const handleSaveDossier = async () => {
-    if (!dossierData || !studentId || !dossierId || !classroomId) {
-      setError("Faltam dados essenciais para salvar.");
-      return;
-    }
+    if (!dossierData) return alert("Nenhum dado de dossiê para salvar.");
     setIsSaving(true);
     setError(null);
     try {
@@ -376,8 +367,7 @@ const PreencherDossiePage: React.FC = () => {
         await loadDossierAndAppraisal();
     } catch (err: any) {
         setError(err.message || "Erro ao salvar o dossiê.");
-        console.error("Erro ao salvar avaliação:", err);
-        setError(`Erro ao salvar: ${err.response?.data?.message || err.message}`);
+        console.error(err);
     } finally {
         setIsSaving(false);
     }
@@ -396,18 +386,10 @@ const PreencherDossiePage: React.FC = () => {
     router.back();
   };
 
-  if (isLoading) {
-    return <div className={styles.loadingState}>Carregando dossiê...</div>;
-  }
+  if (isLoading) return <div className={styles.loadingState}>Carregando...</div>;
+  if (error) return <div className={styles.errorState}>Erro: {error}</div>;
+  if (!dossierData) return <div className={styles.emptyState}>Nenhum dado de dossiê encontrado.</div>;
 
-  if (error) {
-    return <div className={styles.errorState}>{error}</div>;
-  }
-
-  if (!dossierData) {
-    return <div className={styles.emptyState}>Nenhum dado de dossiê para exibir.</div>;
-  }
-  
   return (
     <>
       <Head>
@@ -424,52 +406,52 @@ const PreencherDossiePage: React.FC = () => {
             <span>Voltar</span>
           </button>
           
+          <h1 className={styles.pageTitle}>{isEditing ? "Preenchendo Dossiê" : "Visualizando Dossiê"}</h1>
+          
           <div className={styles.headerActions}>
-            <button onClick={handleSaveDossier} className={styles.saveButton} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : 'Salvar Progresso'}
-            </button>
-            <button 
-                onClick={handleExportPdf} 
-                className={`${styles.actionButton} ${!isDossierComplete ? styles.disabled : styles.exportButtonAvailable}`}
-                disabled={!isDossierComplete}
-                title={!isDossierComplete ? "Preencha todos os campos para exportar" : "Exportar como PDF"}
-              >
-                <Download size={20} />
-                Exportar PDF
+            {isEditing && (
+              <>
+                <button onClick={handleSaveDossier} className={styles.saveButton} disabled={isSaving}>
+                  {isSaving ? 'Salvando...' : 'Salvar Progresso'}
+                </button>
+                {/* Botão de Exportar PDF */}
+                <button 
+                  onClick={handleExportPdf} 
+                  className={`${styles.actionButton} ${!isDossierComplete ? styles.disabled : ''}`}
+                  disabled={!isDossierComplete}
+                  title={!isDossierComplete ? "Preencha todos os campos para exportar" : "Exportar como PDF"}
+                >
+                  <Download size={20} />
+                  Exportar PDF
+                </button>
+              </>
+            )}
+            <button onClick={handleToggleEditMode} className={styles.editButton}>
+              {isEditing ? 'Modo Visualização' : 'Modo Edição'}
             </button>
           </div>
         </header>
-        
+
         <main className={styles.mainContent}>
-            <div className={styles.dossierHeader}>
-              <h2>{`Dossiê: ${dossierData.title} - Aluno: ${dossierData.studentName}`}</h2>
-              <div className={styles.scoreDisplay}>
-                  <strong>Pontuação Atual:</strong> {totalScore.toFixed(2)}
-              </div>
-              {dossierData.description && <p className={styles.dossierDescription}>{dossierData.description}</p>}
-
-              <div className={styles.progressBarContainer}>
-                <div className={styles.progressBar}>
-                  <div 
-                    className={styles.progressFill}
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                <p className="text-sm text-right mt-1">{Math.round(progress)}% Completo</p>
-              </div>
+          <div className={styles.dossierHeader}>
+            <h2>{`Dossiê: ${dossierData.title} - Aluno: ${dossierData.studentName}`}</h2>
+            <div className={styles.scoreDisplay}>
+                <strong>Pontuação Atual:</strong> {totalScore.toFixed(2)}
             </div>
+            {dossierData.description && <p className={styles.dossierDescription}>{dossierData.description}</p>}
+          </div>
 
-            <div className={styles.sectionsContainer}>
-              {dossierData.sections.map(section => (
-                <DossierSectionCard 
-                  key={section.id} 
-                  section={section} 
-                  isEditing={true} 
-                  onItemChange={handleItemChange} 
-                  evaluationOptions={evaluationOptions}
-                />
-              ))}
-            </div>
+          <div className={styles.sectionsContainer}>
+            {dossierData.sections.map(section => (
+              <DossierSectionCard 
+                key={section.id} 
+                section={section} 
+                isEditing={isEditing} 
+                onItemChange={handleItemFieldChange}
+                evaluationOptions={evaluationOptions}
+              />
+            ))}
+          </div>
         </main>
       </div>
     </>
