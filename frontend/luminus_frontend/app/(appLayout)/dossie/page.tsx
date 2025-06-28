@@ -279,6 +279,7 @@ export default function GerenciarDossies() {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={confirmDeletion}
         total={idsToDelete.length}
+        type="dossier"
       />
 
       <ArchiveConfirmation

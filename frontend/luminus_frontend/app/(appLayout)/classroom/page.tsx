@@ -329,6 +329,7 @@ export default function VizualizationClass() {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={confirmDeletion}
         total={idsToDelete.length}
+        type="classroom"
       />
 
       <ArchiveConfirmation
