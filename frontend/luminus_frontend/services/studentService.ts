@@ -73,6 +73,9 @@ export const DeleteStudent = async (classroomID: number, studentID: number, cust
 }
 
 export const UpdateStudent = async (classroomID: number, studentID: number, updateData: { id: number; name: string }): Promise<CreateResponse> => {
+    if(updateData.id === 0){
+        throw new Error('A matrícula do estudante não pode ser 0')
+    }
     try {
         const response = await api.put(`/student/${classroomID}/update/${studentID}`, updateData);
         return response.data;
