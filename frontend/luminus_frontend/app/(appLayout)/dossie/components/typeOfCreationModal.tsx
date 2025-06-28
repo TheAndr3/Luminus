@@ -111,7 +111,7 @@ export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationMod
                         <Button 
                             onClick={onClose}
                             variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200"
+                            className="h-12 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-6 py-3 shadow-md border transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                         >
                             Cancelar
                         </Button>

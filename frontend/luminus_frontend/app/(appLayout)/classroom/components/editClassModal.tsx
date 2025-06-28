@@ -217,14 +217,14 @@ export default function EditClassModal({open, onCancel, classroom}: EditClassMod
                         <Button 
                             onClick={onCancel}
                             variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200 cursor-pointer"
+                            className="h-12 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-6 py-3 shadow-md border transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                         >
                             Cancelar
                         </Button>
                         <Button 
                             onClick={handleClick} 
                             disabled={save}
-                            className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                            className="h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-3 shadow-md border border-gray-700 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Save size={16} />
                             {messageButton}
