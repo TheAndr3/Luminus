@@ -185,23 +185,43 @@ exports.Update = async (req, res) => {
         customUserId: req.body.customUserId
       };
 
+      // Deleta o estudante da turma
       await db.pgDelete('ClassroomStudent', classroomStudentPayload);
       
+      // Deleta as avaliações do estudante na turma
       const appraisalPayload = {
         studentId: req.params.id,
+        classroomId: req.params.classid,
         customUserId: req.body.customUserId
       };
 
       await db.pgDelete('Appraisal', appraisalPayload);
 
-      const studentPayload = {
-        id: req.params.id
+      // Verifica se o estudante existe em outras turmas (exceto a atual)
+      const otherClassroomsPayload = {
+        studentId: req.params.id,
+        customUserId: req.body.customUserId
       };
       
-      await db.pgDelete('Student', studentPayload);
-  
+      const allClassrooms = await db.pgSelect('ClassroomStudent', otherClassroomsPayload);
+      
+      // Filtra a turma atual para verificar se o estudante existe em outras turmas
+      const otherClassrooms = allClassrooms.filter(classroom => 
+        classroom.classroomid !== parseInt(req.params.classid)
+      );
+      
+      // Deleta o estudante da tabela Student se ele não estiver em outras turmas
+      if (otherClassrooms.length === 0) {
+        const studentPayload = {
+          id: req.params.id
+        };
+        
+        await db.pgDelete('Student', studentPayload);
+      }
+
       return res.status(200).json({ msg: 'estudante removido com sucesso' });
     } catch (error) {
+      console.error("Erro ao deletar estudante:", error);
       return res.status(500).json({ msg: 'nao foi possivel atender a solicitacao' });
     }
   };

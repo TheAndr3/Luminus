@@ -10,13 +10,15 @@ import { darkenHexColor } from '@/utils/colorHover';
 // import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
 import { Header } from "./components/Header";
 import { ActionBar} from "./components/ActionBar"; // Corrigido nome do componente para ActionBar
-import { FileText } from "lucide-react"; // Manteve FileText
+import { FileText, AlertTriangle } from "lucide-react"; // Manteve FileText
 import styles from './selected-classroom.module.css';
 import { toast } from 'react-hot-toast'; 
 import { api } from "@/services/api";
 import { GetClassroom } from '@/services/classroomServices';
 import { ListStudents as ListStudentsService, DeleteStudent } from '@/services/studentService';
 import { getDossierById } from '@/services/dossierServices';
+
+import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +28,6 @@ import {
   DialogFooter,
   DialogOverlay
 } from "@/components/ui/dialog";
-import {
-  DossierProgress,
-  getDossierProgress
-} from "@/services/classroomServices";
 import { useParams } from 'next/navigation';
 
 type ParsedStudent = {
@@ -645,24 +643,14 @@ export default function VisualizacaoAlunos() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Confirmação de Exclusão de Alunos (exemplo, se você tiver) */}
-        <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
-            <DialogContent className="max-w-md bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
-                <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-center">Confirmar Exclusão</DialogTitle>
-                </DialogHeader>
-                <DialogDescription className="text-center my-4">
-                    Tem certeza que deseja excluir {idsToDelete.length} aluno(s) selecionado(s)?
-                </DialogDescription>
-                <DialogFooter className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white" disabled={isLoading}>Cancelar</Button>
-                    <Button onClick={confirmDeletion} className="bg-red-600 hover:bg-red-700 text-white" disabled={isLoading}>
-                        {isLoading ? "Excluindo..." : "Excluir"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        {/* Modal de Confirmação de Exclusão de Alunos */}
+        <ConfirmDeleteDialog
+          open={confirmDeleteOpen}
+          onCancel={() => setConfirmDeleteOpen(false)}
+          onConfirm={confirmDeletion}
+          total={idsToDelete.length}
+          type="student"
+        />
 
         <div className="px-10 flex items-center justify-center -mt-2 ml-auto"> {/*px-10 no original*/}
           <ListStudents
