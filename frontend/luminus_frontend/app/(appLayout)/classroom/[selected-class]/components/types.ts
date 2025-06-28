@@ -1,5 +1,5 @@
 export type Students = {
-    selected: unknown;
+    selected: boolean;
     matricula: number;
     nome: string;
   };

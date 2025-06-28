@@ -62,16 +62,22 @@ exports.Get = async (req, res) => {
     const class_id = req.params.classid;
 
     try {
-        const payload = {classroomId: class_id, studentId:id};
-        const dataStudent = await db.pgSelect('ClassroomStudent', payload);
+        const payload = {studentid: id, classroomid: class_id};
+        const dataStudent = await db.pgSelect('classroomstudent', payload);
 
         if(Object.values(dataStudent).length > 0) {
-            res.status(200).json(dataStudent);
+            const student = await db.pgSelect('student', {id: id});
+            if (student.length > 0) {
+                return res.status(200).json(student[0]);
+            } else {
+                return res.status(404).json({msg:'Estudante referenciado na turma, mas não encontrado.'});
+            }
         } else {
-            res.status(400).json({msg:'estudante nao existe na turma'})
+            return res.status(403).json({msg:'estudante nao existe na turma'})
         }
     } catch (error) {
-        res.status(500).json({msg:'nao foi possivel atender a solicitacao'});
+        console.error("Erro ao buscar estudante no controller:", error);
+        return res.status(400).json({msg:'nao foi possivel atender a solicitacao'});
     }
 
     

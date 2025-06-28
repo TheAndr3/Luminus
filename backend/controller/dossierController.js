@@ -29,17 +29,30 @@ exports.Create = async (req, res) => {
 
     const evMethodId = evMethodResult.rows[0].id;
 
-    //insere os campos de avaliação
-    if (evaluationMethod.evaluationType && Array.isArray(evaluationMethod.evaluationType)) {
-      for (let i = 0; i < evaluationMethod.evaluationType.length; i++) {
-        var type = evaluationMethod.evaluationType[i];
-        var payloadEvaluationType = {
-          name:type.name,
-          value:type.value,
-          evaluationMethodId:evMethodId,
-          customUserId:customUserId
+    // Se o método for numérico, cria os tipos de avaliação de 0 a 10 (inteiros)
+    if (evaluationMethod.name.toLowerCase() === 'numerical') {
+      for (let i = 0; i <= 10; i++) {
+        const payloadNumericalType = {
+          name: i.toString(),
+          value: i,
+          evaluationMethodId: evMethodId,
+          customUserId: customUserId
+        };
+        await db.pgInsert('EvaluationType', payloadNumericalType);
+      }
+    } else {
+      // Se for do tipo 'letter', usa os tipos fornecidos
+      if (evaluationMethod.evaluationType && Array.isArray(evaluationMethod.evaluationType)) {
+        for (let i = 0; i < evaluationMethod.evaluationType.length; i++) {
+          var type = evaluationMethod.evaluationType[i];
+          var payloadEvaluationType = {
+            name:type.name,
+            value:type.value,
+            evaluationMethodId:evMethodId,
+            customUserId:customUserId
+          }
+          await db.pgInsert('EvaluationType', payloadEvaluationType);
         }
-        await db.pgInsert('EvaluationType', payloadEvaluationType);
       }
     }
 
