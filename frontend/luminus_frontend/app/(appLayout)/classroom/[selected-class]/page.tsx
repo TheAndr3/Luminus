@@ -133,8 +133,9 @@ export default function VisualizacaoAlunos() {
       // Mapeamento dos dados, preservando a seleção
       const studentsFromApi = response.data.map((student: any) => {
         const studentId = student.studentId || student.matricula;
-        const existingStudent = classiRef.current.find(s => s.matricula === studentId);
+        const existingStudent = classiRef.current.find(s => s.id === studentId);
         return {
+          id: student.studentId,
           matricula: studentId,
           nome: student.name || student.nome || "Nome não disponível",
           selected: existingStudent ? existingStudent.selected : false,
@@ -194,6 +195,7 @@ export default function VisualizacaoAlunos() {
 
       // Mapeia e define o estado dos alunos
       const formattedStudents = studentsFromService.data.map((student: any) => ({
+        id: student.studentId,
         matricula: student.studentId || student.matricula,
         nome: student.name,
         selected: false,
@@ -231,6 +233,10 @@ export default function VisualizacaoAlunos() {
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1); 
+  };
+
+  const refreshStudents = () => {
+    fetchStudentsWithParams(searchTerm);
   };
 
   // Manipular mudança de página
@@ -676,6 +682,7 @@ export default function VisualizacaoAlunos() {
             inlineAddStudentError={inlineAddStudentError}
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
+            refreshStudents={refreshStudents}
             associatedDossier={associatedDossier}
           />
         </div>
