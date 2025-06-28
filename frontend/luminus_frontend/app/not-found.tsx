@@ -5,14 +5,14 @@ import Image from 'next/image';
 import styles from './not-found.module.css';
 import logo from '@/public/logo-Luminus.svg';
 
-export default function NotFoundPage() {
+export default function NotFound() {
   return (
     <div className={styles.container}>
       <Image 
         src={logo} 
         alt="Luminus Logo" 
         className={styles.logo}
-        unoptimized // Necessário para SVGs que não têm width/height intrínsecos definidos
+        unoptimized
       />
       <div className={styles.errorCode}>404</div>
       <h1 className={styles.title}>Página Não Encontrada</h1>
