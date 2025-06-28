@@ -1,7 +1,7 @@
 export interface DossierItem {
   id: number;
   description: string;
-  answer: EvaluationType | null;
+  answer: EvaluationType | number | null;
 }
 
 export interface DossierSection {
@@ -30,7 +30,7 @@ export type HandleItemChange = (
   sectionId: number,
   itemId: number,
   field: keyof DossierItem,
-  value: EvaluationType | string | null
+  value: EvaluationType | string | number | null
 ) => void;
 
 export type HandleDossierChange = (field: keyof Omit<DossierFillData, 'sections' | 'studentName'>, value: string) => void; 

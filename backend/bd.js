@@ -146,8 +146,31 @@ async function pgDossieSelect(id) {
     const evaluationMethodId = dossierData.rows[0]["dossierevaluationmethod"];
 
     // Get evaluation method and types using correct column names
-    const methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
+    let methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
     const method = await pgSelect('evaluationmethod', {id: evaluationMethodId, customuserid: customUserId});
+    
+    // On-the-fly migration for old numeric dossiers to integer 0-10 scale
+    if (method.length > 0 && method[0].name.toLowerCase() === 'numerical' && methodType.length !== 11) {
+        console.log(`Migrating EvaluationType for numeric dossier's method ID: ${evaluationMethodId} to 0-10 integer scale.`);
+        const client = await connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('DELETE FROM evaluationtype WHERE evaluationmethodid = $1 AND customuserid = $2', [evaluationMethodId, customUserId]);
+            
+            for (let i = 0; i <= 10; i++) {
+                const insertQuery = 'INSERT INTO EvaluationType (name, value, evaluationMethodId, customUserId) VALUES ($1, $2, $3, $4)';
+                await client.query(insertQuery, [i.toString(), i, evaluationMethodId, customUserId]);
+            }
+            await client.query('COMMIT');
+            
+            methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
+        } catch (e) {
+            await client.query('ROLLBACK');
+            console.error('Failed to migrate evaluation types on the fly:', e);
+        } finally {
+            client.release();
+        }
+    }
     
     // Get sections and questions with LEFT JOINs
     const sectionsQuery = `
@@ -336,9 +359,12 @@ async function pgAppraisalUpdate(data, appraisalId) {
         if (dossierRes.rows.length === 0) throw new Error(`Dossiê ${dossierid} não encontrado.`);
         const { customuserid, evaluationmethodid } = dossierRes.rows[0];
 
-        // Itera e insere cada resposta com todos os IDs corretos
+        // Itera e insere cada resposta
         for (const answer of answers) {
-            if (answer.question_id == null || answer.evaluation_type_id == null) continue;
+            const valueToStore = answer.answer_value ?? answer.evaluation_type_id;
+            
+            // Pula se não houver valor para armazenar
+            if (answer.question_id == null || valueToStore == null) continue;
 
             const questionRes = await client.query('SELECT sectionid FROM question WHERE id = $1', [answer.question_id]);
             if (questionRes.rows.length === 0) {
@@ -355,7 +381,8 @@ async function pgAppraisalUpdate(data, appraisalId) {
             `;
             const values = [
                 studentid, customuserid, classroomid, dossierid, sectionid,
-                evaluationmethodid, answer.question_id, appraisalId, answer.evaluation_type_id
+                evaluationmethodid, answer.question_id, appraisalId, 
+                valueToStore
             ];
             await client.query(insertQuery, values);
         }

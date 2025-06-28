@@ -29,9 +29,9 @@ exports.Create = async (req, res) => {
 
     const evMethodId = evMethodResult.rows[0].id;
 
-    // Se o método for numérico, cria os tipos de avaliação de 0 a 10
+    // Se o método for numérico, cria os tipos de avaliação de 0 a 10 (inteiros)
     if (evaluationMethod.name.toLowerCase() === 'numerical') {
-      for (let i = 0; i <= 10; i += 2) {
+      for (let i = 0; i <= 10; i++) {
         const payloadNumericalType = {
           name: i.toString(),
           value: i,

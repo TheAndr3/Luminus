@@ -337,7 +337,6 @@ export default function ListStudents({
                   <td className="p-2">
                     {hovered === students.matricula && (
                       <StudentActions
-                        studentId={students.matricula}
                         onEdit={() => handleStartEdit(students)}
                         onDelete={() => onDeleteStudent(students.matricula)}
                       />

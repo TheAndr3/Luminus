@@ -28,8 +28,14 @@ interface AppraisalApiResponse {
     id: number;
     student_id: number;
     dossier_id: number;
-    answers: Array<{ question_id: number; evaluation_type_id?: number; question_option_id?: number; }>;
+    answers: Array<{ question_id: number; evaluation_type_id?: number; question_option_id?: number; answer_value?: number; }>;
 }
+
+type AnswerPayload = {
+  question_id: number;
+  evaluation_type_id?: number;
+  answer_value?: number;
+};
 
 
 // --- Componentes Internos para Melhor Organização ---
@@ -44,14 +50,70 @@ interface DossierItemRowProps {
 }
 
 const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEditing, onItemChange, evaluationOptions, evaluationConcept }) => {
-  const selectedValue = item.answer && typeof item.answer === 'object' ? (item.answer as EvaluationType).id : item.answer;
+  const initialValue = (item.answer && typeof item.answer === 'object' && 'value' in item.answer)
+    ? (item.answer as EvaluationType).value.toString()
+    : '';
+  const [inputValue, setInputValue] = useState(initialValue);
 
-  const getOptionLabel = (opt: EvaluationType) => {
-    if (evaluationConcept === 'letter') {
-      return `${opt.name} (${opt.value.toFixed(1)})`;
+  useEffect(() => {
+    const externalValue = (item.answer && typeof item.answer === 'object' && 'value' in item.answer)
+      ? (item.answer as EvaluationType).value.toString()
+      : '';
+    setInputValue(externalValue);
+  }, [item.answer]);
+
+  const handleNumericBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    if (rawValue === '') {
+      onItemChange(sectionId, item.id, 'answer', null);
+      return;
     }
-    return opt.name;
+    
+    // Força para inteiro e remove decimais
+    let numValue = parseInt(rawValue, 10);
+    if (isNaN(numValue)) {
+      setInputValue('');
+      onItemChange(sectionId, item.id, 'answer', null);
+      return;
+    }
+
+    // Garante que o valor está entre 0 e 10
+    const clampedValue = Math.max(0, Math.min(10, numValue));
+
+    const selectedOption = evaluationOptions.find(opt => opt.value === clampedValue);
+
+    if (selectedOption) {
+      onItemChange(sectionId, item.id, 'answer', selectedOption);
+      setInputValue(selectedOption.value.toString());
+    } else {
+      setInputValue('');
+      onItemChange(sectionId, item.id, 'answer', null);
+    }
   };
+
+  if (isEditing && evaluationConcept === 'numerical') {
+    return (
+      <div className={styles.itemRow}>
+        <label htmlFor={`item-desc-${item.id}`} className={styles.itemDescriptionLabel}>
+          {item.description}
+        </label>
+        <input
+          type="number"
+          id={`item-answer-${item.id}`}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleNumericBlur}
+          className={styles.itemInput}
+          step="1" // Apenas inteiros
+          min="0"
+          max="10"
+          placeholder="Nota (0-10)"
+        />
+      </div>
+    );
+  }
+  
+  const selectedValue = item.answer && typeof item.answer === 'object' ? (item.answer as EvaluationType).id : '';
 
   return (
     <div className={styles.itemRow}>
@@ -61,7 +123,7 @@ const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEdit
       {isEditing ? (
         <select
           id={`item-answer-${item.id}`}
-          value={selectedValue || ''}
+          value={selectedValue}
           onChange={(e) => {
             const selectedOption = evaluationOptions.find(opt => opt.id === Number(e.target.value));
             onItemChange(sectionId, item.id, 'answer', selectedOption || null);
@@ -70,12 +132,15 @@ const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEdit
         >
           <option value="">Selecione...</option>
           {evaluationOptions.map(opt => (
-            <option key={opt.id} value={opt.id}>{getOptionLabel(opt)}</option>
+            <option key={opt.id} value={opt.id}>{`${opt.name}`}</option>
           ))}
         </select>
       ) : (
         <p className={styles.itemAnswerDisplay}>
-          {typeof item.answer === 'object' && item.answer !== null ? (item.answer as EvaluationType).name : <span className={styles.emptyAnswer}>Não preenchido</span>}
+          {(item.answer && typeof item.answer === 'object' && 'name' in item.answer)
+            ? (item.answer as EvaluationType).name
+            : <span className={styles.emptyAnswer}>Não preenchido</span>
+          }
         </p>
       )}
     </div>
@@ -137,82 +202,86 @@ const PreencherDossiePage: React.FC = () => {
   const studentId = params.studentId as string;
   const classroomId = params['selected-class'] as string; // Corrigido para corresponder ao nome da pasta
 
-  useEffect(() => {
+  const loadDossierAndAppraisal = useCallback(async () => {
+    setIsLoading(true);
     if (!dossierId || !studentId || !classroomId) {
       setError("IDs de dossiê, aluno ou turma não fornecidos na URL.");
       setIsLoading(false);
       return;
     }
 
-    const loadDossierAndAppraisal = async () => {
-      try {
-        const dossierResponse = await getDossierById(Number(dossierId));
-        const dossierApiData = dossierResponse.data as DossierApiResponse;
-        
-        const studentResponse = await GetStudent(Number(studentId), Number(classroomId));
-        const studentName = studentResponse.name || 'Nome não encontrado';
+    try {
+      const dossierResponse = await getDossierById(Number(dossierId));
+      const dossierApiData = dossierResponse.data as DossierApiResponse;
+      
+      const studentResponse = await GetStudent(Number(studentId), Number(classroomId));
+      const studentName = studentResponse.name || 'Nome não encontrado';
 
-        // Carrega opções de avaliação
-        if (dossierApiData.evaluation_method && dossierApiData.evaluation_method.evaluationType) {
-            setEvaluationOptions(dossierApiData.evaluation_method.evaluationType);
-        }
-
-        let appraisalData: AppraisalApiResponse | null = null;
-        try {
-            const appraisalResponse = await GetStudentAppraisal(Number(classroomId), Number(studentId), Number(dossierId));
-            if (appraisalResponse && appraisalResponse.data) {
-                appraisalData = appraisalResponse.data as AppraisalApiResponse;
-                if (appraisalData) setAppraisalId(appraisalData.id);
-            }
-        } catch (appraisalError: any) {
-            if (appraisalError.response?.status !== 404) console.warn("Não foi possível carregar a avaliação existente:", appraisalError);
-        }
-        
-        const answersMap = new Map<number, number>();
-        if (appraisalData?.answers) {
-            appraisalData.answers.forEach(ans => {
-                const answerValue = ans.evaluation_type_id ?? ans.question_option_id;
-                if (answerValue !== undefined) {
-                    answersMap.set(ans.question_id, answerValue);
-                }
-            });
-        }
-
-        const adaptedSections: DossierSection[] = Object.values(dossierApiData.sections).map(apiSection => ({
-            id: apiSection.id,
-            title: apiSection.name,
-            guidance: apiSection.description,
-            weight: apiSection.weigth, // Mapeando o peso
-            items: Object.values(apiSection.questions).map(apiQuestion => {
-                const answerId = answersMap.get(apiQuestion.id);
-                const answerObject = dossierApiData.evaluation_method.evaluationType.find(opt => opt.id === answerId);
-                return {
-                    id: apiQuestion.id,
-                    description: apiQuestion.name,
-                    answer: answerObject || null // Armazena o objeto da opção ou null
-                };
-            })
-        }));
-
-        setDossierData({
-            id: dossierApiData.id,
-            title: dossierApiData.name,
-            description: dossierApiData.description,
-            studentName: studentName,
-            sections: adaptedSections,
-        });
-
-      } catch (err) {
-        setError("Erro ao carregar os dados. Verifique se os IDs na URL são válidos.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+      // Carrega opções de avaliação
+      if (dossierApiData.evaluation_method && dossierApiData.evaluation_method.evaluationType) {
+          setEvaluationOptions(dossierApiData.evaluation_method.evaluationType);
       }
-    };
 
-    loadDossierAndAppraisal();
+      let appraisalData: AppraisalApiResponse | null = null;
+      try {
+          const appraisalResponse = await GetStudentAppraisal(Number(classroomId), Number(studentId), Number(dossierId));
+          if (appraisalResponse && appraisalResponse.data) {
+              appraisalData = appraisalResponse.data as AppraisalApiResponse;
+              if (appraisalData) setAppraisalId(appraisalData.id);
+          }
+      } catch (appraisalError: any) {
+          if (appraisalError.response?.status !== 404) console.warn("Não foi possível carregar a avaliação existente:", appraisalError);
+      }
+      
+      const answersMap = new Map<number, number | EvaluationType>();
+      if (appraisalData?.answers) {
+          appraisalData.answers.forEach(ans => {
+              const answerValue = ans.question_option_id;
 
+              if (answerValue !== null && answerValue !== undefined) {
+                  // Para AMBOS os tipos, usamos o ID para encontrar o objeto completo.
+                  const answerObject = dossierApiData.evaluation_method.evaluationType.find(opt => opt.id === Number(answerValue));
+                  if (answerObject) {
+                      answersMap.set(ans.question_id, answerObject);
+                  }
+              }
+          });
+      }
+
+      const adaptedSections: DossierSection[] = Object.values(dossierApiData.sections).map(apiSection => ({
+          id: apiSection.id,
+          title: apiSection.name,
+          guidance: apiSection.description,
+          weight: apiSection.weigth, // Mapeando o peso
+          items: Object.values(apiSection.questions).map(apiQuestion => {
+              const answer = answersMap.get(apiQuestion.id);
+              return {
+                  id: apiQuestion.id,
+                  description: apiQuestion.name,
+                  answer: answer !== undefined ? answer : null
+              };
+          })
+      }));
+
+      setDossierData({
+          id: dossierApiData.id,
+          title: dossierApiData.name,
+          description: dossierApiData.description,
+          studentName: studentName,
+          sections: adaptedSections,
+      });
+
+    } catch (err) {
+      setError("Erro ao carregar os dados. Verifique se os IDs na URL são válidos.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [dossierId, studentId, classroomId]);
+
+  useEffect(() => {
+    loadDossierAndAppraisal();
+  }, [loadDossierAndAppraisal]);
 
   // Efeito para verificar se o dossiê está completo e calcular a nota
   useEffect(() => {
@@ -294,6 +363,8 @@ const PreencherDossiePage: React.FC = () => {
         }
 
         alert("Dossiê salvo com sucesso!");
+        // Recarrega os dados para refletir o que foi salvo
+        await loadDossierAndAppraisal();
     } catch (err: any) {
         setError(err.message || "Erro ao salvar o dossiê.");
         console.error(err);

@@ -91,10 +91,6 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         <h2 style="text-align: center; justify-itens: center; align-itens:center;">${dossierData.name} </h2><h2 style="text-align: center; justify-itens: center; align-itens:center;"> Pontuação total: ${appraisal.total_points}</h2>
         <p>${dossierData.description}</p>
   `;
-    const sections = Object.values(dossierData.sections);
-    const methods = Object.values(dossierData.evaluation_method.evaluationType);
-
-    methods.sort((a, b) => b.value - a.value);
 
     const answerMap = new Map();
     if (appraisal && appraisal.answers) {
@@ -103,6 +99,15 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         });
     }
 
+    // Identifica apenas os tipos de avaliação que foram realmente usados
+    const allMethods = dossierData.evaluation_method.evaluationType;
+    const usedOptionIds = new Set(answerMap.values());
+    const usedMethods = allMethods.filter(method => usedOptionIds.has(method.id));
+
+    // Ordena os métodos usados pelo valor, do maior para o menor
+    usedMethods.sort((a, b) => b.value - a.value);
+
+    const sections = Object.values(dossierData.sections);
     sections.forEach(section => {
         html += `<div class="section">`;
         html += `<h3>${section.name} (Peso: ${section.weigth}%)</h3>`;
@@ -112,7 +117,8 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         html += `<thead>`;
         html += `<tr>`;
         html += `<th>Pergunta</th>`;
-        methods.forEach(method => {
+        // O cabeçalho agora só contém as opções usadas
+        usedMethods.forEach(method => {
             html += `<th>${method.name} (${method.value})</th>`;
         });
         html += `</tr>`;
@@ -122,15 +128,19 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         const questions = Object.values(section.questions);
         questions.forEach(question => {
             const selectedOptionId = answerMap.get(question.id);
-            const indexAnswer = methods.findIndex(method => method.id == selectedOptionId);
             
-            html += `<tr>`;
-            html += `<td><p class="question">${question.name}</p></td>`;
-            
-            for (let i = 0; i < methods.length; i++) {
-                html += `<td style="text-align: center;justify-itens:center;align-itens:center;font-size:28px;font-weight: bold;">${(indexAnswer == i ? 'X' : '')}</td>`
+            // Só exibe a linha da pergunta se ela foi respondida
+            if (selectedOptionId !== undefined) {
+                html += `<tr>`;
+                html += `<td><p class="question">${question.name}</p></td>`;
+                
+                // Marca 'X' na coluna correspondente
+                usedMethods.forEach(method => {
+                    const isSelected = method.id === selectedOptionId;
+                    html += `<td style="text-align: center; font-size: 28px; font-weight: bold;">${isSelected ? 'X' : ''}</td>`;
+                });
+                html += `</tr>`;
             }
-            html += `</tr>`;
         });
 
         html += `</tbody>`;
@@ -147,7 +157,7 @@ function dossierToHtml(dossierData, studentName, appraisal) {
 exports.GeneratePdf = async(req, res) => {
     const classId = req.params.classId;
     const dossierId = req.params.dossierId;
-    const studentId = req.params.studentId; // Precisamos saber de qual aluno é o dossiê
+    const studentId = req.params.studentId; 
 
     try {
         let browser = null;

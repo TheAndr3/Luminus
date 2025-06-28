@@ -61,6 +61,10 @@ export default function VisualizacaoAlunos() {
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null); // Para debounce
+  const classiRef = useRef(classi);
+  useEffect(() => {
+      classiRef.current = classi;
+  }, [classi]);
   
   // Estados para CSV
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
@@ -121,19 +125,23 @@ export default function VisualizacaoAlunos() {
   };
 
   // Função para buscar alunos com paginação e busca no servidor
-  const fetchStudentsWithParams = async (searchValue = searchTerm) => {
+  const fetchStudentsWithParams = useCallback(async (searchValue = searchTerm) => {
     if (!currentTurmaId) return;
     setIsFetchingStudents(true);
     try {
       const start = (currentPage - 1) * alunosPorPagina;
       const response = await ListStudentsService(currentTurmaId, start, alunosPorPagina, searchValue);
       
-      // Mapeamento dos dados
-      const studentsFromApi = response.data.map((student: any) => ({
-        matricula: student.studentId || student.matricula,
-        nome: student.name || student.nome || "Nome não disponível",
-        selected: false,
-      }));
+      // Mapeamento dos dados, preservando a seleção
+      const studentsFromApi = response.data.map((student: any) => {
+        const studentId = student.studentId || student.matricula;
+        const existingStudent = classiRef.current.find(s => s.matricula === studentId);
+        return {
+          matricula: studentId,
+          nome: student.name || student.nome || "Nome não disponível",
+          selected: existingStudent ? existingStudent.selected : false,
+        };
+      });
 
       // Filtro para garantir que só alunos válidos sejam exibidos
       const validStudents = studentsFromApi.filter(
@@ -152,7 +160,7 @@ export default function VisualizacaoAlunos() {
     } finally {
       setIsFetchingStudents(false);
     }
-  };
+  }, [currentTurmaId, currentPage, searchTerm, alunosPorPagina]);
 
   // Função única para buscar detalhes da turma e alunos em paralelo
   const fetchPageData = useCallback(async (id: number) => {
@@ -232,26 +240,13 @@ export default function VisualizacaoAlunos() {
     setCurrentPage(page);
   };
 
-  useEffect(() => {
-    if (currentTurmaId) {
-      fetchStudentsWithParams();
-    }
-  }, [currentPage, currentTurmaId]);
-
   const totalPages = Math.ceil(totalItems / alunosPorPagina);
   const isAllSelected = classi.length > 0 && classi.every((t) => t.selected);
 
 
   const toggleSelectAll = () => {
-    const newSelected = !isAllSelected;
-    const idsVisiveis = classi.map(a => a.matricula);
-    const novaLista = classi.map((aluno) => {
-      if (idsVisiveis.includes(aluno.matricula)) {
-        return { ...aluno, selected: newSelected };
-      }
-      return aluno;
-    });
-    setClassi(novaLista);
+    const newSelectedState = !isAllSelected;
+    setClassi(classi.map((student) => ({ ...student, selected: newSelectedState })));
   };
 
   const toggleOne = (id: number) => {

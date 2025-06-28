@@ -2,18 +2,27 @@ import { Pencil, Trash2 } from "lucide-react";
 import React from 'react';
 
 interface StudentActionsProps {
-    studentId: number;
-    onEdit: (id: number) => void;
-    onDelete: (id: number) => void;
+    onEdit: () => void;
+    onDelete: () => void;
 }
 
-export default function StudentActions({ studentId, onEdit, onDelete }: StudentActionsProps) {
+export default function StudentActions({ onEdit, onDelete }: StudentActionsProps) {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit();
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
+  };
+
   return (
     <div className="flex gap-3 text-white -ml-4">
-      <button onClick={() => onEdit(studentId)} className="hover:text-yellow-400 cursor-pointer">
+      <button onClick={handleEditClick} className="hover:text-yellow-400 cursor-pointer">
         <Pencil size={18} />
       </button>
-      <button onClick={() => onDelete(studentId)} className="hover:text-yellow-400 cursor-pointer">
+      <button onClick={handleDeleteClick} className="hover:text-yellow-400 cursor-pointer">
         <Trash2 size={18} />
       </button>
     </div>
