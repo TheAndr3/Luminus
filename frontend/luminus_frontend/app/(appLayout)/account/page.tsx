@@ -1,193 +1,277 @@
-"use client"; // Marca este componente como um Componente Cliente no Next.js
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from 'next/navigation'; // Hook para navegação programática no Next.js
-import EditingAccount from "./editingAccount"; // Componente para edição dos detalhes da conta do usuário
-import { ConfirmDeletation } from "./confirmDeletation"; // Componente para confirmação de exclusão de conta
-import { deleteProfile } from "@/services/profileService"; // Serviço de API para exclusão de perfil
-import { GetProfile } from "@/services/professorService"; // ✅ Chamada de API real para obter o perfil do professor
+import { useRouter } from 'next/navigation';
+import EditingAccount from "./editingAccount";
+import { ConfirmDeletation } from "./confirmDeletation";
+import { deleteProfile } from "@/services/profileService";
+import { GetProfile } from "@/services/professorService";
+import { ErroMessageDialog } from "../classroom/components/erroMessageDialog";
+import { Button } from "@/components/ui/button";
+import { User, Mail, Shield, Calendar, Edit, Trash2, LogOut, Settings } from "lucide-react";
 
-// Define a forma dos dados para o formulário do usuário
 interface FormDataType {
   id: number;
   username: string;
   email: string;
+  role?: string;
 }
 
 export default function Account() {
-  // Estado para controlar a visibilidade do diálogo de confirmação de exclusão
+  const [openMessage, setOpenMessage] = useState(false);
+  const [messageDialog, setMessageDialog] = useState('');
   const [deleteDialog, setDeleteDialog] = useState(false);
-  // Instância do roteador Next.js para navegação
   const router = useRouter();
-  // Estado para controlar a visibilidade do formulário de edição de conta
   const [editAccount, setEditAccount] = useState(false);
-  // Estado para armazenar os dados do perfil do usuário
   const [formData, setFormData] = useState<FormDataType>({
     id: 0,
     username: '',
-    email: ''
+    email: '',
+    role: ''
   });
-  // Estado para indicar se os dados estão sendo carregados
   const [loading, setLoading] = useState(true);
-  // Estado para armazenar quaisquer mensagens de erro durante a busca de dados
   const [error, setError] = useState<string | null>(null);
 
-  // Manipulador para abrir o diálogo de confirmação de exclusão
   const handleDeleteProfile = () => {
     setDeleteDialog(true);
   };
 
-  // useCallback memoiza a função fetchUserData para evitar recriações desnecessárias,
-  // otimizando o desempenho para o array de dependências do useEffect.
+  const handleLogout = () => {
+    localStorage.removeItem("professorId");
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
+
   const fetchUserData = useCallback(async () => {
-    setLoading(true); // Inicia o estado de carregamento
-    setError(null); // Limpa quaisquer erros anteriores
+    setLoading(true);
+    setError(null);
 
     try {
-      // Recupera o ID do professor do localStorage.
-      // Este é um padrão comum, mas considere alternativas mais seguras para produção.
       const professorId = localStorage.getItem("professorId");
 
-      // Lança um erro se o professorId não for encontrado, indicando um problema potencial
       if (!professorId) {
+        setMessageDialog("ID do professor não encontrado no localStorage.")
+        setOpenMessage(true)
         throw new Error("ID do professor não encontrado no localStorage.");
       }
 
-      // Chama a API real para obter os dados do perfil do professor
       const data = await GetProfile(parseInt(professorId, 10));
 
-      // Atualiza o estado formData com os dados do usuário obtidos
       setFormData({
-        id: parseInt(professorId, 10), // Garante que o ID seja analisado como um número inteiro
+        id: parseInt(professorId, 10),
         username: data.name,
-        email: data.email
+        email: data.email,
+        role: data.role || 'Professor'
       });
 
     } catch (err) {
-      // Captura e define quaisquer erros que ocorram durante a operação de busca
-      setError("Erro ao carregar os dados do perfil.");
-      console.error(err); // Registra o erro para fins de depuração
+      setMessageDialog("Erro ao carregar os dados do perfil.")
+      setOpenMessage(true)
+      console.error(err);
     } finally {
-      setLoading(false); // Finaliza o estado de carregamento, independentemente do sucesso ou falha
+      setLoading(false);
     }
-  }, []); // Array de dependência vazio significa que esta função é criada uma única vez
+  }, []);
 
-  // Hook useEffect para buscar dados do usuário quando o componente é montado
-  // e sempre que fetchUserData mudar (o que não acontecerá devido ao array de dependência vazio do useCallback)
   useEffect(() => {
     fetchUserData();
-  }, [fetchUserData]); // O array de dependência garante que o efeito seja executado quando fetchUserData muda
+  }, [fetchUserData]);
 
-  // Manipulador para abrir o formulário de edição de conta
   const editingProfile = () => setEditAccount(true);
 
-  // Função de callback a ser executada após a conta ser atualizada com sucesso.
-  // Ela busca novamente os dados do usuário para exibir as informações mais recentes.
   const handleAccountUpdated = () => {
     console.log("Perfil atualizado, recarregando dados...");
-    fetchUserData(); // Recarrega os dados para mostrar o perfil atualizado
+    fetchUserData();
   };
 
-  // Função assíncrona para lidar com a exclusão de um perfil de usuário
   const DeleteProfile = async (userId: number) => {
     try {
-      const response = await deleteProfile(userId); // Chama a API para excluir o perfil
+      const response = await deleteProfile(userId);
       console.log("Conta excluída com sucesso:", response.message);
-      router.push("/login"); // ✅ Redireciona para a página de login após a exclusão bem-sucedida
+      router.push("/login"); 
     } catch (error: any) {
-      // Captura e registra quaisquer erros durante o processo de exclusão
       console.error("Erro ao excluir perfil:", error.message);
-      // Potencialmente, você poderia definir um estado de erro aqui para exibir uma mensagem ao usuário
     }
   };
 
-  // --- Renderização Condicional para Estados de Carregamento e Erro ---
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 w-full px-4">
-        <p>Carregando perfil...</p> {/* Exibe mensagem de carregamento */}
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 w-full px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <p className="mt-4 text-gray-600">Carregando perfil...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 w-full px-4">
-        <p className="text-red-500">{error}</p> {/* Exibe mensagem de erro */}
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 w-full px-4">
+        <p className="text-red-500">{error}</p>
       </div>
     );
   }
 
-  // --- Renderização Principal do Componente ---
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-red-100 w-full overflow-hidden">
-      <div className="w-full bg-white rounded-xl shadow-md relative min-h-screen">
-        {/* Ícone de Sino de Notificação */}
-        <div className="absolute top-4 right-4 z-10">
-          <div className="relative">
-            <span className="text-2xl text-gray-700">🔔</span>
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">1</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 h-32 relative">
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/20 to-transparent"></div>
+          </div>
+          
+          <div className="relative px-8 pb-8">
+            <div className="flex items-end gap-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg -mt-12 border-4 border-white">
+                {formData.username.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{formData.username}</h1>
+                <p className="text-lg text-gray-600 flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  {formData.email}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Fundo do Cabeçalho do Perfil */}
-        <div className="h-28 w-full bg-gradient-to-r from-blue-900 to-indigo-400" />
+        {/* Profile Information Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Personal Information Card */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <User className="w-6 h-6 text-gray-900" />
+              <h2 className="text-xl font-semibold text-gray-900">Informações Pessoais</h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Nome Completo</label>
+                <p className="text-lg text-gray-900">{formData.username}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Email</label>
+                <p className="text-lg text-gray-900">{formData.email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Função</label>
+                <p className="text-lg text-gray-900">{formData.role}</p>
+              </div>
+            </div>
+          </div>
 
-        {/* Seção de Informações do Perfil do Usuário */}
-        <div className="flex items-center gap-4 px-6 py-6">
-          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl">👤</div>
-          <div>
-            <h2 className="text-4xl font-bold">{formData.username}</h2>
-            <p className="text-1xl text-gray-600">{formData.email}</p>
-            <p className="text-1xl text-gray-400">Sem instituição associada</p>
+          {/* Account Statistics Card */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Shield className="w-6 h-6 text-green-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Estatísticas da Conta</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">ID do Usuário</span>
+                <span className="font-mono text-gray-900">#{formData.id}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Status da Conta</span>
+                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                  Ativa
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Tipo de Acesso</span>
+                <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+                  Professor
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Detalhes Adicionais do Perfil (ex: Nome Completo) */}
-        <div className="px-6 py-6 space-y-6">
-          <div>
-            <p className="text-1xl text-gray-500 font-semibold mb-1">Nome Completo</p>
-            <p className="text-2xl">{formData.username}</p>
+        {/* Action Buttons */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Settings className="w-6 h-6 text-gray-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Ações da Conta</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button
+              onClick={editingProfile}
+              className="h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full py-3 px-8 shadow-md border border-gray-700 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
+            >
+              <Edit className="w-4 h-4" />
+              Editar Perfil
+            </Button>
+            
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="h-12 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full py-3 px-8 shadow-md border transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              Sair da Conta
+            </Button>
+            
+            <Button
+              onClick={handleDeleteProfile}
+              variant="destructive"
+              className="h-12 text-base font-medium rounded-full py-3 px-8 shadow-md border border-red-600 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              Excluir Conta
+            </Button>
           </div>
         </div>
 
-        {/* Botões de Ação: Editar e Deletar */}
-        <div className="px-6 py-6 flex justify-center gap-5">
-          <button
-            onClick={editingProfile}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded"
-          >
-            Editar {/* Botão para abrir o formulário de edição */}
-          </button>
-          <button
-            onClick={handleDeleteProfile} // Este abre o diálogo de confirmação de exclusão
-            // ALERTA: O texto "Sair" é enganoso, pois aciona a exclusão da conta.
-            // Considere alterar para "Deletar Conta" ou "Excluir Conta".
-            className="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded flex items-center gap-1"
-          >
-            Sair {/* Este botão atualmente inicia a exclusão da conta */}
-          </button>
+        {/* Additional Info Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Calendar className="w-6 h-6 text-purple-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Informações Adicionais</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Sobre o Sistema</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                O Luminus é uma plataforma educacional desenvolvida para facilitar o gerenciamento 
+                de turmas e avaliações. Como professor, você tem acesso completo às funcionalidades 
+                de criação e gestão de dossiês de avaliação.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Suporte</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Em caso de dúvidas ou problemas, entre em contato com a equipe de suporte 
+                através do email de contato ou consulte a documentação disponível.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Modal/Diálogo de Edição de Conta */}
+      {/* Modals */}
       <EditingAccount
-        open={editAccount} // Controla a visibilidade com base no estado
-        onCancel={() => setEditAccount(false)} // Callback para fechar o diálogo
+        open={editAccount}
+        onCancel={() => setEditAccount(false)}
         user={{
           id: formData.id,
           username: formData.username,
-          password: '', // A senha é intencionalmente deixada em branco por segurança
+          password: '',
         }}
-        onUpdateSuccess={handleAccountUpdated} // Callback para buscar novamente os dados após a atualização
+        onUpdateSuccess={handleAccountUpdated}
       />
 
-      {/* Modal/Diálogo de Confirmação de Exclusão */}
       <ConfirmDeletation
-        open={deleteDialog} // Controla a visibilidade com base no estado
-        onCancel={() => setDeleteDialog(false)} // Callback para cancelar a exclusão
-        onConfirm={() => DeleteProfile(formData.id)} // Callback para confirmar e executar a exclusão
+        open={deleteDialog}
+        onCancel={() => setDeleteDialog(false)}
+        onConfirm={() => DeleteProfile(formData.id)}
+      />
+
+      <ErroMessageDialog
+        open={openMessage}
+        onConfirm={() => setOpenMessage(false)}
+        description={messageDialog}
       />
     </div>
   );
-}
+} 
