@@ -17,12 +17,8 @@ import { api } from "@/services/api";
 import { GetClassroom } from '@/services/classroomServices';
 import { ListStudents as ListStudentsService, DeleteStudent } from '@/services/studentService';
 import { getDossierById } from '@/services/dossierServices';
+
 import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
-
-// Removido CreateStudent pois a importação em massa usará um endpoint diferente
-// import { CreateStudent } from "@/services/studentService"; 
-import { useParams } from 'next/navigation';
-
 import {
   Dialog,
   DialogContent,
@@ -32,6 +28,7 @@ import {
   DialogFooter,
   DialogOverlay
 } from "@/components/ui/dialog";
+import { useParams } from 'next/navigation';
 
 type ParsedStudent = {
   matricula: string;
@@ -486,11 +483,12 @@ export default function VisualizacaoAlunos() {
   };
 
   // Função para atualizar o dossiê associado quando um novo dossiê é associado
-  const handleDossierAssociated = (dossierId: number) => {
-    fetchAssociatedDossier(dossierId);
+  const handleDossierAssociated = async (dossierId: number) => {
+    if (currentTurmaId) {
+      await fetchAssociatedDossier(dossierId);
+    }
   };
 
-  // Função para buscar detalhes do dossiê associado
   const fetchAssociatedDossier = async (dossierId: number) => {
     try {
       console.log('Fetching dossier with ID:', dossierId); // Debug log
@@ -678,7 +676,6 @@ export default function VisualizacaoAlunos() {
             inlineAddStudentError={inlineAddStudentError}
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
-            refreshStudents={() => fetchStudentsWithParams(searchTerm)}
             associatedDossier={associatedDossier}
           />
         </div>
