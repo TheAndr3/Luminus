@@ -5,26 +5,48 @@
     flex-direction: column;
     min-height: 100vh;
     background-color: #f4f6f8;
-    /* Cor de fundo suave */
     color: #333;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 .pageHeader {
-    background-color: #7E85C7;
-    /* Roxo  */
-    color: white;
-    padding: 20px 30px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 1.5rem;
 }
 
-.pageHeader h1 {
+.backButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 1rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+}
+
+.backButton:hover {
+    background-color: #f0f0f0;
+}
+
+.pageTitle {
+    flex-grow: 1;
+    text-align: center;
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 600;
+}
+
+.headerActions {
+    display: flex;
+    gap: 1rem;
 }
 
 .headerActions button {
@@ -38,33 +60,53 @@
     transition: background-color 0.2s, opacity 0.2s;
 }
 
-.toggleButton {
-    background-color: #60A5FA;
-    /* Azul*/
-    color: white;
-}
-
-.toggleButton:hover {
-    background-color: #3B82F6;
-}
-
 .saveButton {
     background-color: #000000;
-    /* Preto */
     color: white;
 }
 
 .saveButton:hover {
     background-color: #333;
 }
+.editButton{
+    background-color: #60A5FA;
+    color: white;
+}
+.editButton:hover{
+    background-color: #3B82F6;
+}
+
+.exportButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #1e88e5;
+    background-color: #e3f2fd;
+    color: #1e88e5;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.exportButton:hover {
+    background-color: #bbdefb;
+    border-color: #1565c0;
+}
+
+.exportButton:disabled {
+    background-color: #e0e0e0;
+    border-color: #bdbdbd;
+    color: #9e9e9e;
+    cursor: not-allowed;
+}
 
 .mainContent {
     flex-grow: 1;
     padding: 25px 35px;
     max-width: 900px;
-    /* Limita a largura */
     margin: 0 auto;
-    /* Centraliza o conteúdo */
     width: 100%;
 }
 
@@ -72,16 +114,18 @@
     background-color: #ffffff;
     padding: 20px 25px;
     border-radius: 8px;
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
 }
 
 .dossierHeader h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: #7E85C7;
-    /* Roxo */
     margin-top: 0;
     margin-bottom: 8px;
+    font-weight: 600;
 }
 
 .dossierDescription {
@@ -89,31 +133,6 @@
     color: #555;
     margin-bottom: 15px;
     line-height: 1.6;
-}
-
-.dossierMeta {
-    font-size: 0.9rem;
-    color: #777;
-    font-style: italic;
-}
-
-.dossierMetaField {
-    margin-top: 10px;
-    font-size: 0.9rem;
-}
-
-.dossierMetaField label {
-    margin-right: 8px;
-    color: #555;
-    font-weight: 500;
-}
-
-.metaInput {
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    min-width: 250px;
 }
 
 .sectionsContainer {
@@ -128,22 +147,34 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     border-left: 5px solid #A5B4FC;
-    /* Cor de destaque */
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
 }
 
 .sectionTitle {
+    margin: 0;
     font-size: 1.3rem;
     font-weight: 600;
     color: #374151;
-    /* Cor escura  */
-    margin-top: 0;
-    margin-bottom: 5px;
+}
+
+.sectionWeight {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+    background-color: #f0f0f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
 }
 
 .sectionGuidance {
     font-size: 0.9rem;
     color: #6B7280;
-    /* Cinza */
     margin-bottom: 20px;
     font-style: italic;
     line-height: 1.5;
@@ -153,12 +184,10 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    /* Espaçamento maior entre itens */
 }
 
 .itemRow {
     border-top: 1px solid #e5e7eb;
-    /* Divisor sutil */
     padding-top: 15px;
 }
 
@@ -172,7 +201,6 @@
     font-size: 1rem;
     font-weight: 500;
     color: #1F2937;
-    /* Cor escura do seu exemplo */
     margin-bottom: 8px;
     line-height: 1.4;
 }
@@ -181,27 +209,23 @@
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #D1D5DB;
-    /* Borda */
     border-radius: 6px;
     font-size: 0.95rem;
     font-family: inherit;
     color: #333;
     resize: vertical;
-    /* Permite redimensionar verticalmente */
     min-height: 60px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .itemTextarea:focus {
     border-color: #3B82F6;
-    /* Azul */
     outline: none;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .itemTextarea::placeholder {
     color: #9CA3AF;
-    /* Placeholder */
 }
 
 .itemAnswerDisplay {
@@ -211,13 +235,26 @@
     padding: 10px 12px;
     border-radius: 6px;
     white-space: pre-wrap;
-    /* Mantém quebras de linha */
     word-break: break-word;
     min-height: 40px;
-    /* Para alinhar visualmente com o textarea */
 }
 
 .emptyAnswer {
     color: #9CA3AF;
     font-style: italic;
 }
+
+.scoreDisplay {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #333;
+    background-color: #f0f8ff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border: 1px solid #b3e0ff;
+    text-align: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+} 

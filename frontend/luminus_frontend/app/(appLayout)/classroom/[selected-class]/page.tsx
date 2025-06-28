@@ -20,7 +20,7 @@ import { getDossierById } from '@/services/dossierServices';
 
 // Removido CreateStudent pois a importação em massa usará um endpoint diferente
 // import { CreateStudent } from "@/services/studentService"; 
-import { usePathname } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 import {
   Dialog,
@@ -45,13 +45,8 @@ interface ExpectedCreateResponse {
 }
 
 export default function VisualizacaoAlunos() {
-  const pathname = usePathname();
-  const getTurmaIdFromPath = () => {
-    const parts = pathname.split('/');
-    const idStr = parts[parts.length - 1];
-    const id = parseInt(idStr, 10);
-    return isNaN(id) ? null : id;
-  };
+  const params = useParams();
+  const classroomId = params['selected-class'] as string;
 
   const color = "#311e45";
   const hoverColor = darkenHexColor(color, 25);
@@ -66,6 +61,10 @@ export default function VisualizacaoAlunos() {
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null); // Para debounce
+  const classiRef = useRef(classi);
+  useEffect(() => {
+      classiRef.current = classi;
+  }, [classi]);
   
   // Estados para CSV
   const [parsedStudentsFromCSV, setParsedStudentsFromCSV] = useState<ParsedStudent[]>([]);
@@ -126,19 +125,23 @@ export default function VisualizacaoAlunos() {
   };
 
   // Função para buscar alunos com paginação e busca no servidor
-  const fetchStudentsWithParams = async (searchValue = searchTerm) => {
+  const fetchStudentsWithParams = useCallback(async (searchValue = searchTerm) => {
     if (!currentTurmaId) return;
     setIsFetchingStudents(true);
     try {
       const start = (currentPage - 1) * alunosPorPagina;
       const response = await ListStudentsService(currentTurmaId, start, alunosPorPagina, searchValue);
       
-      // Mapeamento dos dados
-      const studentsFromApi = response.data.map((student: any) => ({
-        matricula: student.studentId || student.matricula,
-        nome: student.name || student.nome || "Nome não disponível",
-        selected: false,
-      }));
+      // Mapeamento dos dados, preservando a seleção
+      const studentsFromApi = response.data.map((student: any) => {
+        const studentId = student.studentId || student.matricula;
+        const existingStudent = classiRef.current.find(s => s.matricula === studentId);
+        return {
+          matricula: studentId,
+          nome: student.name || student.nome || "Nome não disponível",
+          selected: existingStudent ? existingStudent.selected : false,
+        };
+      });
 
       // Filtro para garantir que só alunos válidos sejam exibidos
       const validStudents = studentsFromApi.filter(
@@ -157,7 +160,7 @@ export default function VisualizacaoAlunos() {
     } finally {
       setIsFetchingStudents(false);
     }
-  };
+  }, [currentTurmaId, currentPage, searchTerm, alunosPorPagina]);
 
   // Função única para buscar detalhes da turma e alunos em paralelo
   const fetchPageData = useCallback(async (id: number) => {
@@ -210,21 +213,26 @@ export default function VisualizacaoAlunos() {
   }, []);
 
   useEffect(() => {
-    const turmaId = getTurmaIdFromPath();
+    const turmaId = classroomId ? parseInt(classroomId as string, 10) : null;
     setCurrentTurmaId(turmaId);
     if (turmaId !== null) {
       fetchPageData(turmaId);
     }
-  }, [pathname, fetchPageData]);
+  }, [classroomId, fetchPageData]);
+  
+  useEffect(() => {
+    if (currentTurmaId) {
+      // Debounce search
+      const timeoutId = setTimeout(() => {
+        fetchStudentsWithParams(searchTerm);
+      }, 300); // 300ms delay
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentTurmaId, currentPage, searchTerm, fetchStudentsWithParams]);
 
-  // Busca com debounce
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    setCurrentPage(1);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      fetchStudentsWithParams(value);
-    }, 400);
+    setCurrentPage(1); 
   };
 
   // Manipular mudança de página
@@ -232,26 +240,13 @@ export default function VisualizacaoAlunos() {
     setCurrentPage(page);
   };
 
-  useEffect(() => {
-    if (currentTurmaId) {
-      fetchStudentsWithParams();
-    }
-  }, [currentPage, currentTurmaId]);
-
   const totalPages = Math.ceil(totalItems / alunosPorPagina);
   const isAllSelected = classi.length > 0 && classi.every((t) => t.selected);
 
 
   const toggleSelectAll = () => {
-    const newSelected = !isAllSelected;
-    const idsVisiveis = classi.map(a => a.matricula);
-    const novaLista = classi.map((aluno) => {
-      if (idsVisiveis.includes(aluno.matricula)) {
-        return { ...aluno, selected: newSelected };
-      }
-      return aluno;
-    });
-    setClassi(novaLista);
+    const newSelectedState = !isAllSelected;
+    setClassi(classi.map((student) => ({ ...student, selected: newSelectedState })));
   };
 
   const toggleOne = (id: number) => {
@@ -531,10 +526,10 @@ export default function VisualizacaoAlunos() {
         <ActionBar
           mainColor={color}
           hoverColor={hoverColor}
-          onCsvFileSelected={handleProcessCsvFile} // Passa a função correta
+          onCsvFileSelected={handleProcessCsvFile}
           searchTerm={searchTerm}
           onSearchTermChange={handleSearch}
-          onAddStudentClick={() => setShowInlineAddStudent(true)} // Agora abre a linha de adição
+          onAddStudentClick={() => setShowInlineAddStudent(true)}
           associatedDossier={associatedDossier}
           onDossierAssociated={handleDossierAssociated}
         />
@@ -704,6 +699,7 @@ export default function VisualizacaoAlunos() {
             isLoading={isLoading}
             onCsvFileSelected={handleProcessCsvFile}
             refreshStudents={() => fetchStudentsWithParams(searchTerm)}
+            associatedDossier={associatedDossier}
           />
         </div>
       </div>

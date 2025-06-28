@@ -12,9 +12,9 @@ export const ListStudentsByClass = async (classId: number) => {
 }
 
 // PEGAR avaliação de um estudante numa turma
-export const GetStudentAppraisal = async (classId: number, studentId: number) => {
+export const GetStudentAppraisal = async (classId: number, studentId: number, dossierId: number) => {
   try {
-    const response = await api.get(`/appraisal/get/${classId}/${studentId}`);
+    const response = await api.get(`/appraisal/${classId}/${dossierId}/${studentId}`);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao buscar avaliação';
@@ -37,11 +37,13 @@ export const GetAppraisalById = async (id: number) => {
 export const CreateAppraisal = async (
   classId: number,
   studentId: number,
-  professorId: number
+  professorId: number,
+  dossierId: number
 ) => {
   try {
-    const response = await api.post(`/appraisal/create/${classId}/${studentId}`, {
+    const response = await api.post(`/appraisal/${classId}/create/${studentId}`, {
       professor_id: professorId,
+      dossier_id: dossierId,
     });
     return response.data;
   } catch (error: any) {
@@ -53,7 +55,7 @@ export const CreateAppraisal = async (
 // ATUALIZAR avaliação
 export const UpdateAppraisal = async (id: number, data: any) => {
   try {
-    const response = await api.put(`/appraisal/update/${id}`, data);
+    const response = await api.put(`/appraisal/${id}/update`, data);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.msg || 'Erro ao atualizar avaliação';

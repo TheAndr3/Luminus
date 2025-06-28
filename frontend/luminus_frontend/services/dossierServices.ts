@@ -115,3 +115,41 @@ export const deleteDossier = async (id: number): Promise<DossierResponse> => {
     throw new Error(message);
   }
 };
+
+// Buscar dados de um dossiê para preenchimento por um aluno
+export const getDossierForFilling = async (dossierId: number, studentId: number) => {
+  try {
+    // Esta rota hipotética unifica a busca de dados do dossiê e da avaliação do aluno
+    const response = await api.get(`/dossier/${dossierId}/fill-for/${studentId}`);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao carregar dados do dossiê para preenchimento';
+    throw new Error(message);
+  }
+};
+
+// Salvar as respostas de um dossiê
+export const saveDossierAnswers = async (appraisalId: number, sections: any[]) => {
+  try {
+    // A rota de update da avaliação é usada para salvar o progresso
+    const payload = { answers: sections }; // O backend espera um objeto com a chave 'answers'
+    const response = await api.put(`/appraisal/${appraisalId}/update`, payload);
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao salvar respostas do dossiê';
+    throw new Error(message);
+  }
+};
+
+// Exportar dossiê preenchido para PDF
+export const exportDossierToPdf = async (appraisalId: number): Promise<Blob> => {
+  try {
+    const response = await api.get(`/appraisal/${appraisalId}/pdf`, {
+      responseType: 'blob', // Importante para receber o arquivo
+    });
+    return response.data;
+  } catch (error: any) {
+    const message = error.response?.data?.msg || 'Erro ao exportar PDF';
+    throw new Error(message);
+  }
+};

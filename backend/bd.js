@@ -146,8 +146,31 @@ async function pgDossieSelect(id) {
     const evaluationMethodId = dossierData.rows[0]["dossierevaluationmethod"];
 
     // Get evaluation method and types using correct column names
-    const methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
+    let methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
     const method = await pgSelect('evaluationmethod', {id: evaluationMethodId, customuserid: customUserId});
+    
+    // On-the-fly migration for old numeric dossiers to integer 0-10 scale
+    if (method.length > 0 && method[0].name.toLowerCase() === 'numerical' && methodType.length !== 11) {
+        console.log(`Migrating EvaluationType for numeric dossier's method ID: ${evaluationMethodId} to 0-10 integer scale.`);
+        const client = await connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('DELETE FROM evaluationtype WHERE evaluationmethodid = $1 AND customuserid = $2', [evaluationMethodId, customUserId]);
+            
+            for (let i = 0; i <= 10; i++) {
+                const insertQuery = 'INSERT INTO EvaluationType (name, value, evaluationMethodId, customUserId) VALUES ($1, $2, $3, $4)';
+                await client.query(insertQuery, [i.toString(), i, evaluationMethodId, customUserId]);
+            }
+            await client.query('COMMIT');
+            
+            methodType = await pgSelect('evaluationtype', {evaluationmethodid: evaluationMethodId, customuserid: customUserId});
+        } catch (e) {
+            await client.query('ROLLBACK');
+            console.error('Failed to migrate evaluation types on the fly:', e);
+        } finally {
+            client.release();
+        }
+    }
     
     // Get sections and questions with LEFT JOINs
     const sectionsQuery = `
@@ -253,17 +276,15 @@ async function pgDossieUpdate(data) {
             };
             
             const secid = await pgInsert('section', payloadSection);
-            
-            for (let j = 0; j < section.questions.length; j++) {
-                var question = section.questions[j];
-
+            const questions = section.questions;
+            for(let j = 0; j < questions.length; j++){
+                const question = questions[j];
                 const payloadQuestion = {
                     customuserid: data.customUserId,
-                    sectionid: secid.rows[0].id,
                     dossierid: data.id,
-                    evaluationmethodid: evmid.rows[0].id,
+                    sectionid: secid.rows[0].id,
                     name: question.name
-                };
+                }
                 await pgInsert('question', payloadQuestion);
             }
         }
@@ -281,73 +302,102 @@ async function pgDossieUpdate(data) {
     
 }
 
-async function pgAppraisalSelect(id, idDossie, idClass) {
-    const query = 'SELECT e.id, e.studentId, e.customUserId, e.classroomId, e.dossierId, e.sectionId, e.evaluationMethodId, e.questionId, e.appraisalId, e.questionOption, a.points, a.fillingDate, q.name AS questionName, s.name as sectionName, s.description as sectionDescription, s.weigth, d.name as dossierName, d.description as dossierDescription, et.name as evaluationTypeName, em.name as evaluationMethodName, et.value FROM Evaluation AS e INNER JOIN Appraisal AS a ON e.appraisalId = a.id JOIN Question AS q ON e.questionId = q.id JOIN Section AS s ON q.sectionId = s.id JOIN Dossier AS d ON s.dossierId = d.id JOIN EvaluationMethod as em ON e.evaluationMethodId = em.id JOIN EvaluationType as et ON em.id = et.evaluationMethodId WHERE a.studentId == $1 AND d.id == $2 AND a.classroomId == $3;';
+async function pgAppraisalSelect(studentId, dossierId, classId) {
+    const query = `
+        SELECT a.id as appraisalid, a.studentid, a.dossierid, e.questionid, e.questionoption
+        FROM appraisal as a
+        LEFT JOIN evaluation as e ON a.id = e.appraisalid
+        WHERE a.studentid = $1 AND a.dossierid = $2 AND a.classroomid = $3;
+    `;
+    const client = await connect();
+    const result = await client.query(query, [studentId, dossierId, classId]);
+    client.release();
+
+    if (result.rows.length === 0) {
+        return null;
+    }
+
+    const appraisalData = {
+        id: result.rows[0].appraisalid,
+        student_id: result.rows[0].studentid,
+        dossier_id: result.rows[0].dossierid,
+        answers: []
+    };
+
+    result.rows.forEach(row => {
+        if (row.questionid) {
+            appraisalData.answers.push({
+                question_id: row.questionid,
+                question_option_id: row.questionoption
+            });
+        }
+    });
+
+    return appraisalData;
+}
+
+async function pgAppraisalUpdate(data, appraisalId) {
+    const { answers } = data;
+    if (!answers || !Array.isArray(answers)) {
+        throw new Error("Payload de respostas inválido.");
+    }
 
     const client = await connect();
-
-    const response = await client.query(query, [id, idDossie, idClass]);
-    client.release();
-    const data = await response.rows;
-    var result = {
-        questions:{},
-        appraisalId:data[0].appraisalId,
-        points:data[0].points,
-        fillingDate:data[0].fillingDate,
-        studentId:data[0].studentId,
-        customUserId:data[0].customUserId,
-        classroomId:data[0].classroomId,
-        dossierId:data[0].dossierId,
-        dossieName:data[0].dossierName,
-        dossieDescription:data[0].dossierDescription,
-        evaluationMethodId:data[0].evaluationMethodId,
-        evaluationMethodName:data[0].evaluationMethodName
-    };
-    
-    for(let i=0; i < data.length; i++){
-        var row = data[i];
-        if(!Object.keys(result.questions).find(row.questionId)) {
-            result.questions[row.questionId] = {
-                question:row.questionId,
-                questionName:row.questionName,
-                sectionId:row.sectionId,
-                sectionName:row.sectionName,
-                sectionDescription:row.sectionDescription,
-                sectionWeigth:row.weigth,
-                questionOption:row.questionOption,
-                evaluationTypeName:row.evaluationTypeName,
-
-            }
-        }
-    }
-
-    //retorna os dados da tabela de avaliação ja formatados
-    return result;
-}
-
-//refatorar isso aqui pra galerar poder fazer o update
-async function pgAppraisalUpdate(data) {
     try {
-        await pgDelete('Evaluation', {appraisal_id:data.id});
+        await client.query('BEGIN');
 
-        var evaluations = data.evaluation;
+        // Limpa as respostas antigas
+        await client.query('DELETE FROM evaluation WHERE appraisalid = $1', [appraisalId]);
 
-        for (let i = 0; i < evaluations.length; i++) {
-            const ev = evaluations[i];
-            await pgInsert('Evaluation', ev);
+        // Pega os IDs necessários da avaliação
+        const appraisalRes = await client.query('SELECT studentid, classroomid, dossierid FROM appraisal WHERE id = $1', [appraisalId]);
+        if (appraisalRes.rows.length === 0) throw new Error(`Avaliação ${appraisalId} não encontrada.`);
+        const { studentid, classroomid, dossierid } = appraisalRes.rows[0];
+
+        // Pega o ID do método de avaliação do dossiê
+        const dossierRes = await client.query('SELECT customuserid, evaluationmethodid FROM dossier WHERE id = $1', [dossierid]);
+        if (dossierRes.rows.length === 0) throw new Error(`Dossiê ${dossierid} não encontrado.`);
+        const { customuserid, evaluationmethodid } = dossierRes.rows[0];
+
+        // Itera e insere cada resposta
+        for (const answer of answers) {
+            const valueToStore = answer.answer_value ?? answer.evaluation_type_id;
+            
+            // Pula se não houver valor para armazenar
+            if (answer.question_id == null || valueToStore == null) continue;
+
+            const questionRes = await client.query('SELECT sectionid FROM question WHERE id = $1', [answer.question_id]);
+            if (questionRes.rows.length === 0) {
+                console.warn(`Questão ${answer.question_id} não encontrada. Pulando.`);
+                continue;
+            }
+            const { sectionid } = questionRes.rows[0];
+
+            const insertQuery = `
+                INSERT INTO evaluation (
+                    studentid, customuserid, classroomid, dossierid, sectionid, 
+                    evaluationmethodid, questionid, appraisalid, questionoption
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `;
+            const values = [
+                studentid, customuserid, classroomid, dossierid, sectionid,
+                evaluationmethodid, answer.question_id, appraisalId, 
+                valueToStore
+            ];
+            await client.query(insertQuery, values);
         }
 
-        const payload = {
-            points: data.points,
-            filling_date: data.filling_date
-        };
-        return await pgUpdate('Appraisal', payload, {id:data.id});
+        await client.query('COMMIT');
+        return { success: true, message: "Avaliação atualizada com sucesso." };
     } catch (error) {
-        throw error
+        await client.query('ROLLBACK');
+        console.error("Erro na transação de atualização da avaliação:", error);
+        throw error;
+    } finally {
+        client.release();
     }
 }
 
-//refatorar isso aqui
 async function pgAppraisalGetPoints(classId) {
     try {
         const response = await pgSelect('Appraisal', {classroom_id: classId});
