@@ -53,11 +53,6 @@ function dossierToHtml(dossierData, studentName, appraisal) {
       
     }
 
-    /* Previne que o cabeçalho da tabela se repita em cada página */
-    thead {
-      display: table-row-group;
-    }
-
     /* Estilo para as linhas do corpo da tabela */
     .tabela-vertical tbody tr {
       border-top: 1px solid #dddddd; /* Linha horizontal para separar as linhas */

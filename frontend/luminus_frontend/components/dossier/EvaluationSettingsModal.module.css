@@ -184,15 +184,3 @@
 .modalSaveButton:hover {
   background-color: #333;
 }
-
-.modalSaveButtonClassName:hover,
-.modalCancelButtonClassName:hover {
-    opacity: 0.8;
-}
-
-.limitMessage {
-    color: #ef4444; /* red-500 */
-    font-size: 0.875rem; /* text-sm */
-    margin-top: 0.5rem; /* mt-2 */
-    text-align: center;
-}

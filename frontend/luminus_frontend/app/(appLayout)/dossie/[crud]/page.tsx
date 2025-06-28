@@ -1155,33 +1155,31 @@ const DossierAppPage: React.FC = () => {
         </main>
       </div>
 
-      {/* Renderiza o modal de configurações */}
-      {isClient && (
-          <EvaluationSettingsModal
-            isOpen={isSettingsModalOpen}
-            onClose={() => setIsSettingsModalOpen(false)}
-            initialMethods={evaluationMethodsForModal}
-            onSave={handleSaveEvaluationMethods}
-            evaluationConcept={evaluationConcept}
-            modalOverlayClassName={styles.modalOverlay}
-            modalContentClassName={styles.modalContent}
-            modalHeaderClassName={styles.modalHeader}
-            modalTitleClassName={styles.modalTitle}
-            modalCloseButtonClassName={styles.modalCloseButton}
-            modalBodyClassName={styles.modalBody}
-            modalErrorClassName={styles.modalError}
-            modalListClassName={styles.modalList}
-            modalListItemClassName={styles.modalListItem}
-            modalListItemNameClassName={styles.modalListItemName}
-            modalListItemValueClassName={styles.modalListItemValue}
-            modalListItemDeleteBtnClassName={styles.modalListItemDeleteBtn}
-            modalActionsClassName={styles.modalActions}
-            modalAddButtonClassName={styles.modalAddButton}
-            modalSaveButtonClassName={styles.modalSaveButton}
-            modalCancelButtonClassName={styles.modalCancelButton}
-            editableFieldForModalInputClassName={styles.editableFieldForModalInput}
-            editableFieldForModalTextDisplayClassName={styles.editableFieldForModalTextDisplay}
-          />
+      {isClient && ( 
+        <EvaluationSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={closeEvaluationSettingsModal}
+          initialMethods={evaluationMethodsForModal}
+          onSave={handleSaveEvaluationMethods}
+          modalOverlayClassName={styles.modalOverlay} 
+          modalContentClassName={styles.modalContent}
+          modalHeaderClassName={styles.modalHeader}
+          modalTitleClassName={styles.modalTitle}
+          modalCloseButtonClassName={styles.modalCloseButton}
+          modalBodyClassName={styles.modalBody}
+          modalErrorClassName={styles.modalError} 
+          modalListClassName={styles.modalList}
+          modalListItemClassName={styles.modalListItem}
+          modalListItemNameClassName={styles.modalListItemName}
+          modalListItemValueClassName={styles.modalListItemValue}
+          modalListItemDeleteBtnClassName={styles.modalListItemDeleteBtn}
+          modalActionsClassName={styles.modalActions}
+          modalAddButtonClassName={styles.modalAddButton}
+          modalSaveButtonClassName={styles.modalSaveButton}
+          modalCancelButtonClassName={styles.modalCancelButton}
+          editableFieldForModalInputClassName={styles.modalEditableFieldInput} 
+          editableFieldForModalTextDisplayClassName={styles.modalEditableFieldTextDisplay}
+        />
       )}
 
       <ErroMessageDialog

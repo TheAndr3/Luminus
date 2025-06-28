@@ -22,6 +22,7 @@ routerClassroom.put('/classroom/:id/update', classroomController.Update);
 //Deletar class
 routerClassroom.delete('/classroom/:id/delete', classroomController.Delete);
 
+
 //Associar dossiê
 routerClassroom.put('/classroom/:classid/associate-dossier/:dossierid', classroomController.AssociateDossier);
 
