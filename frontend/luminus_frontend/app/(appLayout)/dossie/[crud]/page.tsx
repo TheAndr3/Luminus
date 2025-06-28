@@ -10,6 +10,7 @@ import DossierHeader from '../../../../components/dossier/DossierHeader';
 import SectionList from '../../../../components/dossier/SectionList';
 import ActionSidebar from '../../../../components/dossier/ActionSidebar';
 import EvaluationSettingsModal from '../../../../components/dossier/EvaluationSettingsModal';
+import { ErroMessageDialog } from '../../classroom/components/erroMessageDialog';
 
 import { SectionData, ItemData, EvaluationConcept, adaptDossierStateToPayload, EvaluationMethodItem } from '../../../../types/dossier';
 import { 
@@ -83,6 +84,8 @@ const DossierAppPage: React.FC = () => {
   const [isEditingMode, setIsEditingMode] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorDialogMessage, setErrorDialogMessage] = useState("");
 
   const [selectedSectionIdForStyling, setSelectedSectionIdForStyling] = useState<string | null>(null);
   const [selectedItemIdGlobal, setSelectedItemIdGlobal] = useState<string | null>(null);
@@ -110,6 +113,18 @@ const DossierAppPage: React.FC = () => {
   const [evaluationMethodsForModal, setEvaluationMethodsForModal] = useState<EvaluationMethodItem[]>(
     DEFAULT_EVALUATION_METHODS_LETTER.map(m => ({...m}))
   );
+
+  // Função para mostrar o diálogo de erro
+  const showErrorDialog = useCallback((message: string) => {
+    setErrorDialogMessage(message);
+    setErrorDialogOpen(true);
+    setError(message); // Mantém o estado de erro para compatibilidade
+  }, []);
+
+  const closeErrorDialog = useCallback(() => {
+    setErrorDialogOpen(false);
+    setError(null);
+  }, []);
 
   useEffect(() => {
     const costumUserId = localStorage.getItem('professorId');
@@ -181,7 +196,7 @@ const DossierAppPage: React.FC = () => {
             setIsLoading(false);
             return;
           } catch (err) {
-            setError('Erro ao carregar dossiê como template.');
+            showErrorDialog('Erro ao carregar dossiê como template.');
             setDossierTitle("");
             setDossierDescription("");
             setSectionsData([JSON.parse(JSON.stringify(DEFAULT_SECTION))]);
@@ -208,7 +223,6 @@ const DossierAppPage: React.FC = () => {
         const response: DossierResponse = await getDossierById(dossierId);
         // Assume-se que response.data tem a estrutura de DossierDetailFromAPI
         const dossierFromApi = response.data as DossierDetailFromAPI;
-
 
         if (!dossierFromApi || !dossierFromApi.evaluation_method) {
             throw new Error("Dossiê não encontrado ou formato de resposta inválido.");
@@ -276,7 +290,9 @@ const DossierAppPage: React.FC = () => {
         setIsEditingMode(modeParam !== 'view');
       } catch (error: any) {
         console.error("Erro ao carregar dossiê:", error);
-        setError(error.message || 'Erro ao carregar dossiê. Tente recarregar a página.');
+        showErrorDialog(
+          error.response?.data?.msg || error.message || 'Erro ao carregar dossiê. Tente recarregar a página.'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -836,14 +852,14 @@ const DossierAppPage: React.FC = () => {
         // Se chegar aqui, é um erro de lógica ou o usuário bypassou a validação do modal.
         // O modal agora deve mostrar seu próprio erro e não fechar.
         // No entanto, como segurança, podemos alertar ou exibir erro na página.
-        setError("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
+        showErrorDialog("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
         // Não fechar o modal, deixar o usuário corrigir lá.
         // A lógica do modal deve impedir que onSave seja chamado se inválido.
         return; 
     }
     setEvaluationMethodsForModal(updatedMethods);
     closeEvaluationSettingsModal(); // Fecha o modal APÓS salvar os métodos no estado da página.
-  }, [closeEvaluationSettingsModal, evaluationConcept]);
+  }, [closeEvaluationSettingsModal, evaluationConcept, showErrorDialog]);
 
   const handleDossierSettingsClick = useCallback(() => {
     // Antes de abrir o modal, se o botão de settings for focado,
@@ -860,7 +876,7 @@ const DossierAppPage: React.FC = () => {
     try {
       const customUserIdStr = localStorage.getItem('professorId'); // Nome da chave no localStorage
       if (!customUserIdStr) { // Se não houver ID do professor no localStorage
-          setError("Sua sessão expirou ou o ID do usuário não foi encontrado. Por favor, faça o login novamente.");
+          showErrorDialog("Sua sessão expirou ou o ID do usuário não foi encontrado. Por favor, faça o login novamente.");
           setIsLoading(false);
           return; // Interrompe a execução
       }
@@ -868,19 +884,18 @@ const DossierAppPage: React.FC = () => {
 
       // Validação adicional para customUserId
       if (isNaN(customUserId) || customUserId <= 0) {
-          setError("ID de usuário inválido. Por favor, verifique os dados de login ou entre em contato com o suporte.");
+          showErrorDialog("ID de usuário inválido. Por favor, verifique os dados de login ou entre em contato com o suporte.");
           setIsLoading(false);
           return; // Interrompe a execução
       }
 
-
       if (!dossierTitle.trim()) {
-        setError("O título do Dossiê não pode ser vazio.");
+        showErrorDialog("O título do Dossiê não pode ser vazio.");
         setIsLoading(false);
         return;
       }
       if (!evaluationConcept) {
-        setError("O método de avaliação não pode ser vazio.");
+        showErrorDialog("O método de avaliação não pode ser vazio.");
         setIsLoading(false);
         return;
       }
@@ -888,27 +903,27 @@ const DossierAppPage: React.FC = () => {
       if (evaluationConcept === 'letter') {
           if (evaluationMethodsForModal.length < 2) {
             openEvaluationSettingsModal(); 
-            setError("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
+            showErrorDialog("Para o conceito 'Letra', são necessários pelo menos dois métodos de avaliação. Configure-os nas configurações.");
             setIsLoading(false);
             return;
           }
           for(const method of evaluationMethodsForModal) {
               if (!method.name.trim()) {
                   openEvaluationSettingsModal();
-                  setError(`Um dos conceitos de avaliação está sem nome. Verifique as configurações.`);
+                  showErrorDialog(`Um dos conceitos de avaliação está sem nome. Verifique as configurações.`);
                   setIsLoading(false);
                   return;
               }
               if (method.value.trim() === '') {
                   openEvaluationSettingsModal();
-                  setError(`O valor para o conceito '${method.name}' não pode ser vazio. Deve ser entre 0.0 e 10.0.`);
+                  showErrorDialog(`O valor para o conceito '${method.name}' não pode ser vazio. Deve ser entre 0.0 e 10.0.`);
                   setIsLoading(false);
                   return;
               }
               const val = parseFloat(method.value);
               if(isNaN(val) || val < 0.0 || val > 10.0) {
                   openEvaluationSettingsModal();
-                  setError(`Valor inválido '${method.value}' para o conceito '${method.name}'. Deve ser entre 0.0 e 10.0.`);
+                  showErrorDialog(`Valor inválido '${method.value}' para o conceito '${method.name}'. Deve ser entre 0.0 e 10.0.`);
                   setIsLoading(false);
                   return;
               }
@@ -917,21 +932,21 @@ const DossierAppPage: React.FC = () => {
           const names = evaluationMethodsForModal.map(m => m.name.trim().toLowerCase());
           if (new Set(names).size !== names.length) {
               openEvaluationSettingsModal();
-              setError('Os nomes dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
+              showErrorDialog('Os nomes dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
               setIsLoading(false);
               return;
           }
           const values = evaluationMethodsForModal.map(m => parseFloat(m.value));
           if (new Set(values).size !== values.length) {
               openEvaluationSettingsModal();
-              setError('Os valores numéricos dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
+              showErrorDialog('Os valores numéricos dos conceitos de avaliação devem ser únicos. Verifique as configurações.');
               setIsLoading(false);
               return;
           }
       }
 
       if (sectionsData.length === 0) {
-        setError("O Dossiê deve conter pelo menos uma seção.");
+        showErrorDialog("O Dossiê deve conter pelo menos uma seção.");
         setIsLoading(false);
         return;
       }
@@ -941,7 +956,7 @@ const DossierAppPage: React.FC = () => {
         sec.items.length > 0 && sec.items.some(it => it.description.trim() !== "")
       );
       if (!hasValidSectionWithQuestion) {
-        setError("O Dossiê deve conter pelo menos uma seção com título e um item com descrição preenchidos.");
+        showErrorDialog("O Dossiê deve conter pelo menos uma seção com título e um item com descrição preenchidos.");
         setIsLoading(false);
         return;
       }
@@ -949,32 +964,32 @@ const DossierAppPage: React.FC = () => {
       let totalWeight = 0;
       for (const sec of sectionsData) {
         if (!sec.title.trim()) {
-            setError(`Uma das seções não pode ter um título vazio.`);
+            showErrorDialog(`Uma das seções não pode ter um título vazio.`);
             setIsLoading(false);
             return;
         }
         if (!Array.isArray(sec.items) || sec.items.length === 0) {
-            setError(`A seção "${sec.title || 'sem título'}" deve conter pelo menos um item.`);
+            showErrorDialog(`A seção "${sec.title || 'sem título'}" deve conter pelo menos um item.`);
             setIsLoading(false);
             return;
         }
         for (const item of sec.items) {
             if (!item.description.trim()) {
-                setError(`Um dos itens na seção "${sec.title || 'sem título'}" não pode ter a descrição vazia.`);
+                showErrorDialog(`Um dos itens na seção "${sec.title || 'sem título'}" não pode ter a descrição vazia.`);
                 setIsLoading(false);
                 return;
             }
         }
         const parsedWeight = parseInt(sec.weight, 10);
         if (isNaN(parsedWeight) || parsedWeight < 0) {
-            setError(`O peso da seção "${sec.title || 'sem título'}" é inválido. Deve ser um número positivo (0-100).`);
+            showErrorDialog(`O peso da seção "${sec.title || 'sem título'}" é inválido. Deve ser um número positivo (0-100).`);
             setIsLoading(false);
             return;
         }
         totalWeight += parsedWeight;
       }
       if (totalWeight !== 100) {
-        setError(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
+        showErrorDialog(`A soma dos pesos de todas as seções deve ser 100%, mas é ${totalWeight}%.`);
         setIsLoading(false);
         return;
       }
@@ -998,13 +1013,13 @@ const DossierAppPage: React.FC = () => {
       router.push('/dossie'); 
     } catch (error: any) {
       console.error("Falha ao salvar dossiê:", error); 
-      setError(error.response?.data?.msg || error.message || 'Falha ao salvar dossiê.');
+      showErrorDialog(error.response?.data?.msg || error.message || 'Falha ao salvar dossiê.');
     } finally {
         setIsLoading(false); 
     }
   }, [
       dossierTitle, dossierDescription, evaluationConcept, sectionsData, 
-      dossierId, router, evaluationMethodsForModal, openEvaluationSettingsModal
+      dossierId, router, evaluationMethodsForModal, openEvaluationSettingsModal, showErrorDialog
     ]);
 
   // Determina se a sidebar de ações deve ser mostrada.
@@ -1012,16 +1027,6 @@ const DossierAppPage: React.FC = () => {
                                      focusedElementRef.current instanceof HTMLElement &&
                                      focusedElementRef.current.closest(`[id^="dossier-item-"]`) instanceof HTMLElement;
   const showActionSidebar = isClient && isEditingMode && isFocusedElementAnItemField && sidebarTargetTop !== null;
-
-  useEffect(() => {
-    if (error && !isLoading) { 
-        if (error !== "Sua sessão expirou ou o ID do usuário não foi encontrado. Por favor, faça o login novamente." &&
-            error !== "ID de usuário inválido. Por favor, verifique os dados de login ou entre em contato com o suporte.") {
-            // setError(null); // Opcional: limpar outros erros ao editar
-        }
-    }
-  }, [dossierTitle, dossierDescription, sectionsData, evaluationMethodsForModal, error, isLoading]);
-
 
   // --- Renderização ---
   if (!isClient || (!isAuthenticated && dossierId)) { 
@@ -1032,9 +1037,6 @@ const DossierAppPage: React.FC = () => {
   }
   if (isLoading && (dossierId || (!isAuthenticated && !dossierId) )) { 
     return <div className={styles.loadingMessage}>Carregando dados...</div>;
-  }
-  if (error && isLoading && dossierId) { 
-     return <div className={styles.errorMessage} style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Erro ao carregar: {error}</div>;
   }
 
   return (
@@ -1055,8 +1057,6 @@ const DossierAppPage: React.FC = () => {
             onFieldFocus={handleFieldFocus} 
             onFieldBlur={handleFieldBlur}   
           />
-
-          {error && !isLoading && <div className={styles.modalError} style={{marginBottom: '15px'}}>{error}</div>}
 
           <div ref={scrollableAreaRef} className={styles.scrollableArea}>
             <DossierHeader
@@ -1181,6 +1181,12 @@ const DossierAppPage: React.FC = () => {
           editableFieldForModalTextDisplayClassName={styles.modalEditableFieldTextDisplay}
         />
       )}
+
+      <ErroMessageDialog
+        open={errorDialogOpen}
+        onConfirm={closeErrorDialog}
+        description={errorDialogMessage}
+      />
     </>
   );
 };
