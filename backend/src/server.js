@@ -2,8 +2,8 @@ require('dotenv').config();
 const app = require('./app.js');
 const bd = require('../bd.js');
 
-const API = process.env.API_IP;
+const PORT = process.env.PORT;
 
-app.listen(API, ()=>{
-    console.log(`Server running on API ${API}`);
+app.listen(PORT, ()=>{
+    console.log(`Server running on PORT ${PORT}`);
 })
