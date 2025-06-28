@@ -6,7 +6,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { use, useState, useRef } from "react"; // Importa hooks do React
 import { toast } from 'react-hot-toast';
 
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Upload, X } from "lucide-react";
 import dark_class_icon from "@/components/icon/dark_icon_classroom.svg" // Importa o ícone da turma em formato SVG
 import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
 import { CreateClassroom} from "@/services/classroomServices";
@@ -33,7 +33,7 @@ export default function DialogPage() {
     const [missingDialog, setMissingDialog] = useState(false);
     const [messageErro, setMessageErro] = useState("");
 
-    const [messageButton, setMessageButton] = useState("Concluir");
+    const [messageButton, setMessageButton] = useState("Criar Turma");
 
     const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null);
     const [csvFileName, setCsvFileName] = useState<string>("Nenhum arquivo selecionado");
@@ -48,7 +48,7 @@ export default function DialogPage() {
         setTitulo(title); // Reseta o título para o valor padrão
         resetModalCsvState();
         setEditing(false); // Adicionado para resetar o modo de edição do título
-        setMessageButton("Concluir");
+        setMessageButton("Criar Turma");
     }
 
      const handleFileSelectedInModal = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +81,7 @@ export default function DialogPage() {
     // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
         setSave(true); // Marca que o salvamento está em andamento
-        setMessageButton("Carregando..."); // Atualiza o texto do botão
+        setMessageButton("Criando..."); // Atualiza o texto do botão
 
         try {
             // Obtém o ID do professor do localStorage
@@ -132,7 +132,7 @@ export default function DialogPage() {
         } catch (err: any) {
             setMessageErro(err.message || "Impossível salvar os dados. Por favor, tente novamente!");
             setMissingDialog(true);
-            setMessageButton("Concluir");
+            setMessageButton("Criar Turma");
         }
     }
     
@@ -152,124 +152,133 @@ export default function DialogPage() {
                         Adicionar turma
                     </div>
                 </DialogTrigger>
-                <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" /> {/* Overlay com fundo e desfoque */}
+                <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" /> {/* Overlay com fundo e desfoque */}
 
-                <DialogContent className="h-[400px] max-w-6xl bg-slate-900 rounded-2xl text-white border-1 border-black">
+                <DialogContent className="max-w-4xl bg-white rounded-3xl text-gray-900 border-0 shadow-2xl p-0 overflow-hidden">
                     <DialogTitle className="sr-only">Criar Nova Turma</DialogTitle>
 
-                    {/* Header do dialog */}
-                    <div className="relative mb-6">
-                    {/* Imagem fixa à esquerda */}
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white w-12 h-12 rounded-lg">
-                        <Image 
-                        src={dark_class_icon}
-                        alt="icone turma"
-                        className="w-12 h-12"
-                        />
-                    </div>
-
-                    {/* Conteúdo centralizado */}
-                    <div className="flex items-center gap-2 justify-center">
-                        <BaseInput 
-                            className="text-4xl font-bold bg-gray-100 text-gray-900 rounded-2xl px-4 py-2"
-                            placeholder="Digite o nome da turma"
-                            value={titulo}
-                            onChange={(e) => setTitulo(e.target.value)}
-                        />
-                        <Pencil 
-                        className="w-5 h-5 text-white cursor-pointer" 
-                        onClick={() => setEditing(!editing)} 
-                        />
-                    </div>
-                    </div>
-
-
-                    {/* Campos de input */}
-                    <div className="grid grid-cols-2 gap-4 m-6 ">
-                        <div className="flex items-center gap-3 "> 
-                            <label className="text-2xl">Disciplina:</label> {/* Label para o campo Disciplina */}
-                            <BaseInput 
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder="Ex: EXA 702 - TPO1" 
-                                value={inputDisc} // Valor do input Disciplina
-                                onChange={(e) => setInputDisc(e.target.value)} // Atualiza o valor do input
+                    {/* Header with gradient background */}
+                    <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 relative">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white p-3 rounded-2xl shadow-lg">
+                                <Image 
+                                    src={dark_class_icon}
+                                    alt="icone turma"
+                                    className="w-8 h-8"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <BaseInput 
+                                    className="text-3xl font-bold bg-white/10 text-white rounded-2xl px-6 py-4 border-0 placeholder-white/70 focus:bg-white/20 transition-all duration-300"
+                                    placeholder="Digite o nome da turma"
+                                    value={titulo}
+                                    onChange={(e) => setTitulo(e.target.value)}
+                                />
+                            </div>
+                            <Pencil 
+                                className="w-6 h-6 text-white/80 hover:text-white cursor-pointer transition-colors duration-200" 
+                                onClick={() => setEditing(!editing)} 
                             />
-                        </div>
-
-                        <div className="flex items-center gap-3 ml-8">
-                            <label className="text-2xl">Instituição:</label> {/* Label para o campo Instituição */}
-                            <BaseInput
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder="Insira o nome da instituição (opcional)"
-                                value={inputInst} // Valor do input Instituição
-                                onChange={(e) => setinputInst(e.target.value)} // Atualiza o valor do input
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-8">
-                            <label className="text-2xl">Período:</label> {/* Label para o campo Período */}
-                            <BaseInput 
-                                className="w-90 h-10 text-gray-900 font-medium bg-gray-100 text-gray-700 rounded-2xl "
-                                placeholder="23.2"
-                                type="number"
-                                value={inputPer} // Valor do input Período
-                                onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
-                            />
-                        </div>
-
-                        {/* Botão para importar CSV */}
-                        <div className="flex items-center justify-end gap-2">
-                            <label
-                                className="text-2xl truncate max-w-[200px] md:max-w-[300px]"
-                                title={csvFileName}
-                            >
-                                {csvFileName}
-                            </label>
-                            <input
-                                type="file"
-                                accept=".csv"
-                                onChange={handleFileSelectedInModal}
-                                style={{ display: 'none' }}
-                                ref={fileInputRefModal}
-                                id="csvFileInputModal"
-                            />
-                            <Button
-                                type="button"
-                                onClick={() => fileInputRefModal.current?.click()}
-                                className="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-3 py-1 h-auto text-sm"
-                            >
-                                Selecionar CSV
-                            </Button>
-                            {csvFileToUpload && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={resetModalCsvState}
-                                    className="text-red-500 hover:text-red-700 px-1"
-                                >
-                                    Limpar
-                                </Button>
-                            )}
                         </div>
                     </div>
 
-                    {/* Botão "Concluir" */}
-                    <div className="flex justify-end mr-7">
-                        <Button onClick={handleClick} className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] py-[1vh] h-7">
+                    {/* Form content */}
+                    <div className="p-8 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Disciplina *</label>
+                                <BaseInput 
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder="Ex: EXA 702 - TPO1" 
+                                    value={inputDisc} // Valor do input Disciplina
+                                    onChange={(e) => setInputDisc(e.target.value)} // Atualiza o valor do input
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Instituição</label>
+                                <BaseInput
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder="Insira o nome da instituição"
+                                    value={inputInst} // Valor do input Instituição
+                                    onChange={(e) => setinputInst(e.target.value)} // Atualiza o valor do input
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Período *</label>
+                                <BaseInput 
+                                    className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
+                                    placeholder="23.2"
+                                    type="number"
+                                    value={inputPer} // Valor do input Período
+                                    onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-lg font-semibold text-gray-700">Importar CSV</label>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleFileSelectedInModal}
+                                        style={{ display: 'none' }}
+                                        ref={fileInputRefModal}
+                                        id="csvFileInputModal"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={() => fileInputRefModal.current?.click()}
+                                        className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 h-12 flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer"
+                                    >
+                                        <Upload size={16} />
+                                        Selecionar CSV
+                                    </Button>
+                                    {csvFileToUpload && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={resetModalCsvState}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200"
+                                        >
+                                            <X size={16} />
+                                        </Button>
+                                    )}
+                                </div>
+                                {csvFileToUpload && (
+                                    <div className="text-sm text-gray-600 bg-green-50 border border-green-200 rounded-lg p-3">
+                                        <span className="font-medium">Arquivo selecionado:</span> {csvFileName}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="bg-gray-50 px-8 py-6 flex justify-end gap-4">
+                        <Button 
+                            onClick={() => setOpen(false)}
+                            variant="outline"
+                            className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200 cursor-pointer"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button 
+                            onClick={handleClick} 
+                            disabled={save}
+                            className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-8 py-3 h-12 font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
                             {messageButton}
                         </Button>
-
-                        
                     </div>
 
-                        <ErroMessageDialog
-                            open={missingDialog}
-                            onConfirm={() => setMissingDialog(false)}
-                            description={messageErro}
-                        />
-                    
-
+                    <ErroMessageDialog
+                        open={missingDialog}
+                        onConfirm={() => setMissingDialog(false)}
+                        description={messageErro}
+                    />
                 </DialogContent>
             </Dialog>
         </>

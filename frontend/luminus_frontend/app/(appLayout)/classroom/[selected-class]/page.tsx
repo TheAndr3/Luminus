@@ -542,56 +542,110 @@ export default function VisualizacaoAlunos() {
         {/* Modal de Confirmação de CSV */}
         <Dialog open={showCsvConfirmation} onOpenChange={(isOpen) => {
             if (!isOpen) resetCsvState();
-            // setShowCsvConfirmation(isOpen); // resetCsvState já faz setShowCsvConfirmation(false)
         }}>
-          <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
-          <DialogContent className="max-w-2xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
-            <DialogHeader className="mb-4">
-              <div className="flex items-center gap-3 justify-center">
-                  <FileText className="w-8 h-8 text-white" />
-                  <DialogTitle className="text-2xl font-bold text-center">
-                    Confirmar Importação de Alunos
-                  </DialogTitle>
-              </div>
-            </DialogHeader>
+          <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          <DialogContent className="max-w-2xl bg-white rounded-3xl text-gray-900 border-0 shadow-2xl p-0 overflow-hidden">
+            <DialogTitle className="sr-only">Confirmar Importação de Alunos</DialogTitle>
             
-            {csvError && (
-              <div className="my-4 p-3 border border-red-700 bg-red-100 text-red-700 rounded-md text-sm">
-                <p className="font-semibold">Erro ao processar CSV:</p>
-                <p>{csvError}</p>
-              </div>
-            )}
-
-            {parsedStudentsFromCSV.length > 0 && !csvError && (
-              <>
-                <DialogDescription className="text-center text-gray-300 mb-1">
-                  Os seguintes {parsedStudentsFromCSV.length} alunos serão importados para a turma:
-                </DialogDescription>
-                <div className="max-h-72 overflow-y-auto mb-4 border border-gray-600 rounded-md p-1 bg-gray-800">
-                  <table className="min-w-full text-sm text-left">
-                    <thead className="bg-gray-700"><tr><th className="p-2">Matrícula</th><th className="p-2">Nome</th></tr></thead>
-                    <tbody>
-                      {parsedStudentsFromCSV.map((student, index) => (
-                        <tr key={index} className="border-b border-gray-700 hover:bg-gray-700/50">
-                          <td className="p-2">{student.matricula}</td><td className="p-2">{student.nome}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {/* Header with gradient background */}
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 relative">
+                <div className="flex items-center gap-4">
+                    <div className="bg-white p-3 rounded-2xl shadow-lg">
+                        <FileText className="w-8 h-8 text-gray-900" />
+                    </div>
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-white">
+                            Confirmar Importação de Alunos
+                        </h2>
+                        <p className="mt-1 text-sm font-normal text-white/80">
+                            Revise os dados antes de importar os alunos para a turma
+                        </p>
+                    </div>
                 </div>
-              </>
-            )}
-            {parsedStudentsFromCSV.length === 0 && !csvError && (
-                <p className="text-center text-gray-400 my-4">Nenhum aluno para importar do arquivo selecionado.</p>
-            )}
-            <DialogFooter className="mt-6 flex justify-end gap-3">
-              <Button variant="outline" onClick={resetCsvState} className="bg-gray-500 hover:bg-gray-600 text-white border-gray-600 rounded-full px-5 py-2 h-auto" disabled={isLoading}>
-                Cancelar
-              </Button>
-              <Button onClick={handleConfirmCsvImport} disabled={isLoading || !!csvError || parsedStudentsFromCSV.length === 0} className="bg-green-600 hover:bg-green-700 text-white rounded-full px-5 py-2 h-auto">
-                {isLoading ? "Importando..." : "Importar Alunos"}
-              </Button>
-            </DialogFooter>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+                {csvError && (
+                    <div className="mb-4 p-4 border border-red-200 bg-red-50 rounded-xl">
+                        <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                                <AlertTriangle className="w-3 h-3 text-red-600" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-red-800 text-sm">Erro ao processar CSV:</p>
+                                <p className="text-red-700 text-xs mt-1">{csvError}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {parsedStudentsFromCSV.length > 0 && !csvError && (
+                    <>
+                        <div className="mb-4 text-center">
+                            <p className="text-gray-700 text-sm font-normal">
+                                Os seguintes <span className="font-semibold text-gray-900">{parsedStudentsFromCSV.length}</span> alunos serão importados para a turma:
+                            </p>
+                        </div>
+                        <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+                            <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                                <h3 className="font-semibold text-gray-900 text-sm">Lista de Alunos</h3>
+                            </div>
+                            <div className="max-h-48 overflow-y-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-normal text-gray-900 uppercase tracking-wider border-b border-gray-200">MATRÍCULA</th>
+                                            <th className="px-4 py-3 text-left text-xs font-normal text-gray-900 uppercase tracking-wider border-b border-gray-200">NOME</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {parsedStudentsFromCSV.map((student, index) => (
+                                            <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm font-normal text-gray-900">
+                                                    {student.matricula}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm font-normal text-gray-900">
+                                                    {student.nome}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
+                )}
+                
+                {parsedStudentsFromCSV.length === 0 && !csvError && (
+                    <div className="text-center py-8">
+                        <div className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-300">
+                            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                            <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum aluno encontrado</h3>
+                            <p className="text-gray-500 text-sm">O arquivo CSV não contém dados válidos para importação.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                <Button 
+                    variant="outline" 
+                    onClick={resetCsvState} 
+                    disabled={isLoading}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-4 py-2 h-10 font-medium transition-all duration-200"
+                >
+                    Cancelar
+                </Button>
+                <Button 
+                    onClick={handleConfirmCsvImport} 
+                    disabled={isLoading || !!csvError || parsedStudentsFromCSV.length === 0}
+                    className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 h-10 font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isLoading ? "Importando..." : "Importar Alunos"}
+                </Button>
+            </div>
           </DialogContent>
         </Dialog>
 

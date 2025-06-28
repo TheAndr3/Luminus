@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BaseInput } from "@/components/inputs/BaseInput";
-import { Folder, Plus, ArrowLeftRight } from "lucide-react";
+import { Folder, Plus, ArrowLeftRight, X, Search } from "lucide-react";
 import { Dossier } from "@/services/dossierServices";
 import { useRouter } from "next/navigation";
 import { listDossiers } from "@/services/dossierServices";
@@ -20,7 +20,6 @@ interface AssociarDossieProps {
   associatedDossier?: { id: number; name: string } | null;
   onDossierAssociated?: (dossierId: number) => void;
 }
-
 
 export default function AssociarDossie({
   mainColor = '',
@@ -93,12 +92,11 @@ export default function AssociarDossie({
             await AssociateDossier(classId, dossie.id);
             setOpen(false);
             
-            // Call the callback to update the parent component
             if (onDossierAssociated) {
                 onDossierAssociated(dossie.id);
             }
             
-            router.refresh(); // Refresh the page to show the updated association
+            router.refresh();
         } catch (error: any) {
             console.error('Erro ao associar dossiê:', error);
             setError(error.message || 'Erro ao associar dossiê');
@@ -112,7 +110,6 @@ export default function AssociarDossie({
         setOpen(false);
     }
 
-    // Determine button text and icon based on whether a dossier is associated
     const getButtonText = () => {
         if (associatedDossier) {
             return 'Trocar Dossiê';
@@ -133,7 +130,7 @@ export default function AssociarDossie({
                 <DialogTrigger asChild>
                     <div>
                         {mainColor === "white" ? (
-                            <div className="bg-white text-black hover:bg-gray-100 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal">
+                            <div className="bg-white text-black hover:bg-gray-100 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal transition-all duration-200">
                                 {getButtonText()}
                             </div>
                         ) : (
@@ -148,67 +145,100 @@ export default function AssociarDossie({
                     </div>
                 </DialogTrigger>
 
-                <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
+                <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
 
-                <DialogContent className="max-w-4xl bg-[#012D48] text-white rounded-2xl border-1 border-black p-6">
+                <DialogContent className="max-w-2xl bg-white rounded-3xl text-gray-900 border-0 shadow-2xl p-0 overflow-hidden">
                     <DialogTitle className="sr-only">Associar Dossiê</DialogTitle>
-                    <div className="relative mb-6">
-                        <div className="flex items-center gap-2 justify-center">
-                            <div className="absolute left-0 top-18 -translate-y-1/2 w-12 h-38 rounded-lg">
-                                <Folder color="white" size={50} /> 
+                    
+                    {/* Red X Close Button */}
+                    <button
+                        onClick={() => setOpen(false)}
+                        className="flex absolute top-4 right-4 gap-1 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition z-10"
+                    >
+                        <X className="h-6 w-6" />
+                        <span className="sr-only">Close</span>
+                    </button>
+                    
+                    {/* Header with gradient background */}
+                    <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 relative">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white p-3 rounded-2xl shadow-lg">
+                                <Folder className="w-8 h-8 text-gray-900" />
                             </div>
-                            <span className="text-4xl font-bold text-white">
-                                {associatedDossier ? 'Trocar Dossiê' : 'Associar Dossiê'}
-                            </span>
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-bold text-white">
+                                    {associatedDossier ? 'Trocar Dossiê' : 'Associar Dossiê'}
+                                </h2>
+                                <p className="mt-1 text-sm font-normal text-gray-300">
+                                    Selecione um dossiê para associar à turma
+                                </p>
+                            </div>
                         </div>
+                    </div>
 
-                        <div className="flex justify-center items-center my-[2vh] mb-[4vh]">
+                    {/* Search Section */}
+                    <div className="p-6 pb-4">
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <BaseInput
                                 type="text"
-                                placeholder="Procure pelo dossiê"
+                                placeholder="Procure pelo dossiê..."
                                 value={searchTerm}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="bg-white border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh] placeholder-black text-black"
+                                className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* Content */}
+                    <div className="px-6 pb-6">
                         {isLoading ? (
-                            <div className="text-white text-2xl mb-4">
-                                Carregando dossiês...
+                            <div className="flex items-center justify-center py-8">
+                                <div className="text-center">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mx-auto mb-3"></div>
+                                    <p className="text-gray-600">Carregando dossiês...</p>
+                                </div>
                             </div>
                         ) : error ? (
-                            <div className="text-white text-2xl mb-4">
-                                {error}
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                                <p className="text-red-700 font-medium">{error}</p>
                             </div>
                         ) : dossies.length === 0 ? (
-                            <>
-                                <div className="text-white text-2xl mb-4">
-                                    Sem dossiês criados
+                            <div className="text-center py-8">
+                                <div className="bg-gray-50 rounded-2xl p-6 border-2 border-dashed border-gray-300">
+                                    <Folder className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Sem dossiês criados</h3>
+                                    <p className="text-gray-500 mb-4 text-sm">Crie seu primeiro dossiê para começar a usar</p>
+                                    <Button 
+                                        onClick={createDossie}
+                                        className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                                    >
+                                        <Plus size={14} className="mr-2" />
+                                        Criar dossiê
+                                    </Button>
                                 </div>
-                                <Button className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-[3vh] h-7 mb-30" onClick={createDossie}>
-                                    + Criar dossiê
-                                </Button>
-                            </>
+                            </div>
                         ) : (
-                            dossies.map((dossie) => (
-                                <div
-                                    key={dossie.id}
-                                    onClick={() => !isAssociating && handleClickDossie(dossie)}
-                                    className={`bg-white rounded cursor-pointer flex items-center h-16 w-full hover:bg-[#0E3A4F] transition-colors ${isAssociating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <div className="flex items-center justify-center w-20 flex-shrink-0 p-2">
-                                        <Folder className="w-10 h-10 text-black" />
+                            <div className="space-y-2">
+                                {dossies.map((dossie) => (
+                                    <div
+                                        key={dossie.id}
+                                        onClick={() => !isAssociating && handleClickDossie(dossie)}
+                                        className={`bg-white border border-gray-200 rounded cursor-pointer flex items-center h-12 w-full hover:bg-gray-50 transition-colors ${isAssociating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <div className="flex items-center justify-center w-16 flex-shrink-0 p-2">
+                                            <Folder className="w-8 h-8 text-gray-900" />
+                                        </div>
+                                        <div className="flex-1 p-2 text-base whitespace-nowrap overflow-hidden text-ellipsis pl-4 font-normal text-gray-900">
+                                            {dossie.name}
+                                        </div>
                                     </div>
-                                    <div className="flex-1 p-2 text-xl whitespace-nowrap overflow-hidden text-black pl-4">
-                                        {dossie.name}
-                                    </div>
-                                </div>
-                            ))
+                                ))}
+                            </div>
                         )}
+                        
                         {totalItems > dossiesPerPage && (
-                            <div className="mt-2">
+                            <div className="mt-4 flex justify-center">
                                 <PageController
                                     currentPage={currentPage + 1}
                                     totalPages={totalPages}

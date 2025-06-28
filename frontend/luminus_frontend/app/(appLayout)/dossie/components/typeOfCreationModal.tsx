@@ -14,7 +14,7 @@ import { useState } from "react";
 // Importa hooks do React. 
 import { useRouter } from "next/navigation"; // Importa o hook de navegação do Next.js
 
-import { Folder } from "lucide-react"; 
+import { Folder, Plus, Copy } from "lucide-react"; 
 import DossieTemplateDialog from "./dossieTemplateDialog";
 // Importa o ícone de pasta (Folder) da biblioteca de ícones `lucide-react`.
 
@@ -48,51 +48,79 @@ export default function TypeOfCreationModal({ open, onClose }: TypeOfCreationMod
             {/* Componente Dialog que controla a abertura e fechamento do modal */}
             <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
                 {/* Overlay do modal (fundo escuro com blur) */}
-                <DialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-xs" />
+                <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
 
                 {/* Conteúdo do modal */}
-                <DialogContent className="h-[400px] max-w-6xl bg-gray-300 rounded-2xl text-white border-3 border-black">
+                <DialogContent className="max-w-4xl bg-white rounded-3xl text-gray-900 border-0 shadow-2xl p-0 overflow-hidden">
                     {/* Título acessível apenas para leitores de tela */}
-                    <DialogTitle className="sr-only">Criar Nova Turma</DialogTitle>
+                    <DialogTitle className="sr-only">Criar Novo Dossiê</DialogTitle>
 
-                    {/* Cabeçalho do modal */}
-                    <div className="relative mb-6">
-                        {/* Ícone à esquerda, posicionado absolutamente */}
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-38 rounded-lg">
-                            <Folder color="black" size={50} /> 
-                            {/* Ícone de pasta */}
-                        </div>
-
-                        {/* Texto centralizado no cabeçalho */}
-                        <div className="flex items-center gap-2 justify-center">
-                            <span className="text-4xl font-bold text-black">Criação de dossiês</span>
+                    {/* Header with gradient background */}
+                    <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 relative">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white p-3 rounded-2xl shadow-lg">
+                                <Folder className="w-8 h-8 text-gray-900" />
+                            </div>
+                            <div className="flex-1">
+                                <h2 className="text-3xl font-bold text-white">Criação de Dossiês</h2>
+                                <p className="text-white/80 mt-2">Escolha como você gostaria de criar seu dossiê</p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Área dos botões */}
-                    <div className="flex justify-center h-20 gap-26">
-                        {/* Botão para criar um novo dossiê */}
-                        <Button 
-                            onClick={handleClickNewDossie} 
-                            className="bg-gray-400 hover:bg-gray-300 text-gray-800 font-medium py-3 px-14 rounded-full shadow-md border border-gray-300 transition-all duration-200 hover:shadow-lg cursor-pointer"
-                        >
-                            Criar novo dossiê
-                        </Button>
+                    {/* Content */}
+                    <div className="p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* New Dossier Card */}
+                            <div className="group cursor-pointer" onClick={handleClickNewDossie}>
+                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-2xl p-6 h-full transition-all duration-300 hover:border-gray-900 hover:shadow-xl hover:scale-105">
+                                    <div className="flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl mb-4 group-hover:bg-gray-800 transition-colors duration-200">
+                                        <Plus className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Criar Novo Dossiê</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Comece do zero e crie um dossiê personalizado com suas próprias seções e critérios de avaliação.
+                                    </p>
+                                </div>
+                            </div>
 
-                        {/* Botão para criar a partir de um modelo existente */}
-                        <Button 
-                            onClick={handleClickUsedDossie} 
-                            className="bg-gray-400 hover:bg-gray-300 text-gray-800 font-medium py-3 px-8 rounded-full shadow-md border border-gray-300 transition-all duration-200 hover:shadow-lg cursor-pointer"
-                        >
-                            Criar a partir de um modelo
-                        </Button>
+                            {/* Template Dossier Card */}
+                            <div className="group cursor-pointer" onClick={handleClickUsedDossie}>
+                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-2xl p-6 h-full transition-all duration-300 hover:border-gray-900 hover:shadow-xl hover:scale-105">
+                                    <div className="flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl mb-4 group-hover:bg-gray-800 transition-colors duration-200">
+                                        <Copy className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Usar Modelo</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Baseie-se em um dossiê existente como modelo para criar um novo com estrutura similar.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-
-                        <DossieTemplateDialog
-                            open={openTemplateDossie}
-                            onClose={()=> setOpenTemplateDossie(false)}
-                        />
+                        {/* Additional info */}
+                        <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                            <p className="text-blue-800 text-sm">
+                                <strong>Dica:</strong> Você pode sempre editar e personalizar seu dossiê depois de criá-lo.
+                            </p>
+                        </div>
                     </div>
+
+                    {/* Footer */}
+                    <div className="bg-gray-50 px-8 py-6 flex justify-end">
+                        <Button 
+                            onClick={onClose}
+                            variant="outline"
+                            className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200"
+                        >
+                            Cancelar
+                        </Button>
+                    </div>
+
+                    <DossieTemplateDialog
+                        open={openTemplateDossie}
+                        onClose={()=> setOpenTemplateDossie(false)}
+                    />
                 </DialogContent>
             </Dialog>
         </>
