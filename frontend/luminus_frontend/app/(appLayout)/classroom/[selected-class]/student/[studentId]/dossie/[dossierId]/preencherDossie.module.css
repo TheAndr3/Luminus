@@ -95,6 +95,16 @@
     border-color: #1565c0;
 }
 
+.exportButtonAvailable {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    border-color: #4CAF50;
+}
+
+.exportButtonAvailable:hover {
+    background-color: #45a049; /* Verde mais escuro no hover */
+}
+
 .exportButton:disabled {
     background-color: #e0e0e0;
     border-color: #bdbdbd;
@@ -228,6 +238,53 @@
     color: #9CA3AF;
 }
 
+.itemInput {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #333;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 200px;
+}
+
+.itemInput:focus {
+    border-color: #3B82F6;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.itemInput::placeholder {
+    color: #9CA3AF;
+}
+
+.itemSelect {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #333;
+    background-color: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 200px;
+    cursor: pointer;
+}
+
+.itemSelect:focus {
+    border-color: #3B82F6;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.itemSelect option {
+    padding: 8px;
+    font-size: 0.95rem;
+}
+
 .itemAnswerDisplay {
     font-size: 0.95rem;
     color: #333;
@@ -248,13 +305,31 @@
     font-size: 1.25rem;
     font-weight: 500;
     color: #333;
-    background-color: #f0f8ff;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
+}
+
+.progressBarContainer {
     margin-top: 1rem;
-    border: 1px solid #b3e0ff;
+}
+
+.progressBar {
+    background-color: #e0e0e0;
+    border-radius: 9999px;
+    height: 10px;
+    width: 100%;
+}
+
+.progressFill {
+    background-color: #4ade80; /* green-400 */
+    height: 10px;
+    border-radius: 9999px;
+    transition: width 0.3s ease-in-out;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
     text-align: center;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
+    padding: 4rem 1rem;
+    font-size: 1.2rem;
+    color: #555;
 } 

@@ -99,13 +99,11 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         });
     }
 
-    // Identifica apenas os tipos de avaliação que foram realmente usados
+    // Mostra TODOS os tipos de avaliação disponíveis, não apenas os usados
     const allMethods = dossierData.evaluation_method.evaluationType;
-    const usedOptionIds = new Set(answerMap.values());
-    const usedMethods = allMethods.filter(method => usedOptionIds.has(method.id));
-
-    // Ordena os métodos usados pelo valor, do maior para o menor
-    usedMethods.sort((a, b) => b.value - a.value);
+    
+    // Ordena todos os métodos pelo valor, do maior para o menor
+    const sortedMethods = [...allMethods].sort((a, b) => b.value - a.value);
 
     const sections = Object.values(dossierData.sections);
     sections.forEach(section => {
@@ -117,8 +115,8 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         html += `<thead>`;
         html += `<tr>`;
         html += `<th>Pergunta</th>`;
-        // O cabeçalho agora só contém as opções usadas
-        usedMethods.forEach(method => {
+        // O cabeçalho agora contém TODAS as opções disponíveis
+        sortedMethods.forEach(method => {
             html += `<th>${method.name} (${method.value})</th>`;
         });
         html += `</tr>`;
@@ -129,18 +127,16 @@ function dossierToHtml(dossierData, studentName, appraisal) {
         questions.forEach(question => {
             const selectedOptionId = answerMap.get(question.id);
             
-            // Só exibe a linha da pergunta se ela foi respondida
-            if (selectedOptionId !== undefined) {
-                html += `<tr>`;
-                html += `<td><p class="question">${question.name}</p></td>`;
-                
-                // Marca 'X' na coluna correspondente
-                usedMethods.forEach(method => {
-                    const isSelected = method.id === selectedOptionId;
-                    html += `<td style="text-align: center; font-size: 28px; font-weight: bold;">${isSelected ? 'X' : ''}</td>`;
-                });
-                html += `</tr>`;
-            }
+            // Exibe a linha da pergunta independentemente de ter sido respondida
+            html += `<tr>`;
+            html += `<td><p class="question">${question.name}</p></td>`;
+            
+            // Marca 'X' na coluna correspondente se foi respondida, senão deixa vazio
+            sortedMethods.forEach(method => {
+                const isSelected = method.id === selectedOptionId;
+                html += `<td style="text-align: center; font-size: 28px; font-weight: bold;">${isSelected ? 'X' : ''}</td>`;
+            });
+            html += `</tr>`;
         });
 
         html += `</tbody>`;
