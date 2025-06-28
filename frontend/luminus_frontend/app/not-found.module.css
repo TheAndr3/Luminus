@@ -1,0 +1,73 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    min-height: 100vh;
+    background-color: var(--background); /* Fundo branco do sistema */
+    color: var(--foreground);
+    padding: 2rem;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.logo {
+    width: 280px;
+    height: auto;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+    animation: float 6s infinite ease-in-out;
+    margin-bottom: 2rem;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.errorCode {
+    font-size: 12rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--foreground); /* Cor preenchida de preto */
+    -webkit-text-stroke: 0; /* Remove o contorno */
+    text-stroke: 0; /* Remove o contorno */
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary); /* Cor primária do sistema */
+    margin-top: 0.5rem;
+}
+
+.message {
+    font-size: 1.125rem;
+    color: var(--muted-foreground);
+    max-width: 450px;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+}
+
+.homeButton {
+    margin-top: 2rem;
+    padding: 0.8rem 2.5rem;
+    background-color: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: 0.625rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.homeButton:hover {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+} 
