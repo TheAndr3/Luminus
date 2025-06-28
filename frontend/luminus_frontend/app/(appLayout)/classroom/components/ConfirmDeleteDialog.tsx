@@ -9,6 +9,7 @@ import {
   AlertDialogAction,
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog"
+import { Trash2, AlertTriangle } from "lucide-react";
 
 // Definição da interface das props do componente
 interface ConfirmDeleteDialogProps {
@@ -31,30 +32,39 @@ export function ConfirmDeleteDialog({
       open={open}               // Controla a visibilidade
       onOpenChange={onCancel}   // Fecha o diálogo quando muda o estado (cancelar)
     >
-      <AlertDialogOverlay className="fixed inset-0 bg-gray-900/40 " />
+      <AlertDialogOverlay className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm" />
       {/* Container do conteúdo (estilizado com fundo vermelho) */}
-      <AlertDialogContent className="bg-[#D72638] text-white  h-45">
+      <AlertDialogContent className="max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200">
         
         {/* Cabeçalho do diálogo */}
-        <AlertDialogHeader>
-          {/* Título com contagem dinâmica de turmas */}
-          <AlertDialogTitle className="text-center text-lg mt-6">
-            Tem certeza que deseja excluir {total} turma(s)?
+        <AlertDialogHeader className="text-center pb-4">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+            </div>
+          </div>
+          <AlertDialogTitle className="text-xl font-bold text-gray-900">
+            Excluir {total > 1 ? `${total} Turmas` : `Turma`}
           </AlertDialogTitle>
+          <p className="text-sm text-gray-600 mt-2">
+            Tem certeza que deseja excluir {total > 1 ? `${total} turmas` : `esta turma`}?
+            Esta ação não pode ser desfeita e todos os dados vinculados serão perdidos.
+          </p>
         </AlertDialogHeader>
 
         {/* Rodapé com botões de ação */}
-        <AlertDialogFooter className="flex justify-center gap-4 mt-4 mx-auto">
+        <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
           {/* Botão de cancelar - estilizado em branco com texto vermelho */}
-          <AlertDialogCancel className="bg-[#D9D9D9] text-lg text-red-600 px-[4vh] py-[2vh] rounded-md">
+          <AlertDialogCancel className="w-full sm:w-auto px-8 py-3 border-gray-300 text-gray-700 bg-gray-300 hover:bg-gray-400 rounded-full font-medium shadow-md border transition-all duration-200 hover:shadow-lg cursor-pointer">
             Cancelar
           </AlertDialogCancel>
 
           {/* Botão de ação principal - estilizado igual mas com handler de confirmação */}
           <AlertDialogAction
             onClick={onConfirm}  // Dispara a função de confirmação
-            className="bg-[#D9D9D9] text-lg text-black px-[6vh] py-[2vh] rounded-md"
+            className="w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium shadow-md border border-red-600 transition-all duration-200 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
           >
+            <Trash2 className="w-4 h-4" />
             Excluir
           </AlertDialogAction>
         </AlertDialogFooter>

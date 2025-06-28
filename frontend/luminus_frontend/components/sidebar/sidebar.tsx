@@ -121,7 +121,7 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-20 flex-col items-center overflow-y-auto border-r border-gray-700 bg-gray-900 py-6"> {/* Increased z-index */}
+    <aside className="fixed inset-y-0 left-0 z-30 flex w-20 flex-col items-center overflow-y-auto rounded-tr-2xl rounded-br-2xl border-r border-gray-700 bg-gray-900 py-6 shadow-[5px_0_15px_-3px_rgba(0,0,0,0.5)]"> {/* Increased z-index */}
       {/* Optional Logo */}
       {/* ... */}
       {/* Main Navigation */}
@@ -200,10 +200,6 @@ const Sidebar = () => {
               <DropdownMenuItem onSelect={() => router.push('/account')} className="cursor-pointer">
                 <CheckCircle className="mr-2 h-4 w-4" />
                 <span>Account</span>
-              </DropdownMenuItem>
-               <DropdownMenuItem onSelect={() => router.push('/notifications')} className="cursor-pointer">
-                <Bell className="mr-2 h-4 w-4" />
-                <span>Notifications</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

@@ -133,7 +133,7 @@ body {
 
 /* --- DossierHeader --- */
 .dossierHeaderContainer {
-  background-color: #7E85C7;
+  background-color: #64748B;
   padding: 15px 20px;
   border-radius: 8px;
   margin-bottom: 25px;
@@ -276,7 +276,7 @@ body {
 
 /* --- Section --- */
 .section_outerContainer {
-  background-color: #7E85C7;
+  background-color: #64748B;
   padding: 15px;
   border-radius: 8px;
   position: relative;
@@ -503,7 +503,6 @@ body {
   cursor: not-allowed;
   background-color: #F4F5F7 !important; /* Garante que o fundo não mude no hover */
   border-color: #DCDFE4 !important; /* Garante que a borda não mude no hover */
-}
-/*.actionSidebarIconVisualBase {
+}/*.actionSidebarIconVisualBase {
   /* Estilos específicos para ícones se necessário */
 /*}*/

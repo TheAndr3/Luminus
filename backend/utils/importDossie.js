@@ -1,14 +1,16 @@
 const fs = require('fs');
 const csv = require('csv-parser');
 const axios = require('axios');
+
 // --- INÍCIO DA CONFIGURAÇÃO ---
 const csvFilePath = 'Dossie.csv'; // Caminho para o seu arquivo CSV
-const apiUrl = 'http://localhost:3000/api/dossier/create'; // URL
-const professorId = 1; //  o ID do professor
+const apiUrl = 'http://localhost:3000/api/dossier/create'; // URL API
+const customUserId = 1; // O ID do usuário (que pode ser professor ou instituição)
 // --- FIM DA CONFIGURAÇÃO ---
 
 const sections = {};
 
+// lendo o arquivo csv
 fs.createReadStream(csvFilePath)
     .pipe(csv())
     .on('data', (row) => {
@@ -23,16 +25,18 @@ fs.createReadStream(csvFilePath)
             };
         }
         sections[sectionName].questions.push({
-            description: row.question_description
+            name: row.question_name, // Novo campo: nome da questão
+            description: row.question_description,
+            evaluationMethodId: parseInt(row.question_evaluation_method_id) // Novo campo: ID do método de avaliação
         });
     })
     .on('end', async() => {
         // Quando a leitura do CSV terminar, monta o objeto final do dossiê
         const dossierData = {
             name: 'Dossiê Importado do CSV',
-            professor_id: professorId,
+            customUserId: customUserId, // Alterado de professor_id para customUserId
             description: 'Este dossiê foi gerado a partir de um arquivo CSV.',
-            evaluation_method: 1,
+            evaluationMethodId: 1, // Alterado de evaluation_method para evaluationMethodId
             sections: Object.values(sections) // Converte o objeto de seções em um array
         };
 

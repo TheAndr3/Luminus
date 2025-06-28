@@ -1,48 +1,73 @@
 const db = require('../bd');
-// Importe o Parser da biblioteca json2csv no início do arquivo
 const { Parser } = require('json2csv');
 
 exports.ExportToCsv = async(req, res) => {
     const dossierId = req.params.id;
 
     try {
-        //  Busca os dados completos do dossiê no banco de dados.
-        //    Estou usando a sua função `pgDossieSelect` que já busca o dossiê com suas seções e questões.
+        // Busca os dados completos do dossiê no banco de dados.
+        // A função `pgDossieSelect` retorna o objeto dossiê diretamente.
         const dossier = await db.pgDossieSelect(dossierId);
 
-
+        // Verifica se o dossiê foi encontrado.
         if (!dossier) {
             return res.status(404).json({ msg: 'Dossiê não encontrado' });
         }
 
-        //  Transforma a estrutura de dados aninhada para uma lista "plana".
-        //    O CSV funciona melhor com uma lista simples de objetos.
+        // Transforma a estrutura de dados aninhada para uma lista "plana".
         const flattenedData = [];
-        dossier.sections.forEach(section => {
-            section.questions.forEach(question => {
-                flattenedData.push({
-                    dossier_nome: dossier.name,
-                    dossier_descricao: dossier.description,
-                    secao_nome: section.name,
-                    secao_peso: section.weigth,
-                    questao_descricao: question.description
-                });
+
+        // Verifica se 'sections' existe antes de iterar, pois pode ser nulo se não houver seções
+        if (dossier.sections) {
+            Object.values(dossier.sections).forEach(section => {
+                // Verifica se 'questions' existe antes de iterar
+                if (section.questions) {
+                    Object.values(section.questions).forEach(question => {
+                        flattenedData.push({
+                            dossier_id: dossier.id, // Adicionado ID do dossiê para referência
+                            dossier_nome: dossier.name,
+                            dossier_descricao: dossier.description,
+                            dossier_evaluation_method_id: dossier.evaluation_method?.id, // Novo campo
+                            secao_id: section.id, // Adicionado ID da seção
+                            secao_nome: section.name,
+                            secao_descricao: section.description, // Novo campo
+                            secao_peso: section.weigth,
+                            questao_id: question.id, // Adicionado ID da questão
+                            questao_nome: question.name, // Novo campo: nome da questão
+                            questao_descricao: question.description || '',
+                            questao_evaluation_method_id: dossier.evaluation_method?.id // Novo campo: ID do método de avaliação da questão
+                        });
+                    });
+                }
             });
-        });
+        }
 
         // Se não houver dados para exportar, retorna uma mensagem.
         if (flattenedData.length === 0) {
             return res.status(200).send('O dossiê não possui seções ou questões para exportar.');
         }
 
-        // Define as colunas do arquivo CSV e converte os dados.
-        const fields = ['dossier_nome', 'dossier_descricao', 'secao_nome', 'secao_peso', 'questao_descricao'];
+        // Define as colunas do arquivo CSV, incluindo os novos campos.
+        const fields = [
+            'dossier_id',
+            'dossier_nome',
+            'dossier_descricao',
+            'dossier_evaluation_method_id',
+            'secao_id',
+            'secao_nome',
+            'secao_descricao',
+            'secao_peso',
+            'questao_id',
+            'questao_nome',
+            'questao_descricao',
+            'questao_evaluation_method_id'
+        ];
         const parser = new Parser({ fields });
         const csv = parser.parse(flattenedData);
 
         // Envia o arquivo CSV como resposta para o navegador.
         res.header('Content-Type', 'text/csv');
-        res.attachment(`dossie-${dossierId}.csv`); // Define o nome do arquivo para download.
+        res.attachment(`dossie-${dossier.name}-${dossierId}.csv`); // Nome do arquivo mais descritivo
         return res.send(csv);
 
     } catch (error) {

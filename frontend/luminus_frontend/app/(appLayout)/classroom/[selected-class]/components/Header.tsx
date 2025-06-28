@@ -55,7 +55,7 @@ export function Header({
     return (
       <div 
       style={{backgroundColor: mainColor,}}
-      className={`content-end rounded h-28 px-4`}>
+      className={`content-end rounded mt-2 mx-10 h-28 px-4`}>
         <div className={`flex justify-between items-center text-white text-[35px] font-bold p-2 px-4`}>
           <div className="flex items-center gap-3">
             <Image src={class_icon} alt="Classroom icon" width={40} height={40} />

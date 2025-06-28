@@ -12,20 +12,18 @@ import {
 import { Trash2, AlertTriangle } from "lucide-react";
 
 // Definição da interface das props do componente
-interface ConfirmDeleteDialogProps {
+interface ConfirmDeletationProps {
   open: boolean          // Controla se o diálogo está aberto ou fechado
   onCancel: () => void   // Função chamada ao cancelar (fechar o diálogo)
   onConfirm: () => void  // Função chamada ao confirmar a exclusão
-  total: number          // Número total de itens/turmas a serem excluídos
 }
 
 // Componente de diálogo de confirmação de exclusão
-export function ConfirmDeleteDialog({
+export function ConfirmDeletation({
   open,
   onCancel,
   onConfirm,
-  total,
-}: ConfirmDeleteDialogProps) {
+}: ConfirmDeletationProps) {
   return (
     // Componente principal do diálogo
     <AlertDialog 
@@ -44,11 +42,10 @@ export function ConfirmDeleteDialog({
             </div>
           </div>
           <AlertDialogTitle className="text-xl font-bold text-gray-900">
-            Excluir {total > 1 ? `${total} Dossiês` : `Dossiê`}
+            Excluir Conta
           </AlertDialogTitle>
           <p className="text-sm text-gray-600 mt-2">
-            Tem certeza que deseja excluir {total > 1 ? `${total} dossiês` : `este dossiê`}?
-            Esta ação não pode ser desfeita e todos os dados vinculados serão perdidos.
+            Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos permanentemente.
           </p>
         </AlertDialogHeader>
 
@@ -65,7 +62,7 @@ export function ConfirmDeleteDialog({
             className="w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium shadow-md border border-red-600 transition-all duration-200 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
-            Excluir
+            Excluir Conta
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

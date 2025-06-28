@@ -36,7 +36,7 @@ exports.Login = async (req, res) => {
             return res.status(403).json({msg:"usuario ainda não confirmou o email, impossivel realizar login"})
         }
         // Comparar a senha desencriptada com o hash salvo
-        const passwordMatch = await bcrypt.compare(decryptedPassword, professor.password); //
+        const passwordMatch = await bcrypt.compare(decryptedPassword, professor.password); 
 
 
         if (!passwordMatch) {

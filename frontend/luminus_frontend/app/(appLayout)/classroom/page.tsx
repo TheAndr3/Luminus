@@ -238,7 +238,7 @@ export default function VizualizationClass() {
           placeholder="Procure pela turma"
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
-          className="border rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
+          className="border bg-[#F5F5F5] border-[#B3B3B3] rounded-full w-[40vw] px-[2vh] py-[1vh] text-[1.5vh]"
         ></BaseInput>
       </div>
 
