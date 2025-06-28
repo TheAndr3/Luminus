@@ -16,14 +16,11 @@ export default function ActionPanel( {onDeleted, toExport} : ActionPanelProps) {
                         onClick={onDeleted}
                 />
             </button>
-            <button className="hover:bg-[#0A2B3D] cursor-pointer p-2 rounded-xl">
+            {/* <button className="hover:bg-[#0A2B3D] cursor-pointer p-2 rounded-xl">
                 <Download className="w-6 h-6 text-white"
                     onClick={toExport}
                 />
-            </button>
-            <button className="hover:bg-[#0A2B3D] cursor-pointer p-2 rounded-xl">
-                <BarChart2 className="w-6 h-6 text-white" />
-            </button>
+            </button> */}
             </div>
         );
     }

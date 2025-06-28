@@ -42,13 +42,12 @@ export function ColoredButton({
         onClick={onClick} 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        className={`${combinedClassName} ${disabled ? 'bg-gray-400' : (isHovered ? hoverColor : mainColor)} ${haveBorder ? 'border' : 'border-transparent'} ${showPointer ? 'cursor-pointer' : 'cursor-default'}`}
         style={{
-            backgroundColor: disabled ? '#A0A0A0' : (isHovered ? hoverColor : mainColor), 
-            borderColor: haveBorder ? (isHovered ? hoverColor : mainColor) : 'transparent', 
             color: textColor,
-            cursor: showPointer ? 'pointer' : 'default',
+            backgroundColor: disabled ? '#A0A0A0' : (isHovered ? (hoverColor.startsWith('#') ? hoverColor : undefined) : (mainColor.startsWith('#') ? mainColor : undefined)),
+            borderColor: haveBorder ? (isHovered ? (hoverColor.startsWith('#') ? hoverColor : undefined) : (mainColor.startsWith('#') ? mainColor : undefined)) : 'transparent',
         }}
-        className={combinedClassName}
         title={title || text}
       >    
         {icon && <span className="flex-shrink-0">{icon}</span>}

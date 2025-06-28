@@ -37,8 +37,7 @@ export default function ActionPanel({
 
   return (
     <div 
-      className="left-4 shadow-lg rounded-xl flex flex-row z-50 w-fit"
-      style={{ backgroundColor: mainColor }}
+      className={`left-4 shadow-lg rounded-xl flex flex-row z-50 w-fit ${mainColor}`}
     >
       
       <ColoredButton
@@ -48,19 +47,6 @@ export default function ActionPanel({
           onClick={onDeleted}
         />
 
-      <ColoredButton
-          mainColor={mainColor}
-          hoverColor={hoverColor}
-          icon={<Download className="w-6 h-6 text-white" color="white" />}
-          onClick={onDownload}
-        />
-
-      <ColoredButton
-          mainColor={mainColor}
-          hoverColor={hoverColor}
-          icon={<BarChart2 className="w-6 h-6 text-white" color="white" />}
-          onClick={onViewChart}
-        />
     </div>
   );
 }

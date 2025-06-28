@@ -188,8 +188,7 @@ export default function ListStudents({
         <tbody>
           {showInlineAddStudent && (
             <tr  
-              className="text-white border-b border-gray-700"
-              style={{ backgroundColor: mainColor || '#111827' }}
+              className={`text-white border-b border-gray-700 ${mainColor}`}
             >
               <td className="px-4 py-3 w-12"></td>
               <td className="w-10 px-5 py-3 text-left">
@@ -253,8 +252,8 @@ export default function ListStudents({
               onClick={() => handleRowClick(student.matricula)}
               className={`text-white transition-all duration-300 ease-in-out border-b border-gray-700
                 ${hovered === student.matricula ? 'bg-opacity-40' : 'bg-opacity-20'}
-                ${associatedDossier && editingId !== student.matricula ? 'cursor-pointer' : 'cursor-default'}`}
-              style={{ backgroundColor: hovered === student.matricula ? hoverColor : mainColor }}
+                ${associatedDossier && editingId !== student.matricula ? 'cursor-pointer' : 'cursor-default'}
+                ${hovered === student.matricula ? hoverColor : mainColor}`}
             >
               <td className="w-12 px-4 py-3">
                 <input

@@ -13,6 +13,7 @@ export function Header({
   title, 
   mainColor, 
   hoverColor,
+  originalColor,
   classroomId,
   associatedDossier,
   onDossierAssociated
@@ -20,6 +21,7 @@ export function Header({
   title: string; 
   mainColor?: string; 
   hoverColor?: string;
+  originalColor?: string;
   classroomId?: number | null;
   associatedDossier?: { id: number; name: string } | null;
   onDossierAssociated?: (dossierId: number) => void;
@@ -54,8 +56,7 @@ export function Header({
 
     return (
       <div 
-      style={{backgroundColor: mainColor,}}
-      className={`content-end rounded mt-2 mx-10 h-28 px-4`}>
+      className={`content-end rounded mt-2 mx-10 h-28 px-4 ${mainColor}`}>
         <div className={`flex justify-between items-center text-white text-[35px] font-bold p-2 px-4`}>
           <div className="flex items-center gap-3">
             <Image src={class_icon} alt="Classroom icon" width={40} height={40} />
@@ -67,20 +68,20 @@ export function Header({
                 {/* Show dossier name button if associated, otherwise show "Nenhum dossiê associado" */}
                 {associatedDossier ? (
                   <ColoredButton
-                    mainColor="white"
-                    hoverColor="gray-100"
+                    mainColor="#ffffff"
+                    hoverColor="#f3f4f6"
                     text={associatedDossier.name}
-                    icon={<Folder size={18} color={mainColor} />}
+                    icon={<Folder size={18} color={originalColor} />}
                     haveBorder={false}
-                    textColor={mainColor}
+                    textColor={originalColor}
                     title={associatedDossier.name}
                     className="min-w-[14.2rem] max-w-[14.2rem] justify-center"
                     showPointer={false}
                   />
                 ) : (
                   <ColoredButton
-                    mainColor="white"
-                    hoverColor="gray-100"
+                    mainColor="#ffffff"
+                    hoverColor="#f3f4f6"
                     text="Nenhum dossiê associado"
                     icon={<Folder size={18} color="#888" />}
                     haveBorder={false}
@@ -91,12 +92,12 @@ export function Header({
                 )}
               </div>
               <ColoredButton
-                mainColor={mainColor}
-                hoverColor={hoverColor}
+                mainColor="bg-gray-900"
+                hoverColor="bg-gray-800"
                 text={''}  
                 icon={<Edit size={25}/>} 
-                haveBorder={true}
-                className="ml-50 mt-6"
+                haveBorder={false}
+                className="ml-50 mt-6 border border-gray-900"
                 onClick={() => setShowEditModal(true)}
               ></ColoredButton>
             </div>

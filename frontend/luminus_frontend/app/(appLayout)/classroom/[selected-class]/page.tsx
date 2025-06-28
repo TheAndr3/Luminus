@@ -49,8 +49,9 @@ export default function VisualizacaoAlunos() {
   const params = useParams();
   const classroomId = params['selected-class'] as string;
 
-  const color = "#311e45";
-  const hoverColor = darkenHexColor(color, 25);
+  const color = "bg-gray-900";
+  const hoverColor = "bg-gray-800";
+  const originalColor = "#311e45"; // Original hex color for dossier name
   const [classTitle, setClassTitle] = useState("Carregando Turma..."); // Tornar dinâmico
 
   // const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Se não usar grid, pode remover
@@ -526,6 +527,7 @@ export default function VisualizacaoAlunos() {
           title={classTitle} 
           mainColor={color} 
           hoverColor={hoverColor}
+          originalColor={originalColor}
           classroomId={currentTurmaId}
           associatedDossier={associatedDossier}
           onDossierAssociated={handleDossierAssociated}
