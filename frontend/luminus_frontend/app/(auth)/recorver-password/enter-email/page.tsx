@@ -1,3 +1,4 @@
+'use client'
 import Image from 'next/image';
 import logoLuminus from '@/app/Image/logoLuminus.svg';
 import style from '@/app/recorver-password/enter-email/page.module.css';
@@ -13,7 +14,6 @@ export default function enterEmail(){
 
     //função para mandar email para API 
     async function emailtoAPI(formData: FormData){
-        "use server"
         const email = formData.get("email")?.toString();
 
 

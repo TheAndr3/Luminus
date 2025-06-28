@@ -1,3 +1,4 @@
+'use client'
 import Image from "next/image";
 import logoimg from "@/app/Image/logoLuminus.svg"
 import style from "./page.module.css";
