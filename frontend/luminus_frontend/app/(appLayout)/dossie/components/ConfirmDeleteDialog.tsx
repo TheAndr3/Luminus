@@ -16,7 +16,8 @@ interface ConfirmDeleteDialogProps {
   open: boolean          // Controla se o diálogo está aberto ou fechado
   onCancel: () => void   // Função chamada ao cancelar (fechar o diálogo)
   onConfirm: () => void  // Função chamada ao confirmar a exclusão
-  total: number          // Número total de itens/turmas a serem excluídos
+  total: number          // Número total de itens a serem excluídos
+  type?: 'classroom' | 'student' | 'dossier' // Tipo de item sendo excluído
 }
 
 // Componente de diálogo de confirmação de exclusão
@@ -25,7 +26,33 @@ export function ConfirmDeleteDialog({
   onCancel,
   onConfirm,
   total,
+  type = 'dossier',
 }: ConfirmDeleteDialogProps) {
+  // Função para obter o texto correto baseado no tipo
+  const getItemText = () => {
+    switch (type) {
+      case 'student':
+        return total > 1 ? `${total} Alunos` : 'Aluno';
+      case 'dossier':
+        return total > 1 ? `${total} Dossiês` : 'Dossiê';
+      case 'classroom':
+      default:
+        return total > 1 ? `${total} Turmas` : 'Turma';
+    }
+  };
+
+  const getItemTextLower = () => {
+    switch (type) {
+      case 'student':
+        return total > 1 ? `${total} alunos` : 'este aluno';
+      case 'dossier':
+        return total > 1 ? `${total} dossiês` : 'este dossiê';
+      case 'classroom':
+      default:
+        return total > 1 ? `${total} turmas` : 'esta turma';
+    }
+  };
+
   return (
     // Componente principal do diálogo
     <AlertDialog 
@@ -44,10 +71,10 @@ export function ConfirmDeleteDialog({
             </div>
           </div>
           <AlertDialogTitle className="text-xl font-bold text-gray-900">
-            Excluir {total > 1 ? `${total} Dossiês` : `Dossiê`}
+            Excluir {getItemText()}
           </AlertDialogTitle>
           <p className="text-sm text-gray-600 mt-2">
-            Tem certeza que deseja excluir {total > 1 ? `${total} dossiês` : `este dossiê`}?
+            Tem certeza que deseja excluir {getItemTextLower()}?
             Esta ação não pode ser desfeita e todos os dados vinculados serão perdidos.
           </p>
         </AlertDialogHeader>
