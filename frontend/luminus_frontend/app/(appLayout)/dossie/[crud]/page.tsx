@@ -1084,7 +1084,7 @@ const DossierAppPage: React.FC = () => {
               descriptionTextClassName={styles.dossierHeader_descriptionTextDisplay}
               descriptionTextareaClassName={styles.dossierHeader_descriptionTextarea}
               evaluationAndSettingsClassName={styles.dossierHeader_evaluationAndSettings}
-              settingsButtonClassName={styles.dossierHeader_settingsButton}
+              settingsButtonClassName={`${styles.pageHeader_backButton} ${styles.dossierHeader_settingsButton}`}
               settingsButtonIconClassName={styles.pageHeader_backIcon} 
             />
             <SectionList
