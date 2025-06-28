@@ -230,7 +230,7 @@ export default function DialogPage() {
                                     <Button
                                         type="button"
                                         onClick={() => fileInputRefModal.current?.click()}
-                                        className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-4 py-2 h-12 flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer"
+                                        className="h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full px-6 py-3 shadow-md border border-gray-700 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                                     >
                                         <Upload size={16} />
                                         Selecionar CSV
@@ -241,7 +241,7 @@ export default function DialogPage() {
                                             variant="ghost"
                                             size="sm"
                                             onClick={resetModalCsvState}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200"
+                                            className="h-10 text-base font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full px-3 py-2 shadow-md border border-red-200 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                                         >
                                             <X size={16} />
                                         </Button>
@@ -261,14 +261,14 @@ export default function DialogPage() {
                         <Button 
                             onClick={() => setOpen(false)}
                             variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl px-6 py-3 h-12 font-medium transition-all duration-200 cursor-pointer"
+                            className="h-12 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-6 py-3 shadow-md border transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer"
                         >
                             Cancelar
                         </Button>
                         <Button 
                             onClick={handleClick} 
                             disabled={save}
-                            className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-8 py-3 h-12 font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full px-8 py-3 shadow-md border border-gray-700 transition-all duration-200 hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {messageButton}
                         </Button>
