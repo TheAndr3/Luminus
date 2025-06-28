@@ -26,7 +26,7 @@ export default function VizualizationClass() {
   //   selected: false,
   // }));
   
-  const [visualization, setVisualization] = useState<'grid' | 'list'>('list'); // Modo de visualização
+  const [visualization, setVisualization] = useState<'grid' | 'list'>('grid'); // Modo de visualização
   const [classi, setClassi] = useState<Classroom[]>([]); // Lista de turmas
   const [currentPage, setCurrentPage] = useState(1); // Paginação
   const turmasPorPagina = 6; // Itens por página (fixed at 6)
@@ -44,7 +44,16 @@ export default function VizualizationClass() {
   const [messageErro, setMessageErro] = useState(""); //inserir mensagem de erro do dialog
   const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
   
-  
+  useEffect(() => {
+    const savedVisualization = localStorage.getItem('classVisualization') as 'grid' | 'list' | null;
+    if (savedVisualization) {
+      setVisualization(savedVisualization);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('classVisualization', visualization);
+  }, [visualization]);
 
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(totalItems / turmasPorPagina);
