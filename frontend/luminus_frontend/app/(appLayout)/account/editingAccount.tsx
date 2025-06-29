@@ -9,8 +9,8 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useEffect, useState, useCallback } from "react";
-import { User, Lock, X } from "lucide-react";
+import { useEffect, useState } from "react"; // CORREÇÃO: 'useCallback' removido
+import { User, Lock } from "lucide-react"; // CORREÇÃO: 'X' removido
 import { ErroMessageDialog } from "../classroom/components/erroMessageDialog";
 import { updateProfile } from "@/services/profileService";
 
@@ -98,10 +98,12 @@ export default function EditingAccount({
       if (onUpdateSuccess) {
         onUpdateSuccess();
       }
-    } catch (err: any) {
-      setMessageErro(
-        err.message || "Impossível salvar os dados editados. Por favor, tente novamente!"
-      );
+    } catch (err: unknown) { // CORREÇÃO: trocado 'any' por 'unknown' e adicionada verificação
+      let errorMessage = "Impossível salvar os dados editados. Por favor, tente novamente!";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setMessageErro(errorMessage);
       setMissingDialog(true);
     } finally {
       setSave(false);
