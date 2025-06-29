@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 // Importa o componente de botão customizado do projeto.
 
 import { 
-    Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, 
-    DialogHeader, DialogOverlay, DialogTitle, DialogTrigger 
+    Dialog, DialogContent, DialogDescription, DialogFooter, 
+    DialogHeader, DialogOverlay, DialogTitle 
 } from "@/components/ui/dialog"; 
 // Importa os componentes relacionados ao Dialog (modal) da biblioteca de UI do projeto.
 
-import { use, useEffect, useState } from "react"; 
+import { useEffect, useState } from "react"; 
 // Importa hooks do React. 
 
 import { Folder, Download } from "lucide-react"; 
@@ -25,12 +25,11 @@ interface ExportDownloadDialogProps {
     IdToExport: number[]
     onClose: () => void;  // Função chamada quando o modal deve ser fechado.
     description: string,
-    typeOfData: string,
     dossies: Dossie[] // Lista completa de dossiês para mostrar os selecionados
 }
 
 // Componente principal que representa o modal de exportação de dossiês.
-export default function ExportDownloadDialog({ open, IdToExport, onClose, description, typeOfData, dossies }: ExportDownloadDialogProps) {
+export default function ExportDownloadDialog({ open, IdToExport, onClose, description, dossies }: ExportDownloadDialogProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>("");
 
@@ -70,8 +69,12 @@ export default function ExportDownloadDialog({ open, IdToExport, onClose, descri
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
             }
-        } catch (error: any) {
-            setError(error.message || "Erro ao exportar o(s) dossiê(s)");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError("Erro ao exportar o(s) dossiê(s)");
+            }
         } finally {
             setIsLoading(false);
         }

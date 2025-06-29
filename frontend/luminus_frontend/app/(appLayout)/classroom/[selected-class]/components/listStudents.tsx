@@ -126,9 +126,13 @@ export default function ListStudents({
       setEditedData({});
       
       refreshStudents();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao atualizar estudante:', error);
-      alert(error.message || 'Erro ao atualizar estudante');
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('Erro ao atualizar estudante');
+      }
     }
   };
 
