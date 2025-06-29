@@ -53,7 +53,7 @@ describe('professorController', () => {
     };
   });
 
-  // --- Testes para cada função ---
+  // Testes para cada função
 
   // Exemplo de teste para GetPublicKey
   describe('GetPublicKey', () => {
@@ -140,8 +140,8 @@ describe('professorController', () => {
       mockReq.body = { customUserEmail: 'newuser@example.com', password: 'pass', name: 'New User' };
       decryptPassword.mockResolvedValue('pass');
       hashPassword.mockResolvedValue('hashedPass');
-      db.pgSelect.mockResolvedValueOnce([]).mockResolvedValueOnce([]); // Primeiro para verificar e-mail, segundo para códigos antigos
-      db.pgInsert.mockResolvedValueOnce({ rows: [{ id: 100 }] }).mockResolvedValueOnce({}); // Para CustomUser e VerifyCode
+      db.pgSelect.mockResolvedValueOnce([]).mockResolvedValueOnce([]); //Primeiro para verificar e-mail, segundo para códigos antigos
+      db.pgInsert.mockResolvedValueOnce({ rows: [{ id: 100 }] }).mockResolvedValueOnce({}); //Para CustomUser e VerifyCode
       emailSender.sendEmail.mockReturnValue(true);
       jwt.sign.mockReturnValue('mockedToken');
 
@@ -156,8 +156,8 @@ describe('professorController', () => {
         name: 'New User',
         role: 'unknow',
       });
-      expect(emailSender.sendEmail).toHaveBeenCalled(); // Verifica se o e-mail foi enviado
-      expect(jwt.sign).toHaveBeenCalled(); // Verifica se o token foi gerado
+      expect(emailSender.sendEmail).toHaveBeenCalled(); //Verifica se o e-mail foi enviado
+      expect(jwt.sign).toHaveBeenCalled(); //Verifica se o token foi gerado
       expect(db.pgInsert).toHaveBeenCalledWith(
         'verifyCode',
         expect.objectContaining({ customUserId: 100, status: 0 }),
@@ -175,7 +175,7 @@ describe('professorController', () => {
 
     test('deve retornar status 409 se o e-mail já estiver cadastrado', async () => {
       mockReq.body = { customUserEmail: 'existing@example.com', password: 'pass', name: 'Existing User' };
-      db.pgSelect.mockResolvedValue([{ id: 1, email: 'existing@example.com' }]); // E-mail já existe
+      db.pgSelect.mockResolvedValue([{ id: 1, email: 'existing@example.com' }]); //E-mail já existe
 
       await professorController.Create(mockReq, mockRes);
 
@@ -187,9 +187,9 @@ describe('professorController', () => {
       mockReq.body = { customUserEmail: 'db_error@example.com', password: 'pass', name: 'DB Error User' };
       decryptPassword.mockResolvedValue('pass');
       hashPassword.mockResolvedValue('hashedPass');
-      db.pgSelect.mockResolvedValueOnce([]).mockResolvedValueOnce([]); // Email não existe, sem códigos antigos
-      db.pgInsert.mockResolvedValueOnce({ rows: [{ id: 101 }] }); // Inserção de CustomUser
-      db.pgInsert.mockRejectedValueOnce(new Error('Failed to insert verifyCode')); // Erro ao inserir VerifyCode
+      db.pgSelect.mockResolvedValueOnce([]).mockResolvedValueOnce([]); //Email não existe, sem códigos antigos
+      db.pgInsert.mockResolvedValueOnce({ rows: [{ id: 101 }] }); //Inserção de CustomUser
+      db.pgInsert.mockRejectedValueOnce(new Error('Failed to insert verifyCode')); //Erro ao inserir VerifyCode
       emailSender.sendEmail.mockReturnValue(true);
       jwt.sign.mockReturnValue('mockedToken');
 
