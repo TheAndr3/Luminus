@@ -1,34 +1,32 @@
 "use client"
-import { ImportCSVButton } from "@/components/button-csv/import-csv-button"; // Importa o botão para importar CSV
-import { BaseInput } from "@/components/inputs/BaseInput"; // Importa o componente de input customizado
-import { Button } from "@/components/ui/button"; // Importa o botão customizado
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog"; // Importa componentes do Dialog
-import { use, useState, useRef } from "react"; // Importa hooks do React
+// CORREÇÃO: Import 'ImportCSVButton' removido pois não era utilizado.
+import { BaseInput } from "@/components/inputs/BaseInput";
+import { Button } from "@/components/ui/button";
+// CORREÇÃO: Componentes não utilizados do Dialog ('DialogClose', 'DialogDescription', etc.) foram removidos.
+import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "@/components/ui/dialog"; 
+// CORREÇÃO: Hook 'use' removido pois não era utilizado.
+import { useState, useRef } from "react"; 
 import { toast } from 'react-hot-toast';
 
 import { Pencil, Plus, Upload, X } from "lucide-react";
-import dark_class_icon from "@/components/icon/dark_icon_classroom.svg" // Importa o ícone da turma em formato SVG
-import Image from "next/image"; // Importa o componente Image do Next.js para usar imagens de forma otimizada
-import { CreateClassroom} from "@/services/classroomServices";
+import dark_class_icon from "@/components/icon/dark_icon_classroom.svg";
+import Image from "next/image";
+// CORREÇÃO: Importações combinadas para melhor organização.
+import { CreateClassroom, CreateClassroomWithCSV } from "@/services/classroomServices";
 import { ErroMessageDialog } from "./erroMessageDialog";
-import { CreateClassroomWithCSV } from "@/services/classroomServices";
-
-
-
 
 export default function DialogPage() {
-    const [save, setSave] = useState(false); // Estado para controlar se os dados estão sendo salvos
+    const [save, setSave] = useState(false);
+    const [open, setOpen] = useState(false);
 
-    const [open, setOpen] = useState(false); // Estado para controlar se o dialog está aberto ou fechado
+    const [inputDisc, setInputDisc] = useState('');
+    const [inputInst, setinputInst] = useState('');
+    const [inputPer, setInputPer] = useState('');
 
-    // Estados para armazenar os valores dos inputs
-    const [inputDisc, setInputDisc] = useState('') // Estado para armazenar o valor do input Disciplina
-    const [inputInst, setinputInst] = useState('') // Estado para armazenar o valor do input Instituição
-    const [inputPer, setInputPer] = useState('') // Estado para armazenar o valor do input Período
-
-    let title = ""
-    const [titulo, setTitulo] = useState(title) // Estado para armazenar o título (nome da turma)
-    const [editing, setEditing] = useState(false); // Estado para controlar se o título está sendo editado
+    // CORREÇÃO: Trocado 'let' por 'const' pois 'title' nunca é reatribuído.
+    const title = "";
+    const [titulo, setTitulo] = useState(title);
+    const [editing, setEditing] = useState(false);
 
     const [missingDialog, setMissingDialog] = useState(false);
     const [messageErro, setMessageErro] = useState("");
@@ -37,17 +35,15 @@ export default function DialogPage() {
 
     const [csvFileToUpload, setCsvFileToUpload] = useState<File | null>(null);
     const [csvFileName, setCsvFileName] = useState<string>("Nenhum arquivo selecionado");
-    const fileInputRefModal = useRef<HTMLInputElement | null>(null); // Corrigido para useRef
+    const fileInputRefModal = useRef<HTMLInputElement | null>(null);
 
-
-    // Função que reseta os campos dos inputs quando o dialog é fechado
     const handleDialogClose = () => {
-        setInputDisc(''); // Reseta o valor do input Disciplina
-        setInputPer(''); // Reseta o valor do input Período
-        setinputInst(''); // Reseta o valor do input Instituição
-        setTitulo(title); // Reseta o título para o valor padrão
+        setInputDisc('');
+        setInputPer('');
+        setinputInst('');
+        setTitulo(title);
         resetModalCsvState();
-        setEditing(false); // Adicionado para resetar o modo de edição do título
+        setEditing(false);
         setMessageButton("Criar Turma");
     }
 
@@ -69,7 +65,6 @@ export default function DialogPage() {
         }
     };
 
-     // Função para limpar os estados do CSV no modal
     const resetModalCsvState = () => {
         setCsvFileToUpload(null);
         setCsvFileName("Nenhum arquivo selecionado");
@@ -78,21 +73,17 @@ export default function DialogPage() {
         }
     };
 
-    // Função chamada ao clicar no botão de "Concluir"
     const handleClick = async () => {
-        setSave(true); // Marca que o salvamento está em andamento
-        setMessageButton("Criando..."); // Atualiza o texto do botão
+        setSave(true);
+        setMessageButton("Criando...");
 
         try {
-            // Obtém o ID do professor do localStorage
             const customUserId = localStorage.getItem('professorId');
             if (!customUserId) {
                 throw new Error('ID do professor não encontrado');
             }
 
-            // Verifica se há um arquivo CSV para upload
             if (csvFileToUpload) {
-                // Cria a turma com o arquivo CSV
                 const formData = new FormData();
                 formData.append('csvfile', csvFileToUpload);
                 formData.append('customUserId', customUserId);
@@ -108,12 +99,10 @@ export default function DialogPage() {
                     window.location.reload();
                 }
             } else {
-                // Verifica se os campos obrigatórios estão preenchidos para criação sem CSV
-                if (!inputDisc || !inputPer || titulo === title) {
+                if (!inputDisc || !inputPer || !titulo) { // Verificação melhorada
                     throw new Error("Por favor, preencha todos os campos obrigatórios!");
                 }
 
-                // Cria a turma sem o arquivo CSV
                 const newClassData = {
                     customUserId: Number(customUserId),
                     name: titulo,
@@ -129,21 +118,23 @@ export default function DialogPage() {
                     window.location.reload();
                 }
             }
-        } catch (err: any) {
-            setMessageErro(err.message || "Impossível salvar os dados. Por favor, tente novamente!");
+        } catch (err: unknown) { // CORREÇÃO: Trocado 'any' por 'unknown' com verificação de tipo.
+            let errorMessage = "Impossível salvar os dados. Por favor, tente novamente!";
+            if (err instanceof Error) {
+                errorMessage = err.message;
+            }
+            setMessageErro(errorMessage);
             setMissingDialog(true);
             setMessageButton("Criar Turma");
         }
     }
     
-
     return (
         <>
-            {/* Componente Dialog */}
             <Dialog open={open} onOpenChange={(isOpen) => {
-                setOpen(isOpen); // Atualiza o estado de "open" ao mudar a visibilidade do dialog
+                setOpen(isOpen);
                 if (!isOpen) {
-                    handleDialogClose(); // Chama a função para resetar os campos quando o dialog é fechado
+                    handleDialogClose();
                 }
             }}>
                 <DialogTrigger asChild>
@@ -152,12 +143,11 @@ export default function DialogPage() {
                         Adicionar turma
                     </div>
                 </DialogTrigger>
-                <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" /> {/* Overlay com fundo e desfoque */}
+                <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
 
                 <DialogContent className="max-w-4xl bg-white rounded-3xl text-gray-900 border-0 shadow-2xl p-0 overflow-hidden">
                     <DialogTitle className="sr-only">Criar Nova Turma</DialogTitle>
 
-                    {/* Header with gradient background */}
                     <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 relative">
                         <div className="flex items-center gap-4">
                             <div className="bg-white p-3 rounded-2xl shadow-lg">
@@ -182,7 +172,6 @@ export default function DialogPage() {
                         </div>
                     </div>
 
-                    {/* Form content */}
                     <div className="p-8 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
@@ -190,8 +179,8 @@ export default function DialogPage() {
                                 <BaseInput 
                                     className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
                                     placeholder="Ex: EXA 702 - TPO1" 
-                                    value={inputDisc} // Valor do input Disciplina
-                                    onChange={(e) => setInputDisc(e.target.value)} // Atualiza o valor do input
+                                    value={inputDisc}
+                                    onChange={(e) => setInputDisc(e.target.value)}
                                 />
                             </div>
 
@@ -200,8 +189,8 @@ export default function DialogPage() {
                                 <BaseInput
                                     className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
                                     placeholder="Insira o nome da instituição"
-                                    value={inputInst} // Valor do input Instituição
-                                    onChange={(e) => setinputInst(e.target.value)} // Atualiza o valor do input
+                                    value={inputInst}
+                                    onChange={(e) => setinputInst(e.target.value)}
                                 />
                             </div>
 
@@ -211,8 +200,8 @@ export default function DialogPage() {
                                     className="w-full h-12 text-gray-900 font-medium bg-gray-50 border border-gray-200 rounded-xl px-4 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/20 transition-all duration-200"
                                     placeholder="23.2"
                                     type="number"
-                                    value={inputPer} // Valor do input Período
-                                    onChange={(e) => setInputPer(e.target.value)} // Atualiza o valor do input
+                                    value={inputPer}
+                                    onChange={(e) => setInputPer(e.target.value)}
                                 />
                             </div>
 
@@ -256,7 +245,6 @@ export default function DialogPage() {
                         </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="bg-gray-50 px-8 py-6 flex justify-end gap-4">
                         <Button 
                             onClick={() => setOpen(false)}
