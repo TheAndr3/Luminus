@@ -86,11 +86,20 @@ export default function Account() {
 
   const DeleteProfile = async (userId: number) => {
     try {
+      // Supondo que deleteProfile retorne um objeto com uma propriedade 'message'
       const response = await deleteProfile(userId);
       console.log("Conta excluída com sucesso:", response.message);
-      router.push("/login"); 
-    } catch (error: any) {
-      console.error("Erro ao excluir perfil:", error.message);
+      router.push("/login");
+    } catch (error: unknown) { // CORREÇÃO: trocado 'any' por 'unknown' e adicionada verificação
+      let errorMessage = "Erro desconhecido ao excluir perfil.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+        errorMessage = (error as { message: string }).message;
+      }
+      console.error("Erro ao excluir perfil:", errorMessage);
+      setMessageDialog(`Erro ao excluir perfil: ${errorMessage}`);
+      setOpenMessage(true);
     }
   };
 
@@ -274,4 +283,4 @@ export default function Account() {
       />
     </div>
   );
-} 
+}
