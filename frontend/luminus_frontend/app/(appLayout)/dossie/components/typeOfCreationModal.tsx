@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 // Importa o componente de botão customizado do projeto.
 
 import { 
-    Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, 
-    DialogHeader, DialogOverlay, DialogTitle, DialogTrigger 
+    Dialog, DialogContent, DialogOverlay, DialogTitle 
 } from "@/components/ui/dialog"; 
 // Importa os componentes relacionados ao Dialog (modal) da biblioteca de UI do projeto.
 
