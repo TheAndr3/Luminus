@@ -15,7 +15,6 @@ import {
  * @prop {boolean} open - Controla a visibilidade do diálogo
  * @prop {() => void} onCancel - Callback acionado ao cancelar a ação
  * @prop {() => void} onConfirm - Callback acionado ao confirmar a ação
- * @prop {number} total - Quantidade total de itens selecionados
  * @prop {string} [title] - Título opcional da turma (para single selection)
  * @prop {string} [code] - Código opcional da turma (para single selection)
  * @prop {string} description - Descrição principal da ação
@@ -24,7 +23,8 @@ interface ArchiveConfirmationProps {
   open: boolean
   onCancel: () => void
   onConfirm: () => void
-  total: number
+  // CORREÇÃO: A prop 'total' foi removida pois não estava sendo utilizada.
+  // total: number 
   title?: string
   code?: string
   description: string
@@ -32,7 +32,7 @@ interface ArchiveConfirmationProps {
 
 /**
  * Componente de diálogo para confirmação de arquivamento
- * - Exibe mensagem contextual (diferente para single/multi selection)
+ * - Exibe mensagem contextual
  * - Oferece ações de cancelar ou confirmar
  * - Estilizado com tema vermelho para ações destrutivas
  */
@@ -40,11 +40,10 @@ export function ArchiveConfirmation({
   open,
   onCancel,
   onConfirm,
-  total,
   title,
   code,
   description
-}: ArchiveConfirmationProps) {
+}: ArchiveConfirmationProps) { // CORREÇÃO: 'total' removido dos argumentos.
   return (
     // Componente base do AlertDialog
     <AlertDialog 
