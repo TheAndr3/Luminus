@@ -7,7 +7,7 @@ import class_icon from "@/components/icon/icon_classroom.svg"
 import Image from "next/image";
 import { useEffect, useState } from 'react';
 import ActionPanel from './actionPanel';
-import {Download, Pencil, Trash } from 'lucide-react';
+import { Download, Pencil, Trash } from 'lucide-react';
 import EditClassModal from './editClassModal';
 import { useRouter } from 'next/navigation';
 
@@ -21,10 +21,10 @@ type GridclassroomsProps = {
   setCurrentPage: (page: number) => void;
   visualization: string
   setVisualization: (set: 'grid' | 'list') => void;
-
   onDeleteClass: () => void;
-  toArchiveClass: () => void;
-  toExportClass: () => void;
+  // CORREÇÃO: Removidas props 'toArchiveClass' e 'toExportClass' pois não eram utilizadas neste componente.
+  // toArchiveClass: () => void;
+  toExportClass: () => void; // Mantida pois é usada no botão de download individual
 };
 
 export default function Gridclassrooms({
@@ -38,37 +38,23 @@ export default function Gridclassrooms({
   visualization,
   setVisualization,
   onDeleteClass,
-  toArchiveClass,
-  toExportClass
-
+  toExportClass, // Mantida
+  // CORREÇÃO: 'toArchiveClass' removida dos argumentos.
 }: GridclassroomsProps) {
 
   const [hasSelected, setHasSelected] = useState(false);
-  // Estado que armazena o id da turma que está sendo "hovered" (mouse sobre ela)
   const [hovered, setHovered] = useState<number | null>(null);
-
-    // Estado para controlar a abertura do modal de edição
   const [openEditingModal, setOpenEditingModal] = useState(false);
-
-  // Estado que guarda a turma atualmente sendo editada (ou null se nenhuma)
   const [editingClassroom, setEditingClassroom] = useState<Classroom | null>(null);
-
   const [lockHover, setLockHover] = useState(false)
-
   const router = useRouter()
 
-    // Efeito que verifica sempre que a lista de classrooms muda
-    // para atualizar o estado hasSelected
-    useEffect(() => {
-      // Verifica se existe pelo menos uma classroom selecionada
-      setHasSelected(classrooms.some(classroom => classroom.selected));
-    }, [classrooms]); // Executa sempre que o array de classrooms mudar
-
+  useEffect(() => {
+    setHasSelected(classrooms.some(classroom => classroom.selected));
+  }, [classrooms]);
 
   const handleClickPageStudent = (id: number) => {
-
     router.push(`/classroom/${id}`)
-    //pesquisar sobre cache que mano maike falou
   }
 
   return (
@@ -99,8 +85,8 @@ export default function Gridclassrooms({
         {classrooms.map((classroom) => (
           <div
             key={classroom.id}
-            onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}  // Marca a turma como "hovered" quando o mouse passar por cima
-            onMouseLeave={() =>!lockHover && setHovered(null)}  // Remove o "hovered" quando o mouse sair da linha
+            onMouseEnter={() =>!lockHover &&setHovered(classroom.id)}
+            onMouseLeave={() =>!lockHover && setHovered(null)}
             className="bg-gray-900 text-white rounded-lg p-4 shadow-md flex flex-col justify-between h-48 cursor-pointer hover:brightness-110"
             onClick={() => handleClickPageStudent(classroom.id)}
           >
@@ -176,7 +162,6 @@ export default function Gridclassrooms({
         />
       </div>
 
-      {/* Modal de edição da turma */}
       {editingClassroom && (
         <EditClassModal
           open={openEditingModal}
@@ -196,10 +181,10 @@ export default function Gridclassrooms({
       )}
 
       <div className="relative">
-        {/* Painel de ações que aparece apenas quando há classrooms selecionadas */}
         {hasSelected && (
           <div className="absolute bottom-1 left">
-            <ActionPanel onDeleted={onDeleteClass} toExport={toExportClass}/>
+            {/* CORREÇÃO: Removida a prop 'toExport' que não é mais aceita por ActionPanel */}
+            <ActionPanel onDeleted={onDeleteClass} />
           </div>
         )}
       </div>
