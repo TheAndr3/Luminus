@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+// CORREÇÃO: As importações de 'Image', 'Button' e 'Plus' foram removidas pois não eram utilizadas.
 import { useEffect, useState } from "react";
 import { GetProfile } from '@/services/professorService';
 
@@ -13,12 +11,14 @@ interface Professor {
   role: string;
 }
 
-type TabType = "recent" | "archived" | null;
+// CORREÇÃO: O tipo 'TabType' foi removido pois o estado que o usava foi removido.
+// type TabType = "recent" | "archived" | null;
 
 export default function Home() {
   const [professor, setProfessor] = useState<Professor | null>(null);
-  const [selectedTab, setSelectedTab] = useState<TabType>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // CORREÇÃO: Os estados 'selectedTab' e 'isLoading' foram removidos pois não eram utilizados.
+  // const [selectedTab, setSelectedTab] = useState<TabType>(null);
+  // const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfessorData = async () => {
@@ -36,9 +36,11 @@ export default function Home() {
           email: "",
           role: ""
         });
-      } finally {
-        setIsLoading(false);
       }
+      // CORREÇÃO: A chamada a setIsLoading foi removida.
+      // finally {
+      //   setIsLoading(false);
+      // }
     };
 
     fetchProfessorData();
@@ -52,7 +54,7 @@ export default function Home() {
         <div className="text-center mb-4 flex-shrink-0">
           <h1 className="font-poppins font-semibold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-[#1E1E1E] leading-tight">
             Bem vindo ao Luminus,{" "}
-            <span className="text-[#112C3F]">{professor?.name}</span>!
+            <span className="text-[#112C3F]">{professor?.name || "..."}</span>!
           </h1>
         </div>
 
