@@ -4,11 +4,8 @@ import ListClass from "./components/listClass";
 import { Classroom } from "@/app/(appLayout)/classroom/components/types";
 import { useState, useEffect, useRef } from "react";
 import GridClass from "./components/gridClass";
-import ClassViewMode from "./components/classViewMode";
 import { BaseInput } from "@/components/inputs/BaseInput";
 import { ConfirmDeleteDialog } from "./components/ConfirmDeleteDialog";
-// CORREÇÃO: Importação do ArchiveConfirmation removida pois a funcionalidade não estava em uso.
-// import { ArchiveConfirmation } from "./components/archiveConfirmation";
 import { ErroMessageDialog } from "./components/erroMessageDialog";
 import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
 import DialogPage from "./components/createClassModal";
@@ -22,12 +19,6 @@ export default function VizualizationClass() {
   const [totalItems, setTotalItems] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
-  // CORREÇÃO: Removidos estados relacionados à funcionalidade de arquivamento não utilizada.
-  // const [archiveConfirmation, setarchiveConfirmation] = useState(false);
-  // const [idsToArchive, setIdsToArchive] = useState<number[]>([]);
-  // const [titleClass, setTitleClass] = useState<string | undefined>(undefined);
-  // const [classDescription, setClassDescription] = useState("");
-  // const [codeClass, setCodeClass] = useState<string | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [missingDialog, setMissingDialog] = useState(false);
@@ -159,7 +150,6 @@ export default function VizualizationClass() {
     }
   };
 
-  // CORREÇÃO: Função 'archiveHandle' removida pois não era utilizada.
 
   const handleExportClass = () => {
     const selectedClasses = classi.filter(turma => turma.selected);
@@ -205,30 +195,7 @@ export default function VizualizationClass() {
         />
       </div>
 
-      <div className="-mt-4">
-        <div className="flex justify-between items-center mb-3 px-[6vh]">
-          {filteredClasses.length > 0 && (
-            <>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={toggleSelectAll}
-                  className="w-6 h-6 accent-blue-600 cursor-pointer"
-                  disabled={!classi || classi.length === 0}
-                />
-                <span className="px-2 text-lg text-gray-600 font-bold">Selecionar todos</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ClassViewMode
-                  visualization={visualization}
-                  setVisualization={setVisualization}
-                />
-                <DialogPage />
-              </div>
-            </>
-          )}
-        </div>
+      {/* Removed duplicate select all and create classroom buttons since they exist in GridClass and ListClass components */}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
@@ -272,7 +239,6 @@ export default function VizualizationClass() {
             />
           </div>
         )}
-      </div>
 
       <ConfirmDeleteDialog
         open={confirmOpen}
@@ -281,8 +247,6 @@ export default function VizualizationClass() {
         total={idsToDelete.length}
         type="classroom"
       />
-
-      {/* CORREÇÃO: Componente ArchiveConfirmation removido do JSX */}
 
       <ErroMessageDialog
         open={missingDialog}
