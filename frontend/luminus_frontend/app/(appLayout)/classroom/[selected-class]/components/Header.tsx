@@ -1,10 +1,7 @@
 import { ColoredButton } from "@/components/colored-button/colored-button";
-import { clsx } from 'clsx';
-import { ClipboardEdit, Plus, Download, Filter, Edit, Folder } from 'lucide-react';
-import AssociarDossie from "./associarDossie";
-import { useState, useEffect } from 'react';
+import { Edit, Folder } from 'lucide-react';
+import { useState} from 'react';
 import EditClassModal from '../../components/editClassModal';
-import { getDossierById } from '@/services/dossierServices';
 import class_icon from "@/components/icon/icon_classroom.svg";
 import Image from 'next/image';
 
@@ -12,11 +9,9 @@ import Image from 'next/image';
 export function Header({ 
   title, 
   mainColor, 
-  hoverColor,
   originalColor,
   classroomId,
   associatedDossier,
-  onDossierAssociated
 }: { 
   title: string; 
   mainColor?: string; 
@@ -27,32 +22,8 @@ export function Header({
   onDossierAssociated?: (dossierId: number) => void;
 }) {
     const [showEditModal, setShowEditModal] = useState(false);
-    const [isLoadingDossier, setIsLoadingDossier] = useState(false);
 
-    // Fetch associated dossier information
-    const fetchAssociatedDossier = async (dossierId: number) => {
-        setIsLoadingDossier(true);
-        try {
-            const response = await getDossierById(dossierId);
-            if (response.data) {
-                // Update the parent component's state
-                if (onDossierAssociated) {
-                    onDossierAssociated(dossierId);
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching dossier:', error);
-        } finally {
-            setIsLoadingDossier(false);
-        }
-    };
 
-    // This function will be called when a dossier is associated
-    const handleDossierAssociated = (dossierId: number) => {
-        if (onDossierAssociated) {
-            onDossierAssociated(dossierId);
-        }
-    };
 
     return (
       <div 
@@ -121,14 +92,5 @@ export function Header({
       </div>
     );
   }
-
-  /*<div class="absolute top-0 -z-10 h-full w-full bg-white"><div class="
-  absolute
-  bottom-auto
-  left-auto right-0 
-  top-0 h-[500px] w-[500px]
-  -translate-x-[30%] translate-y-[20%] rounded-full 
-  bg-[rgba(173,109,244,0.5)]
-  opacity-50 blur-[80px]"></div></div> */
 
   
