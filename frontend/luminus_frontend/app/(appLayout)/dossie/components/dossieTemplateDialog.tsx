@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 // Importa o componente de botão customizado do projeto.
 
 import { 
-    Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, 
-    DialogHeader, DialogOverlay, DialogTitle, DialogTrigger 
+    Dialog, DialogContent, DialogOverlay, DialogTitle
 } from "@/components/ui/dialog"; 
 // Importa os componentes relacionados ao Dialog (modal) da biblioteca de UI do projeto.
 // Estes componentes formam a estrutura base do modal.
@@ -31,6 +30,15 @@ import PageController from "./paginationController";
 // Importa componente responsável pela paginação dos dossiês
 
 import { listDossiers } from "@/services/dossierServices";
+
+// Define a resposta da API para um dossiê
+interface ApiDossier {
+    id: number;
+    name: string;
+    description: string;
+    evaluation_method: string;
+    customUserId: number;
+}
 
 // Tipagem das props recebidas no componente.
 interface DossieTemplateDialogProps {
@@ -70,17 +78,18 @@ export default function DossieTemplateDialog({ open, onClose }: DossieTemplateDi
             const start = page * dossiesPerPage;
             const response = await listDossiers(professorId, start, dossiesPerPage, searchValue);
             // Map to Dossie type
-            setDossies((response.data || []).map((d: any) => ({
+            setDossies(((response.data as unknown as ApiDossier[]) || []).map((d) => ({
                 id: d.id,
                 name: d.name,
                 description: d.description,
                 evaluation_method: d.evaluation_method,
-                professor_id: d.costumUser_id,
+                professor_id: d.customUserId,
                 selected: false
-            })));
+            } as Dossie)));
             setTotalItems(response.ammount || 0);
-        } catch (error: any) {
-            setError(error.message || 'Erro ao carregar dossiês');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dossiês';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
