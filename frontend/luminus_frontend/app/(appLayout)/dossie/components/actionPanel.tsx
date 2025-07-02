@@ -17,12 +17,12 @@ export default function ActionPanel({ onDelete, onArchive, toExport }: ActionPan
     // A lógica agora renderiza os botões condicionalmente, com base nas props recebidas.
 
     return (
-        <div className="left-4 bg-gray-900 shadow-lg rounded-xl flex flex-row gap-4 z-50 w-fit p-2">
+        <div className="left-4 bg-gray-900 shadow-lg rounded-xl flex flex-row gap-4 z-50 w-fit">
             {/* O botão de excluir é sempre exibido */}
             <button
                 title="Excluir selecionados"
                 onClick={onDelete}
-                className="hover:bg-red-800/50 p-2 rounded-xl cursor-pointer transition-colors"
+                className="hover:bg-gray-800 p-2 rounded-xl cursor-pointer transition-colors"
             >
                 <Trash2 className="w-6 h-6 text-white" />
             </button>
@@ -32,7 +32,7 @@ export default function ActionPanel({ onDelete, onArchive, toExport }: ActionPan
                 <button
                     title="Arquivar selecionados"
                     onClick={onArchive}
-                    className="hover:bg-yellow-800/50 p-2 rounded-xl cursor-pointer transition-colors"
+                    className="hover:bg-gray-800 p-2 rounded-xl cursor-pointer transition-colors"
                 >
                     <Archive className="w-6 h-6 text-white" />
                 </button>
@@ -43,7 +43,7 @@ export default function ActionPanel({ onDelete, onArchive, toExport }: ActionPan
                  <button
                     title="Exportar selecionados"
                     onClick={toExport}
-                    className="hover:bg-blue-800/50 p-2 rounded-xl cursor-pointer transition-colors"
+                    className="hover:bg-gray-800 p-2 rounded-xl cursor-pointer transition-colors"
                 >
                     <Download className="w-6 h-6 text-white" />
                 </button>
