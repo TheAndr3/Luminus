@@ -195,7 +195,7 @@ const DossierAppPage: React.FC = () => {
             setIsEditingMode(true);
             setIsLoading(false);
             return;
-          } catch (err) {
+          } catch {
             showErrorDialog('Erro ao carregar dossiê como template.');
             setDossierTitle("");
             setDossierDescription("");
@@ -288,11 +288,17 @@ const DossierAppPage: React.FC = () => {
         
         setSectionsData(adaptedSections);
         setIsEditingMode(modeParam !== 'view');
-      } catch (error: any) {
+      } catch (error: unknown) { // CORRIGIDO: trocado 'any' por 'unknown'
         console.error("Erro ao carregar dossiê:", error);
-        showErrorDialog(
-          error.response?.data?.msg || error.message || 'Erro ao carregar dossiê. Tente recarregar a página.'
-        );
+        // CORRIGIDO: Tratamento de erro seguro
+        let errorMessage = 'Erro ao carregar dossiê. Tente recarregar a página.';
+        if (typeof error === 'object' && error !== null && 'response' in error) {
+            const responseError = error as { response?: { data?: { msg?: string } } };
+            errorMessage = responseError.response?.data?.msg || errorMessage;
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        showErrorDialog(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -313,8 +319,8 @@ const DossierAppPage: React.FC = () => {
         setIsEditingMode(true);
         setIsLoading(false);
     }
-  // Adicionado dossierIdParam para reagir a mudanças no ID da URL
-  }, [dossierId, isClient, modeParam, isAuthenticated, dossierIdParam, templateId]);
+  // CORRIGIDO: Adicionado showErrorDialog à lista de dependências
+  }, [dossierId, isClient, modeParam, isAuthenticated, dossierIdParam, templateId, showErrorDialog]);
   
 
   const clearBlurTimeoutAndSignalIgnore = useCallback(() => {
@@ -485,8 +491,8 @@ const DossierAppPage: React.FC = () => {
         scrollableAreaEl.removeEventListener('scroll', calculateAndSetPosition);
         window.removeEventListener('resize', calculateAndSetPosition);
     };
-  // Adicionado isClient para garantir que execute apenas no cliente
-  }, [focusedElementRef.current, isEditingMode, sidebarHeightEstimate, sidebarTargetTop, isClient]);
+  // CORRIGIDO: Removido focusedElementRef.current da lista de dependências.
+  }, [isEditingMode, sidebarHeightEstimate, sidebarTargetTop, isClient]);
 
 
   const handleBackClick = useCallback(() => { router.push('/dossie'); }, [router]);
@@ -578,11 +584,11 @@ const DossierAppPage: React.FC = () => {
         items: [{ id: newItemId, description: '', value: 'N/A' }]
     };
 
-    let newSectionsList = [...sectionsData];
+    const newSectionsList = [...sectionsData]; // CORRIGIDO: de let para const
     let insertionIndex = sectionsData.length; // Padrão: adiciona no final
 
     // Determina o contexto atual para inserir a nova seção APÓS ele.
-    let currentContextId = selectedSectionIdForStyling || 
+    const currentContextId = selectedSectionIdForStyling || // CORRIGIDO: de let para const
                            (selectedItemIdGlobal ? sectionsData.find(s => s.items.some(i => i.id === selectedItemIdGlobal))?.id : null);
 
     if (currentContextId) {
@@ -1011,9 +1017,17 @@ const DossierAppPage: React.FC = () => {
       }
       setIsEditingMode(false); 
       router.push('/dossie'); 
-    } catch (error: any) {
+    } catch (error: unknown) { // CORRIGIDO: trocado 'any' por 'unknown'
       console.error("Falha ao salvar dossiê:", error); 
-      showErrorDialog(error.response?.data?.msg || error.message || 'Falha ao salvar dossiê.');
+      // CORRIGIDO: Tratamento de erro seguro
+      let errorMessage = 'Falha ao salvar dossiê.';
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+          const responseError = error as { response?: { data?: { msg?: string } } };
+          errorMessage = responseError.response?.data?.msg || errorMessage;
+      } else if (error instanceof Error) {
+          errorMessage = error.message;
+      }
+      showErrorDialog(errorMessage);
     } finally {
         setIsLoading(false); 
     }

@@ -51,16 +51,17 @@ export default function AssociarDossie({
             if (!professorId) throw new Error('ID do professor não encontrado');
             const start = page * dossiesPerPage;
             const response = await listDossiers(professorId, start, dossiesPerPage, searchValue);
-            setDossies((response.data || []).map((d: any) => ({
+            setDossies((response.data || []).map((d: Dossier) => ({
                 id: d.id,
                 name: d.name,
                 description: d.description,
-                evaluationMethod: d.evaluation_method,
-                customUserId: d.costumUser_id
+                evaluationMethod: d.evaluationMethod,
+                customUserId: d.customUserId
             })));
             setTotalItems(response.ammount || 0);
-        } catch (error: any) {
-            setError(error.message || 'Erro ao carregar dossiês');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dossiês';
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -97,9 +98,10 @@ export default function AssociarDossie({
             }
             
             router.refresh();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Erro ao associar dossiê:', error);
-            setError(error.message || 'Erro ao associar dossiê');
+            const errorMessage = error instanceof Error ? error.message : 'Erro ao associar dossiê';
+            setError(errorMessage);
         } finally {
             setIsAssociating(false);
         }

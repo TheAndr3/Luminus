@@ -3,11 +3,9 @@
 
 // Componentes e tipos
 import ListStudents from "./components/listStudents";
-import { Students } from "./components/types"; // Corrigido o caminho se 'types.ts' estiver na mesma pasta de componentes
+import { Students } from "./components/types"; 
 import React, { useState, useEffect, useRef, useCallback } from 'react'; // Adicionado useRef
 import { Button } from "@/components/ui/button";
-import { darkenHexColor } from '@/utils/colorHover';
-// import { BaseInput } from "@/components/inputs/BaseInput"; // Não parece estar sendo usado diretamente aqui
 import { Header } from "./components/Header";
 import { ActionBar} from "./components/ActionBar"; // Corrigido nome do componente para ActionBar
 import { FileText, AlertTriangle } from "lucide-react"; // Manteve FileText
@@ -15,21 +13,16 @@ import styles from './selected-classroom.module.css';
 import { toast } from 'react-hot-toast'; 
 import { api } from "@/services/api";
 import { GetClassroom } from '@/services/classroomServices';
-import { ListStudents as ListStudentsService, DeleteStudent } from '@/services/studentService';
+import { ListStudents as ListStudentsService, DeleteStudent, StudentListResponse } from '@/services/studentService';
 import { getDossierById } from '@/services/dossierServices';
 import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
 
-// Removido CreateStudent pois a importação em massa usará um endpoint diferente
-// import { CreateStudent } from "@/services/studentService"; 
 import { useParams } from 'next/navigation';
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
   DialogOverlay
 } from "@/components/ui/dialog";
 
@@ -38,12 +31,6 @@ type ParsedStudent = {
   nome: string;
 };
 
-interface ExpectedCreateResponse {
-  success: boolean;
-  message?: string; // Mensagem opcional, geralmente presente em caso de erro
-  // Adicione outras propriedades aqui se a API retornar dados do aluno criado no sucesso,
-  // por exemplo: student?: Students;
-}
 
 export default function VisualizacaoAlunos() {
   const params = useParams();
@@ -62,7 +49,7 @@ export default function VisualizacaoAlunos() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false); // Renomeado para clareza
   const [idsToDelete, setIdsToDelete] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null); // Para debounce
+
   const classiRef = useRef(classi);
   useEffect(() => {
       classiRef.current = classi;
@@ -76,13 +63,6 @@ export default function VisualizacaoAlunos() {
 
   const [currentTurmaId, setCurrentTurmaId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingStudents, setIsFetchingStudents] = useState(false); // Loading específico para fetchStudents
-
-  // Estados para o modal de adicionar aluno (mantido para referência, mas não usado para a nova funcionalidade)
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [newStudentMatricula, setNewStudentMatricula] = useState('');
-  const [newStudentName, setNewStudentName] = useState('');
-  const [addStudentError, setAddStudentError] = useState<string | null>(null);
 
   // Novos estados para a linha de adição direta
   const [showInlineAddStudent, setShowInlineAddStudent] = useState(false);
@@ -93,55 +73,23 @@ export default function VisualizacaoAlunos() {
   // Estado para o dossiê associado
   const [associatedDossier, setAssociatedDossier] = useState<{ id: number; name: string } | null>(null);
 
-  // Função para buscar alunos da API
-  const fetchStudents = async (turmaId: number) => {
-    if (!turmaId) return;
-    setIsFetchingStudents(true);
-    try {
-      const response = await api.get(`/student/${turmaId}/list`);
-      // Mapeamento aqui:
-      const studentsFromApi = response.data.data.map((student: any) => ({
-        matricula: student.studentId || student.matricula,
-        nome: student.name || student.nome || "Nome não disponível",
-        selected: false,
-      }));
 
-      // Filtro para garantir que só alunos válidos sejam exibidos
-      const validStudents = studentsFromApi.filter(
-        (s: Students) => typeof s.matricula === 'number' && s.nome !== "Nome não disponível"
-      );
-
-      if (validStudents.length !== studentsFromApi.length && studentsFromApi.length > 0) {
-        toast("Alguns dados de alunos da API estavam incompletos.", { icon: "⚠️" });
-      }
-
-      setClassi(validStudents);
-    } catch (error: any) {
-      console.error("Erro ao buscar alunos:", error);
-      const errorMsg = error.response?.data?.msg || `Falha ao carregar alunos da turma ${turmaId}.`;
-      toast.error(errorMsg);
-      setClassi([]);
-    } finally {
-      setIsFetchingStudents(false);
-    }
-  };
 
   // Função para buscar alunos com paginação e busca no servidor
   const fetchStudentsWithParams = useCallback(async (searchValue = searchTerm) => {
     if (!currentTurmaId) return;
-    setIsFetchingStudents(true);
     try {
       const start = (currentPage - 1) * alunosPorPagina;
       const response = await ListStudentsService(currentTurmaId, start, alunosPorPagina, searchValue);
       
       // Mapeamento dos dados, preservando a seleção
-      const studentsFromApi = response.data.map((student: any) => {
+      const studentsFromApi = response.data.map((student: StudentListResponse) => {
         const studentId = student.studentId || student.matricula;
         const existingStudent = classiRef.current.find(s => s.id === studentId);
         return {
           id: student.studentId,
           matricula: studentId,
-          nome: student.name || student.nome || "Nome não disponível",
+          nome: student.name || "Nome não disponível",
           selected: existingStudent ? existingStudent.selected : false,
         };
       });
@@ -154,14 +102,12 @@ export default function VisualizacaoAlunos() {
       setClassi(validStudents);
       setTotalItems(response.ammount);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao buscar alunos:", error);
-      const errorMsg = error.response?.data?.msg || `Falha ao carregar alunos da turma ${currentTurmaId}.`;
+      const errorMsg = error instanceof Error ? error.message : `Falha ao carregar alunos da turma ${currentTurmaId}.`;
       toast.error(errorMsg);
       setClassi([]);
       setTotalItems(0);
-    } finally {
-      setIsFetchingStudents(false);
     }
   }, [currentTurmaId, currentPage, searchTerm, alunosPorPagina]);
 
@@ -198,7 +144,7 @@ export default function VisualizacaoAlunos() {
       }
 
       // Mapeia e define o estado dos alunos
-      const formattedStudents = studentsFromService.data.map((student: any) => ({
+      const formattedStudents = studentsFromService.data.map((student: StudentListResponse) => ({
         id: student.studentId,
         matricula: student.studentId || student.matricula,
         nome: student.name,
@@ -206,10 +152,11 @@ export default function VisualizacaoAlunos() {
       }));
       setClassi(formattedStudents);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao carregar dados da turma:", error);
       setClassTitle("Turma não encontrada");
-      toast.error(error.message || "Falha ao carregar a página da turma.");
+      const errorMessage = error instanceof Error ? error.message : "Falha ao carregar a página da turma.";
+      toast.error(errorMessage);
       setClassi([]);
     } finally {
       setIsLoading(false);
@@ -239,9 +186,7 @@ export default function VisualizacaoAlunos() {
     setCurrentPage(1); 
   };
 
-  const refreshStudents = () => {
-    fetchStudentsWithParams(searchTerm);
-  };
+
 
   // Manipular mudança de página
   const handlePageChange = (page: number) => {
@@ -292,9 +237,10 @@ export default function VisualizacaoAlunos() {
       toast.success(`${idsToDelete.length} aluno(s) removido(s) com sucesso.`);
       fetchStudentsWithParams(searchTerm); // Recarrega a lista com parâmetros atuais
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao excluir alunos:", error);
-      toast.error(error.message || "Erro ao excluir alunos.");
+      const errorMessage = error instanceof Error ? error.message : "Erro ao excluir alunos.";
+      toast.error(errorMessage);
     } finally {
       setConfirmDeleteOpen(false);
       setIdsToDelete([]);
@@ -397,9 +343,9 @@ export default function VisualizacaoAlunos() {
       } else {
         toast.error(response.data.msg || "Ocorreu um problema durante a importação.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao importar alunos via CSV:", error);
-      const errorMsg = error.response?.data?.msg || "Erro ao conectar com o servidor para importar alunos.";
+      const errorMsg = error instanceof Error ? error.message : "Erro ao conectar com o servidor para importar alunos.";
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -474,11 +420,12 @@ export default function VisualizacaoAlunos() {
           toast.error(response.data.msg || "Erro desconhecido ao adicionar aluno.");
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Erro ao adicionar aluno:", error);
         // Captura erros de rede ou respostas de erro da API
-        setInlineAddStudentError(error.response?.data?.msg || "Erro ao conectar com o servidor ou adicionar aluno.");
-        toast.error(error.response?.data?.msg || "Erro ao conectar com o servidor ou adicionar aluno.");
+        const errorMessage = error instanceof Error ? error.message : "Erro ao conectar com o servidor ou adicionar aluno.";
+        setInlineAddStudentError(errorMessage);
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -514,7 +461,7 @@ export default function VisualizacaoAlunos() {
         console.log('No dossier data in response:', response); // Debug log
         setAssociatedDossier(null);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching associated dossier:', error);
       setAssociatedDossier(null);
     }

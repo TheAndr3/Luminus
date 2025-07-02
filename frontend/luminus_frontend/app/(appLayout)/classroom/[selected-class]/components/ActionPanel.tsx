@@ -1,6 +1,6 @@
 // luminus_frontend/app/(appLayout)/classroom/components/actionPainel.tsx
-import { Trash2, Download, BarChart2 } from "lucide-react";
-import React, { useRef } from "react"; // Importe useRef
+import {Trash2} from "lucide-react";
+import React from "react"; // Importe useRef
 import { ColoredButton } from "@/components/colored-button/colored-button"; //
 
 interface ActionPanelProps {
@@ -9,31 +9,13 @@ interface ActionPanelProps {
   onDeleted: () => void;
   // Renomeado para refletir que esta função receberá o File
   onCsvFileSelected: (file: File) => void; // A função que `page.tsx` passa para processar o CSV
-  onDownload?: () => void; // Adicionado para download, se precisar de uma ação
-  onViewChart?: () => void; // Adicionado para gráfico, se precisar de uma ação
 }
 
 export default function ActionPanel({
   mainColor,
   hoverColor,
-  onDeleted,
-  onCsvFileSelected,
-  onDownload,
-  onViewChart,
+  onDeleted
 }: ActionPanelProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null); // Ref para o input de arquivo
-  // Função que será chamada pelo botão Archive para disparar o clique no input escondido
-  const handleArchiveButtonClick = () => {
-    fileInputRef.current?.click(); // Dispara o clique no input de arquivo
-  };
-
-  // Função que será chamada quando o arquivo for selecionado no input
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      onCsvFileSelected(event.target.files[0]); // Passa o arquivo selecionado para a função prop
-      event.target.value = ''; // Limpa o input para permitir re-selecionar o mesmo arquivo
-    }
-  };
 
   return (
     <div 

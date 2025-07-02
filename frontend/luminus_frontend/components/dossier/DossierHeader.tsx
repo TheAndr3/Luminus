@@ -17,7 +17,7 @@ interface DossierHeaderProps {
   onDescriptionChange: (newDescription: string) => void; 
   onEvaluationConceptChange: (concept: EvaluationConcept) => void; 
   onSettingsClick?: () => void; 
-  showSettingsButton?: boolean; // Esta prop será controlada pela lógica interna baseada em isEditing e evaluationConcept
+  showSettingsButton?: boolean;
   onFieldFocus?: (element: HTMLElement, context: { type: 'item', id: string } | { type: 'section', id: string }) => void;
   onFieldBlur?: () => void; 
 
@@ -48,7 +48,6 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
   onDescriptionChange,
   onEvaluationConceptChange,
   onSettingsClick,
-  // showSettingsButton não é mais pego das props, é determinado internamente
   onFieldFocus,
   onFieldBlur,
   className = '',
@@ -68,7 +67,8 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
   settingsButtonClassName = '',
   settingsButtonIconClassName = '',
 }) => {
-  const handleLocalFocus = (element: HTMLElement, fieldType: 'title' | 'description' | 'settings' | 'evaluation_concept') => {
+  // CORREÇÃO: O parâmetro 'fieldType' foi removido pois não era utilizado.
+  const handleLocalFocus = (element: HTMLElement) => {
       if (onFieldFocus) {
           onFieldFocus(element, { type: 'section', id: 'dossier-header' });
       }
@@ -80,7 +80,6 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
       }
   };
 
-  // Determina se o botão de configurações deve ser mostrado
   const internalShowSettingsButton = isEditing && evaluationConcept === 'letter';
 
   return (
@@ -93,7 +92,7 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
           className={titleInputClassName}
           aria-label="Título do Dossiê" 
           placeholder="Digite o título do dossiê" 
-          onFocus={(e) => handleLocalFocus(e.target, 'title')} 
+          onFocus={(e) => handleLocalFocus(e.target)} // CORREÇÃO: Chamada ajustada
           onBlur={handleLocalBlur} 
         />
       ) : (
@@ -117,7 +116,7 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
                        checked={evaluationConcept === 'numerical'} 
                        onChange={() => onEvaluationConceptChange('numerical')} 
                        className={evaluationConceptRadioInputClassName}
-                       onFocus={(e) => handleLocalFocus(e.target as HTMLInputElement, 'evaluation_concept')}
+                       onFocus={(e) => handleLocalFocus(e.target as HTMLInputElement)} // CORREÇÃO: Chamada ajustada
                        onBlur={handleLocalBlur}
                      />
                      Numeral (0.0 - 10.0)
@@ -130,7 +129,7 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
                        checked={evaluationConcept === 'letter'}
                        onChange={() => onEvaluationConceptChange('letter')}
                        className={evaluationConceptRadioInputClassName}
-                       onFocus={(e) => handleLocalFocus(e.target as HTMLInputElement, 'evaluation_concept')}
+                       onFocus={(e) => handleLocalFocus(e.target as HTMLInputElement)} // CORREÇÃO: Chamada ajustada
                        onBlur={handleLocalBlur}
                      />
                      Conceito (Customizável) 
@@ -138,14 +137,14 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
                  </div>
               </div>
 
-             {internalShowSettingsButton && onSettingsClick && ( // Verifica se onSettingsClick existe
+             {internalShowSettingsButton && onSettingsClick && (
                  <button
                      type="button" 
                      onClick={onSettingsClick} 
                      aria-label="Configurar conceitos de avaliação" 
                      title="Configurar conceitos de avaliação" 
                      className={settingsButtonClassName}
-                     onFocus={(e) => handleLocalFocus(e.target, 'settings')}
+                     onFocus={(e) => handleLocalFocus(e.target)} // CORREÇÃO: Chamada ajustada
                      onBlur={handleLocalBlur}
                  >
                      <SettingsIcon className={settingsButtonIconClassName} /> 
@@ -182,7 +181,7 @@ const DossierHeader: React.FC<DossierHeaderProps> = ({
           aria-label="Descrição do Dossiê"
           placeholder="Digite a descrição do dossiê"
           rows={3} 
-          onFocus={(e) => handleLocalFocus(e.target, 'description')}
+          onFocus={(e) => handleLocalFocus(e.target)} // CORREÇÃO: Chamada ajustada
           onBlur={handleLocalBlur}
         />
       ) : (
