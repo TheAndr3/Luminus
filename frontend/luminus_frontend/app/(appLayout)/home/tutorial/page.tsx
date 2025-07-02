@@ -71,7 +71,7 @@ export default function Home() {
           </div>
           <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl aspect-[16/9] flex-shrink-0">
             <iframe
-              src="https://www.youtube.com/embed/wMTD8maO6U4"
+              src="https://www.youtube.com/embed/6mCLS0k2CH8"
               title="Luminus Platform Introduction"
               className="w-full h-full rounded-lg"
               frameBorder="0"
