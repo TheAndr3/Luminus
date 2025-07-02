@@ -11,7 +11,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -32,7 +32,8 @@ type InternalErrors = {
     newPassword?: string | null;
 };
 
-export default function ResetPasswordPage() {
+// Component that uses useSearchParams - needs to be wrapped in Suspense
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -271,5 +272,52 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function ResetPasswordLoading() {
+  return (
+    <div className={styles.pageContainer}>
+      <div className={styles.leftPanel}>
+         <div className={styles.NexusLogoContainer}>
+           <Image src="/logo-Nexus.svg" alt="Nexus Logo" width={200} height={40}/>
+         </div>
+         <Carousel autoSlide={true} autoSlideInterval={5000}>
+           {[
+             <Image
+               key="reg-slide-1"
+               src="/carroselAlunos.png"
+               alt="Alunos utilizando a plataforma"
+               fill
+               priority
+               style={{ objectFit: "cover" }}
+             />
+           ]}
+         </Carousel>
+      </div>
+
+      <div className={styles.rightPanel}>
+        <div className={styles.logoContainer}>
+            <Image src="/logo-Luminus.svg" alt="Luminus Logo" width={200} height={50} priority />
+        </div>
+
+        <div className={styles.contentWrapper}>
+          <h1 className={styles.title}>DEFINIR NOVA SENHA</h1>
+          <p className={styles.instructionText}>
+             Carregando...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<ResetPasswordLoading />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
