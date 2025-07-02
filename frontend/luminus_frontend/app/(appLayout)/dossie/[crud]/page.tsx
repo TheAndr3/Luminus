@@ -195,7 +195,7 @@ const DossierAppPage: React.FC = () => {
             setIsEditingMode(true);
             setIsLoading(false);
             return;
-          } catch (_err) { // CORRIGIDO: variável não utilizada prefixada com _
+          } catch {
             showErrorDialog('Erro ao carregar dossiê como template.');
             setDossierTitle("");
             setDossierDescription("");
