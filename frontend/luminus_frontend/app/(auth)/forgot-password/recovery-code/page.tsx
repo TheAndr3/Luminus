@@ -10,8 +10,7 @@
 
 'use client';
 
-// CORREÇÃO: 'useEffect' removido pois não era utilizado.
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -23,7 +22,7 @@ import Carousel from '@/components/carousel/Carousel';
 
 const PIN_LENGTH = 4;
 
-export default function RecoveryCodePage() {
+function RecoveryCodeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
@@ -154,5 +153,50 @@ export default function RecoveryCodePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function RecoveryCodeLoading() {
+  return (
+    <div className={styles.pageContainer}>
+      <div className={styles.leftPanel}>
+         <div className={styles.NexusLogoContainer}>
+           <Image src="/logo-Nexus.svg" alt="Nexus Logo" width={200} height={40}/>
+         </div>
+         <Carousel autoSlide={true} autoSlideInterval={5000}>
+           {[
+             <Image
+               key="reg-slide-1"
+               src="/carroselAlunos.png"
+               alt="Alunos utilizando a plataforma"
+               fill
+               priority
+               style={{ objectFit: "cover" }}
+             />
+           ]}
+         </Carousel>
+      </div>
+
+      <div className={styles.rightPanel}>
+        <div className={styles.logoContainer}>
+            <Image src="/logo-Luminus.svg" alt="Luminus Logo" width={200} height={50} priority />
+        </div>
+
+        <div className={styles.contentWrapper}>
+          <h1 className={styles.title}>VERIFICAR CÓDIGO</h1>
+          <p className={styles.instructionText}>
+             Carregando...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function RecoveryCodePage() {
+  return (
+    <Suspense fallback={<RecoveryCodeLoading />}>
+      <RecoveryCodeContent />
+    </Suspense>
   );
 }
