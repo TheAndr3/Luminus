@@ -10,7 +10,7 @@ jest.mock('dotenv', () => ({
 }));
 
 // Mock do process.env para as chaves
-process.env.PUBLIC_KEY = 'mocked_public_key'; // Este mock é para uso *dentro do arquivo de teste*, não afeta o controller que carrega o .env real.
+process.env.PUBLIC_KEY = 'mocked_public_key';
 process.env.TOKEN_KEY = 'mocked_secret_key';
 
 const professorController = require('../professorController.js');
@@ -55,7 +55,7 @@ describe('professorController', () => {
     // Objetos mock para request e response
     mockReq = {};
     mockRes = {
-      status: jest.fn().mockReturnThis(), // Permite encadeamento .status().json() ou .status().send()
+      status: jest.fn().mockReturnThis(),
       json: jest.fn(),
       send: jest.fn(),
     };
@@ -72,7 +72,6 @@ describe('professorController', () => {
     test('deve retornar a chave pública com status 200', async () => {
       await professorController.GetPublicKey(mockReq, mockRes);
       expect(mockRes.status).toHaveBeenCalledWith(200);
-      // Correção: O teste deve esperar a chave pública mockada definida no ambiente de teste.
       expect(mockRes.json).toHaveBeenCalledWith({ publicKey: 'mocked_public_key' });
     });
   });
@@ -82,8 +81,6 @@ describe('professorController', () => {
     test('deve retornar status 200 e dados do usuário em login bem-sucedido', async () => {
       mockReq.body = { customUserEmail: 'test@example.com', password: 'encryptedPassword' };
       decryptPassword.mockResolvedValue('plainPassword');
-      // Correção: Alterado 'name' para 'nome' no mock para corresponder ao controller (se o controller usar 'professor.nome')
-      // Se o seu controller usa 'professor.name', o mock deve ser 'name: "Professor Teste"'
       db.pgSelect.mockResolvedValue([
         { id: 1, email: 'test@example.com', password: 'hashedPassword', role: 'professor', nome: 'Professor Teste' },
       ]);
@@ -270,10 +267,9 @@ describe('professorController', () => {
         customUserId: 1,
         requestDate: expect.any(String), // Data atual
       });
-      // Correção: O backend passa bd_code.status que é undefined
       expect(db.pgUpdate).toHaveBeenCalledWith(
         'VerifyCode',
-        { status: undefined }, // Ajustado para corresponder ao comportamento atual do backend
+        { status: undefined },
         expect.objectContaining({ customUserId: 1, code: '1234' }),
       );
       expect(db.pgInsert).toHaveBeenCalledWith('TokenCode', {
@@ -366,7 +362,6 @@ describe('professorController', () => {
 
   // Testes para NewPassword
   describe('NewPassword', () => {
-    // Este teste agora valida o comportamento de erro do backend devido ao problema assíncrono
     test('deve retornar status 403 e mensagem de erro devido a falha ao decodificar token', async () => {
       mockReq.body = { newPass: 'newSecurePass', email: 'test@example.com' };
       mockReq.params = { token: 'validToken' };
@@ -374,20 +369,16 @@ describe('professorController', () => {
       hashPassword.mockResolvedValue('hashedNewSecurePass');
       db.pgSelect.mockResolvedValueOnce([{ id: 1, email: 'test@example.com' }]) // CustomUser
                   .mockResolvedValueOnce([{ verifyStatus: 0 }]); // TokenCode
-      // O mock do jwt.verify precisa chamar o callback, pois o backend usa o padrão de callback.
-      // O erro 'falha ao decodificar token' ocorre no backend porque 'result' será undefined fora do callback.
       jwt.verify.mockImplementation((token, secret, callback) => {
         // Simula um token válido, mas o controller falhará ao usar o 'decoded' fora do callback
         callback(null, { userId: 1, email: 'test@example.com' }); 
       });
-      db.pgUpdate.mockResolvedValue({}); // Esta chamada não será atingida no backend
+      db.pgUpdate.mockResolvedValue({});
 
       await professorController.NewPassword(mockReq, mockRes);
 
-      // Espera o status e a mensagem de erro que o backend atualmente retorna devido ao bug
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({ msg: 'token invalido, falha ao decodificar' });
-      // Remover expect de db.pgUpdate, pois não é chamado nesse cenário atual do backend
     });
 
     test('deve retornar status 403 para token inválido', async () => {
@@ -406,7 +397,6 @@ describe('professorController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({ msg: 'token invalido, falha ao decodificar' });
     });
 
-    // Este teste também valida o comportamento de erro do backend devido ao problema assíncrono
     test('deve retornar status 403 e mensagem de erro se o token já foi utilizado', async () => {
       mockReq.body = { newPass: 'newSecurePass', email: 'test@example.com' };
       mockReq.params = { token: 'usedToken' };
@@ -420,7 +410,7 @@ describe('professorController', () => {
 
       await professorController.NewPassword(mockReq, mockRes);
 
-      // Correção: Espera a mensagem de erro correta que o backend retorna.
+      //Espera a mensagem de erro correta que o backend retorna.
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({ msg: 'token ja utilizado' });
     });
@@ -440,7 +430,6 @@ describe('professorController', () => {
 
       await professorController.NewPassword(mockReq, mockRes);
 
-      // Espera o status e a mensagem de erro que o backend atualmente retorna devido ao bug
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({ msg: 'token invalido, falha ao decodificar' });
     });

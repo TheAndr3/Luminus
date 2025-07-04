@@ -2,7 +2,6 @@ const db = require('../../bd.js');
 const { hashPassword, decryptPassword } = require('../../utils/passwordManagement.js');
 const profileController = require('../profileController.js');
 
-// Mock dotenv to prevent it from loading actual .env files during tests
 jest.mock('dotenv', () => ({
   config: jest.fn(),
 }));
@@ -37,7 +36,7 @@ describe('profileController', () => {
     consoleErrorSpy.mockRestore();
   });
 
-  // Testes para a função Delete
+  // Testes para Delete
   describe('Delete', () => {
     test('deve retornar status 200 e mensagem de sucesso ao excluir a conta', async () => {
       mockReq.params = { id: 1 };
@@ -51,7 +50,7 @@ describe('profileController', () => {
     });
 
     test('deve retornar status 401 se o ID do usuário estiver faltando', async () => {
-      mockReq.params = {}; // ID faltando
+      mockReq.params = {}; //ID faltando
 
       await profileController.Delete(mockReq, mockRes);
 
@@ -130,14 +129,14 @@ describe('profileController', () => {
         mockReq.params = { id: 1 };
         mockReq.body = {}; // Nenhum campo para atualizar
         db.pgSelect.mockResolvedValueOnce([existingUser]);
-        db.pgUpdate.mockResolvedValueOnce({}); // pgUpdate será chamado com payload vazio
+        db.pgUpdate.mockResolvedValueOnce({}); //pgUpdate será chamado com payload vazio
 
         await profileController.Update(mockReq, mockRes);
 
         expect(db.pgSelect).toHaveBeenCalledWith('CustomUser', { id: 1 });
         expect(decryptPassword).not.toHaveBeenCalled();
         expect(hashPassword).not.toHaveBeenCalled();
-        expect(db.pgUpdate).toHaveBeenCalledWith('CustomUser', {}, { id: 1 }); // Payload vazio esperado
+        expect(db.pgUpdate).toHaveBeenCalledWith('CustomUser', {}, { id: 1 }); //Payload vazio esperado
         expect(mockRes.status).toHaveBeenCalledWith(200);
         expect(mockRes.json).toHaveBeenCalledWith({ message: 'Perfil atualizado com sucesso!' });
     });
@@ -156,7 +155,7 @@ describe('profileController', () => {
     test('deve retornar status 404 se o usuário não for encontrado no banco de dados', async () => {
       mockReq.params = { id: 999 };
       mockReq.body = { name: 'New Name' };
-      db.pgSelect.mockResolvedValueOnce([]); // Usuário não encontrado
+      db.pgSelect.mockResolvedValueOnce([]); //Usuário não encontrado
 
       await profileController.Update(mockReq, mockRes);
 
