@@ -13,7 +13,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
@@ -34,6 +34,7 @@
     "puppeteer": "^24.10.1"
   },
   "devDependencies": {
+    "jest": "^30.0.4",
     "nodemon": "^3.1.9"
   }
 }
