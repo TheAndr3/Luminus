@@ -389,7 +389,7 @@
 .section_descriptionText {
    /* AGORA FUNCIONA */
    composes: editableField_textDisplay;
-   color: rgba(255, 255, 255, 0.9);
+   color: #374151;
    font-size: 0.95rem;
    font-style: italic;
    padding: 0 2px;

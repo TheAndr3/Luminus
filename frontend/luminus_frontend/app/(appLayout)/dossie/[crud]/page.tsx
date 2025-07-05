@@ -108,6 +108,8 @@ const DossierAppPage: React.FC = () => {
   const dossierId = dossierIdParam && dossierIdParam !== 'create' ? parseInt(dossierIdParam as string) : null;
   const templateId = searchParams.get('templateId');
 
+  // Estado para rastrear o ID do elemento focado para acionar a recálculo da posição da sidebar
+  const [focusedElementId, setFocusedElementId] = useState<string | null>(null);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [evaluationMethodsForModal, setEvaluationMethodsForModal] = useState<EvaluationMethodItem[]>(
@@ -195,8 +197,10 @@ const DossierAppPage: React.FC = () => {
             setIsEditingMode(true);
             setIsLoading(false);
             return;
-          } catch {
-            showErrorDialog('Erro ao carregar dossiê como template.');
+          } catch (error) {
+            console.error('Erro ao carregar dossiê como template:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dossiê como template.';
+            showErrorDialog(errorMessage);
             setDossierTitle("");
             setDossierDescription("");
             setSectionsData([JSON.parse(JSON.stringify(DEFAULT_SECTION))]);
@@ -288,16 +292,9 @@ const DossierAppPage: React.FC = () => {
         
         setSectionsData(adaptedSections);
         setIsEditingMode(modeParam !== 'view');
-      } catch (error: unknown) { // CORRIGIDO: trocado 'any' por 'unknown'
+      } catch (error: unknown) {
         console.error("Erro ao carregar dossiê:", error);
-        // CORRIGIDO: Tratamento de erro seguro
-        let errorMessage = 'Erro ao carregar dossiê. Tente recarregar a página.';
-        if (typeof error === 'object' && error !== null && 'response' in error) {
-            const responseError = error as { response?: { data?: { msg?: string } } };
-            errorMessage = responseError.response?.data?.msg || errorMessage;
-        } else if (error instanceof Error) {
-            errorMessage = error.message;
-        }
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dossiê. Tente recarregar a página.';
         showErrorDialog(errorMessage);
       } finally {
         setIsLoading(false);
@@ -319,7 +316,7 @@ const DossierAppPage: React.FC = () => {
         setIsEditingMode(true);
         setIsLoading(false);
     }
-  // CORRIGIDO: Adicionado showErrorDialog à lista de dependências
+  // Adicionado dossierIdParam para reagir a mudanças no ID da URL
   }, [dossierId, isClient, modeParam, isAuthenticated, dossierIdParam, templateId, showErrorDialog]);
   
 
@@ -341,6 +338,8 @@ const DossierAppPage: React.FC = () => {
     ignoreNextBlurRef.current = false;
 
     focusedElementRef.current = element; 
+    // Define o ID do elemento focado para acionar a recálculo da posição da sidebar
+    setFocusedElementId(`${context.type}-${context.id}`);
 
     if (context.type === 'item') {
       setSelectedItemIdGlobal(context.id);
@@ -366,6 +365,7 @@ const DossierAppPage: React.FC = () => {
       if (isSettingsModalOpen) return;
 
       focusedElementRef.current = null;
+      setFocusedElementId(null);
       setSelectedItemIdGlobal(null);
       setSelectedSectionIdForStyling(null);
       setSidebarTargetTop(null); 
@@ -380,6 +380,7 @@ const DossierAppPage: React.FC = () => {
          setSelectedItemIdGlobal(null);
          setSelectedSectionIdForStyling(null);
           focusedElementRef.current = null; 
+          setFocusedElementId(null);
           setSidebarTargetTop(null);
      } else {
          setSelectedItemIdGlobal(itemId);
@@ -405,6 +406,7 @@ const DossierAppPage: React.FC = () => {
       if (selectedSectionIdForStyling === sectionId && !selectedItemIdGlobal) { // Se já selecionado e nenhum item focado, deseleciona
           setSelectedSectionIdForStyling(null);
           focusedElementRef.current = null; // Limpa o foco
+          setFocusedElementId(null);
       } else {
           setSelectedSectionIdForStyling(sectionId);
           // Tenta focar o input do título da seção.
@@ -491,8 +493,8 @@ const DossierAppPage: React.FC = () => {
         scrollableAreaEl.removeEventListener('scroll', calculateAndSetPosition);
         window.removeEventListener('resize', calculateAndSetPosition);
     };
-  // CORRIGIDO: Removido focusedElementRef.current da lista de dependências.
-  }, [isEditingMode, sidebarHeightEstimate, sidebarTargetTop, isClient]);
+  // Adicionado isClient para garantir que execute apenas no cliente
+  }, [focusedElementId, isEditingMode, sidebarHeightEstimate, sidebarTargetTop, isClient]);
 
 
   const handleBackClick = useCallback(() => { router.push('/dossie'); }, [router]);
@@ -504,6 +506,7 @@ const DossierAppPage: React.FC = () => {
         if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
         ignoreNextBlurRef.current = false;
         focusedElementRef.current = null;
+        setFocusedElementId(null);
         setSelectedItemIdGlobal(null);
         setSelectedSectionIdForStyling(null);
         setSidebarTargetTop(null); 
@@ -584,11 +587,11 @@ const DossierAppPage: React.FC = () => {
         items: [{ id: newItemId, description: '', value: 'N/A' }]
     };
 
-    const newSectionsList = [...sectionsData]; // CORRIGIDO: de let para const
+    const newSectionsList = [...sectionsData];
     let insertionIndex = sectionsData.length; // Padrão: adiciona no final
 
     // Determina o contexto atual para inserir a nova seção APÓS ele.
-    const currentContextId = selectedSectionIdForStyling || // CORRIGIDO: de let para const
+    const currentContextId = selectedSectionIdForStyling || 
                            (selectedItemIdGlobal ? sectionsData.find(s => s.items.some(i => i.id === selectedItemIdGlobal))?.id : null);
 
     if (currentContextId) {
@@ -758,7 +761,9 @@ const DossierAppPage: React.FC = () => {
     
     requestAnimationFrame(() => {
         if (typeof document === 'undefined' || !finalSelectedSectionId) {
-            focusedElementRef.current = null; setSidebarTargetTop(null);
+            focusedElementRef.current = null; 
+            setFocusedElementId(null);
+            setSidebarTargetTop(null);
             return;
         }
 
@@ -768,7 +773,9 @@ const DossierAppPage: React.FC = () => {
                 el.focus();
                 handleFieldFocus(el, { type: 'item', id: nextFocusedItemId });
             } else { // Elemento do item não encontrado
-                focusedElementRef.current = null; setSidebarTargetTop(null);
+                focusedElementRef.current = null; 
+                setFocusedElementId(null);
+                setSidebarTargetTop(null);
             }
         } else if (focusSectionTitleIfItemWasLastInSection || (finalSelectedSectionId && !nextFocusedItemId)) {
             // Foca no título da seção se o item era o último ou se não há item para focar
@@ -777,10 +784,14 @@ const DossierAppPage: React.FC = () => {
                 sectionTitleInput.focus();
                 handleFieldFocus(sectionTitleInput, {type: 'section', id: finalSelectedSectionId});
             } else { // Input do título não encontrado
-                focusedElementRef.current = null; setSidebarTargetTop(null);
+                focusedElementRef.current = null; 
+                setFocusedElementId(null);
+                setSidebarTargetTop(null);
             }
         } else { // Nenhum foco específico determinado
-            focusedElementRef.current = null; setSidebarTargetTop(null);
+            focusedElementRef.current = null; 
+            setFocusedElementId(null);
+            setSidebarTargetTop(null);
         }
     });
 
@@ -812,6 +823,7 @@ const DossierAppPage: React.FC = () => {
     
     // Limpa o foco da sidebar, pois a seção foi removida ou o contexto mudou
     focusedElementRef.current = null; 
+    setFocusedElementId(null);
     setSidebarTargetTop(null);
 
     if (newSelectedSectionId) {
@@ -1017,16 +1029,9 @@ const DossierAppPage: React.FC = () => {
       }
       setIsEditingMode(false); 
       router.push('/dossie'); 
-    } catch (error: unknown) { // CORRIGIDO: trocado 'any' por 'unknown'
+    } catch (error: unknown) {
       console.error("Falha ao salvar dossiê:", error); 
-      // CORRIGIDO: Tratamento de erro seguro
-      let errorMessage = 'Falha ao salvar dossiê.';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-          const responseError = error as { response?: { data?: { msg?: string } } };
-          errorMessage = responseError.response?.data?.msg || errorMessage;
-      } else if (error instanceof Error) {
-          errorMessage = error.message;
-      }
+      const errorMessage = error instanceof Error ? error.message : 'Falha ao salvar dossiê.';
       showErrorDialog(errorMessage);
     } finally {
         setIsLoading(false); 
@@ -1098,7 +1103,7 @@ const DossierAppPage: React.FC = () => {
               descriptionTextClassName={styles.dossierHeader_descriptionTextDisplay}
               descriptionTextareaClassName={styles.dossierHeader_descriptionTextarea}
               evaluationAndSettingsClassName={styles.dossierHeader_evaluationAndSettings}
-              settingsButtonClassName={styles.dossierHeader_settingsButton}
+              settingsButtonClassName={`${styles.pageHeader_backButton} ${styles.dossierHeader_settingsButton}`}
               settingsButtonIconClassName={styles.pageHeader_backIcon} 
             />
             <SectionList
