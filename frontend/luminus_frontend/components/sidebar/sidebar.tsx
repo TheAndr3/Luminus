@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { GetProfile } from '@/services/professorService';
+import { useLoading } from '@/contexts/LoadingContext';
 
 const navigation = [
   { name: 'Home', href: '/home', icon: HomeIcon },
@@ -53,6 +54,7 @@ const Sidebar = () => {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { isNavigating } = useLoading();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -94,7 +96,9 @@ const Sidebar = () => {
 
   const hasNotification = true;
 
-  if (isLoading) {
+  console.log('Sidebar - isLoading:', isLoading, 'isNavigating:', isNavigating); // Debug
+  
+  if (isLoading || isNavigating) {
     return (
       <aside className="fixed inset-y-0 left-0 z-30 flex w-20 flex-col items-center overflow-y-auto border-r border-gray-700 bg-gray-900 py-6">
         <div className="flex items-center justify-center h-full">

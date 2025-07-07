@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono} from "next/font/google";import "../../styles/globals.css";
 import Sidebar from "../../components/sidebar/sidebar"; 
 import { Toaster } from 'react-hot-toast';
+import { LoadingProvider } from "../../contexts/LoadingContext";
 
 
 const geistSans = Geist({
@@ -27,44 +28,46 @@ export default function RootLayout({
   return (
         <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className={geistSans.className}>
-        <div> 
-          <Toaster 
-            position="top-right" // Você pode escolher a posição
-            toastOptions={{
-              // Você pode definir durações padrão, estilos, etc.
-              duration: 5000, // 5 segundos
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-              },
-              error: {
-                duration: 5000,
-              }
-            }}
-          />
-          <Sidebar />
-          <div className="pl-20">
-            <div className="flex h-screen">
-              <div className="flex w-16 items-center justify-center">
-                <div className="flex flex-col items-center text-lg text-gray-400">
-                  <span>L</span>
-                  <span>U</span>
-                  <span>M</span>
-                  <span>I</span>
-                  <span>N</span>
-                  <span>U</span>
-                  <span>S</span>
+        <LoadingProvider>
+          <div> 
+            <Toaster 
+              position="top-right" // Você pode escolher a posição
+              toastOptions={{
+                // Você pode definir durações padrão, estilos, etc.
+                duration: 5000, // 5 segundos
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+                success: {
+                  duration: 3000,
+                },
+                error: {
+                  duration: 5000,
+                }
+              }}
+            />
+            <Sidebar />
+            <div className="pl-20">
+              <div className="flex h-screen">
+                <div className="flex w-16 items-center justify-center">
+                  <div className="flex flex-col items-center text-lg text-gray-400">
+                    <span>L</span>
+                    <span>U</span>
+                    <span>M</span>
+                    <span>I</span>
+                    <span>N</span>
+                    <span>U</span>
+                    <span>S</span>
+                  </div>
                 </div>
+                <main className="flex-1 overflow-y-auto rounded-tl-2xl rounded-bl-2xl border-l border-[#000000] bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.3)]">
+                  <div className="p-6">{children}</div>
+                </main>
               </div>
-              <main className="flex-1 overflow-y-auto rounded-tl-2xl rounded-bl-2xl border-l border-[#000000] bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.3)]">
-              <div className="p-6">{children}</div>
-              </main>
             </div>
           </div>
-        </div>
+        </LoadingProvider>
       </body>
     </html>
   );
