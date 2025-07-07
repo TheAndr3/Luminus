@@ -12,6 +12,7 @@ import ExportDownloadDialog from './components/exportDownloadDialog';
 import TypeOfCreationModal from './components/typeOfCreationModal';
 import ImportDossierDialog from './components/importDossierDialog';
 import { listDossiers, deleteDossier } from '@/services/dossierServices';
+import Loading from '@/components/ui/loading';
 
 
 export default function GerenciarDossies() {
@@ -250,32 +251,30 @@ export default function GerenciarDossies() {
           )}
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <p>Carregando dossiês...</p>
-          </div>
-        ) : dossies.length === 0 ? (
-          <div className="text-center py-8">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum dossiê encontrado</h3>
-            <p className="text-gray-500 mb-4 text-sm">Crie seu primeiro dossiê para começar a usar</p>
-          </div>
-        ) : (
-          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
-            <ListDossie
-              dossies={dossies}
-              toggleSelectAll={toggleSelectAll}
-              toggleOne={toggleOne}
-              isAllSelected={isAllSelected}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              setCurrentPage={setCurrentPage}
-              onImportDossie={handleImportDossie}
-              onCreateDossie={handleCreateDossie}
-              onDeleteClass={handleDeleteClass}
-              toExportDossie={exportHandle}
-            />
-          </div>
-        )}
+        <Loading isLoading={isLoading}>
+          {dossies.length === 0 ? (
+            <div className="text-center py-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum dossiê encontrado</h3>
+              <p className="text-gray-500 mb-4 text-sm">Crie seu primeiro dossiê para começar a usar</p>
+            </div>
+          ) : (
+            <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
+              <ListDossie
+                dossies={dossies}
+                toggleSelectAll={toggleSelectAll}
+                toggleOne={toggleOne}
+                isAllSelected={isAllSelected}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+                onImportDossie={handleImportDossie}
+                onCreateDossie={handleCreateDossie}
+                onDeleteClass={handleDeleteClass}
+                toExportDossie={exportHandle}
+              />
+            </div>
+          )}
+        </Loading>
       </div>
 
       {/* Modais */}
