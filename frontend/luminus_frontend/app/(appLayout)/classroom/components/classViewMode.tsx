@@ -16,24 +16,24 @@ export default function ClassViewMode({ visualization, setVisualization }: Class
     setVisualization(visualization === 'grid' ? 'list' : 'grid');
   };
 
-  // Define a classe CSS para o botão com fundo cinza e efeito hover
-  const buttonClass = `cursor-pointer p-1 rounded-full w-7 h-7 
-    bg-gray-300 hover:bg-gray-400 text-black`;
-
   // Renderiza o ícone apropriado com base no modo de visualização atual
   // Se estiver em modo grid, mostra o ícone de lista, e vice-versa
   return (
     <div>
       {visualization === 'grid' ? (
-        <List
+        <button
           onClick={handleClick}
-          className={buttonClass}
-        />
+          className="cursor-pointer p-1 rounded-full w-7 h-7 bg-gray-300 hover:bg-gray-400 text-black"
+        >
+          <List className="w-full h-full" />
+        </button>
       ) : (
-        <LayoutGrid
+        <button
           onClick={handleClick}
-          className={buttonClass}
-        />
+          className="cursor-pointer p-1 rounded-full w-7 h-7 bg-gray-300 hover:bg-gray-400 text-black"
+        >
+          <LayoutGrid className="w-full h-full" />
+        </button>
       )}
     </div>
   );

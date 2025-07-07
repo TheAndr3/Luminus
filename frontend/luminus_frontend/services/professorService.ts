@@ -31,7 +31,7 @@ export interface CreatePayLoad {
 
 interface CreateResponse {
   msg: string;
-  token: number;
+  token: string;
 }
 
 // RECUPERAR SENHA
@@ -43,7 +43,7 @@ interface RecoverPasswordPayLoad {
 interface RecoverPasswordResponse {
   msg: string;
   pb_k?: string;
-  token?: number;
+  token?: string;
 }
 
 interface NewPasswordPayLoad {
@@ -59,7 +59,7 @@ interface NewPasswordResponse {
 interface ConfirmEmailPayload {
   email: string;
   code: number;
-  token: number;
+  token: string;
 }
 
 interface ConfirmEmailResponse {

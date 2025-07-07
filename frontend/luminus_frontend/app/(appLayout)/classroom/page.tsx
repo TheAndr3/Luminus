@@ -10,6 +10,7 @@ import { ErroMessageDialog } from "./components/erroMessageDialog";
 import { ListClassroom, GetClassroomResponse, DeleteClassroom } from "@/services/classroomServices";
 import DialogPage from "./components/createClassModal";
 import toast from 'react-hot-toast';
+import Loading from '@/components/ui/loading';
 
 export default function VizualizationClass() {
   const [visualization, setVisualization] = useState<'grid' | 'list'>('grid');
@@ -197,48 +198,46 @@ export default function VizualizationClass() {
 
       {/* Removed duplicate select all and create classroom buttons since they exist in GridClass and ListClass components */}
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <p>Carregando turmas...</p>
-          </div>
-        ) : filteredClasses.length === 0 ? (
-          <div className="text-center p-10">
-            <p className="text-xl text-gray-600 mb-4">Nenhuma turma encontrada.</p>
-            <DialogPage />
-          </div>
-        ) : visualization === 'list' ? (
-          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
-            <ListClass
-              classrooms={filteredClasses}
-              toggleSelectAll={toggleSelectAll}
-              toggleOne={toggleOne}
-              isAllSelected={isAllSelected}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              setCurrentPage={handlePageChange}
-              visualization={visualization}
-              setVisualization={setVisualization}
-              onDeleteClass={handleDeleteClass}
-              toExportClass={handleExportClass}
-            />
-          </div>
-        ) : (
-          <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
-            <GridClass
-              classrooms={filteredClasses}
-              toggleSelectAll={toggleSelectAll}
-              toggleOne={toggleOne}
-              isAllSelected={isAllSelected}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              setCurrentPage={handlePageChange}
-              visualization={visualization}
-              setVisualization={setVisualization}
-              onDeleteClass={handleDeleteClass}
-              toExportClass={handleExportClass}
-            />
-          </div>
-        )}
+        <Loading isLoading={isLoading}>
+          {filteredClasses.length === 0 ? (
+            <div className="text-center p-10">
+              <p className="text-xl text-gray-600 mb-4">Nenhuma turma encontrada.</p>
+              <DialogPage />
+            </div>
+          ) : visualization === 'list' ? (
+            <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
+              <ListClass
+                classrooms={filteredClasses}
+                toggleSelectAll={toggleSelectAll}
+                toggleOne={toggleOne}
+                isAllSelected={isAllSelected}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={handlePageChange}
+                visualization={visualization}
+                setVisualization={setVisualization}
+                onDeleteClass={handleDeleteClass}
+                toExportClass={handleExportClass}
+              />
+            </div>
+          ) : (
+            <div className="px-[7vh] flex items-center justify-center mt-10 ml-auto">
+              <GridClass
+                classrooms={filteredClasses}
+                toggleSelectAll={toggleSelectAll}
+                toggleOne={toggleOne}
+                isAllSelected={isAllSelected}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={handlePageChange}
+                visualization={visualization}
+                setVisualization={setVisualization}
+                onDeleteClass={handleDeleteClass}
+                toExportClass={handleExportClass}
+              />
+            </div>
+          )}
+        </Loading>
 
       <ConfirmDeleteDialog
         open={confirmOpen}
