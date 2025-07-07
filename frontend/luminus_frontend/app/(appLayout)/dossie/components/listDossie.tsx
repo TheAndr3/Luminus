@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageController from "./paginationController";
 import ActionPanel from "./actionPanel";
-import TypeOfCreationModal from "./typeOfCreationModal";
+
 
 interface ListDossieProps {
   dossies: Dossie[];
@@ -39,7 +39,7 @@ export default function ListDossie({
   const [hovered, setHovered] = useState<number | null>(null);
   const router = useRouter();
 
-  const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
+
 
   useEffect(() => {
     setHasSelected(dossies.some((dossie) => dossie.selected));
@@ -97,10 +97,7 @@ export default function ListDossie({
                   <Download size={16} className="mr-1" /> Importar Dossiê
                 </button>
                 <button
-                  onClick={() => {
-                    onCreateDossie();
-                    setOpenTypeOfCreation(true);
-                  }}
+                  onClick={onCreateDossie}
                   className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal"
                 >
                   <Plus size={16} className="mr-1" /> Adicionar Dossiê
@@ -214,10 +211,7 @@ export default function ListDossie({
         )}
       </div>
 
-      <TypeOfCreationModal
-        open={openTypeOfCreation}
-        onClose={() => setOpenTypeOfCreation(false)}
-      />
+
       
     </div>
   );
