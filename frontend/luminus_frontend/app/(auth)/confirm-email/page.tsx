@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation'; // Hook para ler parâmetros da URL no App Router
 import styles from './confirmEmail.module.css'; // Estilos CSS Modules específicos
 import { useRouter } from 'next/navigation'; // Importa useRouter para redirecionar
-import { ConfirmEmail } from '@/services/professorService';
+import { ConfirmEmail, SendRecoveryEmail } from '@/services/professorService';
 
 // --- Importações de Componentes ---
 import { PinInput } from '@/components/inputs/PinInput'; // Componente reutilizável para entrada de PIN
@@ -82,6 +82,8 @@ function ConfirmEmailContent() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   // Estado para controlar a exibição de carregamento (ex: durante a verificação).
   const [isLoading, setIsLoading] = useState(false);
+  // Estado para controlar o carregamento do reenvio de email
+  const [isResending, setIsResending] = useState(false);
   // Estado para armazenar o email lido da URL. Inicia como null.
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -169,6 +171,30 @@ function ConfirmEmailContent() {
     } finally {
         // Garante que o estado de carregamento seja desativado, independentemente de sucesso ou falha.
         setIsLoading(false);
+    }
+  };
+
+  /**
+   * Handler para reenviar o email de confirmação.
+   * Chama a API para gerar um novo código e enviar por email.
+   */
+  const handleResendEmail = async () => {
+    if (!userEmail) {
+      alert('Email não encontrado. Por favor, tente novamente.');
+      return;
+    }
+
+    setIsResending(true);
+
+    try {
+      await SendRecoveryEmail(userEmail);
+      alert('Email de confirmação reenviado com sucesso!');
+    } catch (error: unknown) {
+      console.error("Erro ao reenviar email:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao reenviar email de confirmação. Tente novamente.';
+      alert(errorMessage);
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -263,6 +289,19 @@ function ConfirmEmailContent() {
               </Link>
             </div>
           </form>
+
+          {/* Link para reenviar email */}
+          <p className={styles.switchLink}>
+            Não recebeu o código?{' '}
+            <button 
+              type="button" 
+              onClick={handleResendEmail} 
+              disabled={isResending}
+              className={styles.resendButton}
+            >
+              {isResending ? 'Reenviando...' : 'Reenviar código'}
+            </button>
+          </p>
         </div>
       </div> {/* Fim leftPanel */}
 

@@ -76,7 +76,7 @@ exports.Create = async (req, res) => {
         // Verificar se o email já está cadastrado
         const verification = await db.pgSelect('CustomUser', { email: customUserEmail });
 
-        //Cadastrar professor no banco de dados
+        // Se o usuário não existe, criar novo cadastro
         if (verification.length === 0 || !verification[0]) {
             const customUserResult = await db.pgInsert('CustomUser', {
                 email: customUserEmail, 
@@ -113,8 +113,43 @@ exports.Create = async (req, res) => {
             }
 
         } else {
-            console.log('o email é igual')
-            return res.status(409).json({ msg: 'Esse e-mail já possui um cadastro' });
+            // Usuário já existe, verificar se tem role "unknown" (não confirmou email)
+            const existingUser = verification[0];
+            
+            if (existingUser.role === 'unknow') {
+                // Usuário existe mas não confirmou email, permitir reenvio do código
+                const customUserId = existingUser.id;
+                const data = new Date();
+                var code = genRandomCode(0, 9999);
+                
+                const old_code = await db.pgSelect('verifyCode', {customUserId:customUserId, requestDate:data.toISOString()});
+
+                const used_codes = old_code.map((iten) => {
+                    return iten.code;
+                })
+                
+                while (used_codes.includes(code)) {
+                    code = genRandomCode(0, 9999);
+                }
+
+                emailSender.sendEmail(customUserEmail, code);
+                const payload = {userId: customUserId, email:customUserEmail, code:code, data:data.toISOString()}
+
+                //geracao do token a ser utilizado
+                const token = jwt.sign(payload, process.env.TOKEN_KEY, {algorithm:'HS256'});
+
+                try {
+                    const resp = await db.pgInsert('verifyCode', {code:code, customUserId:customUserId, requestDate:data.toISOString(), status:0});
+                    return res.status(200).json({msg:'email enviado', token:token});
+                } catch(err) {
+                    console.log('erro ao inserir no banco de dados: ', err);
+                    return res.status(500).json({msg:"falha ao enviar codigo"})
+                }
+            } else {
+                // Usuário já existe e já confirmou email (tem role diferente de "unknown")
+                console.log('o email é igual e já confirmado')
+                return res.status(409).json({ msg: 'Esse e-mail já possui um cadastro confirmado' });
+            }
         }
     } catch (err) {
         console.error('Erro ao cadastrar professor:', err);

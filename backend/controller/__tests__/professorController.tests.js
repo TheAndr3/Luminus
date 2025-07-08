@@ -179,14 +179,31 @@ describe('professorController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({ msg: 'Os campos precisam estar preenchidos corretamente' });
     });
 
-    test('deve retornar status 409 se o e-mail já estiver cadastrado', async () => {
+    test('deve retornar status 409 se o e-mail já estiver cadastrado e confirmado', async () => {
       mockReq.body = { customUserEmail: 'existing@example.com', password: 'pass', name: 'Existing User' };
-      db.pgSelect.mockResolvedValue([{ id: 1, email: 'existing@example.com' }]); //E-mail já existe
+      db.pgSelect.mockResolvedValue([{ id: 1, email: 'existing@example.com', role: 'professor' }]); //E-mail já existe e confirmado
 
       await professorController.Create(mockReq, mockRes);
 
       expect(mockRes.status).toHaveBeenCalledWith(409);
-      expect(mockRes.json).toHaveBeenCalledWith({ msg: 'Esse e-mail já possui um cadastro' });
+      expect(mockRes.json).toHaveBeenCalledWith({ msg: 'Esse e-mail já possui um cadastro confirmado' });
+    });
+
+    test('deve permitir reenvio de código se o e-mail já estiver cadastrado mas não confirmado', async () => {
+      mockReq.body = { customUserEmail: 'existing@example.com', password: 'pass', name: 'Existing User' };
+      db.pgSelect.mockResolvedValue([{ id: 1, email: 'existing@example.com', role: 'unknow' }]); //E-mail já existe mas não confirmado
+      decryptPassword.mockResolvedValue('pass');
+      hashPassword.mockResolvedValue('hashedPass');
+      db.pgSelect.mockResolvedValueOnce([{ id: 1, email: 'existing@example.com', role: 'unknow' }]) // CustomUser
+                  .mockResolvedValueOnce([]); // old_code vazio
+      emailSender.sendEmail.mockReturnValue(true);
+      jwt.sign.mockReturnValue('mockedToken');
+      db.pgInsert.mockResolvedValue({});
+
+      await professorController.Create(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(200);
+      expect(mockRes.json).toHaveBeenCalledWith({ msg: 'email enviado', token: 'mockedToken' });
     });
 
     test('deve retornar status 500 se houver um erro no banco de dados ao inserir o código de verificação', async () => {
