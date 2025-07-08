@@ -40,7 +40,6 @@ export function ArchiveConfirmation({
   open,
   onCancel,
   onConfirm,
-  total,
   title,
   code,
   description

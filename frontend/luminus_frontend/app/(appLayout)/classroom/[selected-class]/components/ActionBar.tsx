@@ -1,9 +1,10 @@
 // Em: [selected-class]/components/ActionBar.tsx
 
 import { BaseInput } from "@/components/inputs/BaseInput";
-import { ColoredButton } from "@/components/colored-button/colored-button"; //
-import { ImportCSVButton } from "@/components/button-csv/import-csv-button"; //
-import { Plus, ClipboardEdit, Folder } from 'lucide-react';
+import { ColoredButton } from "@/components/colored-button/colored-button";
+import { ImportCSVButton } from "@/components/button-csv/import-csv-button";
+// CORREÇÃO: Ícone 'Folder' removido pois não era utilizado.
+import { Plus, ClipboardEdit } from 'lucide-react';
 import React from 'react';
 import AssociarDossie from "./associarDossie";
 
@@ -11,7 +12,7 @@ interface ActionBarProps {
   mainColor?: string;
   hoverColor: string;
   onAddStudentClick?: () => void;
-  onCsvFileSelected: (file: File) => void; // Modificado para aceitar File
+  onCsvFileSelected: (file: File) => void;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
   associatedDossier?: { id: number; name: string } | null;
@@ -22,16 +23,15 @@ export function ActionBar({
   mainColor,
   hoverColor,
   onAddStudentClick,
-  onCsvFileSelected, // Nome da prop continua o mesmo
+  onCsvFileSelected,
   searchTerm,
   onSearchTermChange,
   associatedDossier,
   onDossierAssociated,
 }: ActionBarProps) {
 
-  // Esta função agora apenas repassa o arquivo selecionado
   const handleActualCsvFileSelected = (file: File) => {
-    onCsvFileSelected(file); // Chama a função passada por props (que será handleProcessCsvFile)
+    onCsvFileSelected(file);
   };
 
   return (
@@ -48,7 +48,6 @@ export function ActionBar({
           />
         </div>
         <div className="flex items-center gap-3">
-          {/* Show "Trocar Dossiê" button if dossier is associated, otherwise show "Associar Dossiê" */}
           <AssociarDossie
             mainColor={mainColor}
             hoverColor={hoverColor}

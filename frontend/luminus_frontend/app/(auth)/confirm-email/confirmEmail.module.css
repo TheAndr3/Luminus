@@ -187,6 +187,34 @@
     border-color: #2c3e50; /* Cor da borda escurece ligeiramente. */
 }
 
+/* Estilo para o botão "Reenviar código" */
+.resendButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0; /* Adicionado para garantir alinhamento */
+  color: #e74c3c; /* Mesma cor do link */
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: inherit; /* Herda tamanho do <p> */
+  display: inline; /* Para ficar na mesma linha do texto */
+  vertical-align: baseline; /* Alinha com o texto ao redor */
+}
+
+.resendButton:hover {
+  text-decoration: underline;
+}
+
+/* Link inferior para reenviar email */
+.switchLink {
+	margin-top: 1.2rem;
+	text-align: center;
+	font-size: 0.8rem;
+	color: #555;
+    flex-shrink: 0;
+}
+
 /* --- Ajustes Responsivos --- */
 
 /* Media Query para telas com largura máxima de 1024px (tablets maiores, laptops pequenos). */

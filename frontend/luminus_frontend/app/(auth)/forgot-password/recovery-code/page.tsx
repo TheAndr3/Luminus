@@ -3,40 +3,33 @@
  * @file RecoveryCodePage.tsx
  * @description Define o componente da página para inserir o código de recuperação de senha,
  *              utilizando o componente PinInput. Exibe o email do usuário e o passa adiante.
- * @version 1.2 (Exibe e repassa email da URL)
- * @date 06-05-2024 // Data atualizada
+ * @version 1.3 (build error fixed)
+ * @date 29-06-2024 // Data atualizada
  * @author Pedro e Armando (Adaptado)
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react'; // useEffect pode ser útil se precisar reagir a mudanças no email
+import React, { useState, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation'; // <<< Adicionado useSearchParams
-import styles from './recoveryCode.module.css'; // <<< Assume que este CSS existe
+import { useRouter, useSearchParams } from 'next/navigation';
+import styles from './recoveryCode.module.css';
 import { RecoverPassword } from '@/services/professorService';
 
-// --- Importações de Componentes Customizados ---
-import { PinInput } from '@/components/inputs/PinInput'; // <<< USA PinInput
-import Carousel from '@/components/carousel/Carousel';     // Reutiliza o Carousel
+import { PinInput } from '@/components/inputs/PinInput';
+import Carousel from '@/components/carousel/Carousel';
 
-const PIN_LENGTH = 4; // Define o tamanho do PIN aqui
+const PIN_LENGTH = 4;
 
-/**
- * @component RecoveryCodePage
- * @description Componente funcional que renderiza a página para inserir o código PIN.
- */
-export default function RecoveryCodePage() {
+function RecoveryCodeContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // <<< Hook para ler parâmetros da URL
-  const email = searchParams.get('email'); // <<< Pega o valor do parâmetro 'email' da URL
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email');
 
-  // --- Estados do Componente ---
   const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-    // --- Slides para o Carrossel ---
   const recoverySlides = [
     <Image
       key="reg-slide-1"
@@ -62,12 +55,10 @@ export default function RecoveryCodePage() {
     />,
   ];
 
-  // --- Manipulador de Mudança do PIN ---
   const handlePinChange = (value: string) => {
     setPin(value);
   };
 
-  // --- Submissão do Formulário ---
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -84,29 +75,27 @@ export default function RecoveryCodePage() {
         code: parseInt(pin)
       });
 
-      // Se chegou aqui, a verificação foi bem-sucedida
       if (response.token) {
-        // Redireciona para a página de reset de senha com o token
         router.push(`/forgot-password/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(response.token)}`);
       } else {
         throw new Error('Token não recebido do servidor');
       }
-    } catch (error: any) {
+    } catch (error: unknown) { // CORREÇÃO: Trocado 'any' por 'unknown' e adicionada verificação
       console.error("Erro na verificação do PIN:", error);
-      alert(error.message || 'PIN inválido ou expirado. Tente novamente.');
+      let errorMessage = 'PIN inválido ou expirado. Tente novamente.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- Lógica para Desabilitar Botão ---
   const isSubmitDisabled = isLoading || pin.length !== PIN_LENGTH;
 
-  // --- Renderização do Componente ---
   return (
     <div className={styles.pageContainer}>
-
-      {/* Painel Esquerdo */}
       <div className={styles.leftPanel}>
          <div className={styles.NexusLogoContainer}>
            <Image src="/logo-Nexus.svg" alt="Nexus Logo" width={200} height={40}/>
@@ -116,7 +105,6 @@ export default function RecoveryCodePage() {
          </Carousel>
       </div>
 
-      {/* Painel Direito */}
       <div className={styles.rightPanel}>
         <div className={styles.logoContainer}>
             <Image src="/logo-Luminus.svg" alt="Luminus Logo" width={200} height={50} priority />
@@ -126,14 +114,10 @@ export default function RecoveryCodePage() {
           <h1 className={styles.title}>VERIFICAR CÓDIGO</h1>
           <p className={styles.instructionText}>
             Digite o PIN de {PIN_LENGTH} dígitos enviado para o seu email:{' '}
-            {/* <<< MODIFICADO: Exibe o email pego da URL */}
             {email && <strong className={styles.emailDisplay || ''}>{email}</strong>}
           </p>
 
-          {/* Formulário */}
           <form onSubmit={handleSubmit} className={styles.form} noValidate>
-
-            {/* ---- Componente PinInput INTEGRADO ---- */}
             <PinInput
                 length={PIN_LENGTH}
                 value={pin}
@@ -145,10 +129,8 @@ export default function RecoveryCodePage() {
                 inputClassName={styles.pinDigitInput || ''}
             />
 
-            {/* Espaçamento Manual */}
             <div style={{ height: '1.25rem', marginBottom: '0.8rem' }}></div>
 
-            {/* Botão de Submissão */}
             <button
               type="submit"
               className={`${styles.submitButton} ${styles.mt1}`}
@@ -158,21 +140,63 @@ export default function RecoveryCodePage() {
             </button>
           </form>
 
-          {/* Link Inferior */}
           <p className={styles.switchLink}>
             Não recebeu o código?{' '}
             <button type="button" onClick={() => alert('Funcionalidade de Reenviar Código não implementada.')} className={styles.resendButton || ''}>
                 Reenviar código
             </button>
              {' ou '}
-            {/* <<< MODIFICADO: Passa o email de volta para a página anterior se necessário */}
             <Link href={`/forgot-password/enter-email?email=${encodeURIComponent(email || '')}`}>
               Digite outro email
             </Link>
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        </div> {/* Fim contentWrapper */}
-      </div> {/* Fim rightPanel */}
-    </div> // Fim pageContainer
+function RecoveryCodeLoading() {
+  return (
+    <div className={styles.pageContainer}>
+      <div className={styles.leftPanel}>
+         <div className={styles.NexusLogoContainer}>
+           <Image src="/logo-Nexus.svg" alt="Nexus Logo" width={200} height={40}/>
+         </div>
+         <Carousel autoSlide={true} autoSlideInterval={5000}>
+           {[
+             <Image
+               key="reg-slide-1"
+               src="/carroselAlunos.png"
+               alt="Alunos utilizando a plataforma"
+               fill
+               priority
+               style={{ objectFit: "cover" }}
+             />
+           ]}
+         </Carousel>
+      </div>
+
+      <div className={styles.rightPanel}>
+        <div className={styles.logoContainer}>
+            <Image src="/logo-Luminus.svg" alt="Luminus Logo" width={200} height={50} priority />
+        </div>
+
+        <div className={styles.contentWrapper}>
+          <h1 className={styles.title}>VERIFICAR CÓDIGO</h1>
+          <p className={styles.instructionText}>
+             Carregando...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function RecoveryCodePage() {
+  return (
+    <Suspense fallback={<RecoveryCodeLoading />}>
+      <RecoveryCodeContent />
+    </Suspense>
   );
 }

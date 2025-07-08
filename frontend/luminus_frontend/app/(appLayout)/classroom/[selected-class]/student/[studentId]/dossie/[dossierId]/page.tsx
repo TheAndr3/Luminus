@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronLeft, Download } from 'lucide-react';
 import styles from './preencherDossie.module.css';
-import { DossierFillData, DossierSection, DossierItem, HandleItemChange, HandleDossierChange, EvaluationType } from './types';
+import { DossierFillData, DossierSection, DossierItem, HandleItemChange, EvaluationType } from './types';
 import { getDossierById } from '@/services/dossierServices';
 import { GetStudentAppraisal, UpdateAppraisal, CreateAppraisal } from '@/services/appraisalService';
 import { GetStudent } from '@/services/studentService';
@@ -30,12 +30,6 @@ interface AppraisalApiResponse {
     dossier_id: number;
     answers: Array<{ question_id: number; evaluation_type_id?: number; question_option_id?: number; answer_value?: number; }>;
 }
-
-type AnswerPayload = {
-  question_id: number;
-  evaluation_type_id?: number;
-  answer_value?: number;
-};
 
 
 // --- Componentes Internos para Melhor Organização ---
@@ -70,7 +64,7 @@ const DossierItemRow: React.FC<DossierItemRowProps> = ({ item, sectionId, isEdit
     }
     
     // Força para inteiro e remove decimais
-    let numValue = parseInt(rawValue, 10);
+    const numValue = parseInt(rawValue, 10);
     if (isNaN(numValue)) {
       setInputValue('');
       onItemChange(sectionId, item.id, 'answer', null);
@@ -229,8 +223,12 @@ const PreencherDossiePage: React.FC = () => {
               appraisalData = appraisalResponse.data as AppraisalApiResponse;
               if (appraisalData) setAppraisalId(appraisalData.id);
           }
-      } catch (appraisalError: any) {
-          if (appraisalError.response?.status !== 404) console.warn("Não foi possível carregar a avaliação existente:", appraisalError);
+      } catch (appraisalError: unknown) {
+          if (appraisalError instanceof Error && 'response' in appraisalError && 
+              typeof appraisalError.response === 'object' && appraisalError.response && 
+              'status' in appraisalError.response && appraisalError.response.status !== 404) {
+              console.warn("Não foi possível carregar a avaliação existente:", appraisalError);
+          }
       }
       
       const answersMap = new Map<number, number | EvaluationType>();
@@ -325,10 +323,6 @@ const PreencherDossiePage: React.FC = () => {
     }
   }, [dossierData]);
 
-  const handleDossierChange: HandleDossierChange = useCallback((key, value) => {
-    setDossierData(prev => prev ? { ...prev, [key]: value } : null);
-  }, []);
-
   const handleItemChange: HandleItemChange = useCallback((sectionId, itemId, key, value) => {
     setDossierData(prev => {
       if (!prev) return null;
@@ -374,10 +368,11 @@ const PreencherDossiePage: React.FC = () => {
         alert("Dossiê salvo com sucesso!");
         // Recarrega os dados para refletir o que foi salvo
         await loadDossierAndAppraisal();
-    } catch (err: any) {
-        setError(err.message || "Erro ao salvar o dossiê.");
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "Erro ao salvar o dossiê.";
+        setError(errorMessage);
         console.error("Erro ao salvar avaliação:", err);
-        setError(`Erro ao salvar: ${err.response?.data?.message || err.message}`);
+        setError(`Erro ao salvar: ${errorMessage}`);
     } finally {
         setIsSaving(false);
     }

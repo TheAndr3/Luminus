@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { 
-    Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, 
-    DialogHeader, DialogOverlay, DialogTitle, DialogTrigger 
+    Dialog, DialogContent, DialogDescription, DialogFooter, 
+    DialogHeader, DialogOverlay, DialogTitle
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Upload, FileText } from "lucide-react";
@@ -67,8 +67,12 @@ export default function ImportDossierDialog({ open, onClose, onImportSuccess }: 
             
             // Chamar o callback de sucesso após a redireção
             onImportSuccess();
-        } catch (error: any) {
-            setError(error.message || "Erro ao importar o dossiê. Verifique se o arquivo está no formato correto.");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError("Erro ao importar o dossiê. Verifique se o arquivo está no formato correto.");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -149,4 +153,4 @@ export default function ImportDossierDialog({ open, onClose, onImportSuccess }: 
             </DialogContent>
         </Dialog>
     );
-} 
+}

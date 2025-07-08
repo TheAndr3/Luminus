@@ -1,5 +1,5 @@
 import { useState } from "react"; // Importa o hook useState do React para gerenciar o estado local
-import { ColoredButton } from "@/components/colored-button/colored-button";
+// CORREÇÃO: A importação de 'ColoredButton' foi removida pois não era utilizada.
 
 // Define as props esperadas pelo componente PageController
 interface PageControllerProps {
@@ -45,7 +45,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         
         {/* Botão de página anterior */}
         <button
-          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600 cursor-pointer"
+          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => setCurrentPage(currentPage - 1)}
           disabled={currentPage === 1} // Desativa se já estiver na primeira página
         >
@@ -55,8 +55,8 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
         {/* Campo de entrada manual para número da página */}
         <input
           type="text" // Poderia ser type="number", mas manter "text" permite lidar melhor com vazio e validação
-          placeholder="Page"
-          className="border px-3 py-1 rounded w-16 text-sm"
+          placeholder="Página"
+          className="border px-3 py-1 rounded w-20 text-sm text-center"
           value={inputController} // Valor controlado pelo estado local
           onChange={(e) => {
             const value = e.target.value;
@@ -67,13 +67,21 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
             } else {
               // Converte para número
               const num = parseInt(value, 10);
+              // Atualiza o estado do input visualmente, mesmo que a página não mude
+              setInputController(num); 
               if (!isNaN(num) && num <= totalPages && num > 0) {
-                // Atualiza página e estado apenas se for número válido e dentro do limite
+                // Atualiza página apenas se for número válido e dentro do limite
                 setCurrentPage(num);
-                setInputController(num);
               }
-              // Se for inválido ou maior que totalPages, ignora 
             }
+          }}
+          onKeyDown={(e) => {
+             if (e.key === 'Enter') {
+                const num = Number(inputController);
+                if (!isNaN(num) && num > 0 && num <= totalPages) {
+                    setCurrentPage(num);
+                }
+             }
           }}
         />
 
@@ -91,7 +99,10 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
                 ? "bg-[#101828] text-white" // Estilo diferente para a página atual
                 : "bg-gray-200 text-black hover:bg-gray-600"
             }`}
-            onClick={() => setCurrentPage(page)} // Altera a página ao clicar
+            onClick={() => {
+              setCurrentPage(page);
+              setInputController(page); // Atualiza o input ao clicar no botão
+            }}
           >
             {page}
           </button>
@@ -104,7 +115,7 @@ export default function PageController({ currentPage, totalPages, setCurrentPage
 
         {/* Botão de próxima página */}
         <button
-          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600 cursor-pointer"
+          className="border px-[3vh] py-[1vh] rounded-full bg-gray-400 hover:bg-gray-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => setCurrentPage(currentPage + 1)}
           disabled={currentPage === totalPages} // Desativa se já estiver na última página
         >
