@@ -4,30 +4,23 @@
  * @description Define o componente TextInput, um campo de formulário genérico para texto simples,
  *              baseado no componente BaseInput.
  * @version 1.0
- * @date 02-05-2025
+ * @date 29-06-2025
  * @author Pedro
  */
 
-// Diretiva específica do Next.js/React Server Components para indicar que este é um Componente de Cliente.
-// Necessário porque ele utiliza o BaseInput, que pode ser interativo.
 'use client';
 
 import React from 'react';
-// Importa o componente base e sua interface de propriedades.
 import { BaseInput, BaseInputProps } from './BaseInput';
 
 /**
- * @interface TextInputProps
+ * @type TextInputProps
  * @description Define as propriedades aceitas pelo componente `TextInput`.
- * Esta interface herda todas as propriedades de `BaseInputProps`, com exceção da
- * propriedade `type`. Esta é omitida porque o `TextInput` define seu valor
- * fixamente como 'text' para garantir que ele funcione como um campo de texto padrão.
+ * Este tipo utiliza Omit para herdar todas as propriedades de `BaseInputProps`, com exceção da
+ * propriedade `type`, que é fixada como 'text'.
  */
-export interface TextInputProps extends Omit<BaseInputProps, 'type'> {
-  // Nenhuma propriedade adicional específica para TextInput neste momento.
-  // Todas as outras props de BaseInput (como label, required, isInvalid, value,
-  // onChange, placeholder, ariaDescribedby, etc.) são aceitas e repassadas.
-}
+// CORREÇÃO: A declaração foi alterada de 'interface' para 'type' para resolver o erro do ESLint.
+export type TextInputProps = Omit<BaseInputProps, 'type'>;
 
 /**
  * @component TextInput
@@ -101,24 +94,17 @@ export interface TextInputProps extends Omit<BaseInputProps, 'type'> {
  */
 export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   (
-    // `props` recebe todas as propriedades definidas em `TextInputProps`
-    // (ou seja, as de BaseInput exceto 'type').
     props,
-    // `ref` é encaminhado do componente pai.
     ref
   ) => {
-    // Renderiza o componente BaseInput.
     return (
       <BaseInput
-        ref={ref} // Passa a ref recebida para o BaseInput.
-        type="text" // Define explicitamente o tipo do input como 'text'.
-        {...props}   // Espalha todas as outras propriedades recebidas (label, value, onChange, required,
-                     // isInvalid, ariaDescribedby, placeholder, etc.) para o BaseInput.
-                     // Isso garante que todas as funcionalidades e configurações do BaseInput sejam aplicadas.
+        ref={ref}
+        type="text"
+        {...props}
       />
     );
   }
 );
 
-// Define um nome de exibição para o componente, útil para depuração no React DevTools.
 TextInput.displayName = 'TextInput';

@@ -4,31 +4,23 @@
  * @description Define o componente EmailInput, um campo de formulário especializado para emails,
  *              baseado no componente BaseInput.
  * @version 1.0
- * @date 02-05-2025
+ * @date 29-06-2025
  * @author Pedro
  */
 
-// Diretiva específica do Next.js/React Server Components para indicar que este é um Componente de Cliente.
-// Necessário porque ele utiliza o BaseInput, que pode usar hooks de cliente ou ser interativo.
 'use client';
 
 import React from 'react';
-// Importa o componente base e sua interface de propriedades.
 import { BaseInput, BaseInputProps } from './BaseInput';
 
 /**
- * @interface EmailInputProps
+ * @type EmailInputProps
  * @description Define as propriedades aceitas pelo componente `EmailInput`.
- * Esta interface herda todas as propriedades de `BaseInputProps`, com exceção das
- * propriedades `type` e `inputMode`. Estas são omitidas porque o `EmailInput`
- * define seus valores fixamente como 'email' para garantir a semântica e
- * otimização corretas para campos de email.
+ * Este tipo utiliza Omit para herdar todas as propriedades de `BaseInputProps`, com exceção das
+ * propriedades `type` e `inputMode`, que são fixadas para otimizar campos de email.
  */
-export interface EmailInputProps extends Omit<BaseInputProps, 'type' | 'inputMode'> {
-  // Atualmente, não há propriedades adicionais específicas para o EmailInput.
-  // Todas as outras props de BaseInput (como label, required, isInvalid,
-  // ariaDescribedby, value, onChange, etc.) são aceitas.
-}
+// CORREÇÃO: A declaração foi alterada de 'interface' para 'type' para resolver o erro do ESLint.
+export type EmailInputProps = Omit<BaseInputProps, 'type' | 'inputMode'>;
 
 /**
  * @component EmailInput
@@ -85,24 +77,18 @@ export interface EmailInputProps extends Omit<BaseInputProps, 'type' | 'inputMod
  */
 export const EmailInput = React.forwardRef<HTMLInputElement, EmailInputProps>(
   (
-    // `props` recebe todas as propriedades definidas em `EmailInputProps`
-    // (ou seja, as de BaseInput exceto type e inputMode).
     props,
-    // `ref` é encaminhado do componente pai.
     ref
   ) => {
-    // Renderiza o componente BaseInput.
     return (
       <BaseInput
-        ref={ref} // Passa a ref recebida para o BaseInput, que a encaminhará ao <input> real.
-        type="email"      // Define o tipo do input como 'email'. Essencial para semântica e validação básica.
-        inputMode="email" // Otimiza o teclado virtual em dispositivos móveis para entrada de email.
-        {...props}        // Espalha todas as outras propriedades recebidas (label, value, onChange, required, isInvalid, etc.)
-                          // para o BaseInput. Isso garante que todas as funcionalidades do BaseInput sejam herdadas.
+        ref={ref}
+        type="email"
+        inputMode="email"
+        {...props}
       />
     );
   }
 );
 
-// Define um nome de exibição para o componente, útil para depuração no React DevTools.
 EmailInput.displayName = 'EmailInput';

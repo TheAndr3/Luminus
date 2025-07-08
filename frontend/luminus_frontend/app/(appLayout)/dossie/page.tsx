@@ -1,7 +1,7 @@
 "use client";
 
 // pages/gerenciar-dossies.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BaseInput } from "@/components/inputs/BaseInput";
 import ListDossie from "./components/listDossie";
 import { Dossie } from "./components/types";
@@ -12,6 +12,7 @@ import ExportDownloadDialog from './components/exportDownloadDialog';
 import TypeOfCreationModal from './components/typeOfCreationModal';
 import ImportDossierDialog from './components/importDossierDialog';
 import { listDossiers, deleteDossier } from '@/services/dossierServices';
+import Loading from '@/components/ui/loading';
 
 
 export default function GerenciarDossies() {
@@ -37,14 +38,12 @@ export default function GerenciarDossies() {
   const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
   const [openImportDialog, setOpenImportDialog] = useState(false);
 
-  let typeOfData = "Dossie";
-
   // ============ CÁLCULOS DERIVADOS ============
   const totalPages = Math.ceil(totalItems / dossiersPerPage);
   const isAllSelected = dossies?.every((d) => d.selected) || false;
 
   // ============ CHAMADAS À API ============
-  const fetchDossies = async () => {
+  const fetchDossies = useCallback(async () => {
     try {
       setIsLoading(true);
       const professorId = localStorage.getItem('professorId');
@@ -55,6 +54,7 @@ export default function GerenciarDossies() {
       const response = await listDossiers(Number(professorId), start, dossiersPerPage, searchTerm);
       if (!response.data) {
         setDossies([]);
+        setTotalItems(0);
         return;
       }
       setTotalItems(response.ammount);
@@ -67,8 +67,8 @@ export default function GerenciarDossies() {
         selected: false
       }));
       setDossies(dossiesFormatados);
-    } catch (error: any) {
-      if (error.message !== "Nenhum dossiê encontrado") {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message !== "Nenhum dossiê encontrado") {
         setMessageErro(error.message || "Erro ao carregar dossiês");
         setMissingDialog(true);
       }
@@ -76,12 +76,12 @@ export default function GerenciarDossies() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, dossiersPerPage, searchTerm]);
 
   useEffect(() => {
     fetchDossies();
-  }, [currentPage, dossiersPerPage, searchTerm]); // Adiciona currentPage, dossiersPerPage e searchTerm como dependências
-  // Adiciona o debounce para evitar múltiplas chamadas à API
+  }, [fetchDossies]); // Adiciona fetchDossies como dependência
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1); // Reseta a página para 1 quando o usuário digita algo
@@ -149,14 +149,20 @@ export default function GerenciarDossies() {
       }
       await fetchDossies(); // Atualiza a lista de dossiês
       // Ajusta a página atual se necessário
-      const remainingDossiers = dossies.length - idsToDelete.length;
-      const newTotalPages = Math.ceil(remainingDossiers / dossiersPerPage);
-      if (currentPage > newTotalPages) {
-        setCurrentPage(Math.max(1, newTotalPages));
+      const remainingItems = totalItems - idsToDelete.length;
+      const newTotalPages = Math.ceil(remainingItems / dossiersPerPage);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      } else if (remainingItems === 0) {
+        setCurrentPage(1);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao excluir dossiês:", error);
-      setMessageErro(error.message || "Erro ao excluir os dados desejados!");
+      if (error instanceof Error) {
+        setMessageErro(error.message);
+      } else {
+        setMessageErro("Erro ao excluir os dados desejados!");
+      }
       setMissingDialog(true);
     } finally {
       setIsLoading(false);
@@ -215,7 +221,7 @@ export default function GerenciarDossies() {
       <div className="-mt-4">
         {/* Barra de ferramentas - sempre visível */}
         <div className="flex justify-between items-center mb-3 px-[6vh]">
-          {(!dossies || dossies.length === 0) && (
+          {(!dossies || dossies.length === 0) && !isLoading && (
             <>
               <div className="flex items-center gap-2">
                 <input
@@ -223,7 +229,7 @@ export default function GerenciarDossies() {
                   checked={isAllSelected}
                   onChange={toggleSelectAll}
                   className="w-6 h-6 accent-blue-600 cursor-pointer"
-                  disabled={!dossies || dossies.length === 0}
+                  disabled={true}
                 />
                 <span className="px-2vh text-lg text-gray-600 font-bold">Selecionar todos</span>
               </div>
@@ -245,32 +251,30 @@ export default function GerenciarDossies() {
           )}
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <p>Carregando dossiês...</p>
-          </div>
-        ) : dossies.length === 0 ? (
-          <div className="flex justify-center items-center h-40">
-            <p>Nenhum dossiê encontrado. Crie um novo dossiê para começar!</p>
-          </div>
-        ) : (
-          <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
-            <ListDossie
-              dossies={dossies}
-              toggleSelectAll={toggleSelectAll}
-              toggleOne={toggleOne}
-              isAllSelected={isAllSelected}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              setCurrentPage={setCurrentPage}
-              onImportDossie={handleImportDossie}
-              onCreateDossie={handleCreateDossie}
-              onDeleteClass={handleDeleteClass}
-              toArchiveClass={archiveHandle}
-              toExportDossie={exportHandle}
-            />
-          </div>
-        )}
+        <Loading isLoading={isLoading}>
+          {dossies.length === 0 ? (
+            <div className="text-center py-8">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum dossiê encontrado</h3>
+              <p className="text-gray-500 mb-4 text-sm">Crie seu primeiro dossiê para começar a usar</p>
+            </div>
+          ) : (
+            <div className="px-[6vh] flex items-center justify-center mt-10 ml-auto">
+              <ListDossie
+                dossies={dossies}
+                toggleSelectAll={toggleSelectAll}
+                toggleOne={toggleOne}
+                isAllSelected={isAllSelected}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+                onImportDossie={handleImportDossie}
+                onCreateDossie={handleCreateDossie}
+                onDeleteClass={handleDeleteClass}
+                toExportDossie={exportHandle}
+              />
+            </div>
+          )}
+        </Loading>
       </div>
 
       {/* Modais */}
@@ -303,7 +307,6 @@ export default function GerenciarDossies() {
         IdToExport={idsToExport}
         onClose={()=>setOpenDownloadDialog(false)}
         description={"Dossiê exportado"}
-        typeOfData={typeOfData}
         dossies={dossies}
       />
 

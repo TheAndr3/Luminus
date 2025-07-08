@@ -6,11 +6,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageController from "./paginationController";
 import ActionPanel from "./actionPanel";
-import TypeOfCreationModal from "./typeOfCreationModal";
-import { ExportConfirmDialog } from "./exportConfirmDialog";
-import ExportDownloadDialog from "./exportDownloadDialog";
-
-
 
 
 interface ListDossieProps {
@@ -24,8 +19,6 @@ interface ListDossieProps {
   onImportDossie: () => void;
   onCreateDossie: () => void;
   onDeleteClass: () => void;
-  toArchiveClass: () => void;
-
   toExportDossie: () => void;
 }
 
@@ -40,25 +33,13 @@ export default function ListDossie({
   onImportDossie,
   onCreateDossie,
   onDeleteClass,
-  toArchiveClass,
   toExportDossie
 }: ListDossieProps) {
   const [hasSelected, setHasSelected] = useState(false);
   const [hovered, setHovered] = useState<number | null>(null);
   const router = useRouter();
 
-  const [openTypeOfCreation, setOpenTypeOfCreation] = useState(false);
 
-
-
-  // Estado que controla se o hover está bloqueado (ex: quando um modal está aberto)
-  const [lockHover, setLockHover] = useState(false);
-
-    // Estado para controlar a abertura do modal de edição
-  const [openEditingModal, setOpenEditingModal] = useState(false);
-
-  // Estado que guarda o dossie atualmente sendo editada (ou null se nenhuma)
-  const [editingDossie, setEditingDossie] = useState<Dossie | null>(null);
 
   useEffect(() => {
     setHasSelected(dossies.some((dossie) => dossie.selected));
@@ -116,11 +97,7 @@ export default function ListDossie({
                   <Download size={16} className="mr-1" /> Importar Dossiê
                 </button>
                 <button
-                  onClick={() => {
-                    onCreateDossie
-                    setOpenTypeOfCreation(true)
-                    
-                  }}
+                  onClick={onCreateDossie}
                   className="bg-gray-300 text-black hover:bg-gray-400 rounded-full px-3 py-1 h-7 inline-flex items-center justify-center cursor-pointer text-sm whitespace-nowrap font-normal"
                 >
                   <Plus size={16} className="mr-1" /> Adicionar Dossiê
@@ -228,17 +205,13 @@ export default function ListDossie({
       <div className="-mt-10">
         {hasSelected && (
           <ActionPanel
-            onDeleted={onDeleteClass}
+            onDelete={onDeleteClass}
             toExport={toExportDossie}
           />
         )}
       </div>
 
-      <TypeOfCreationModal
-        open={openTypeOfCreation}
-        onClose={() => setOpenTypeOfCreation(false)}
-      />
-      
+
       
     </div>
   );
