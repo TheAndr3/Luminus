@@ -11,6 +11,9 @@ const PUBLIC_KEY = process.env.PUBLIC_KEY;
 
 //Enviar chave pública
 exports.GetPublicKey = async (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Permite todos os domínios (para desenvolvimento)
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
    return res.status(200).json({ publicKey: PUBLIC_KEY });
 

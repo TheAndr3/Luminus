@@ -105,7 +105,7 @@ export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateR
 
     //encriptar senha
     const encryptedPassword = await encryptWithPublicKey(publicKey, payLoad.password);
-
+    console.log('entrou aqui 1');
     //enviar dados na rota
     const response = await api.post('/professor/register', {
       ...payLoad,
@@ -123,6 +123,7 @@ export const RegisterProfessor = async (payLoad: CreatePayLoad): Promise<CreateR
 export const getPublicKey = async (): Promise<string> => {
   try {
     const response = await api.get('/professor/public-key');
+    console.log('entrou aqui 1');
     return response.data.publicKey;
   } catch (error: any) {
     const message = error.response?.data?.message || 'Erro ao buscar a chave pública';
