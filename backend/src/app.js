@@ -11,10 +11,10 @@ const routerAppraisal = require('../routes/appraisalRouter.js');
 const routerProfile = require('../routes/profileRouter.js')
 
 app.use(cors());
-app.get('/', (req, res => {
-    return res.statusCode(200).json({msg:'a api esta no ar'});
-}))
-app.use(express.json()); 
+app.use(express.json());
+app.get('/', (req, res) => {
+	return res.status(200).json({msg: 'a api esta no ar'});
+}) 
 app.use(routerProfessor);
 app.use(routerDossie);
 app.use(routerClassroom);
